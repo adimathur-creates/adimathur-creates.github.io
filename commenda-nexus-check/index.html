@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nexus Check</title>
+<meta name="description" content="Raw Stripe export to a US sales tax nexus verdict a tax lead can sign off. A product build for Commenda by Aditya Mathur.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a working tool first (data -> clean-up -> verdicts -> review), then the product brief. One column, 1080px, ledger-like tables. */
+:root{
+  --bg:#f4f6f8; --paper:#ffffff; --ink:#14213a; --muted:#5b6578; --line:#d9dee6; --soft:#eef1f5;
+  --accent:#1f4fd1; --accent-ink:#ffffff;
+  --red:#b42318; --red-bg:#fde8e6; --amber:#9a5b00; --amber-bg:#fff1d6; --green:#1d6b3a; --green-bg:#e3f4e8; --grey-bg:#eceff3;
+  --violet:#5b3cc4; --violet-bg:#ece8fb;
+  --display:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --body:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1420; --paper:#151d2c; --ink:#e7ecf5; --muted:#9aa5b8; --line:#2a3447; --soft:#1b2436;
+  --accent:#7aa2ff; --accent-ink:#0b1220;
+  --red:#ff8a80; --red-bg:#3a1714; --amber:#f4c06a; --amber-bg:#3a2a0c; --green:#7fd49b; --green-bg:#11301d; --grey-bg:#222b3b;
+  --violet:#b9a7ff; --violet-bg:#2a2147; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1420; --paper:#151d2c; --ink:#e7ecf5; --muted:#9aa5b8; --line:#2a3447; --soft:#1b2436;
+  --accent:#7aa2ff; --accent-ink:#0b1220;
+  --red:#ff8a80; --red-bg:#3a1714; --amber:#f4c06a; --amber-bg:#3a2a0c; --green:#7fd49b; --green-bg:#11301d; --grey-bg:#222b3b;
+  --violet:#b9a7ff; --violet-bg:#2a2147; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:28px 64px;display:grid;gap:28px}
+.wrap>*{min-width:0}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:-.02em}
+h2{font-size:22px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:18px;max-width:68ch;color:var(--ink)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+a{color:var(--accent)}
+.hero{display:grid;gap:14px;padding-top:8px}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted)}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:16px}
+.step{display:flex;gap:12px;align-items:baseline}
+.step .n{font-family:var(--mono);font-size:12px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 6px;white-space:nowrap}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button,.btn,label.btn{font:600 14px var(--body);border-radius:6px;padding:9px 14px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,label.btn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+select,input[type=date]{font:14px var(--body);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);max-width:100%}
+.problem{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.problem div{border-top:2px solid var(--ink);padding-top:10px;display:grid;gap:6px;align-content:start}
+.maptbl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 16px}
+.maptbl label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+#tbl{min-width:1180px}
+#tbl th{white-space:nowrap}
+#tbl td:last-child{min-width:300px}
+#tbl td:nth-child(2),#tbl td:nth-child(3){white-space:nowrap}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;background:var(--soft);position:sticky;top:0}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.mono{font-family:var(--mono);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.pill{display:inline-block;font:600 12px var(--body);padding:2px 8px;border-radius:999px;white-space:nowrap}
+.p-crossed{background:var(--red-bg);color:var(--red)}
+.p-approaching{background:var(--amber-bg);color:var(--amber)}
+.p-clear{background:var(--green-bg);color:var(--green)}
+.p-no-count{background:var(--grey-bg);color:var(--muted)}
+.p-fragile{background:var(--violet-bg);color:var(--violet)}
+.p-firm{background:var(--grey-bg);color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.tile{border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;gap:2px;background:var(--paper)}
+.tile b{font:700 26px var(--display);font-variant-numeric:tabular-nums}
+.tile span{font-size:13px;color:var(--muted)}
+.issues{display:grid;gap:0}
+.issue{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.issue:last-child{border-bottom:0}
+.issue .what{font-weight:600}
+.issue .fix{grid-column:1/-1;font-size:13px;color:var(--muted)}
+.issue .n{font-family:var(--mono);font-size:13px;text-align:right;white-space:nowrap}
+.callout{border-left:3px solid var(--red);background:var(--red-bg);padding:12px 14px;border-radius:0 8px 8px 0;display:grid;gap:6px}
+.callout.v{border-left-color:var(--violet);background:var(--violet-bg)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:600 13px var(--body);padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.summary{font-family:var(--mono);font-size:13px;white-space:pre-wrap;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:14px;max-height:360px;overflow:auto}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.two>*{min-width:0}
+.list{margin:0;padding-left:18px;display:grid;gap:6px}
+.checks{display:grid;gap:4px;font-size:13.5px}
+.checks div{display:flex;gap:8px}
+.checks .ok{color:var(--green);font-family:var(--mono)}
+.checks .bad{color:var(--red);font-family:var(--mono)}
+details summary{cursor:pointer;font-weight:600}
+.brief h3{margin-top:4px}
+.kv{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:8px 16px;font-size:14px}
+.kv dt{font-weight:600}
+.kv dd{margin:0;color:var(--ink)}
+@media (max-width:560px){.kv{grid-template-columns:1fr}.kv dd{margin-bottom:6px}}
+footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<main class="wrap">
+  <header class="hero">
+    <div class="eyebrow">A product build for Commenda · Indirect tax · by Aditya Mathur</div>
+    <h1>Nexus Check</h1>
+    <p class="lede">Drop in a raw Stripe export. Get a US sales tax nexus verdict for every state that a tax lead can sign off, with the date each threshold was crossed, the tax that was not collected, and a short list of the verdicts the data is too messy to trust.</p>
+    <div class="meta"><span>Rules: Sales Tax Institute chart as of 1 Aug 2026</span><span>Rates: Tax Foundation, 1 Jan 2026</span><span>Runs fully in your browser. No data leaves the page.</span></div>
+  </header>
+
+  <section class="panel" aria-labelledby="pb">
+    <h2 id="pb">The problem</h2>
+    <div class="problem">
+      <div><h3>Who has it</h3><p>Indian and other foreign SaaS companies selling to US customers through Stripe, with no US office. Since <i>Wayfair</i> (2018), selling enough into a state creates a duty to collect its sales tax. Being abroad does not change that.</p></div>
+      <div><h3>Why it breaks</h3><p>45 states and DC each set their own threshold, transaction test, look-back window and rule on what counts. Four dropped their transaction test between Jan 2025 and Aug 2026. A raw export carries failed and test charges, refunds, INR settlement amounts, typo'd states and blank addresses. Any one of these can flip a verdict.</p></div>
+      <div><h3>Where it hurts Commenda</h3><p>Commenda offers prospects a free nexus analysis and promises alerts before a threshold is crossed. Each analysis means cleaning someone's export by hand. Slow analyses lose deals. A wrong "you're fine" is worse: it is the customer's tax bill and Commenda's credibility.</p></div>
+    </div>
+    <p class="muted small">I don't know how Commenda's team runs these analyses internally. The free analysis and the alerts are on Commenda's indirect tax page. The workflow pains are what I'd expect from my year handling Stripe transaction data, and the first thing I'd check by sitting with the team.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="s1">
+    <div class="step"><span class="n">STEP 1</span><h2 id="s1">Load a payments export</h2></div>
+    <div class="row">
+      <button class="primary" id="loadSample" type="button">Load sample: Ledgerly's Stripe export</button>
+      <label class="btn" for="file">Upload your CSV<input id="file" type="file" accept=".csv,text/csv" hidden></label>
+      <label class="small muted" for="asof">Data up to <input type="date" id="asof" value="2026-09-30"></label>
+    </div>
+    <p class="small muted" id="dataNote">Ledgerly is a made-up Bengaluru B2B SaaS company: monthly plans from $29 to $799, some annual contracts, about $7.6M of US sales from Jan 2025 to Sep 2026, settled in INR. The export is deliberately messy, like real ones.</p>
+    <details>
+      <summary>Column mapping (auto-detected; change it if your export uses other names)</summary>
+      <div class="maptbl" id="mapper" style="margin-top:12px"></div>
+    </details>
+  </section>
+
+  <section class="panel" aria-labelledby="s2">
+    <div class="step"><span class="n">STEP 2</span><h2 id="s2">Clean before you count</h2></div>
+    <p class="muted">Every fix the tool made, with the number of rows and dollars it touched. This is the list an analyst would otherwise build by hand in a spreadsheet.</p>
+    <div class="issues" id="issues"></div>
+    <div class="callout" id="naive"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="s3">
+    <div class="step"><span class="n">STEP 3</span><h2 id="s3">Verdict by state</h2></div>
+    <div class="tiles" id="tiles"></div>
+    <div class="chips" role="group" aria-label="Filter states" id="chips"></div>
+    <div class="scroll" style="max-height:620px"><table id="tbl"><thead><tr>
+      <th>State</th><th>Verdict</th><th>Crossed / projected</th><th>Test met</th><th class="num">Sales in window</th><th class="num">Txns</th><th class="num">Est. uncollected tax</th><th>Confidence</th><th>Next step</th>
+    </tr></thead><tbody></tbody></table></div>
+    <p class="small muted">"Est. uncollected tax" = taxable sales from the crossing date × the state's average combined rate (Texas at 80% of the charge, Connecticut at the 1% business rate). It is an upper bound for prioritising, not a filing number: most states give a short window after crossing before collection is due, and local rates vary. Delaware, Montana, New Hampshire and Oregon have no state sales tax and are left out.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="s4">
+    <div class="step"><span class="n">STEP 4</span><h2 id="s4">What a person must review</h2></div>
+    <p class="muted">The tool runs every state three ways: the best reading of the data, refunds not netted, and missing states spread by known sales. If the verdict holds in all three, it is <span class="pill p-firm">firm</span>. If it changes, it is <span class="pill p-fragile">fragile</span> and goes to an analyst with the reason. Analysts spend their time on a handful of states, not on all 47 jurisdictions.</p>
+    <div class="two">
+      <div class="scroll"><table id="review"><thead><tr><th>State</th><th>Why it needs a person</th></tr></thead><tbody></tbody></table></div>
+      <div style="display:grid;gap:10px;align-content:start">
+        <h3>Client-ready summary</h3>
+        <div class="summary" id="summary"></div>
+        <div class="row"><button id="copySum" type="button">Copy summary</button><button id="copyCsv" type="button">Copy table as CSV</button><span class="small muted" id="copyMsg" role="status"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="s5">
+    <h2 id="s5">Self-checks</h2>
+    <p class="muted">Hand-built cases with known answers, run against the same engine every time this page loads. They cover the rules most likely to be coded wrong.</p>
+    <div class="checks" id="checks"></div>
+  </section>
+
+  <section class="panel brief" aria-labelledby="s6">
+    <h2 id="s6">The product thinking</h2>
+    <dl class="kv">
+      <dt>Problem statement</dt><dd>A finance lead at a cross-border SaaS company can't tell from their payments data which US states they owe sales tax in, since when, or how much. Today, getting that answer means a person cleaning an export by hand, and the answer is only as good as their cleaning.</dd>
+      <dt>Who uses this</dt><dd>First, Commenda's indirect tax analysts running free nexus analyses for prospects. Later, customers themselves, as the "before you cross" alert inside the product.</dd>
+      <dt>Outcome</dt><dd>Exposure report in minutes, not hours, with every verdict traceable to a rule, a source and a date.</dd>
+    </dl>
+    <h3>Four decisions I made, and why</h3>
+    <ol class="list">
+      <li><b>Clean before you count.</b> The most common errors are in the data, not the rules: summing INR settlement amounts as dollars, counting failed and test charges, missing "Calif." when you filter on "CA". The tool shows each fix so an analyst can challenge it.</li>
+      <li><b>Rules are data with a source and a date.</b> Every threshold carries its effective dates. Utah's 200-transaction test counts for sales before 1 Jul 2025 and not after. When a state changes a rule, one row changes, and the self-checks catch regressions.</li>
+      <li><b>Firm vs fragile.</b> The tool doesn't hide uncertainty. It runs the data three ways and sends only the verdicts that change to a person. This is the same "stage it for human review" idea Commenda describes for its agents.</li>
+      <li><b>It never files.</b> It recommends and explains. A person signs off before anything reaches a customer or a state.</li>
+    </ol>
+    <h3>How I'd measure it</h3>
+    <ul class="list">
+      <li><b>Time to first exposure report</b> per prospect. I'd measure today's baseline in week one rather than guess it.</li>
+      <li><b>Share of state verdicts that come out firm</b>, which shows how much analyst time is saved.</li>
+      <li><b>Analyst override rate</b> on firm verdicts. If it rises above a few percent, the rules or the clean-up are wrong, and that matters more than speed.</li>
+      <li><b>Free analysis → paid indirect tax customer</b> conversion, compared against analyses done the old way.</li>
+      <li><b>Guardrail: missed thresholds.</b> Any customer who crossed before we told them is a serious incident.</li>
+    </ul>
+    <h3>My first two weeks with this at Commenda</h3>
+    <ol class="list">
+      <li>Days 1–3: sit with the people running nexus analyses. Do five real ones by hand alongside them. Time each step and log every manual fix.</li>
+      <li>Days 4–7: run this engine on ten past analyses. Every verdict that differs from the human one is either a bug in my rules or a miss in the old process. Both are worth knowing.</li>
+      <li>Week 2: put it in the analysts' hands behind a review step. Add mappings for Shopify, Chargebee and NetSuite exports, in the order the team actually receives them.</li>
+    </ol>
+    <h3>What it doesn't do yet</h3>
+    <ul class="list">
+      <li>Marketplace sales, which many states exclude from the seller's own threshold.</li>
+      <li>Physical nexus from US employees or contractors. This links to Commenda's entity vs EOR work, since hiring in a state can create nexus on day one.</li>
+      <li>Exemption and resale certificates, local-only taxes (Chicago, Colorado home-rule cities, Alaska) and look-back periods for voluntary disclosure.</li>
+      <li>EU and UK VAT. The same engine shape fits the EU's €10,000 OSS threshold; only the rules table changes.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <div><b>Sources.</b> <a href="https://www.salestaxinstitute.com/resources/economic-nexus-state-guide" target="_blank" rel="noopener">Sales Tax Institute, Economic Nexus State by State Chart (as of 1 Aug 2026)</a> · <a href="https://taxfoundation.org/data/all/state/sales-tax-rates/" target="_blank" rel="noopener">Tax Foundation, State and Local Sales Tax Rates (1 Jan 2026)</a> · <a href="https://www.anrok.com/saas-sales-tax-by-state" target="_blank" rel="noopener">Anrok, SaaS sales tax by state</a> · <a href="https://taxcloud.com/blog/saas-sales-tax-by-state/" target="_blank" rel="noopener">TaxCloud, SaaS sales tax by state</a> · <a href="https://www.commenda.io/indirect-tax" target="_blank" rel="noopener">Commenda, Global Indirect Tax</a></div>
+    <div>Not tax advice. SaaS taxability defaults are editable assumptions, and the sources disagree in places (for example, on the exact count of states that tax SaaS). Ledgerly and its data are fictional. Built by Aditya Mathur with Claude · <a href="https://www.linkedin.com/in/adityaamathur" target="_blank" rel="noopener">LinkedIn</a></div>
+  </footer>
+</main>
+
+<script>
+// US economic nexus rules for remote sellers.
+// Thresholds, transaction tests, measurement periods and "what counts": Sales Tax Institute,
+//   "Economic Nexus State by State Chart", as of 1 Aug 2026.
+// Average combined rates: Tax Foundation, "State and Local Sales Tax Rates", as of 1 Jan 2026.
+// SaaS taxability defaults: Anrok "SaaS sales tax by state" (2026) cross-checked with TaxCloud (Oct 2025 table).
+//   Y = taxable, N = not taxable, P = partial/local/use-dependent -> human review, 80 = 80% of charge taxable (Texas).
+// period: cy  = previous OR current calendar year
+//         pcy = previous calendar year only (nexus from 1 Jan of next year)
+//         r12 = trailing 12 months, checked daily
+//         q4  = trailing 4 completed quarters, checked at each quarter end (nexus from next day)
+//         ct  = 12 months ending 30 Sep (Connecticut), nexus from 1 Oct
+// counts: gross | retail | taxable  (taxable = only taxable sales count toward the threshold)
+// txnUntil: date the transaction test stopped applying (threshold removed)
+const RULES_AS_OF = '1 Aug 2026 (thresholds) · 1 Jan 2026 (rates)';
+const R = (code, name, sales, txn, mode, period, counts, saas, rate, extra = {}) =>
+  ({ code, name, sales, txn, mode, period, counts, saas, rate, ...extra });
+
+const RULES = [
+  R('AL','Alabama',250000,null,null,'pcy','retail','N',9.46,{note:'Also requires specified activities in the state.'}),
+  R('AK','Alaska',100000,200,'or','cy','gross','P',1.82,{txnUntil:'2025-01-01',note:'Local-only tax under the ARSSTC; check each adopting municipality.'}),
+  R('AZ','Arizona',100000,null,null,'cy','gross','Y',8.52),
+  R('AR','Arkansas',100000,200,'or','cy','taxable','N',9.46),
+  R('CA','California',500000,null,null,'cy','gross','N',8.99,{note:'SaaS is reported as taxable from 1 Jan 2027. Re-run before year end.'}),
+  R('CO','Colorado',100000,null,null,'cy','retail','P',7.89,{note:'Some home-rule cities tax SaaS; state-level from 2027 per Anrok.'}),
+  R('CT','Connecticut',100000,200,'and','ct','retail','Y',1.00,{note:'Business-use software is taxed at a reduced 1% rate; this estimate uses 1%.'}),
+  R('DC','District of Columbia',100000,200,'or','cy','retail','Y',6.00),
+  R('FL','Florida',100000,null,null,'pcy','taxable','N',6.98),
+  R('GA','Georgia',100000,200,'or','cy','retail','N',7.49),
+  R('HI','Hawaii',100000,200,'or','cy','gross','Y',4.50,{note:'General excise tax, not a sales tax.'}),
+  R('ID','Idaho',100000,null,null,'cy','gross','N',6.03),
+  R('IL','Illinois',100000,200,'or','q4','retail','P',8.96,{txnUntil:'2026-01-01',note:'Chicago taxes SaaS under its lease transaction tax; the rest of the state does not.'}),
+  R('IN','Indiana',100000,null,null,'cy','gross','N',7.00),
+  R('IA','Iowa',100000,null,null,'cy','gross','P',6.94,{note:'Exempt when sold to qualifying commercial enterprises.'}),
+  R('KS','Kansas',100000,null,null,'cy','gross','N',8.69),
+  R('KY','Kentucky',100000,200,'or','cy','gross','Y',6.00,{txnUntil:'2026-08-01'}),
+  R('LA','Louisiana',100000,null,null,'cy','gross','Y',10.11),
+  R('ME','Maine',100000,null,null,'cy','gross','N',5.50),
+  R('MD','Maryland',100000,200,'or','cy','gross','Y',6.00,{note:'Maryland changed its digital and IT services rules in 2025; confirm the rate for B2B SaaS.'}),
+  R('MA','Massachusetts',100000,null,null,'cy','gross','Y',6.25),
+  R('MI','Michigan',100000,200,'or','pcy','gross','N',6.00),
+  R('MN','Minnesota',100000,200,'or','q4','retail','N',8.14),
+  R('MS','Mississippi',250000,null,null,'r12','gross','N',7.06,{strict:true}),
+  R('MO','Missouri',100000,null,null,'q4','taxable','N',8.44),
+  R('NE','Nebraska',100000,200,'or','cy','retail','N',6.98),
+  R('NV','Nevada',100000,200,'or','cy','retail','N',8.24),
+  R('NJ','New Jersey',100000,200,'or','cy','gross','N',6.60),
+  R('NM','New Mexico',100000,null,null,'pcy','taxable','Y',7.67,{note:'Gross receipts tax.'}),
+  R('NY','New York',500000,100,'and','q4','gross','Y',8.54,{txnGt:true}),
+  R('NC','North Carolina',100000,null,null,'cy','gross','N',7.00),
+  R('ND','North Dakota',100000,null,null,'cy','taxable','N',7.09),
+  R('OH','Ohio',100000,200,'or','cy','retail','P',7.29,{note:'Taxable when bought for business use; personal use exempt.'}),
+  R('OK','Oklahoma',100000,null,null,'cy','taxable','N',9.06),
+  R('PA','Pennsylvania',100000,null,null,'r12','gross','Y',6.34),
+  R('RI','Rhode Island',100000,200,'or','pcy','gross','Y',7.00),
+  R('SC','South Carolina',100000,null,null,'cy','gross','Y',7.49),
+  R('SD','South Dakota',100000,null,null,'cy','gross','Y',6.11),
+  R('TN','Tennessee',100000,null,null,'r12','retail','Y',9.61),
+  R('TX','Texas',500000,null,null,'r12','gross','80',8.20,{note:'80% of a SaaS charge is taxable.'}),
+  R('UT','Utah',100000,200,'or','cy','gross','Y',7.42,{txnUntil:'2025-07-01'}),
+  R('VT','Vermont',100000,200,'or','q4','gross','Y',6.39),
+  R('VA','Virginia',100000,200,'or','cy','retail','N',5.77),
+  R('WA','Washington',100000,null,null,'cy','gross','Y',9.51,{note:'B&O tax also applies once you have nexus.'}),
+  R('WV','West Virginia',100000,200,'or','cy','gross','Y',6.59),
+  R('WI','Wisconsin',100000,null,null,'cy','gross','N',5.72),
+  R('WY','Wyoming',100000,null,null,'cy','gross','N',5.56),
+];
+const NO_SALES_TAX = { DE:'Delaware', MT:'Montana', NH:'New Hampshire', OR:'Oregon' };
+
+globalThis.NEXUS_RULES = { RULES, NO_SALES_TAX, RULES_AS_OF };
+if (typeof module !== 'undefined') module.exports = globalThis.NEXUS_RULES;
+
+// Nexus engine: raw payments export -> cleaned rows -> per-state verdicts under 3 data scenarios.
+// Pure functions; runs in the browser and in Node (for tests).
+(function (root) {
+const RULESMOD = (typeof module !== 'undefined') ? require('./rules.js') : globalThis.NEXUS_RULES;
+const { RULES, NO_SALES_TAX } = RULESMOD;
+
+// ---------- dates ----------
+const DAY = 86400000;
+const toDay = (y, m, d) => Math.floor(Date.UTC(y, m - 1, d) / DAY);
+const dayToISO = (n) => new Date(n * DAY).toISOString().slice(0, 10);
+const isoToDay = (s) => { const [y, m, d] = s.split('-').map(Number); return toDay(y, m, d); };
+const yearOf = (n) => new Date(n * DAY).getUTCFullYear();
+const monthOf = (n) => new Date(n * DAY).getUTCMonth() + 1;
+function parseDate(s) {
+  if (!s) return null; s = String(s).trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return toDay(+m[1], +m[2], +m[3]);
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return toDay(+m[3], +m[1], +m[2]);
+  const t = Date.parse(s); return isNaN(t) ? null : Math.floor(t / DAY);
+}
+// latest quarter end strictly before day n
+function prevQuarterEnd(n) {
+  const y = yearOf(n), m = monthOf(n);
+  const q = Math.floor((m - 1) / 3);           // 0..3 current quarter
+  const qs = toDay(y, q * 3 + 1, 1);           // start of current quarter
+  return qs - 1;                               // last day of previous quarter
+}
+function quarterStartMonthsBack(qe, k) {       // start of the quarter k quarters back from quarter ending qe (inclusive window of k quarters)
+  const y = yearOf(qe), m = monthOf(qe);       // m is 3,6,9,12
+  let sm = m - 3 * k + 1, sy = y;
+  while (sm < 1) { sm += 12; sy -= 1; }
+  return toDay(sy, sm, 1);
+}
+
+// ---------- CSV ----------
+function parseCSV(text) {
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(f); f = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+    else f += c;
+  }
+  if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  return rows.filter(r => r.length > 1 || (r[0] || '').trim() !== '');
+}
+
+const SYN = {
+  id: ['id', 'charge id', 'transaction id', 'payment id'],
+  date: ['created date (utc)', 'created (utc)', 'created', 'date', 'created_at', 'transaction date', 'order date'],
+  amount: ['amount', 'total', 'gross amount', 'charge amount', 'amount (usd)'],
+  refunded: ['amount refunded', 'refunded amount', 'refund amount', 'refunded'],
+  currency: ['currency'],
+  status: ['status'],
+  captured: ['captured'],
+  mode: ['mode', 'livemode'],
+  state: ['card address state', 'customer address state', 'billing state', 'billing address state', 'shipping state', 'ship to state', 'state', 'region'],
+  country: ['card address country', 'customer address country', 'billing country', 'billing address country', 'country'],
+  convCurrency: ['converted currency'],
+};
+function autoMap(header) {
+  const h = header.map(x => x.trim().toLowerCase());
+  const map = {};
+  for (const k of Object.keys(SYN)) {
+    for (const s of SYN[k]) { const i = h.indexOf(s); if (i >= 0) { map[k] = i; break; } }
+  }
+  return map;
+}
+
+// ---------- normalisation ----------
+const STATE_INDEX = (() => {
+  const idx = {};
+  const all = RULES.map(r => [r.code, r.name]).concat(Object.entries(NO_SALES_TAX));
+  for (const [code, name] of all) { idx[code.toLowerCase()] = code; idx[name.toLowerCase()] = code; }
+  Object.assign(idx, { calif: 'CA', cal: 'CA', mass: 'MA', penn: 'PA', penna: 'PA', wash: 'WA', 'washington dc': 'DC', 'washington d c': 'DC', 'd c': 'DC', 'n y': 'NY', 'new york state': 'NY', tex: 'TX', fla: 'FL', ill: 'IL', mich: 'MI', minn: 'MN', ariz: 'AZ', colo: 'CO', conn: 'CT', ga: 'GA', 'n c': 'NC', 'n j': 'NJ', 'w va': 'WV', wisc: 'WI', tenn: 'TN', va: 'VA' });
+  return idx;
+})();
+function normState(s) {
+  if (!s) return { code: null, changed: false };
+  const raw = String(s);
+  const k = raw.toLowerCase().replace(/[.\-_,]/g, ' ').replace(/\s+/g, ' ').trim();
+  const code = STATE_INDEX[k] || STATE_INDEX[k.replace(/ /g, '')] || null;
+  return { code, changed: code !== null && raw !== code };
+}
+function isUS(c) {
+  if (c == null || String(c).trim() === '') return null; // unknown
+  const k = String(c).trim().toLowerCase().replace(/\./g, '');
+  return ['us', 'usa', 'united states', 'united states of america', 'u s', 'u s a'].includes(k);
+}
+const num = (s) => { if (s == null || s === '') return 0; const v = parseFloat(String(s).replace(/[$,\s]/g, '')); return isNaN(v) ? 0 : v; };
+
+const DEFAULT_FX = { usd: 1, eur: 1.08, gbp: 1.27, cad: 0.73, aud: 0.65, inr: 0.0119, sgd: 0.74 };
+
+// ---------- clean ----------
+function clean(rows, map, fx = DEFAULT_FX) {
+  const issues = {
+    total: 0, kept: 0,
+    duplicate: { n: 0, amt: 0 }, failed: { n: 0, amt: 0 }, test: { n: 0, amt: 0 },
+    nonUS: { n: 0, amt: 0 }, countryInferred: { n: 0, amt: 0 },
+    noState: { n: 0, amt: 0 }, stateFixed: { n: 0, amt: 0 },
+    fxConverted: { n: 0, amt: 0, ccys: {} }, fxUnknown: { n: 0, amt: 0, ccys: {} },
+    refundPartial: { n: 0, amt: 0 }, refundFull: { n: 0, amt: 0 },
+    badDate: { n: 0, amt: 0 }, convCurrency: {},
+  };
+  const seen = new Set(); const out = [];
+  const g = (r, k) => (map[k] != null ? r[map[k]] : undefined);
+  for (const r of rows) {
+    issues.total++;
+    let amt = num(g(r, 'amount')), ref = num(g(r, 'refunded'));
+    const ccy = String(g(r, 'currency') || 'usd').trim().toLowerCase() || 'usd';
+    const cc = g(r, 'convCurrency'); if (cc) { const k = String(cc).trim().toLowerCase(); issues.convCurrency[k] = (issues.convCurrency[k] || 0) + 1; }
+    let rate = fx[ccy];
+    const add = (o, a) => { o.n++; o.amt += a; };
+    const id = g(r, 'id');
+    if (id) { if (seen.has(id)) { add(issues.duplicate, amt * (rate || 0)); continue; } seen.add(id); }
+    const status = String(g(r, 'status') || '').trim().toLowerCase();
+    const captured = String(g(r, 'captured') || '').trim().toLowerCase();
+    if ((status && !['paid', 'succeeded', 'success', 'complete', 'completed', 'settled'].includes(status)) || captured === 'false') { add(issues.failed, amt * (rate || 0)); continue; }
+    const mode = String(g(r, 'mode') || '').trim().toLowerCase();
+    if (mode === 'test' || mode === 'false') { add(issues.test, amt * (rate || 0)); continue; }
+    if (rate == null) { add(issues.fxUnknown, amt); issues.fxUnknown.ccys[ccy] = 1; continue; }
+    if (ccy !== 'usd') { add(issues.fxConverted, amt * rate); issues.fxConverted.ccys[ccy] = (issues.fxConverted.ccys[ccy] || 0) + 1; }
+    amt *= rate; ref *= rate;
+    const day = parseDate(g(r, 'date'));
+    if (day == null) { add(issues.badDate, amt); continue; }
+    const us = isUS(g(r, 'country'));
+    const st = normState(g(r, 'state'));
+    if (us === false) { add(issues.nonUS, amt); continue; }
+    if (us === null) { if (st.code) add(issues.countryInferred, amt); else { add(issues.nonUS, amt); continue; } }
+    if (!st.code) add(issues.noState, amt); else if (st.changed) add(issues.stateFixed, amt);
+    if (ref > 0 && ref < amt - 0.005) add(issues.refundPartial, ref);
+    if (ref > 0 && ref >= amt - 0.005) add(issues.refundFull, ref);
+    out.push({ day, state: st.code, amt, ref: Math.min(ref, amt) });
+  }
+  issues.kept = out.length;
+  return { rows: out, issues };
+}
+
+// ---------- scenario aggregation ----------
+const SCENARIOS = {
+  A: { key: 'A', label: 'Best reading', desc: 'Refunds netted out, fully refunded charges not counted, rows with no state left out', netRefunds: true, countRefunded: false, allocUnknown: false },
+  B: { key: 'B', label: 'Refunds not netted', desc: 'Same as A, but refunds are not deducted and refunded charges still count as transactions', netRefunds: false, countRefunded: true, allocUnknown: false },
+  C: { key: 'C', label: 'Missing states spread', desc: 'Same as A, plus rows with no state are spread across states in proportion to known sales', netRefunds: true, countRefunded: false, allocUnknown: true },
+};
+function aggregate(rows, sc, day0, nDays) {
+  const sales = {}, cnt = {};
+  const ensure = (s) => { if (!sales[s]) { sales[s] = new Float64Array(nDays); cnt[s] = new Float64Array(nDays); } };
+  let unkAmt = new Float64Array(nDays), unkCnt = new Float64Array(nDays);
+  const known = {};
+  for (const r of rows) {
+    const i = r.day - day0; if (i < 0 || i >= nDays) continue;
+    const full = r.ref >= r.amt - 0.005 && r.ref > 0;
+    const a = sc.netRefunds ? r.amt - r.ref : r.amt;
+    const c = (full && !sc.countRefunded) ? 0 : 1;
+    if (!r.state) { unkAmt[i] += a; unkCnt[i] += c; continue; }
+    ensure(r.state); sales[r.state][i] += a; cnt[r.state][i] += c; known[r.state] = (known[r.state] || 0) + a;
+  }
+  if (sc.allocUnknown) {
+    const tot = Object.values(known).reduce((x, y) => x + y, 0) || 1;
+    for (const s of Object.keys(known)) {
+      const w = known[s] / tot;
+      for (let i = 0; i < nDays; i++) { if (unkAmt[i]) { sales[s][i] += unkAmt[i] * w; cnt[s][i] += unkCnt[i] * w; } }
+    }
+  }
+  const pre = (arr) => { const p = new Float64Array(nDays + 1); for (let i = 0; i < nDays; i++) p[i + 1] = p[i] + arr[i]; return p; };
+  const P = {};
+  for (const s of Object.keys(sales)) P[s] = { S: pre(sales[s]), C: pre(cnt[s]) };
+  return P;
+}
+
+// ---------- rule evaluation ----------
+const share = (saas) => saas === 'Y' ? 1 : saas === '80' ? 0.8 : 0;
+function evalState(rule, P, day0, asOf) {
+  const nDays = asOf - day0 + 1;
+  const zero = { S: new Float64Array(nDays + 1), C: new Float64Array(nDays + 1) };
+  const p = P[rule.code] || zero;
+  const countsZero = rule.counts === 'taxable' && share(rule.saas) === 0 && rule.saas !== 'P';
+  const rng = (arr, a, b) => { a = Math.max(a, day0); b = Math.min(b, asOf); if (b < a) return 0; return arr[b - day0 + 1] - arr[a - day0]; };
+  const S = (a, b) => countsZero ? 0 : rng(p.S, a, b);
+  const C = (a, b) => countsZero ? 0 : rng(p.C, a, b);
+  const txnLive = (d) => rule.txn && (!rule.txnUntil || d < isoToDay(rule.txnUntil));
+  const test = (s, c, d) => {
+    const so = rule.strict ? s > rule.sales : s >= rule.sales;
+    const tl = txnLive(d);
+    const to = tl && (rule.txnGt ? c > rule.txn : c >= rule.txn);
+    let ok;
+    if (rule.mode === 'and') ok = so && to; else if (rule.mode === 'or') ok = so || to; else ok = so;
+    return ok ? (rule.mode === 'or' && to && !so ? 'transactions' : (rule.mode === 'and' ? 'sales and transactions' : 'sales')) : null;
+  };
+  function windowAt(d) {               // [start,end] of the window that decides nexus on day d
+    const y = yearOf(d);
+    switch (rule.period) {
+      case 'cy': return [[toDay(y - 1, 1, 1), toDay(y - 1, 12, 31)], [toDay(y, 1, 1), d]];
+      case 'pcy': return [[toDay(y - 1, 1, 1), toDay(y - 1, 12, 31)]];
+      case 'r12': return [[d - 364, d]];
+      case 'q4': { const qe = prevQuarterEnd(d); return [[quarterStartMonthsBack(qe, 4), qe]]; }
+      case 'ct': { const se = (monthOf(d) >= 10) ? toDay(y, 9, 30) : toDay(y - 1, 9, 30); return [[se - 364, se]]; }
+    }
+  }
+  let crossed = null, reason = null;
+  for (let d = day0; d <= asOf; d++) {
+    for (const [a, b] of windowAt(d)) {
+      const r = test(S(a, b), C(a, b), d);
+      if (r) { crossed = d; reason = r; break; }
+    }
+    if (crossed != null) break;
+  }
+  // current position (for "approaching")
+  const y = yearOf(asOf);
+  let cur;
+  switch (rule.period) {
+    case 'cy': case 'pcy': cur = [toDay(y, 1, 1), asOf]; break;
+    case 'ct': { const se = monthOf(asOf) >= 10 ? toDay(y, 9, 30) : toDay(y - 1, 9, 30); cur = [se + 1, asOf]; break; }
+    default: cur = [asOf - 364, asOf];
+  }
+  const curS = S(cur[0], cur[1]), curC = C(cur[0], cur[1]);
+  const sr = curS / rule.sales, tr = txnLive(asOf) ? curC / rule.txn : 0;
+  const ratio = rule.mode === 'and' ? Math.min(sr, tr) : Math.max(sr, tr);
+  const pace = S(asOf - 89, asOf) / 90, cpace = C(asOf - 89, asOf) / 90;
+  let projDay = null;
+  if (!crossed) {
+    const ds = pace > 0 ? (rule.sales - curS) / pace : Infinity;
+    const dc = (txnLive(asOf) && cpace > 0) ? (rule.txn - curC) / cpace : Infinity;
+    const dd = rule.mode === 'and' ? Math.max(ds, dc) : Math.min(ds, dc);
+    if (isFinite(dd)) projDay = asOf + Math.ceil(dd);
+  }
+  const taxShare = share(rule.saas);
+  const exposureBase = crossed != null ? rng(p.S, crossed, asOf) : 0;
+  const exposure = exposureBase * taxShare * rule.rate / 100;
+  const total = rng(p.S, day0, asOf), totalC = rng(p.C, day0, asOf);
+  return { crossed, reason, curS, curC, ratio, projDay, exposureBase, exposure, total, totalC, countsZero };
+}
+
+function verdictOf(rule, e, asOf) {
+  if (e.countsZero) return 'no-count';
+  if (e.crossed != null) return 'crossed';
+  if (e.ratio >= 0.7) return 'approaching';
+  return 'clear';
+}
+
+function analyse(cleanRows, opts = {}) {
+  const asOf = opts.asOf != null ? opts.asOf : Math.max(...cleanRows.map(r => r.day));
+  const firstYear = yearOf(Math.min(...cleanRows.map(r => r.day)));
+  const day0 = toDay(firstYear - 1, 1, 1);               // include one year before data so "previous year" tests read zero, not undefined
+  const nDays = asOf - day0 + 1;
+  const res = {};
+  const aggs = {};
+  for (const k of Object.keys(SCENARIOS)) aggs[k] = aggregate(cleanRows, SCENARIOS[k], day0, nDays);
+  for (const rule of RULES) {
+    const per = {};
+    for (const k of Object.keys(SCENARIOS)) { const e = evalState(rule, aggs[k], day0, asOf); per[k] = { ...e, verdict: verdictOf(rule, e, asOf) }; }
+    const base = per.A;
+    const flips = Object.keys(per).filter(k => k !== 'A' && (per[k].verdict === 'crossed') !== (base.verdict === 'crossed'));
+    const dateShift = Object.keys(per).filter(k => k !== 'A' && per[k].crossed != null && base.crossed != null && Math.abs(per[k].crossed - base.crossed) > 92);
+    const review = [];
+    if (flips.length) review.push('Verdict changes under ' + flips.map(k => SCENARIOS[k].label.toLowerCase()).join(' and '));
+    if (dateShift.length) review.push('Crossing date moves by more than a quarter under ' + dateShift.map(k => SCENARIOS[k].label.toLowerCase()).join(' and '));
+    if (base.verdict === 'crossed' && rule.saas === 'P') review.push('Nexus is met, but SaaS taxability here depends on use or locality');
+    if (base.verdict === 'crossed' && rule.code === 'AL') review.push('Alabama also requires specified in-state activities');
+    const anyCrossed = Object.values(per).some(x => x.verdict === 'crossed');
+    const confidence = flips.length ? 'fragile' : 'firm';
+    res[rule.code] = { rule, per, base, flips, review, confidence, anyCrossed };
+  }
+  return { asOf, day0, firstYear, states: res };
+}
+
+const api = { RULES, NO_SALES_TAX, SCENARIOS, DEFAULT_FX, parseCSV, autoMap, clean, analyse, evalState, aggregate, toDay, dayToISO, isoToDay, normState, isUS, parseDate, yearOf };
+if (typeof module !== 'undefined') module.exports = api; else root.Nexus = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+// Generates a realistic, messy Stripe payments export for a fictional Bengaluru B2B SaaS company ("Ledgerly")
+// selling to US SMBs from India with no US entity. Deterministic (seeded).
+(function (root) {
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const W = { CA: 12, TX: 8.6, NY: 7.6, FL: 6.2, IL: 4.1, PA: 3.9, OH: 3.0, GA: 3.1, NC: 3.0, MI: 2.6, NJ: 3.0, VA: 2.8, WA: 4.2, AZ: 2.2, MA: 3.4, TN: 2.0, IN: 1.6, MD: 2.0, MO: 1.6, WI: 1.5, CO: 2.6, MN: 1.8, SC: 1.4, AL: 1.1, LA: 1.0, KY: 1.0, OR: 1.3, OK: 0.9, CT: 1.3, UT: 1.6, IA: 0.8, NV: 1.2, AR: 0.6, MS: 0.5, KS: 0.8, NM: 0.5, NE: 0.6, ID: 0.6, WV: 0.3, HI: 0.4, NH: 0.5, ME: 0.4, MT: 0.3, RI: 0.4, DE: 0.6, SD: 0.2, ND: 0.2, AK: 0.15, DC: 0.6, VT: 0.25, WY: 0.15 };
+const NAMES = { CA: 'California', TX: 'Texas', NY: 'New York', FL: 'Florida', WA: 'Washington', MA: 'Massachusetts', PA: 'Pennsylvania', IL: 'Illinois', GA: 'Georgia', CO: 'Colorado' };
+const MESSY = { CA: ['Calif.', 'california', 'CA ', 'Ca'], NY: ['N.Y.', 'new york'], TX: ['Tex.', 'texas'], WA: ['Wash.', 'washington'], MA: ['Mass.', 'massachusetts'], PA: ['Penn.', 'pennsylvania'], IL: ['Ill.'], FL: ['Fla.', 'florida'] };
+const FX_INR = 84.1;
+function plan(r) {                       // price points: monthly plans + occasional annual contracts
+  const x = r();
+  if (x < 0.40) return 29;
+  if (x < 0.70) return 99;
+  if (x < 0.88) return 299;
+  if (x < 0.965) return 799;
+  return [4800, 7200, 9600, 14400, 24000][Math.floor(r() * 5)];
+}
+function generate(seed = 14) {
+  const r = mulberry32(seed);
+  const states = Object.keys(W), tot = states.reduce((a, s) => a + W[s], 0);
+  const cum = []; let c = 0; for (const s of states) { c += W[s] / tot; cum.push([c, s]); }
+  const pick = () => { const x = r(); for (const [p, s] of cum) if (x <= p) return s; return states[0]; };
+  const header = ['id', 'Description', 'Created date (UTC)', 'Amount', 'Amount Refunded', 'Currency', 'Converted Amount', 'Converted Currency', 'Captured', 'Status', 'Mode', 'Customer Email', 'Card Address State', 'Card Address Country'];
+  const lines = [header.join(',')];
+  let n = 0;
+  const start = Date.UTC(2025, 0, 1), end = Date.UTC(2026, 8, 30);
+  const days = Math.round((end - start) / 864e5) + 1;
+  for (let d = 0; d < days; d++) {
+    const t = start + d * 864e5;
+    const month = d / 30.4;
+    const usDaily = 6200 * Math.pow(1.036, month);                 // ~$2.6M US in 2025, ~$3.6M Jan-Sep 2026
+    let spent = 0;
+    while (spent < usDaily * (0.6 + r() * 0.8)) {
+      n++;
+      const amt = plan(r); spent += amt;
+      const ts = new Date(t + Math.floor(r() * 864e5)).toISOString().replace('T', ' ').slice(0, 19);
+      let country = 'US', st = pick(), ccy = 'usd', a = amt;
+      const xr = r();
+      if (xr < 0.035) { country = ['GB', 'DE', 'CA', 'AU', 'SG'][Math.floor(r() * 5)]; st = ''; if (country === 'DE') { ccy = 'eur'; a = Math.round(amt / 1.08); } }
+      else if (xr < 0.05) { country = 'IN'; st = 'KA'; ccy = 'inr'; a = Math.round(amt * FX_INR); }
+      // messiness
+      let stOut = st;
+      const m = r();
+      if (country === 'US' && m < 0.09) stOut = '';                                      // no billing state captured
+      else if (country === 'US' && m < 0.135 && MESSY[st]) stOut = MESSY[st][Math.floor(r() * MESSY[st].length)];
+      else if (country === 'US' && m < 0.15 && NAMES[st]) stOut = NAMES[st];
+      let countryOut = country; if (country === 'US') { const k = r(); if (k < 0.03) countryOut = ''; else if (k < 0.06) countryOut = 'United States'; }
+      let status = 'Paid', captured = 'true', mode = 'Live';
+      const f = r();
+      if (f < 0.022) { status = 'Failed'; captured = 'false'; }
+      else if (f < 0.03) mode = 'Test';
+      let ref = 0; const rf = r();
+      if (status === 'Paid' && rf < 0.035) ref = a; else if (status === 'Paid' && rf < 0.06) ref = Math.round(a * (0.2 + r() * 0.5));
+      const conv = ccy === 'inr' ? a : Math.round(a * (ccy === 'eur' ? 1.08 : 1) * FX_INR * 100) / 100;
+      const id = 'ch_' + (1e9 + n * 7919).toString(36) + Math.floor(r() * 1e6).toString(36);
+      const email = 'billing' + Math.floor(r() * 4000) + '@customer' + Math.floor(r() * 1200) + '.com';
+      lines.push([id, 'Ledgerly ' + (amt >= 4800 ? 'Annual' : 'Monthly'), ts, a.toFixed(2), ref.toFixed(2), ccy, conv.toFixed(2), 'inr', captured, status, mode, email, stOut, countryOut].map(v => /[",]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : v).join(','));
+      if (r() < 0.002) lines.push(lines[lines.length - 1]);        // exported twice (duplicate row)
+    }
+  }
+  return lines.join('\n');
+}
+if (typeof module !== 'undefined') module.exports = { generate }; else root.LedgerlyData = { generate };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+// Hand-built cases with known answers. Run in Node and in the page ("Self-checks").
+(function (root) {
+const N = (typeof module !== 'undefined') ? require('./engine.js') : root.Nexus;
+function run() {
+  const D = (s) => N.isoToDay(s);
+  const rows = (state, iso, n, amt, ref = 0) => Array.from({ length: n }, () => ({ day: D(iso), state, amt, ref }));
+  const A = (rs, asOf) => N.analyse(rs, { asOf: D(asOf) });
+  const out = [];
+  const t = (name, fn) => { let ok = false, err = ''; try { ok = !!fn(); } catch (e) { err = e.message; } out.push({ name, ok, err }); };
+
+  t('New York needs BOTH $500k and more than 100 sales: $600k in 50 sales is not nexus', () => A(rows('NY', '2025-02-10', 50, 12000), '2026-09-30').states.NY.base.crossed == null);
+  t('New York: $600k in 101 sales is nexus, from the day after the quarter closes', () => N.dayToISO(A(rows('NY', '2025-02-10', 101, 6000), '2026-09-30').states.NY.base.crossed) === '2025-04-01');
+  t('Georgia: 200 small $10 invoices create nexus on transaction count alone', () => { const s = A(rows('GA', '2025-03-01', 200, 10), '2026-09-30').states.GA.base; return s.crossed != null && s.reason === 'transactions'; });
+  t('Utah: 200 transactions in 2026 do NOT count (test removed 1 Jul 2025)', () => A(rows('UT', '2026-03-01', 200, 10), '2026-09-30').states.UT.base.crossed == null);
+  t('Utah: 200 transactions in Mar 2025 DID count (before removal)', () => A(rows('UT', '2025-03-01', 200, 10), '2026-09-30').states.UT.base.crossed != null);
+  t('Florida counts only taxable sales; SaaS is not taxable, so no nexus at any volume', () => A(rows('FL', '2025-03-01', 100, 5000), '2026-09-30').states.FL.base.verdict === 'no-count');
+  t('Michigan uses the previous year only: $150k in 2025 means nexus from 1 Jan 2026', () => N.dayToISO(A(rows('MI', '2025-05-01', 15, 10000), '2026-09-30').states.MI.base.crossed) === '2026-01-01');
+  t('Connecticut: $150k and 250 sales in Oct 2024–Sep 2025 means nexus from 1 Oct 2025', () => N.dayToISO(A(rows('CT', '2025-01-15', 250, 600), '2026-09-30').states.CT.base.crossed) === '2025-10-01');
+  t('Mississippi needs MORE than $250k: exactly $250k is not nexus', () => A(rows('MS', '2025-06-01', 25, 10000), '2026-09-30').states.MS.base.crossed == null);
+  t('Refunds decide the verdict: $110k sold, $15k refunded is flagged as fragile', () => { const r = A(rows('WA', '2025-04-01', 9, 10000).concat(rows('WA', '2025-04-02', 1, 20000, 15000)), '2026-09-30').states.WA; return r.confidence === 'fragile' && r.base.crossed == null && r.per.B.crossed != null; });
+  t('Texas exposure uses 80% of the SaaS charge', () => { const s = A(rows('TX', '2025-02-01', 60, 10000), '2025-12-31').states.TX.base; return Math.abs(s.exposure - 600000 * 0.8 * 0.082) < 1; });
+  t('"Calif.", "N.Y." and "Wash." resolve to CA, NY and WA', () => N.normState('Calif.').code === 'CA' && N.normState('N.Y.').code === 'NY' && N.normState('Wash.').code === 'WA');
+  t('Duplicate charge IDs are dropped; INR is converted, not summed as dollars', () => {
+    const csv = 'id,Created date (UTC),Amount,Amount Refunded,Currency,Status,Card Address State,Card Address Country\n' +
+      'ch_1,2025-01-02 10:00:00,100.00,0,usd,Paid,CA,US\nch_1,2025-01-02 10:00:00,100.00,0,usd,Paid,CA,US\nch_2,2025-01-03 10:00:00,8410.00,0,inr,Paid,TX,US\n';
+    const r = N.parseCSV(csv); const h = r.shift(); const c = N.clean(r, N.autoMap(h));
+    return c.rows.length === 2 && c.issues.duplicate.n === 1 && Math.abs(c.rows[1].amt - 100.08) < 0.01;
+  });
+  return out;
+}
+if (typeof module !== 'undefined') module.exports = { run }; else root.NexusTests = { run };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+// UI wiring
+(function () {
+const N = window.Nexus;
+const $ = (id) => document.getElementById(id);
+const fmt$ = (v) => '$' + Math.round(v).toLocaleString('en-US');
+const fmtK = (v) => v >= 1e6 ? '$' + (v / 1e6).toFixed(2) + 'M' : v >= 1e3 ? '$' + Math.round(v / 1e3).toLocaleString('en-US') + 'k' : '$' + Math.round(v);
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fdate = (d) => { const s = N.dayToISO(d).split('-'); return +s[2] + ' ' + MON[+s[1] - 1] + ' ' + s[0]; };
+const fmon = (d) => { const s = N.dayToISO(d).split('-'); return MON[+s[1] - 1] + ' ' + s[0]; };
+const VERDICT = { crossed: 'Nexus met', approaching: 'Approaching', clear: 'Clear', 'no-count': 'No nexus' };
+const FIELDS = [['date','Date'],['amount','Amount'],['currency','Currency'],['refunded','Amount refunded'],['state','Customer state'],['country','Customer country'],['status','Status'],['captured','Captured'],['mode','Live / test mode'],['id','Charge ID'],['convCurrency','Settlement currency']];
+
+let header = [], body = [], map = {}, result = null, cleanRes = null, filter = 'all', sourceName = 'Ledgerly';
+
+function load(text, name) {
+  const rows = N.parseCSV(text);
+  header = rows.shift() || []; body = rows; map = N.autoMap(header); sourceName = name;
+  renderMapper(); run();
+}
+function renderMapper() {
+  const opts = (sel) => '<option value="">(none)</option>' + header.map((h, i) => `<option value="${i}" ${sel === i ? 'selected' : ''}>${esc(h)}</option>`).join('');
+  $('mapper').innerHTML = FIELDS.map(([k, label]) => `<label for="m_${k}">${label}<select id="m_${k}" data-k="${k}">${opts(map[k])}</select></label>`).join('');
+  $('mapper').querySelectorAll('select').forEach(s => s.addEventListener('change', () => { const v = s.value; if (v === '') delete map[s.dataset.k]; else map[s.dataset.k] = +v; run(); }));
+}
+function asOfDay() { const v = $('asof').value; return v ? N.isoToDay(v) : null; }
+
+function run() {
+  if (map.date == null || map.amount == null || map.state == null) {
+    $('issues').innerHTML = '<p>Map at least the date, amount and customer state columns to run the check.</p>';
+    return;
+  }
+  cleanRes = N.clean(body, map);
+  if (!cleanRes.rows.length) { $('issues').innerHTML = '<p>No usable US rows found. Check the column mapping.</p>'; return; }
+  result = N.analyse(cleanRes.rows, { asOf: asOfDay() ?? undefined });
+  renderIssues(); renderNaive(); renderTiles(); renderChips(); renderTable(); renderReview(); renderSummary();
+}
+
+function renderIssues() {
+  const i = cleanRes.issues;
+  const conv = Object.keys(i.convCurrency).filter(k => k !== 'usd');
+  const items = [
+    [i.failed, 'Failed or uncaptured charges', 'Removed. No money changed hands, so they are not sales.'],
+    [i.test, 'Test-mode charges', 'Removed. Created while testing the integration.'],
+    [i.duplicate, 'Duplicate rows (same charge ID)', 'Removed. Usually caused by joining two exports.'],
+    [i.nonUS, 'Customers outside the US', 'Left out of US nexus. They matter for VAT and GST, which is a separate check.'],
+    [i.fxConverted, 'Charges in other currencies (' + Object.keys(i.fxConverted.ccys).join(', ').toUpperCase() + ')', 'Converted to USD at a fixed rate. Use the rate on each transaction date before filing.'],
+    [i.stateFixed, 'State written as a name or abbreviation ("Calif.", "N.Y.", "texas")', 'Mapped to the two-letter code. A pivot table on "CA" would miss these.'],
+    [i.countryInferred, 'Country blank, but the state is a US state', 'Treated as US.'],
+    [i.noState, 'US customers with no billing state', 'Left out in the best reading; spread across states in scenario C to test whether it changes any verdict.'],
+    [i.refundFull, 'Fully refunded charges', 'Netted out and not counted as transactions in the best reading. Scenario B keeps them, because states differ on returns.'],
+    [i.refundPartial, 'Partial refunds', 'Netted out of the sale amount in the best reading.'],
+  ].filter(x => x[0].n > 0);
+  let html = `<div class="issue"><span class="what">${body.length.toLocaleString('en-US')} rows in the export</span><span class="n">${cleanRes.rows.length.toLocaleString('en-US')} usable US rows</span></div>`;
+  html += items.map(([o, what, fix]) => `<div class="issue"><span class="what">${what}</span><span class="n">${o.n.toLocaleString('en-US')} rows · ${fmtK(o.amt)}</span><span class="fix">${fix}</span></div>`).join('');
+  if (conv.length) html += `<div class="issue"><span class="what">Settlement currency is ${conv.join(', ').toUpperCase()}</span><span class="n">${(i.convCurrency[conv[0]] || 0).toLocaleString('en-US')} rows</span><span class="fix">The "Converted Amount" column is in ${conv[0].toUpperCase()}, not dollars. The tool reads the original charge amount and currency instead. Summing the converted column would overstate sales about 84 times.</span></div>`;
+  $('issues').innerHTML = html;
+}
+
+// What a quick pivot table would have said: raw Amount summed (any currency, any status), exact 2-letter state only, all-time totals, no look-back windows or taxable-only rules.
+function renderNaive() {
+  const g = (r, k) => (map[k] != null ? r[map[k]] : '');
+  const agg = {};
+  for (const r of body) {
+    const c = String(g(r, 'country')).trim(); if (c && c !== 'US') continue;
+    const s = String(g(r, 'state')).trim(); if (!/^[A-Z]{2}$/.test(s)) continue;
+    const a = parseFloat(String(g(r, 'amount')).replace(/[$,]/g, '')) || 0;
+    agg[s] = agg[s] || { s: 0, c: 0 }; agg[s].s += a; agg[s].c++;
+  }
+  const falsePos = [], misses = [];
+  for (const code of Object.keys(result.states)) {
+    const x = result.states[code], r = x.rule, a = agg[code] || { s: 0, c: 0 };
+    const naive = a.s >= r.sales || (r.txn && a.c >= r.txn);
+    const real = x.base.verdict === 'crossed';
+    if (naive && !real) falsePos.push(code); else if (!naive && real) misses.push(code);
+  }
+  const n = falsePos.length + misses.length;
+  $('naive').innerHTML = `<h3>A quick pivot table gets ${n} of ${Object.keys(result.states).length} verdicts wrong</h3>
+  <p class="small">Summing the raw Amount column by state over the whole export, the way most first passes are done, says there is nexus in ${falsePos.length} states where there isn't${falsePos.length ? ' (' + falsePos.join(', ') + ')' : ''}, and misses ${misses.length ? misses.length + ' (' + misses.join(', ') + ')' : 'none'}. The causes: all-time totals instead of each state's look-back window, and states that count only taxable sales${misses.length ? ', plus rows lost to spellings like "Calif."' : ''}. In the other direction, the pivot also counts failed and test charges and ignores refunds.</p>`;
+}
+
+function rowsSorted() {
+  const order = { crossed: 0, approaching: 1, clear: 3, 'no-count': 4 };
+  return Object.values(result.states).sort((a, b) => {
+    const fa = a.confidence === 'fragile' ? -0.5 : 0, fb = b.confidence === 'fragile' ? -0.5 : 0;
+    return (order[a.base.verdict] + fa) - (order[b.base.verdict] + fb) || b.base.exposure - a.base.exposure || b.base.ratio - a.base.ratio;
+  });
+}
+function projText(x) {
+  const r = x.rule, b = x.base, asOf = result.asOf;
+  if (b.verdict === 'crossed') return fdate(b.crossed);
+  if (b.verdict === 'no-count') return '—';
+  if (!b.projDay) return 'No recent sales';
+  const yEnd = N.toDay(N.yearOf(asOf), 12, 31);
+  if ((r.period === 'cy' || r.period === 'pcy') && b.projDay > yEnd) return 'Not this year at current pace';
+  if (b.projDay - asOf > 540) return 'Over 18 months away';
+  return '~' + fmon(b.projDay) + (r.period === 'pcy' ? ' (nexus from 1 Jan next year)' : '');
+}
+function nextStep(x) {
+  const r = x.rule, b = x.base;
+  if (x.confidence === 'fragile') return 'Analyst review: fix the missing data first';
+  if (b.verdict === 'crossed') {
+    if (r.saas === 'P') return 'Analyst review: taxability depends on use or locality';
+    if (r.saas === 'N') return r.code === 'CA' ? 'Nexus met; SaaS taxable from 1 Jan 2027. Register before then' : 'Nexus met, but SaaS is not taxable here. Confirm whether registration is needed';
+    return b.exposure > 0 ? 'Register now; weigh voluntary disclosure for past periods' : 'Register now';
+  }
+  if (b.verdict === 'approaching') return 'Set alert; plan registration';
+  if (b.verdict === 'no-count') return 'None. Re-check if taxability changes';
+  return 'None';
+}
+function renderTiles() {
+  const s = Object.values(result.states);
+  const crossed = s.filter(x => x.base.verdict === 'crossed');
+  const exp = s.reduce((a, x) => a + x.base.exposure, 0);
+  const appr = s.filter(x => x.base.verdict === 'approaching').length;
+  const rev = s.filter(x => x.review.length).length;
+  const firm = s.filter(x => x.confidence === 'firm').length;
+  $('tiles').innerHTML = [
+    [crossed.length, 'states where nexus is met'],
+    [fmtK(exp), 'est. uncollected tax so far'],
+    [appr, 'states approaching a threshold'],
+    [rev, 'states for an analyst to review'],
+    [firm + ' / ' + s.length, 'verdicts firm in all 3 readings'],
+  ].map(([v, l]) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`).join('');
+}
+function renderChips() {
+  const s = Object.values(result.states);
+  const c = (f) => s.filter(f).length;
+  const chips = [['all', 'All ' + s.length], ['crossed', 'Nexus met ' + c(x => x.base.verdict === 'crossed')], ['approaching', 'Approaching ' + c(x => x.base.verdict === 'approaching')], ['fragile', 'Fragile ' + c(x => x.confidence === 'fragile')], ['clear', 'Clear ' + c(x => x.base.verdict === 'clear' || x.base.verdict === 'no-count')]];
+  $('chips').innerHTML = chips.map(([k, l]) => `<button type="button" class="chip" data-f="${k}" aria-pressed="${filter === k}">${l}</button>`).join('');
+  $('chips').querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => { filter = b.dataset.f; renderChips(); renderTable(); }));
+}
+function renderTable() {
+  const keep = (x) => filter === 'all' || (filter === 'fragile' ? x.confidence === 'fragile' : filter === 'clear' ? (x.base.verdict === 'clear' || x.base.verdict === 'no-count') : x.base.verdict === filter);
+  const tb = $('tbl').querySelector('tbody');
+  tb.innerHTML = rowsSorted().filter(keep).map(x => {
+    const r = x.rule, b = x.base;
+    const test = b.countsZero ? 'Counts taxable sales only; SaaS not taxable' : b.reason ? b.reason : (r.txn && (!r.txnUntil || result.asOf < N.isoToDay(r.txnUntil)) ? `${fmtK(r.sales)} ${r.mode} ${r.txnGt ? '>' : ''}${r.txn} txns` : fmtK(r.sales) + (r.strict ? ' (more than)' : ''));
+    return `<tr><td><b>${r.code}</b> <span class="muted small">${r.name}</span></td>
+      <td><span class="pill p-${b.verdict}">${VERDICT[b.verdict]}</span></td>
+      <td>${projText(x)}</td>
+      <td class="small">${esc(test)}</td>
+      <td class="num">${b.countsZero ? '$0' : fmt$(b.curS)}</td>
+      <td class="num">${b.countsZero ? '0' : Math.round(b.curC)}</td>
+      <td class="num">${b.exposure > 0 ? fmt$(b.exposure) : '—'}</td>
+      <td><span class="pill p-${x.confidence}">${x.confidence}</span></td>
+      <td class="small">${nextStep(x)}${r.note ? '<br><span class="muted">' + esc(r.note) + '</span>' : ''}</td></tr>`;
+  }).join('');
+}
+function renderReview() {
+  const items = rowsSorted().filter(x => x.review.length);
+  $('review').querySelector('tbody').innerHTML = items.length ? items.map(x => {
+    const v = x.per; const line = ['A', 'B', 'C'].map(k => `${k}: ${VERDICT[v[k].verdict]}`).join(' · ');
+    return `<tr><td><b>${x.rule.code}</b></td><td>${x.review.map(esc).join('<br>')}<br><span class="muted small mono">${line}</span></td></tr>`;
+  }).join('') : '<tr><td colspan="2">Nothing to review. Every verdict holds in all three readings.</td></tr>';
+}
+function summaryText() {
+  const s = rowsSorted();
+  const asOf = fdate(result.asOf);
+  const pick = (f) => s.filter(f);
+  const taxable = pick(x => x.base.verdict === 'crossed' && x.base.exposure > 0 && x.confidence === 'firm');
+  const nonTax = pick(x => x.base.verdict === 'crossed' && x.base.exposure === 0 && x.confidence === 'firm');
+  const appr = pick(x => x.base.verdict === 'approaching' && x.confidence === 'firm');
+  const frag = pick(x => x.confidence === 'fragile');
+  const exp = taxable.reduce((a, x) => a + x.base.exposure, 0);
+  const L = [];
+  L.push(`${sourceName}: US sales tax nexus review (data to ${asOf})`);
+  L.push('');
+  L.push(`1. Nexus met, SaaS taxable: register now (${taxable.length})`);
+  taxable.forEach(x => L.push(`   ${x.rule.code}  since ${fdate(x.base.crossed)}  est. uncollected ${fmt$(x.base.exposure)}`));
+  L.push(`   Estimated uncollected tax: ${fmt$(exp)} (upper bound, average rates)`);
+  L.push('');
+  L.push(`2. Nexus met, SaaS not taxable or taxable only in some cases (${nonTax.length})`);
+  nonTax.forEach(x => L.push(`   ${x.rule.code}  since ${fdate(x.base.crossed)}  ${nextStep(x)}`));
+  L.push('');
+  L.push(`3. Approaching a threshold: we'll alert you before you cross (${appr.length})`);
+  appr.forEach(x => L.push(`   ${x.rule.code}  ${Math.round(x.base.ratio * 100)}% of threshold  ${projText(x)}`));
+  L.push('');
+  L.push(`4. Needs your data before we can say (${frag.length})`);
+  frag.forEach(x => L.push(`   ${x.rule.code}  ${x.review[0]}`));
+  if (frag.length) L.push(`   Ask: billing state for the ${cleanRes.issues.noState.n.toLocaleString('en-US')} US charges with no address, and how refunds were issued.`);
+  L.push('');
+  L.push('Verdicts are reviewed by a Commenda tax analyst before any registration.');
+  return L.join('\n');
+}
+function renderSummary() { $('summary').textContent = summaryText(); }
+function csvText() {
+  const head = ['state', 'verdict', 'crossed_or_projected', 'sales_in_window', 'txns_in_window', 'est_uncollected_tax', 'confidence', 'next_step'];
+  const q = (v) => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : v;
+  return [head.join(',')].concat(rowsSorted().map(x => [x.rule.code, VERDICT[x.base.verdict], projText(x), Math.round(x.base.curS), Math.round(x.base.curC), Math.round(x.base.exposure), x.confidence, nextStep(x)].map(q).join(','))).join('\n');
+}
+function copy(text, msg) {
+  const done = () => { $('copyMsg').textContent = msg; setTimeout(() => $('copyMsg').textContent = '', 2500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(() => fallback());
+  else fallback();
+  function fallback() { const sel = window.getSelection(), rng = document.createRange(); rng.selectNodeContents($('summary')); sel.removeAllRanges(); sel.addRange(rng); $('copyMsg').textContent = 'Selected. Press Ctrl/Cmd+C to copy.'; }
+}
+function renderChecks() {
+  const res = window.NexusTests.run();
+  const ok = res.filter(r => r.ok).length;
+  $('checks').innerHTML = `<div><b>${ok} of ${res.length} passed</b></div>` + res.map(r => `<div><span class="${r.ok ? 'ok' : 'bad'}">${r.ok ? 'PASS' : 'FAIL'}</span><span>${esc(r.name)}${r.err ? ' — ' + esc(r.err) : ''}</span></div>`).join('');
+}
+
+$('loadSample').addEventListener('click', () => { load(window.LedgerlyData.generate(), 'Ledgerly'); $('dataNote').hidden = false; });
+$('file').addEventListener('change', (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader(); rd.onload = () => { load(String(rd.result), f.name.replace(/\.csv$/i, '')); $('dataNote').textContent = 'Loaded ' + f.name + '. Check the column mapping below if anything looks off.'; }; rd.readAsText(f);
+});
+$('asof').addEventListener('change', () => { if (body.length) run(); });
+$('copySum').addEventListener('click', () => copy(summaryText(), 'Summary copied.'));
+$('copyCsv').addEventListener('click', () => copy(csvText(), 'Table copied as CSV.'));
+renderChecks();
+load(window.LedgerlyData.generate(), 'Ledgerly');
+})();
+
+</script>
+
+</body>
+</html>
