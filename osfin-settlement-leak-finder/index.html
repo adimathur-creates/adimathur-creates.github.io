@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Settlement Leak Finder</title>
+<meta name="description" content="Orders, gateway settlement report and bank statement reconciled in one pass, with a fee audit and a claim pack. A product build for Osfin.ai by Aditya Mathur.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a recon workbench. Data in -> match ladder -> money at risk -> claim, then the PRD and GTM. One column, 1100px. */
+:root{
+  --bg:#f3f5f4; --paper:#ffffff; --ink:#122523; --muted:#56635f; --line:#d6dedb; --soft:#ecf1ef;
+  --accent:#0d6e62; --accent-ink:#ffffff; --accent-soft:#d9efea;
+  --red:#b42318; --red-bg:#fdeae7; --amber:#8f5a00; --amber-bg:#fff0d4; --green:#1d6b3a; --green-bg:#e2f3e7; --grey-bg:#e8edeb;
+  --display:'IBM Plex Sans Condensed','IBM Plex Sans',system-ui,sans-serif;
+  --body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1413; --paper:#121d1b; --ink:#e4eeeb; --muted:#97a8a3; --line:#25332f; --soft:#18241f;
+  --accent:#5fd0bd; --accent-ink:#06201c; --accent-soft:#163a34;
+  --red:#ff8f84; --red-bg:#3a1714; --amber:#f2c26b; --amber-bg:#3a2a0c; --green:#7fd49b; --green-bg:#11301d; --grey-bg:#1f2b28; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1413; --paper:#121d1b; --ink:#e4eeeb; --muted:#97a8a3; --line:#25332f; --soft:#18241f;
+  --accent:#5fd0bd; --accent-ink:#06201c; --accent-soft:#163a34;
+  --red:#ff8f84; --red-bg:#3a1714; --amber:#f2c26b; --amber-bg:#3a2a0c; --green:#7fd49b; --green-bg:#11301d; --grey-bg:#1f2b28; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:20px;padding-block:28px 64px;display:grid;gap:26px}
+.wrap>*{min-width:0}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(32px,5.5vw,50px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:24px;font-weight:700}
+h3{font-size:17px;font-weight:700}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:18px;max-width:70ch}
+.muted{color:var(--muted)} .small{font-size:13px}
+a{color:var(--accent)}
+.hero{display:grid;gap:14px;padding-top:6px}
+.files{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-family:var(--mono);font-size:13px}
+.files span.f{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:4px 10px}
+.files span.x{color:var(--muted)}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:16px}
+.step{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.step .n{font-family:var(--mono);font-size:12px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 6px;white-space:nowrap}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button,label.btn{font:600 14px var(--body);border-radius:6px;padding:9px 14px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:focus-visible,input:focus-visible,label.btn:focus-within,tr[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=number]{font:14px var(--mono);width:84px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.cols3>div{border-top:2px solid var(--ink);padding-top:10px;display:grid;gap:6px;align-content:start}
+.rates{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 14px}
+.rates label{display:grid;gap:4px;font-size:12.5px;color:var(--muted)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;background:var(--soft);white-space:nowrap}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+#queue{min-width:900px}
+#queue tbody tr{cursor:pointer}
+#queue tbody tr:hover,#queue tbody tr.sel{background:var(--accent-soft)}
+#drill{min-width:640px}
+.ladder{display:grid;gap:10px}
+.lrow{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr) 120px;gap:12px;align-items:center}
+.lrow .lbl{font-size:14px} .lrow .lbl b{display:block;font-size:12px;color:var(--muted);font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em}
+.bar{height:16px;background:var(--soft);border-radius:4px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.bar .prev{background:var(--grey-bg);background:color-mix(in srgb,var(--accent) 35%,var(--soft))}
+.bar .now{background:var(--accent)}
+.lrow .v{font-family:var(--mono);font-size:13px;text-align:right;white-space:nowrap}
+@media (max-width:640px){.lrow{grid-template-columns:1fr}.lrow .v{text-align:left}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.tile{border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;gap:2px}
+.tile b{font:700 26px var(--display);font-variant-numeric:tabular-nums}
+.tile span{font-size:13px;color:var(--muted)}
+.tile.hot{border-color:var(--red);background:var(--red-bg)} .tile.hot b{color:var(--red)}
+.pill{display:inline-block;font:600 12px var(--body);padding:2px 8px;border-radius:999px;white-space:nowrap}
+.p-leak{background:var(--red-bg);color:var(--red)} .p-watch{background:var(--amber-bg);color:var(--amber)} .p-gw{background:var(--accent-soft);color:var(--accent)}
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:12px 14px;border-radius:0 8px 8px 0;display:grid;gap:6px}
+.summary{font-family:var(--mono);font-size:13px;white-space:pre-wrap;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:14px;max-height:380px;overflow:auto}
+.list{margin:0;padding-left:18px;display:grid;gap:6px}
+.checks{display:grid;gap:4px;font-size:13.5px}
+.checks div{display:flex;gap:8px}
+.ok{color:var(--green);font-family:var(--mono)} .bad{color:var(--red);font-family:var(--mono)}
+.kv{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr);gap:8px 16px;font-size:14px}
+.kv dt{font-weight:600} .kv dd{margin:0}
+@media (max-width:560px){.kv{grid-template-columns:1fr}.kv dd{margin-bottom:6px}}
+.req td:first-child{font-family:var(--mono);white-space:nowrap}
+footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<main class="wrap">
+  <header class="hero">
+    <div class="eyebrow">A product build for Osfin.ai · Payments reconciliation · by Aditya Mathur</div>
+    <h1>Settlement Leak Finder</h1>
+    <p class="lede">A finance team already has three files: its orders, the gateway's settlement report and the bank statement. This reconciles them in one pass, shows which rule closed each match, checks every fee against the contract, and turns what is left into a claim the gateway can act on.</p>
+    <div class="files"><span class="f">orders.csv</span><span class="x">↔</span><span class="f">gateway_settlement.csv</span><span class="x">↔</span><span class="f">bank_statement.csv</span></div>
+  </header>
+
+  <section class="panel" aria-labelledby="pb">
+    <h2 id="pb">The problem</h2>
+    <div class="cols3">
+      <div><h3>Who has it</h3><p>Finance and ops teams at Indian merchants taking lakhs of online payments a month: D2C brands, gaming apps, e-pharmacies, insurers. Each payment touches three systems that never agree on IDs, timing or amounts.</p></div>
+      <div><h3>Why it breaks</h3><p>Gateways settle in daily batches, net of fees, GST, refunds and chargebacks. Bank narrations drop the UTR. Debit cards get billed at credit card rates. Orders marked "failed" still capture money. Matching on one key leaves a pile of false alarms that hide the real losses.</p></div>
+      <div><h3>Why it matters to Osfin</h3><p>Osfin already sells this outcome: PG charge auditing for Games24x7, settlement visibility for PharmEasy, AI exception triage. The hard product question is which exceptions to auto-close, which to escalate, and how to turn a recon result into money recovered.</p></div>
+    </div>
+    <p class="muted small">I don't know how Osfin's modules work inside. The customer use cases above are from Osfin's Payments &amp; Cards page. The failure patterns come from my time owning settlement and reconciliation for a payment gateway's acquiring product at EnKash.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="s1">
+    <div class="step"><span class="n">STEP 1</span><h2 id="s1">Load the three files</h2></div>
+    <div class="row">
+      <button class="primary" id="loadSample" type="button">Load sample: Tiffin Tree, Aug–Sep 2026</button>
+      <label class="btn" for="fOrders">Orders CSV<input id="fOrders" type="file" accept=".csv" hidden></label>
+      <label class="btn" for="fPg">Gateway report CSV<input id="fPg" type="file" accept=".csv" hidden></label>
+      <label class="btn" for="fBank">Bank statement CSV<input id="fBank" type="file" accept=".csv" hidden></label>
+    </div>
+    <p class="small muted" id="dataNote"></p>
+    <h3>Contracted pricing</h3>
+    <p class="small muted">Fee as a % of the payment; GST is 18% on the fee. These are the sample merchant's contract terms. Change any of them and everything below recomputes.</p>
+    <div class="rates" id="rates"></div>
+    <div class="row small muted">
+      <label for="sla">Settlement SLA: T+<input id="sla" type="number" min="0" max="10" value="2"></label>
+      <label for="tol">Rounding tolerance ₹<input id="tol" type="number" min="0" max="10" step="0.5" value="1"></label>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="s2">
+    <div class="step"><span class="n">STEP 2</span><h2 id="s2">The match ladder</h2></div>
+    <p class="muted">Rules run strictest first. Each rule only sees what the rules above it left. The dark part of each bar is what that rule closed.</p>
+    <div class="ladder" id="ladder"></div>
+    <div class="callout" id="ladderNote"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="s3">
+    <div class="step"><span class="n">STEP 3</span><h2 id="s3">Money at risk</h2></div>
+    <div class="tiles" id="tiles"></div>
+    <div class="callout" id="insight"></div>
+    <div class="scroll"><table id="queue"><thead><tr><th>Exception</th><th>Type</th><th>Owner</th><th class="num">Count</th><th class="num">₹ affected</th><th>Oldest</th><th>Next step</th></tr></thead><tbody></tbody></table></div>
+    <h3 id="drillTitle">Rows</h3>
+    <div class="scroll" style="max-height:340px"><table id="drill"><thead><tr><th>Reference</th><th>Date</th><th class="num">₹</th><th>Detail</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="panel" aria-labelledby="s4">
+    <div class="step"><span class="n">STEP 4</span><h2 id="s4">Claim pack for the gateway</h2></div>
+    <p class="muted">The exceptions the gateway owns, in one message with the IDs its team needs. Recovering money is what makes a recon tool pay for itself.</p>
+    <div class="summary" id="claim"></div>
+    <div class="row"><button type="button" id="copyClaim">Copy claim</button><button type="button" id="copyCsv">Copy exceptions as CSV</button><span class="small muted" id="copyMsg" role="status"></span></div>
+  </section>
+
+  <section class="panel" aria-labelledby="s5">
+    <h2 id="s5">Self-checks</h2>
+    <p class="muted">Small cases with known answers, run against the same engine on every load.</p>
+    <div class="checks" id="checks"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="s6">
+    <h2 id="s6">PRD: Settlement leak detection</h2>
+    <dl class="kv">
+      <dt>Problem</dt><dd>Merchants reconcile to find whether money arrived, not whether the right money arrived. Fee overbilling, short and missing settlements, and over-refunds sit in exception queues with no rupee value or owner, so nothing gets claimed back.</dd>
+      <dt>Users</dt><dd><b>Recon analyst</b>, who works the queue every morning. <b>Finance controller</b>, who signs off month-end and owns the gateway relationship. <b>Osfin implementation team</b>, who configure rules for each new customer.</dd>
+      <dt>Goal</dt><dd>Every unmatched rupee has a reason, an owner and a next step within one day of the bank statement landing. Money owed by the gateway goes out as a claim without manual work.</dd>
+      <dt>Non-goals</dt><dd>Disputes and chargeback representment (separate module), GL posting, multi-currency.</dd>
+    </dl>
+    <h3>Requirements</h3>
+    <div class="scroll"><table class="req"><thead><tr><th>ID</th><th>Requirement</th><th>Acceptance criteria</th></tr></thead><tbody>
+      <tr><td>P0-1</td><td>Match ladder with per-rule counts</td><td>Every matched record stores the rule that matched it. The ladder shows each rule's closes, and rules can be reordered without a deploy.</td></tr>
+      <tr><td>P0-2</td><td>Contract-aware fee audit</td><td>A rate card per gateway and payment method, effective-dated. Overbilling above ₹0.05 per transaction is flagged with the rupee amount including GST.</td></tr>
+      <tr><td>P0-3</td><td>Reason codes with owner and next step</td><td>Every exception gets exactly one code from a fixed list. Each code maps to an owner team and a default action.</td></tr>
+      <tr><td>P0-4</td><td>Settlement watch</td><td>A batch with no bank credit after the SLA plus 2 days is "missing". A UTR-matched credit below the batch net by more than the tolerance is "short".</td></tr>
+      <tr><td>P1-1</td><td>Claim pack</td><td>One click produces the gateway claim with batch IDs, transaction IDs and totals. Its status is tracked until the money arrives.</td></tr>
+      <tr><td>P1-2</td><td>Auto-close for known benign patterns</td><td>Rounding within tolerance and late-but-arrived settlements close themselves, with an audit trail. The analyst override rate is tracked for each rule.</td></tr>
+      <tr><td>P2-1</td><td>AI-drafted claim and root-cause notes</td><td>Drafts only. A person approves before anything is sent.</td></tr>
+    </tbody></table></div>
+    <h3>How I'd measure it</h3>
+    <ul class="list">
+      <li><b>North star: rupees recovered per month</b> from gateway claims, as a share of rupees flagged.</li>
+      <li><b>Auto-match rate by rule</b>, from the ladder. A sudden drop in one rule usually means a gateway changed its file format.</li>
+      <li><b>Exception aging:</b> the share of exceptions older than 7 days, by owner.</li>
+      <li><b>Guardrail: false auto-closes.</b> Every exception that gets reopened after auto-close counts against that rule.</li>
+    </ul>
+    <h3>Go-to-market</h3>
+    <ul class="list">
+      <li><b>Who to sell to first:</b> merchants on two or more gateways with high card share, such as gaming, travel and e-pharmacy. Fee audits pay off most there.</li>
+      <li><b>Wedge:</b> a free 90-day leak audit. The prospect uploads three files and gets a rupee figure and a claim pack in a day. The first claim that comes back is the sales case for the full recon subscription.</li>
+      <li><b>Buyer and champion:</b> the CFO buys on rupees recovered; the recon lead champions on hours saved. The demo shows both.</li>
+      <li><b>Launch:</b> five design partners from existing payments customers. Measure recovered rupees and override rate for 6 weeks, then publish one customer number.</li>
+    </ul>
+    <h3>Risks</h3>
+    <ul class="list">
+      <li><b>Wrong contract rates</b> create false claims and damage the merchant's gateway relationship. Rate cards need sign-off and effective dates.</li>
+      <li><b>Gateway file formats change without notice.</b> Per-rule match rates are the early warning.</li>
+      <li><b>Too much auto-close</b> hides real losses. Start with rounding and late settlements only, and widen based on override data.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <div><b>Sources.</b> <a href="https://www.osfin.ai/solutions/payments-cards" target="_blank" rel="noopener">Osfin, Payments &amp; Cards reconciliation</a> · <a href="https://www.osfin.ai/blog/refund-reconciliation" target="_blank" rel="noopener">Osfin, Refund reconciliation</a> · <a href="https://www.osfin.ai/blog/chargeback-management" target="_blank" rel="noopener">Osfin, Chargeback management</a></div>
+    <div>Tiffin Tree, PayGate and all sample data are fictional, and so are the contract rates. GST at 18% on gateway fees follows Indian practice. Built by Aditya Mathur with Claude · <a href="https://www.linkedin.com/in/adityaamathur" target="_blank" rel="noopener">LinkedIn</a> · <a href="https://adimathur-creates.github.io/" target="_blank" rel="noopener">Portfolio</a></div>
+  </footer>
+</main>
+
+<script>
+// Settlement Leak Finder: three-way reconciliation (orders x PG settlement report x bank statement)
+// with a fee audit and exception reason codes. Pure functions; browser + Node.
+(function (root) {
+const r2 = (x) => Math.round(x * 100) / 100;
+const DAY = 86400000;
+const toDay = (s) => { const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? Math.floor(Date.UTC(+m[1], +m[2] - 1, +m[3]) / DAY) : null; };
+const dayISO = (d) => new Date(d * DAY).toISOString().slice(0, 10);
+
+function parseCSV(text) {
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true; else if (c === ',') { row.push(f); f = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+    else f += c;
+  }
+  if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  const clean = rows.filter(r => r.some(x => String(x).trim() !== ''));
+  const h = (clean.shift() || []).map(x => x.trim());
+  return clean.map(r => Object.fromEntries(h.map((k, i) => [k, (r[i] ?? '').trim()])));
+}
+const num = (s) => { const v = parseFloat(String(s ?? '').replace(/[₹,\s]/g, '')); return isNaN(v) ? 0 : v; };
+
+// Contracted pricing (editable). Fee is % of gross; GST at 18% applies on the fee.
+const DEFAULT_RATES = { UPI: 0.0, DEBIT_CARD: 0.40, CREDIT_CARD: 1.90, NETBANKING: 1.50, WALLET: 1.75, CORPORATE_CARD: 2.40 };
+const GST = 0.18;
+
+const REASONS = {
+  CAPTURED_ORDER_FAILED: { label: 'Money captured, order marked failed', owner: 'Merchant ops', action: 'Refund the customer or fulfil the order before it becomes a complaint or a chargeback', leak: false },
+  PAID_NO_PG_RECORD: { label: 'Order marked paid, no payment at the gateway', owner: 'Merchant tech', action: 'Check the payment status webhook; the order may have shipped without money', leak: true },
+  AMOUNT_MISMATCH: { label: 'Order amount differs from captured amount', owner: 'Merchant tech', action: 'Check partial captures and currency or rounding in the checkout', leak: true },
+  FEE_OVERCHARGE: { label: 'Fee above the contracted rate', owner: 'Gateway', action: 'Claim the difference from the gateway with transaction IDs', leak: true },
+  GST_MISMATCH: { label: 'GST is not 18% of the fee', owner: 'Gateway', action: 'Ask for a corrected tax invoice; input credit depends on it', leak: true },
+  REFUND_NOT_IN_OMS: { label: 'Refund at the gateway with no refund in the order system', owner: 'Merchant ops', action: 'Find who issued it; possible manual or fraudulent refund', leak: true },
+  DUPLICATE_REFUND: { label: 'Refunded more than was paid', owner: 'Merchant ops', action: 'Recover the extra refund from the customer or the gateway', leak: true },
+  CHARGEBACK_DEBIT: { label: 'Chargeback deducted from settlement', owner: 'Disputes team', action: 'Check the representment deadline and attach delivery proof', leak: false },
+  SETTLEMENT_MISSING: { label: 'Settlement batch never reached the bank', owner: 'Gateway', action: 'Escalate with batch ID and expected UTR; money is held at the gateway', leak: true },
+  SHORT_SETTLEMENT: { label: 'Bank credit is less than the batch net', owner: 'Gateway', action: 'Ask for the deduction breakup for this batch', leak: true },
+  LATE_SETTLEMENT: { label: 'Settled later than the agreed T+2', owner: 'Gateway', action: 'Track against the SLA; repeated delays are a pricing lever at renewal', leak: false },
+  UNKNOWN_CREDIT: { label: 'Bank credit from the gateway with no matching batch', owner: 'Finance', action: 'Ask the gateway which batch this is; do not book it as revenue yet', leak: false },
+};
+
+function run(data, opts = {}) {
+  const rates = opts.rates || DEFAULT_RATES;
+  const slaDays = opts.slaDays ?? 2, missingAfter = opts.missingAfter ?? 4, tol = opts.tol ?? 1.0;
+  const asOf = opts.asOf != null ? opts.asOf : Math.max(...data.bank.map(b => toDay(b.date)).filter(x => x != null));
+  const orders = data.orders.map(o => ({ id: o.order_id, day: toDay(o.created_at), amt: num(o.amount), status: (o.status || '').toUpperCase(), refund: num(o.refund_amount), method: o.method }));
+  const pg = data.pg.map(p => ({ id: p.pg_txn_id, order: p.order_id, type: (p.type || '').toUpperCase(), day: toDay(p.txn_date), amt: num(p.amount), method: (p.method || '').toUpperCase(), fee: num(p.fee), gst: num(p.gst), net: num(p.net), batch: p.settlement_id, sday: toDay(p.settlement_date), utr: p.utr }));
+  const bank = data.bank.map((b, i) => { const n = b.narration || ''; const m = n.match(/UTR[:\- ]?([A-Z0-9]{8,})/i); return { i, day: toDay(b.date), amt: num(b.credit), narr: n, utr: m ? m[1].toUpperCase() : null, fromPG: /PAYGATE|PG SETTL|SETTLEMENT/i.test(n) }; });
+  const ex = []; const add = (code, ref, amount, extra = {}) => ex.push({ code, ref, amount: r2(amount), ...extra });
+  const ladder = [];
+
+  // ---------- Leg 1: orders <-> gateway payments ----------
+  const pgByOrder = new Map(); for (const p of pg) { if (!pgByOrder.has(p.order)) pgByOrder.set(p.order, []); pgByOrder.get(p.order).push(p); }
+  const ordById = new Map(orders.map(o => [o.id, o]));
+  let l1Exact = 0, l1Total = 0;
+  for (const o of orders) {
+    const ps = (pgByOrder.get(o.id) || []).filter(p => p.type === 'PAYMENT');
+    if (o.status === 'PAID' || o.status === 'REFUNDED' || o.status === 'PART_REFUNDED') {
+      l1Total++;
+      if (!ps.length) { add('PAID_NO_PG_RECORD', o.id, o.amt, { day: o.day }); continue; }
+      const cap = ps.reduce((a, p) => a + p.amt, 0);
+      if (Math.abs(cap - o.amt) > 0.009) add('AMOUNT_MISMATCH', o.id, o.amt - cap, { day: o.day });
+      else l1Exact++;
+    } else if (o.status === 'FAILED' && ps.length) {
+      add('CAPTURED_ORDER_FAILED', o.id, ps.reduce((a, p) => a + p.amt, 0), { day: o.day });
+    }
+  }
+  ladder.push({ leg: 'Orders ↔ gateway', rule: 'Order ID and amount match exactly', matched: l1Exact, total: l1Total });
+
+  // ---------- Refunds and chargebacks ----------
+  for (const [oid, list] of pgByOrder) {
+    const paid = list.filter(p => p.type === 'PAYMENT').reduce((a, p) => a + p.amt, 0);
+    const refs = list.filter(p => p.type === 'REFUND');
+    const refunded = refs.reduce((a, p) => a + p.amt, 0);
+    const o = ordById.get(oid);
+    if (refs.length) {
+      if (refunded > paid + 0.009) add('DUPLICATE_REFUND', oid, refunded - paid, { day: refs[refs.length - 1].day });
+      else if (!o || o.refund < 0.009) add('REFUND_NOT_IN_OMS', oid, refunded, { day: refs[0].day });
+    }
+    for (const c of list.filter(p => p.type === 'CHARGEBACK')) add('CHARGEBACK_DEBIT', oid, c.amt, { day: c.day });
+  }
+
+  // ---------- Fee audit ----------
+  let feeChecked = 0, feeOk = 0, expectedFees = 0, chargedFees = 0;
+  for (const p of pg.filter(p => p.type === 'PAYMENT')) {
+    const rate = rates[p.method]; if (rate == null) continue;
+    feeChecked++;
+    const expFee = r2(p.amt * rate / 100), expGst = r2(p.fee * GST);
+    expectedFees += expFee + r2(expFee * GST); chargedFees += p.fee + p.gst;
+    let ok = true;
+    if (p.fee - expFee > 0.05) { add('FEE_OVERCHARGE', p.id, (p.fee - expFee) * (1 + GST), { day: p.day, detail: `${p.method}: charged ${(p.fee / p.amt * 100).toFixed(2)}%, contract ${rate.toFixed(2)}%` }); ok = false; }
+    if (Math.abs(p.gst - expGst) > 0.05) { add('GST_MISMATCH', p.id, p.gst - expGst, { day: p.day, detail: `GST ₹${p.gst.toFixed(2)} on fee ₹${p.fee.toFixed(2)}` }); ok = false; }
+    if (ok) feeOk++;
+  }
+  ladder.push({ leg: 'Fee audit', rule: 'Fee and GST match the contract', matched: feeOk, total: feeChecked });
+
+  // ---------- Leg 2: settlement batches <-> bank credits ----------
+  const batches = new Map();
+  for (const p of pg) {
+    if (!p.batch) continue;
+    if (!batches.has(p.batch)) batches.set(p.batch, { id: p.batch, net: 0, utr: p.utr ? p.utr.toUpperCase() : null, sday: p.sday, firstTxn: p.day, n: 0 });
+    const b = batches.get(p.batch); b.net += p.type === 'PAYMENT' ? p.net : -p.amt; b.n++; b.firstTxn = Math.min(b.firstTxn, p.day);
+    if (!b.utr && p.utr) b.utr = p.utr.toUpperCase();
+  }
+  const B = [...batches.values()].map(b => ({ ...b, net: r2(b.net) })).sort((a, b) => a.sday - b.sday);
+  const bankPG = bank.filter(x => x.fromPG && x.amt > 0); const used = new Set(); const byUtr = new Map(bankPG.filter(x => x.utr).map(x => [x.utr, x]));
+  const counts = { utr: 0, amtDate: 0, tol: 0 };
+  const settle = (b, c, how) => { used.add(c.i); b.credit = c; b.how = how; counts[how]++; };
+  for (const b of B) { const c = b.utr && byUtr.get(b.utr); if (c && !used.has(c.i)) settle(b, c, 'utr'); }
+  for (const b of B.filter(b => !b.credit)) { const c = bankPG.find(c => !used.has(c.i) && Math.abs(c.amt - b.net) < 0.009 && c.day >= b.sday && c.day - b.sday <= 3); if (c) settle(b, c, 'amtDate'); }
+  for (const b of B.filter(b => !b.credit)) { const c = bankPG.find(c => !used.has(c.i) && Math.abs(c.amt - b.net) <= tol && c.day >= b.sday && c.day - b.sday <= 3); if (c) settle(b, c, 'tol'); }
+  const eligible = B.length;
+  ladder.push({ leg: 'Gateway ↔ bank', rule: 'Batch UTR found in bank narration', matched: counts.utr, total: eligible });
+  ladder.push({ leg: 'Gateway ↔ bank', rule: 'Same amount within 3 days (UTR missing)', matched: counts.amtDate, total: eligible });
+  ladder.push({ leg: 'Gateway ↔ bank', rule: 'Within ₹' + tol + ' and 3 days (rounding)', matched: counts.tol, total: eligible });
+  for (const b of B) {
+    if (b.credit) {
+      if (b.how === 'utr' && b.net - b.credit.amt > tol) add('SHORT_SETTLEMENT', b.id, b.net - b.credit.amt, { day: b.sday, detail: `Batch net ₹${b.net.toLocaleString('en-IN')}, credited ₹${b.credit.amt.toLocaleString('en-IN')}` });
+      if (b.credit.day - b.firstTxn > slaDays) add('LATE_SETTLEMENT', b.id, b.net, { day: b.sday, detail: `T+${b.credit.day - b.firstTxn}` });
+    } else if (asOf - b.sday >= missingAfter) add('SETTLEMENT_MISSING', b.id, b.net, { day: b.sday, detail: `due ${dayISO(b.sday)}, UTR in your report ${b.utr || 'not given'}` });
+  }
+  for (const c of bankPG) if (!used.has(c.i)) add('UNKNOWN_CREDIT', c.narr.slice(0, 40), c.amt, { day: c.day });
+
+  // ---------- summary ----------
+  const byCode = {};
+  for (const e of ex) { const s = byCode[e.code] || (byCode[e.code] = { code: e.code, n: 0, amount: 0, oldest: e.day }); s.n++; s.amount += Math.abs(e.amount); s.oldest = Math.min(s.oldest, e.day ?? s.oldest); }
+  const leak = Object.values(byCode).filter(s => REASONS[s.code].leak).reduce((a, s) => a + s.amount, 0);
+  const claim = ['FEE_OVERCHARGE', 'GST_MISMATCH', 'SHORT_SETTLEMENT', 'SETTLEMENT_MISSING'].reduce((a, k) => a + (byCode[k] ? byCode[k].amount : 0), 0);
+  const gross = pg.filter(p => p.type === 'PAYMENT').reduce((a, p) => a + p.amt, 0);
+  return { asOf, ladder, exceptions: ex, byCode, leak: r2(leak), claim: r2(claim), gross: r2(gross), batches: B, counts: { orders: orders.length, pg: pg.length, bank: bank.length, batches: B.length, settled: B.filter(b => b.credit).length }, fees: { expected: r2(expectedFees), charged: r2(chargedFees) } };
+}
+
+const api = { parseCSV, run, REASONS, DEFAULT_RATES, GST, toDay, dayISO, r2 };
+if (typeof module !== 'undefined') module.exports = api; else root.Recon = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+// Sample data for a fictional D2C food brand ("Tiffin Tree") on one payment gateway ("PayGate").
+// 60 days of orders, the gateway's transaction-level settlement report, and the bank statement.
+// Deliberately seeded with the problems recon teams meet in practice. Deterministic.
+(function (root) {
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const r2 = (x) => Math.round(x * 100) / 100;
+const iso = (d) => new Date(Date.UTC(2026, 7, 1) + d * 864e5).toISOString().slice(0, 10);
+const RATES = { UPI: 0.0, DEBIT_CARD: 0.40, CREDIT_CARD: 1.90, NETBANKING: 1.50, WALLET: 1.75, CORPORATE_CARD: 2.40 };
+const MIX = [['UPI', .62], ['CREDIT_CARD', .14], ['DEBIT_CARD', .09], ['NETBANKING', .06], ['WALLET', .06], ['CORPORATE_CARD', .03]];
+
+function generate(seed = 7) {
+  const r = mulberry32(seed);
+  const pickM = () => { let x = r(), c = 0; for (const [m, p] of MIX) { c += p; if (x <= c) return m; } return 'UPI'; };
+  const orders = [], pg = [], bank = [];
+  let oid = 100000, tid = 5000000;
+  const DAYS = 60;
+  const truth = { overchargeTx: 0, missingBatch: null, shortBatch: null, shortBy: 0, lateBatches: [], unknownCredit: 0 };
+  const batchNet = {};
+  for (let d = 0; d < DAYS; d++) {
+    const n = 260 + Math.floor(r() * 90) + Math.floor(d * 1.5);
+    for (let k = 0; k < n; k++) {
+      oid++; const id = 'TT' + oid;
+      const amt = r2([149, 199, 249, 349, 499, 699, 999, 1499, 2499, 3499][Math.floor(Math.pow(r(), 1.6) * 10)] + (r() < 0.3 ? 40 : 0));
+      const method = pickM();
+      const ts = iso(d);
+      let status = 'PAID', refund = 0;
+      const f = r();
+      if (f < 0.06) { orders.push({ order_id: id, created_at: ts, amount: amt.toFixed(2), status: 'FAILED', refund_amount: '0.00', method }); if (r() < 0.05) { pushPay(); } continue; }
+      if (f < 0.0605) { orders.push({ order_id: id, created_at: ts, amount: amt.toFixed(2), status: 'PAID', refund_amount: '0.00', method }); continue; } // paid, no gateway record
+      const ref = r();
+      if (ref < 0.03) { status = 'REFUNDED'; refund = amt; }
+      let capAmt = amt; if (r() < 0.0006) capAmt = r2(amt - 40);
+      orders.push({ order_id: id, created_at: ts, amount: amt.toFixed(2), status, refund_amount: refund.toFixed(2), method });
+      pushPay(capAmt);
+      if (status === 'REFUNDED') { pushRefund(amt, d + 1 + Math.floor(r() * 3)); if (r() < 0.035) pushRefund(amt, d + 3); }
+      else if (r() < 0.0012) pushRefund(amt, d + 2); // refund at gateway, not in OMS
+      if (status === 'PAID' && r() < 0.0009) pushCB(amt, d + 12 + Math.floor(r() * 8));
+
+      function pushPay(a = amt) {
+        tid++;
+        let rate = RATES[method];
+        if (method === 'DEBIT_CARD' && a > 2000 && r() < 0.45) { rate = RATES.CREDIT_CARD; truth.overchargeTx++; }         // debit card billed at credit card rate
+        if (method === 'UPI' && r() < 0.012) { rate = 0.30; truth.overchargeTx++; }                                       // "platform fee" on zero-MDR UPI
+        const fee = r2(a * rate / 100);
+        let gst = r2(fee * 0.18); if (fee > 0 && r() < 0.004) gst = r2(a * 0.18 * 0.01 + fee * 0.18);                   // GST computed on the wrong base
+        const sd = d + 1;
+        pg.push({ pg_txn_id: 'PGT' + tid, order_id: id, type: 'PAYMENT', txn_date: ts, amount: a.toFixed(2), method, fee: fee.toFixed(2), gst: gst.toFixed(2), net: r2(a - fee - gst).toFixed(2), settlement_id: 'SET' + iso(sd).replace(/-/g, ''), settlement_date: iso(sd), utr: '' });
+        batchNet[sd] = (batchNet[sd] || 0) + r2(a - fee - gst);
+      }
+      function pushRefund(a, rd) { if (rd >= DAYS) return; tid++; const sd = rd + 1; pg.push({ pg_txn_id: 'PGT' + tid, order_id: id, type: 'REFUND', txn_date: iso(rd), amount: a.toFixed(2), method, fee: '0.00', gst: '0.00', net: (-a).toFixed(2), settlement_id: 'SET' + iso(sd).replace(/-/g, ''), settlement_date: iso(sd), utr: '' }); batchNet[sd] = (batchNet[sd] || 0) - a; }
+      function pushCB(a, cd) { if (cd >= DAYS) return; tid++; const sd = cd + 1; pg.push({ pg_txn_id: 'PGT' + tid, order_id: id, type: 'CHARGEBACK', txn_date: iso(cd), amount: a.toFixed(2), method, fee: '0.00', gst: '0.00', net: (-a).toFixed(2), settlement_id: 'SET' + iso(sd).replace(/-/g, ''), settlement_date: iso(sd), utr: '' }); batchNet[sd] = (batchNet[sd] || 0) - a; }
+    }
+  }
+  // Bank statement: one credit per settlement batch, plus ordinary business entries.
+  const sdays = Object.keys(batchNet).map(Number).sort((a, b) => a - b).filter(sd => sd <= DAYS);
+  const missing = 23, short = 37, late = [11, 29, 46], noUtr = new Set(), rounding = new Set();
+  sdays.forEach(sd => { const x = r(); if (x < 0.10) noUtr.add(sd); else if (x < 0.14) rounding.add(sd); });
+  truth.missingBatch = 'SET' + iso(missing).replace(/-/g, ''); truth.shortBatch = 'SET' + iso(short).replace(/-/g, ''); truth.lateBatches = late.map(x => 'SET' + iso(x).replace(/-/g, ''));
+  for (const sd of sdays) {
+    const utr = 'HDFCN' + (52600000000 + sd * 7919 + 13).toString();
+    const id = 'SET' + iso(sd).replace(/-/g, '');
+    const showUtrInReport = !noUtr.has(sd) && !rounding.has(sd);
+    for (const p of pg) if (p.settlement_id === id && showUtrInReport) p.utr = utr;
+    if (sd === missing) continue;
+    let amt = r2(batchNet[sd]);
+    if (sd === short) { truth.shortBy = 18450; amt = r2(amt - 18450); }
+    if (rounding.has(sd)) amt = r2(amt + (r() < 0.5 ? -1 : 1) * (0.01 + Math.floor(r() * 60) / 100));
+    const bd = late.includes(sd) ? sd + 3 : sd;
+    const narr = noUtr.has(sd) || rounding.has(sd) ? 'NEFT CR PAYGATE SETTLEMENT TIFFIN TREE' : `NEFT CR-UTR ${utr}-PAYGATE SETTLEMENT`;
+    bank.push({ date: iso(bd), narration: narr, debit: '', credit: amt.toFixed(2) });
+  }
+  // an extra gateway credit that matches nothing (e.g. a reversal of an old hold)
+  bank.push({ date: iso(41), narration: 'NEFT CR-UTR HDFCN526999123-PAYGATE SETTLEMENT ADJ', debit: '', credit: '64210.00' }); truth.unknownCredit = 64210;
+  // ordinary entries
+  for (let d = 0; d < DAYS; d += 7) { bank.push({ date: iso(d + 2), narration: 'IMPS DR KITCHEN RENT HSR', debit: '185000.00', credit: '' }); bank.push({ date: iso(d + 4), narration: 'NEFT DR VEGFRESH SUPPLIES', debit: (90000 + Math.round(r() * 40000)).toFixed(2), credit: '' }); }
+  bank.push({ date: iso(15), narration: 'NEFT CR SWIGGY PAYOUT TIFFIN', debit: '', credit: '212450.00' });
+  bank.sort((a, b) => a.date.localeCompare(b.date));
+  return { orders, pg, bank, truth };
+}
+const toCSV = (rows) => { const h = Object.keys(rows[0]); return [h.join(',')].concat(rows.map(r => h.map(k => /[",]/.test(String(r[k])) ? '"' + String(r[k]).replace(/"/g, '""') + '"' : r[k]).join(','))).join('\n'); };
+if (typeof module !== 'undefined') module.exports = { generate, toCSV, RATES }; else root.TiffinData = { generate, toCSV };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+// Hand-built cases with known answers; run in Node and on page load.
+(function (root) {
+const E = (typeof module !== 'undefined') ? require('./engine.js') : root.Recon;
+function run() {
+  const out = []; const t = (name, fn) => { let ok = false, err = ''; try { ok = !!fn(); } catch (e) { err = e.message; } out.push({ name, ok, err }); };
+  const O = (id, amt, status = 'PAID', refund = 0) => ({ order_id: id, created_at: '2026-08-01', amount: String(amt), status, refund_amount: String(refund), method: 'UPI' });
+  const P = (id, oid, type, amt, method = 'UPI', fee = 0, gst = 0, batch = 'S1', utr = 'UTR12345678') => ({ pg_txn_id: id, order_id: oid, type, txn_date: '2026-08-01', amount: String(amt), method, fee: String(fee), gst: String(gst), net: String(amt - fee - gst), settlement_id: batch, settlement_date: '2026-08-02', utr });
+  const BK = (date, amt, narr) => ({ date, narration: narr, credit: String(amt) });
+  const codes = (res) => res.exceptions.map(e => e.code);
+  t('A clean order, payment and UTR-matched credit produce no exceptions', () => E.run({ orders: [O('A', 500)], pg: [P('p1', 'A', 'PAYMENT', 500)], bank: [BK('2026-08-02', 500, 'NEFT CR-UTR UTR12345678-PAYGATE SETTLEMENT')] }).exceptions.length === 0);
+  t('Debit card billed at the credit card rate is flagged with the right rupee amount', () => { const r = E.run({ orders: [O('A', 3000)], pg: [P('p1', 'A', 'PAYMENT', 3000, 'DEBIT_CARD', 57, 10.26)], bank: [BK('2026-08-02', 2932.74, 'NEFT CR-UTR UTR12345678-PAYGATE SETTLEMENT')] }); const e = r.exceptions.find(x => x.code === 'FEE_OVERCHARGE'); return e && Math.abs(e.amount - (57 - 12) * 1.18) < 0.01; });
+  t('A fee on zero-MDR UPI is flagged even when it is under one rupee', () => codes(E.run({ orders: [O('A', 149)], pg: [P('p1', 'A', 'PAYMENT', 149, 'UPI', 0.45, 0.08)], bank: [BK('2026-08-02', 148.47, 'NEFT CR-UTR UTR12345678-PAYGATE SETTLEMENT')] })).includes('FEE_OVERCHARGE'));
+  t('Money captured on an order marked FAILED is caught', () => codes(E.run({ orders: [O('A', 500, 'FAILED')], pg: [P('p1', 'A', 'PAYMENT', 500)], bank: [BK('2026-08-02', 500, 'NEFT CR-UTR UTR12345678-PAYGATE SETTLEMENT')] })).includes('CAPTURED_ORDER_FAILED'));
+  t('Two refunds on one ₹500 order are flagged as ₹500 over-refunded', () => { const r = E.run({ orders: [O('A', 500, 'REFUNDED', 500)], pg: [P('p1', 'A', 'PAYMENT', 500), P('r1', 'A', 'REFUND', 500), P('r2', 'A', 'REFUND', 500)], bank: [BK('2026-08-02', 1, 'IMPS CR OTHER')] }); const e = r.exceptions.find(x => x.code === 'DUPLICATE_REFUND'); return e && e.amount === 500; });
+  t('A batch with no UTR still matches the bank credit on amount and date', () => { const r = E.run({ orders: [O('A', 500)], pg: [P('p1', 'A', 'PAYMENT', 500, 'UPI', 0, 0, 'S1', '')], bank: [BK('2026-08-03', 500, 'NEFT CR PAYGATE SETTLEMENT')] }); return r.counts.settled === 1 && !codes(r).includes('UNKNOWN_CREDIT'); });
+  t('A 40-paise rounding difference matches; a ₹5 gap does not', () => { const mk = (c) => E.run({ orders: [O('A', 500)], pg: [P('p1', 'A', 'PAYMENT', 500, 'UPI', 0, 0, 'S1', '')], bank: [BK('2026-08-02', c, 'NEFT CR PAYGATE SETTLEMENT')] }, { asOf: E.toDay('2026-08-10') }); return mk(500.4).counts.settled === 1 && mk(505).counts.settled === 0; });
+  t('UTR-matched credit ₹2,000 short of the batch is a short settlement of ₹2,000', () => { const r = E.run({ orders: [O('A', 10000)], pg: [P('p1', 'A', 'PAYMENT', 10000)], bank: [BK('2026-08-02', 8000, 'NEFT CR-UTR UTR12345678-PAYGATE SETTLEMENT')] }); const e = r.exceptions.find(x => x.code === 'SHORT_SETTLEMENT'); return e && e.amount === 2000; });
+  t('A batch with no credit after 4 days is missing; after 2 days it is not yet', () => { const d = { orders: [O('A', 500)], pg: [P('p1', 'A', 'PAYMENT', 500)], bank: [BK('2026-08-01', 1, 'IMPS CR OTHER')] }; return codes(E.run(d, { asOf: E.toDay('2026-08-07') })).includes('SETTLEMENT_MISSING') && !codes(E.run(d, { asOf: E.toDay('2026-08-04') })).includes('SETTLEMENT_MISSING'); });
+  t('Credits that are not from the gateway (e.g. rent) are ignored', () => !codes(E.run({ orders: [O('A', 500)], pg: [P('p1', 'A', 'PAYMENT', 500)], bank: [BK('2026-08-02', 500, 'NEFT CR-UTR UTR12345678-PAYGATE SETTLEMENT'), BK('2026-08-02', 9999, 'NEFT CR SWIGGY PAYOUT')] })).includes('UNKNOWN_CREDIT'));
+  t('GST charged on the wrong base is flagged', () => codes(E.run({ orders: [O('A', 1000)], pg: [P('p1', 'A', 'PAYMENT', 1000, 'CREDIT_CARD', 19, 5)], bank: [BK('2026-08-02', 976, 'NEFT CR-UTR UTR12345678-PAYGATE SETTLEMENT')] })).includes('GST_MISMATCH'));
+  t('A refund at the gateway with no refund in the order system is flagged', () => codes(E.run({ orders: [O('A', 500)], pg: [P('p1', 'A', 'PAYMENT', 500), P('r1', 'A', 'REFUND', 500)], bank: [BK('2026-08-02', 1, 'IMPS CR OTHER')] })).includes('REFUND_NOT_IN_OMS'));
+  return out;
+}
+if (typeof module !== 'undefined') module.exports = { run }; else root.ReconTests = { run };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+(function () {
+const R = window.Recon, $ = (id) => document.getElementById(id);
+const inr = (v) => '₹' + Math.round(v).toLocaleString('en-IN');
+const inrS = (v) => { const a = Math.abs(v); return a >= 1e7 ? '₹' + (v / 1e7).toFixed(2) + ' cr' : a >= 1e5 ? '₹' + (v / 1e5).toFixed(2) + ' L' : inr(v); };
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fd = (d) => { if (d == null) return '—'; const s = R.dayISO(d).split('-'); return +s[2] + ' ' + MON[+s[1] - 1]; };
+const LABEL = { UPI: 'UPI', DEBIT_CARD: 'Debit card', CREDIT_CARD: 'Credit card', NETBANKING: 'Net banking', WALLET: 'Wallet', CORPORATE_CARD: 'Corporate card' };
+let files = { orders: null, pg: null, bank: null }, rates = { ...R.DEFAULT_RATES }, res = null, sel = null, merchant = 'Tiffin Tree';
+
+function renderRates() {
+  $('rates').innerHTML = Object.keys(rates).map(k => `<label for="r_${k}">${LABEL[k] || k}<span><input id="r_${k}" data-k="${k}" type="number" step="0.05" min="0" value="${rates[k].toFixed(2)}"> %</span></label>`).join('');
+  $('rates').querySelectorAll('input').forEach(i => i.addEventListener('change', () => { rates[i.dataset.k] = parseFloat(i.value) || 0; compute(); }));
+}
+function loadSample() {
+  const d = window.TiffinData.generate();
+  files = { orders: R.parseCSV(window.TiffinData.toCSV(d.orders)), pg: R.parseCSV(window.TiffinData.toCSV(d.pg)), bank: R.parseCSV(window.TiffinData.toCSV(d.bank)) };
+  merchant = 'Tiffin Tree';
+  $('dataNote').textContent = `Tiffin Tree is a made-up D2C food brand on one gateway: ${files.orders.length.toLocaleString('en-IN')} orders, ${files.pg.length.toLocaleString('en-IN')} gateway rows and ${files.bank.length} bank statement lines from 1 Aug to 29 Sep 2026. The data is seeded with the problems recon teams see in real files.`;
+  compute();
+}
+function compute() {
+  if (!files.orders || !files.pg || !files.bank) { $('dataNote').textContent = 'Add all three files to run the reconciliation. Missing: ' + Object.keys(files).filter(k => !files[k]).join(', ') + '.'; return; }
+  res = R.run(files, { rates, slaDays: +$('sla').value || 0, tol: +$('tol').value || 0 });
+  const codes = Object.values(res.byCode).filter(s => R.REASONS[s.code].leak).sort((a, b) => b.amount - a.amount);
+  if (!sel || !res.byCode[sel]) sel = codes.length ? codes[0].code : Object.keys(res.byCode)[0];
+  renderLadder(); renderTiles(); renderQueue(); renderDrill(); renderClaim();
+}
+function renderLadder() {
+  let prevLeg = null, cum = 0;
+  $('ladder').innerHTML = res.ladder.map(l => {
+    if (l.leg !== prevLeg) { cum = 0; prevLeg = l.leg; }
+    const p0 = l.total ? cum / l.total * 100 : 0, p1 = l.total ? l.matched / l.total * 100 : 0; cum += l.matched;
+    return `<div class="lrow"><div class="lbl"><b>${esc(l.leg)}</b>${esc(l.rule)}</div><div class="bar" role="img" aria-label="${(p0 + p1).toFixed(1)}% matched after this rule"><i class="prev" style="width:${p0}%"></i><i class="now" style="width:${p1}%"></i></div><div class="v">+${l.matched.toLocaleString('en-IN')} · ${(p0 + p1).toFixed(1)}%</div></div>`;
+  }).join('');
+  const utr = res.ladder.find(l => l.rule.startsWith('Batch UTR'));
+  const left = utr.total - utr.matched, after = res.counts.batches - res.counts.settled;
+  $('ladderNote').innerHTML = `<h3>Matching on UTR alone would raise ${left} alarms. ${left - after} of them are fine.</h3><p class="small">${left} of ${utr.total} settlement batches have no UTR the bank narration can be matched on. Amount-and-date and a ₹${$('tol').value} rounding rule explain ${left - after}. The ${after === 1 ? 'one batch' : after + ' batches'} left ${after === 1 ? 'is' : 'are'} a real problem${after ? ' (see "Settlement batch never reached the bank")' : ''}. That's the difference between an analyst chasing ${left} tickets and chasing ${after}.</p>`;
+}
+function renderTiles() {
+  const cf = res.byCode.CAPTURED_ORDER_FAILED ? res.byCode.CAPTURED_ORDER_FAILED.amount : 0;
+  const over = res.fees.expected ? (res.fees.charged / res.fees.expected - 1) * 100 : 0;
+  $('tiles').innerHTML = [
+    [inrS(res.gross), 'payments processed', ''],
+    [inrS(res.leak), 'money at risk (' + (res.leak / res.gross * 100).toFixed(2) + '% of payments)', 'hot'],
+    [inrS(res.claim), 'claimable from the gateway', ''],
+    [inrS(cf), 'customer money captured on failed orders', ''],
+    [over.toFixed(1) + '%', 'fees billed above contract', ''],
+  ].map(([v, l, c]) => `<div class="tile ${c}"><b>${v}</b><span>${l}</span></div>`).join('');
+  const parts = ['SETTLEMENT_MISSING', 'SHORT_SETTLEMENT', 'FEE_OVERCHARGE', 'GST_MISMATCH'].map(k => [k, res.byCode[k] ? res.byCode[k].amount : 0]).sort((a, b) => b[1] - a[1]);
+  const top = parts[0], fee = (res.byCode.FEE_OVERCHARGE || { amount: 0, n: 0 });
+  const SHORT = { SETTLEMENT_MISSING: 'one missing settlement', SHORT_SETTLEMENT: 'a short settlement', FEE_OVERCHARGE: 'fee overbilling', GST_MISMATCH: 'GST errors' };
+  $('insight').innerHTML = `<h3>Fee audits get the attention. The money is in ${SHORT[top[0]]}.</h3><p class="small">${Math.round(top[1] / (res.claim || 1) * 100)}% of the claimable amount comes from "${R.REASONS[top[0]].label.toLowerCase()}". Fee overbilling is ${fee.n.toLocaleString('en-IN')} transactions worth ${inr(fee.amount)}: small per row, but it repeats every month until the gateway's config is fixed. That makes it a renewal argument, not a one-off claim. Rank the queue by rupees, not by row count.</p>`;
+}
+function renderQueue() {
+  const rows = Object.values(res.byCode).sort((a, b) => (R.REASONS[b.code].leak - R.REASONS[a.code].leak) || b.amount - a.amount);
+  $('queue').querySelector('tbody').innerHTML = rows.map(s => { const r = R.REASONS[s.code]; const type = r.leak ? '<span class="pill p-leak">Money at risk</span>' : '<span class="pill p-watch">Watch</span>';
+    return `<tr tabindex="0" data-c="${s.code}" class="${s.code === sel ? 'sel' : ''}"><td><b>${esc(r.label)}</b></td><td>${type}</td><td>${r.owner === 'Gateway' ? '<span class="pill p-gw">Gateway</span>' : esc(r.owner)}</td><td class="num">${s.n.toLocaleString('en-IN')}</td><td class="num">${inr(s.amount)}</td><td>${fd(s.oldest)}</td><td class="small">${esc(r.action)}</td></tr>`; }).join('');
+  $('queue').querySelectorAll('tbody tr').forEach(tr => { const go = () => { sel = tr.dataset.c; renderQueue(); renderDrill(); }; tr.addEventListener('click', go); tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } }); });
+}
+function renderDrill() {
+  const rows = res.exceptions.filter(e => e.code === sel).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+  $('drillTitle').textContent = `${R.REASONS[sel].label}: ${rows.length.toLocaleString('en-IN')} row${rows.length === 1 ? '' : 's'}${rows.length > 25 ? ' (largest 25 shown)' : ''}`;
+  $('drill').querySelector('tbody').innerHTML = rows.slice(0, 25).map(e => `<tr><td style="font-family:var(--mono)">${esc(e.ref)}</td><td>${fd(e.day)}</td><td class="num">${inr(Math.abs(e.amount))}</td><td class="small">${esc(e.detail || '')}</td></tr>`).join('');
+}
+function claimText() {
+  const g = (k) => res.byCode[k] || { n: 0, amount: 0 };
+  const ex = (k) => res.exceptions.filter(e => e.code === k);
+  const L = [];
+  L.push(`To: PayGate settlements team`);
+  L.push(`Subject: ${merchant}: settlement and fee discrepancies, ${fd(Math.min(...res.batches.map(b => b.sday)))}–${fd(Math.max(...res.batches.map(b => b.sday)))} 2026, ${inr(res.claim)}`);
+  L.push('');
+  L.push(`We reconciled your settlement report against our bank statement and our contract. Please review the items below.`);
+  L.push('');
+  let i = 1;
+  if (g('SETTLEMENT_MISSING').n) { L.push(`${i++}. Settlements not received (${inr(g('SETTLEMENT_MISSING').amount)})`); ex('SETTLEMENT_MISSING').forEach(e => L.push(`   Batch ${e.ref}: net ${inr(e.amount)}, ${e.detail}`)); L.push(''); }
+  if (g('SHORT_SETTLEMENT').n) { L.push(`${i++}. Short settlements (${inr(g('SHORT_SETTLEMENT').amount)})`); ex('SHORT_SETTLEMENT').forEach(e => L.push(`   Batch ${e.ref}: ${e.detail}. Please share the deduction breakup.`)); L.push(''); }
+  if (g('FEE_OVERCHARGE').n) {
+    const by = {}; ex('FEE_OVERCHARGE').forEach(e => { const m = (e.detail || '').split(':')[0]; by[m] = by[m] || { n: 0, a: 0 }; by[m].n++; by[m].a += e.amount; });
+    L.push(`${i++}. Fees above contracted rates (${inr(g('FEE_OVERCHARGE').amount)} incl. GST)`);
+    Object.entries(by).forEach(([m, v]) => L.push(`   ${LABEL[m] || m}: ${v.n} transactions, ${inr(v.a)}  (contract ${rates[m].toFixed(2)}%)`));
+    L.push('   Transaction-level list attached. Please also correct the rate configuration going forward.'); L.push('');
+  }
+  if (g('GST_MISMATCH').n) { L.push(`${i++}. GST not equal to 18% of fee: ${g('GST_MISMATCH').n} transactions. Please issue a corrected tax invoice.`); L.push(''); }
+  L.push(`Total claimed: ${inr(res.claim)}`);
+  L.push(`Please confirm within 7 working days.`);
+  return L.join('\n');
+}
+function renderClaim() { $('claim').textContent = claimText(); }
+function csvText() {
+  const q = (v) => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : v;
+  return ['reason_code,reason,owner,reference,date,amount_inr,detail'].concat(res.exceptions.map(e => [e.code, R.REASONS[e.code].label, R.REASONS[e.code].owner, e.ref, e.day != null ? R.dayISO(e.day) : '', e.amount, e.detail || ''].map(q).join(','))).join('\n');
+}
+function copy(text, msg) {
+  const done = () => { $('copyMsg').textContent = msg; setTimeout(() => $('copyMsg').textContent = '', 2500); };
+  const fb = () => { const s = window.getSelection(), r = document.createRange(); r.selectNodeContents($('claim')); s.removeAllRanges(); s.addRange(r); $('copyMsg').textContent = 'Selected. Press Ctrl/Cmd+C to copy.'; };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(fb); else fb();
+}
+function upload(id, key) {
+  $(id).addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { files[key] = R.parseCSV(String(rd.result)); merchant = 'Merchant'; compute(); if (files.orders && files.pg && files.bank) $('dataNote').textContent = 'Using your files. Columns expected: orders (order_id, created_at, amount, status, refund_amount, method); gateway (pg_txn_id, order_id, type, txn_date, amount, method, fee, gst, net, settlement_id, settlement_date, utr); bank (date, narration, credit).'; }; rd.readAsText(f); });
+}
+function renderChecks() {
+  const r = window.ReconTests.run(), ok = r.filter(x => x.ok).length;
+  $('checks').innerHTML = `<div><b>${ok} of ${r.length} passed</b></div>` + r.map(x => `<div><span class="${x.ok ? 'ok' : 'bad'}">${x.ok ? 'PASS' : 'FAIL'}</span><span>${esc(x.name)}${x.err ? ' — ' + esc(x.err) : ''}</span></div>`).join('');
+}
+$('loadSample').addEventListener('click', () => { rates = { ...R.DEFAULT_RATES }; renderRates(); loadSample(); });
+upload('fOrders', 'orders'); upload('fPg', 'pg'); upload('fBank', 'bank');
+$('sla').addEventListener('change', compute); $('tol').addEventListener('change', compute);
+$('copyClaim').addEventListener('click', () => copy(claimText(), 'Claim copied.'));
+$('copyCsv').addEventListener('click', () => copy(csvText(), 'Exceptions copied as CSV.'));
+renderChecks(); renderRates(); loadSample();
+})();
+
+</script>
+
+</body>
+</html>
