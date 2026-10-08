@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Where's My Money</title>
+<meta name="description" content="A support resolver for Groww that answers not-yet-due money questions from the customer's own account and sends overdue ones straight to a person. Built by Aditya Mathur.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: thesis -> evidence -> the split (early vs late) -> live simulator (customer | agent) -> evals -> impact -> PRD/HLD/LLD/SQL. One column, 1100px. */
+:root{
+  --bg:#f5f6f9; --paper:#ffffff; --ink:#141a2b; --muted:#5a6276; --line:#dde1ea; --soft:#eef0f5;
+  --accent:#3347d6; --accent-ink:#ffffff; --accent-soft:#e6e9fc;
+  --late:#b4321f; --late-bg:#fdebe7; --early:#1f6b47; --early-bg:#e2f3ea; --act:#8a5a00; --act-bg:#fff1d3; --risk:#7b2cbf; --risk-bg:#f1e6fb;
+  --bubble-user:#3347d6; --bubble-user-ink:#ffffff; --bubble-bot:#eef0f5;
+  --display:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --body:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d111b; --paper:#141a27; --ink:#e7eaf3; --muted:#9aa2b6; --line:#273047; --soft:#1a2132;
+  --accent:#8c9bff; --accent-ink:#0d111b; --accent-soft:#222a4a;
+  --late:#ff8f7d; --late-bg:#3b1a14; --early:#7dd3a5; --early-bg:#11301f; --act:#f2c26b; --act-bg:#3a2a0c; --risk:#cfa2ff; --risk-bg:#2c1c42;
+  --bubble-user:#8c9bff; --bubble-user-ink:#0d111b; --bubble-bot:#1f2739; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d111b; --paper:#141a27; --ink:#e7eaf3; --muted:#9aa2b6; --line:#273047; --soft:#1a2132;
+  --accent:#8c9bff; --accent-ink:#0d111b; --accent-soft:#222a4a;
+  --late:#ff8f7d; --late-bg:#3b1a14; --early:#7dd3a5; --early-bg:#11301f; --act:#f2c26b; --act-bg:#3a2a0c; --risk:#cfa2ff; --risk-bg:#2c1c42;
+  --bubble-user:#8c9bff; --bubble-user-ink:#0d111b; --bubble-bot:#1f2739; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;margin:0}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:20px;padding-block:28px 64px;display:grid;gap:26px}
+.wrap>*{min-width:0}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(34px,6vw,56px);font-weight:800;letter-spacing:-.025em}
+h2{font-size:24px;font-weight:800;letter-spacing:-.01em}
+h3{font-size:16.5px;font-weight:700}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:19px;max-width:66ch}
+.muted{color:var(--muted)} .small{font-size:13px}
+a{color:var(--accent)}
+.hero{display:grid;gap:14px;padding-top:6px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px;display:grid;gap:16px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.fact{border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:4px;align-content:start}
+.fact b{font:800 26px var(--display);font-variant-numeric:tabular-nums}
+.fact span{font-size:13.5px}
+.fact i{font-style:normal;font-size:12px;color:var(--muted)}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.lane{border-radius:10px;padding:16px;display:grid;gap:8px;align-content:start}
+.lane.early{background:var(--early-bg)} .lane.late{background:var(--late-bg)}
+.lane h3{display:flex;gap:8px;align-items:center}
+.lane.early h3{color:var(--early)} .lane.late h3{color:var(--late)}
+.lane ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-family:var(--mono);font-size:12.5px}
+.flow span{border:1px solid var(--line);border-radius:6px;padding:4px 9px;background:var(--paper)}
+.flow em{font-style:normal;color:var(--muted)}
+/* simulator */
+.personas{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:600 13px var(--body);padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.simgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.simgrid{grid-template-columns:1fr}}
+.phone{border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:10px;background:var(--soft);align-content:start}
+.phone .top{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-family:var(--mono)}
+.bubble{max-width:88%;padding:10px 13px;border-radius:14px;font-size:14px}
+.bubble.u{justify-self:end;background:var(--bubble-user);color:var(--bubble-user-ink);border-bottom-right-radius:4px}
+.bubble.b{justify-self:start;background:var(--paper);border:1px solid var(--line);border-bottom-left-radius:4px;display:grid;gap:10px}
+.track{display:grid;gap:0;margin:2px 0 0;padding:0;list-style:none}
+.track li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:8px;font-size:13px;padding-bottom:8px;position:relative}
+.track li::before{content:'';width:10px;height:10px;border-radius:50%;margin-top:5px;border:2px solid var(--muted);background:var(--paper)}
+.track li.done::before{background:var(--early);border-color:var(--early)}
+.track li.now::before{background:var(--accent);border-color:var(--accent)}
+.track li small{display:block;color:var(--muted);font-family:var(--mono);font-size:11.5px}
+.ask{display:flex;gap:8px}
+.ask input{flex:1;min-width:0;font:14px var(--body);padding:9px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+button{font:700 14px var(--body);border-radius:999px;padding:9px 16px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+button.ghost{background:var(--paper);color:var(--ink);border-color:var(--line);border-radius:6px}
+.qchips{display:flex;flex-wrap:wrap;gap:6px}
+.qchips button{font:500 12.5px var(--body);background:var(--paper);color:var(--ink);border:1px dashed var(--line);border-radius:999px;padding:5px 10px;text-align:left}
+.agent{border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;align-content:start}
+.agent dl{display:grid;grid-template-columns:minmax(0,120px) minmax(0,1fr);gap:6px 12px;margin:0;font-size:13.5px}
+.agent dt{color:var(--muted)} .agent dd{margin:0}
+.pill{display:inline-block;font:700 12px var(--body);padding:2px 9px;border-radius:999px;white-space:nowrap}
+.v-NOT_DUE,.v-WITHIN_WINDOW,.v-DONE{background:var(--early-bg);color:var(--early)}
+.v-OVERDUE,.v-FAILED{background:var(--late-bg);color:var(--late)}
+.v-ACTION_NEEDED{background:var(--act-bg);color:var(--act)}
+.v-RISK,.v-DECLINED{background:var(--risk-bg);color:var(--risk)}
+.v-UNKNOWN,.v-NO_RECORD{background:var(--soft);color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+/* evals */
+.evsum{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline}
+.evsum b{font:800 28px var(--display)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;background:var(--soft);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ok{color:var(--early);font-family:var(--mono);font-weight:600} .bad{color:var(--late);font-family:var(--mono);font-weight:600}
+.hard{font:700 11px var(--mono);color:var(--risk);border:1px solid currentColor;border-radius:4px;padding:0 4px;margin-left:6px}
+/* impact */
+.model{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:820px){.model{grid-template-columns:1fr}}
+.inputs{display:grid;gap:10px}
+.inputs label{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:10px;align-items:center;font-size:13.5px}
+.inputs input{font:14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);width:100%}
+.inputs small{grid-column:1/-1;color:var(--muted);font-size:12px;margin-top:-6px}
+.outs{display:grid;gap:8px;align-content:start}
+.out{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dashed var(--line);padding-bottom:6px;font-size:14px}
+.out b{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.out.big b{font-size:20px;color:var(--accent)}
+/* doc */
+.kv{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:8px 16px;font-size:14px}
+.kv dt{font-weight:700} .kv dd{margin:0}
+@media (max-width:560px){.kv{grid-template-columns:1fr}.kv dd{margin-bottom:6px}}
+.list{margin:0;padding-left:18px;display:grid;gap:6px}
+pre{font-family:var(--mono);font-size:12.5px;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto;margin:0;line-height:1.5}
+.hld{overflow-x:auto}
+.hld svg{min-width:760px;width:100%;height:auto;display:block}
+.hld text{font-family:var(--body);font-size:12.5px;fill:var(--ink)}
+.hld .sub{font-size:11px;fill:var(--muted)}
+.hld .box{fill:var(--paper);stroke:var(--line);stroke-width:1.2}
+.hld .key{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.2}
+.hld .lateb{fill:var(--late-bg);stroke:var(--late)}
+.hld .earlyb{fill:var(--early-bg);stroke:var(--early)}
+.hld line,.hld path{stroke:var(--muted);stroke-width:1.3;fill:none}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<main class="wrap">
+  <header class="hero">
+    <div class="eyebrow">A product build for Groww · Customer Experience · by Aditya Mathur</div>
+    <h1>Where's My Money</h1>
+    <p class="lede">My bet: most "where is my money" questions arrive before the money is late. The first SQL below tests it. Answer those in seconds, from the customer's own account, with the exact time it will land. The ones that really are late skip the bot and go straight to a person, with the case already worked out.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="ev">
+    <h2 id="ev">What the public record says</h2>
+    <div class="facts">
+      <div class="fact"><b>2.24 crore</b><span>transacting users in Q1 FY27</span><i>As reported in Q1 FY27 results coverage</i></div>
+      <div class="fact"><b>1,994 → 1,406</b><span>complaints against Groww at NSE, FY25 → FY26, on about 1.25–1.3 crore active clients</span><i>Exchange data via Chittorgarh</i></div>
+      <div class="fact"><b>174 of 585</b><span>FY27 NSE complaints still pending: about 30%, against 11% for FY26</span><i>Exchange data via Chittorgarh. FY27 is part-year, so some are simply recent</i></div>
+      <div class="fact"><b>"Faster query resolution"</b><span>Management said on the Q1 FY27 call that AI is speeding up support and giving executives more context</span><i>Q1 FY27 earnings call summary</i></div>
+    </div>
+    <p class="muted">Exchange complaints are the tip: they're what's left after support didn't settle it. The rules that answer most money questions are already public, but they're spread across help pages and blogs. Withdrawals have four time bands. Sale proceeds unlock at 10 AM the next trading day. IPO blocks clear when a UPI mandate expires. Equity fund redemptions pay T+2. A customer asking "kab aayega?" needs those rules applied to their own request time, and to holidays like Dussehra and Diwali. A general FAQ answer doesn't do that.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="ins">
+    <h2 id="ins">The one decision that matters: is it late yet?</h2>
+    <div class="split">
+      <div class="lane early"><h3>Not due yet</h3><ul><li>The customer is anxious, but nothing is wrong.</li><li>Answer in chat with <b>their</b> due time and the rule behind it, plus a tracker.</li><li>Goal: no human contact, and no repeat contact before the due time.</li></ul></div>
+      <div class="lane late"><h3>Overdue or failed</h3><ul><li>Something is wrong. A bot reply here is what turns a ticket into an exchange complaint.</li><li>Skip the bot. Put it in the priority queue with the case packet: amounts, timestamps, the rule, how late it is.</li><li>Goal: the customer never has to explain twice.</li></ul></div>
+    </div>
+    <div class="flow"><span>message</span><em>→</em><span>intent (Hinglish-aware)</span><em>→</em><span>account state</span><em>→</em><span>published timeline + holiday calendar</span><em>→</em><span>verdict</span><em>→</em><span>answer or human</span></div>
+    <p class="muted small">Two hard rules sit in front of everything. Any sign of unauthorised activity goes to the security team at once. Requests for advice ("which stock should I buy") are declined.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="sim">
+    <h2 id="sim">Try it</h2>
+    <p class="muted">Six made-up customers, each with a real account state and a clock set to the moment they write in. Pick one, tap a message or type your own (English or Hinglish).</p>
+    <div class="personas" id="personas" role="group" aria-label="Choose a customer"></div>
+    <div class="simgrid">
+      <div class="phone" aria-live="polite">
+        <div class="top"><span id="who"></span><span id="clock"></span></div>
+        <div class="bubble u" id="umsg"></div>
+        <div class="bubble b" id="bmsg"></div>
+        <div class="qchips" id="qchips"></div>
+        <form class="ask" id="askForm"><label for="ask" class="small muted" hidden>Message</label><input id="ask" placeholder="Type a message, e.g. paisa kab aayega?" autocomplete="off"><button type="submit">Send</button></form>
+      </div>
+      <div class="agent">
+        <h3>What the support team sees</h3>
+        <dl id="agentDl"></dl>
+        <div class="note" id="agentNote"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="evals">
+    <h2 id="evals">Eval set</h2>
+    <p class="muted">30 cases with known answers, run against the same engine every time this page loads. They cover cut-offs, weekends, Dussehra and Diwali, IPO windows, T+2 redemptions, and the hard rules. A hard-rule failure blocks a release, whatever the overall score.</p>
+    <div class="evsum" id="evsum"></div>
+    <div class="scroll" style="max-height:420px"><table><thead><tr><th>Result</th><th>Case</th><th>Message</th></tr></thead><tbody id="evrows"></tbody></table></div>
+  </section>
+
+  <section class="panel" aria-labelledby="imp">
+    <h2 id="imp">What it's worth</h2>
+    <p class="muted">Only the user count is public. Every other input is my assumption, and the first thing I'd replace with Groww's support data in week one. Change any value to see the effect.</p>
+    <div class="model">
+      <div class="inputs" id="inputs"></div>
+      <div class="outs" id="outs"></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="prd">
+    <h2 id="prd">PRD: money-status resolution</h2>
+    <dl class="kv">
+      <dt>Problem</dt><dd>Customers contact support to ask when their money will arrive. Most are not late yet, and they get a generic FAQ or wait for an agent. The ones that are late get the same treatment and escalate outside Groww.</dd>
+      <dt>Users</dt><dd><b>Customers</b> waiting on a withdrawal, sale proceeds, IPO unblock, redemption or SIP. <b>Support executives</b>, who spend the first minutes of each late case rebuilding the timeline. <b>CX leads</b>, who answer for complaint volumes and turnaround times.</dd>
+      <dt>Goals</dt><dd>1) Close not-yet-due contacts in chat with a personal due time. 2) Get every overdue case to a person with full context. 3) Cut repeat contacts on the same transaction.</dd>
+      <dt>Non-goals</dt><dd>Fixing the payout rails themselves. Disputes about trade execution. Any investment guidance.</dd>
+    </dl>
+    <h3>Requirements</h3>
+    <div class="scroll"><table><thead><tr><th>ID</th><th>Requirement</th><th>Acceptance criteria</th></tr></thead><tbody>
+      <tr><td>P0-1</td><td>Timeline engine with rules as data</td><td>Each money type has a rule with source, effective date and holiday calendar. A rule change ships without an app release. The eval set passes 100% before deploy.</td></tr>
+      <tr><td>P0-2</td><td>Verdict on every money question</td><td>Not due, within window, action needed, overdue, failed or done, computed from the customer's own records. Never from the message text alone.</td></tr>
+      <tr><td>P0-3</td><td>Overdue goes to a person</td><td>Overdue and failed cases skip automated answers, enter the priority queue with a context packet, and show the customer that a person has it.</td></tr>
+      <tr><td>P0-4</td><td>Hard rules</td><td>Unauthorised activity goes to security at once. Advice is declined. No record means hand off. Zero tolerance in evals.</td></tr>
+      <tr><td>P0-5</td><td>Always a way out</td><td>"Talk to a person" stays visible on every automated answer. Using it is a tracked signal, not a failure.</td></tr>
+      <tr><td>P1-1</td><td>Tell them before they ask</td><td>Show the personal due time on the withdrawal, sell, IPO and redemption confirmation screens. Push a note the moment an item becomes overdue.</td></tr>
+      <tr><td>P1-2</td><td>LLM for language, rules for facts</td><td>An LLM can classify intent and phrase the reply, but every date, amount and verdict comes from the engine. A grounding check rejects any reply with a number not in the case packet.</td></tr>
+    </tbody></table></div>
+    <h3>Metrics</h3>
+    <ul class="list">
+      <li><b>North star:</b> money-status contacts per 1,000 transacting users. The goal is fewer questions, not more bot conversations.</li>
+      <li><b>Not-due contacts closed in chat</b>, with <b>no repeat contact before the due time</b>. A closed chat followed by a repeat contact doesn't count as resolved.</li>
+      <li><b>Overdue at first contact</b>, by money type. This is a product health signal for the payments and ops teams, not a support metric.</li>
+      <li><b>Time to first human touch</b> on overdue cases.</li>
+      <li><b>Guardrails:</b> exchange and SCORES complaints per lakh users; CSAT on automated answers; zero hard-rule misses.</li>
+    </ul>
+    <h3>Experiment and rollout</h3>
+    <ul class="list">
+      <li>Start with withdrawals and sale proceeds, the simplest rules with the most volume.</li>
+      <li>A 10% user holdout keeps today's flow for 4 weeks. Read contacts per 1,000, 7-day repeat contacts, CSAT, and complaints per lakh.</li>
+      <li>Add IPO next, timed before a large issue when IPO questions spike. Then mutual fund redemptions and SIP failures.</li>
+    </ul>
+  </section>
+
+  <section class="panel" aria-labelledby="hld">
+    <h2 id="hld">High-level design</h2>
+    <div class="hld" role="img" aria-label="Architecture: chat and help entry, intent service, account state service, timeline engine with rule store and holiday calendar, verdict router, answer composer, priority agent queue, and proactive notifier.">
+      <svg viewBox="0 0 980 330" xmlns="http://www.w3.org/2000/svg">
+        <rect class="box" x="10" y="130" width="140" height="60" rx="8"/><text x="22" y="156">Chat · Help · IVR</text><text class="sub" x="22" y="174">customer message</text>
+        <rect class="key" x="190" y="60" width="170" height="60" rx="8"/><text x="202" y="86">Intent service</text><text class="sub" x="202" y="104">rules first, LLM fallback</text>
+        <rect class="key" x="190" y="200" width="170" height="60" rx="8"/><text x="202" y="226">Account state API</text><text class="sub" x="202" y="244">payouts · orders · IPO · RTA</text>
+        <rect class="key" x="400" y="130" width="170" height="60" rx="8"/><text x="412" y="156">Timeline engine</text><text class="sub" x="412" y="174">verdict + due time</text>
+        <rect class="box" x="400" y="250" width="170" height="60" rx="8"/><text x="412" y="276">Rule store + calendar</text><text class="sub" x="412" y="294">source, effective dates</text>
+        <rect class="key" x="610" y="130" width="130" height="60" rx="8"/><text x="622" y="156">Router</text><text class="sub" x="622" y="174">hard rules first</text>
+        <rect class="earlyb" x="780" y="40" width="190" height="60" rx="8"/><text x="792" y="66">Answer composer</text><text class="sub" x="792" y="84">grounded reply + tracker</text>
+        <rect class="lateb" x="780" y="130" width="190" height="60" rx="8"/><text x="792" y="156">Priority agent queue</text><text class="sub" x="792" y="174">case packet attached</text>
+        <rect class="lateb" x="780" y="220" width="190" height="60" rx="8"/><text x="792" y="246">Security desk</text><text class="sub" x="792" y="264">unauthorised activity</text>
+        <rect class="box" x="610" y="260" width="130" height="60" rx="8"/><text x="622" y="286">Notifier (P1)</text><text class="sub" x="622" y="304">push when overdue</text>
+        <path d="M150 160 C170 160 170 90 190 90"/><path d="M150 160 C170 160 170 230 190 230"/>
+        <path d="M360 90 C380 90 380 160 400 160"/><path d="M360 230 C380 230 380 160 400 160"/>
+        <line x1="485" y1="250" x2="485" y2="190"/>
+        <line x1="570" y1="160" x2="610" y2="160"/>
+        <path d="M740 160 C760 160 760 70 780 70"/><line x1="740" y1="160" x2="780" y2="160"/><path d="M740 160 C760 160 760 250 780 250"/>
+        <path d="M570 180 C590 180 590 290 610 290"/>
+      </svg>
+    </div>
+    <ul class="list">
+      <li><b>Facts come only from the engine.</b> The LLM never computes a date. If the account state API times out, the router sends the case to a person. It doesn't guess.</li>
+      <li><b>Spikes:</b> market open, expiry days and big IPOs bring bursts. State reads are cached per user for 60 seconds, and the engine is a pure function, so it scales horizontally.</li>
+      <li><b>Idempotent hand-off:</b> one open ticket per transaction. A second contact attaches to it instead of opening a new one.</li>
+    </ul>
+    <h3>Low-level design: the contract</h3>
+<pre>GET /v1/support/money-status?user_id=U123&amp;message=paise%20kab%20aayenge
+
+200 {
+  "intent": "WITHDRAW",
+  "transaction": { "type": "WITHDRAWAL", "id": "WD-88213", "amount": 12000,
+                   "placed_at": "2026-10-19T19:40+05:30" },
+  "verdict": "NOT_DUE",                      // NOT_DUE | WITHIN_WINDOW | ACTION_NEEDED | OVERDUE | FAILED | DONE
+  "due_at": "2026-10-21T14:00+05:30",
+  "rule": { "id": "withdrawal.after_6pm.v3", "source": "groww.in/blog/...", "skipped_days": ["2026-10-20 Dussehra"] },
+  "route": "SELF_SERVE",                     // SELF_SERVE | PRIORITY_AGENT | SECURITY | STANDARD_AGENT | DECLINE
+  "case_packet": null                        // filled when route is an agent queue
+}</pre>
+    <h3>SQL I'd run in week one</h3>
+<pre>-- Share of money-status contacts that arrive before the money is due
+SELECT c.intent,
+       COUNT(*)                                             AS contacts,
+       AVG(CASE WHEN c.created_at &lt; m.due_at THEN 1.0 ELSE 0 END) AS share_not_due,
+       AVG(CASE WHEN c.created_at &gt; m.due_at THEN 1.0 ELSE 0 END) AS share_overdue
+FROM support_contacts c
+JOIN money_movements m ON m.id = c.transaction_id
+WHERE c.created_at &gt;= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY c.intent
+ORDER BY contacts DESC;
+
+-- Repeat contacts on the same transaction within 7 days (the real resolution test)
+SELECT c.intent,
+       AVG(CASE WHEN EXISTS (
+             SELECT 1 FROM support_contacts r
+             WHERE r.transaction_id = c.transaction_id
+               AND r.created_at &gt; c.created_at
+               AND r.created_at &lt;= c.created_at + INTERVAL '7 days') THEN 1.0 ELSE 0 END) AS repeat_7d
+FROM support_contacts c
+GROUP BY c.intent;</pre>
+    <h3>Risks</h3>
+    <ul class="list">
+      <li><b>A wrong due time is worse than none.</b> Rules change (the NSE circular moved sale proceeds to T+1, 10 AM). Every rule carries an owner and an effective date, and the eval set runs in CI.</li>
+      <li><b>Bank holidays differ from trading holidays,</b> and by state. The calendar needs both. This prototype uses trading holidays for both and says so.</li>
+      <li><b>Deflection can hide incidents.</b> During an outage like the August 2026 cloud incident, overdue cases spike together. The router should detect a spike and switch to an incident banner plus a queue, not hundreds of individual answers.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <div><b>Sources.</b> <a href="https://groww.in/blog/how-can-you-withdraw-money-from-groww-balance" target="_blank" rel="noopener">Groww: withdrawal timings</a> · <a href="https://groww.in/help/payments-&amp;-withdrawals/payments/i-am-not-able-to-withdraw-the-money-added-to-my-groww-balance-17" target="_blank" rel="noopener">Groww help: T+1 sale proceeds</a> · <a href="https://groww.in/help/getting-started/getting-started-completesetupfaq/when-will-the-amount-be-unblocked--24" target="_blank" rel="noopener">Groww help: IPO unblocking</a> · <a href="https://www.business-standard.com/amp/article/markets/mutual-funds-adopt-t-2-settlement-cycle-for-redemption-payouts-123012700882_1.html" target="_blank" rel="noopener">Business Standard: MF T+2</a> · <a href="https://cleartax.in/s/nse-holidays-2026" target="_blank" rel="noopener">NSE holidays 2026</a> · <a href="https://www.chittorgarh.com/broker-complaints/groww/173/" target="_blank" rel="noopener">Groww exchange complaints</a> · <a href="https://www.investorstack.in/earnings-calls/groww" target="_blank" rel="noopener">Q1 FY27 call summary</a> · <a href="https://www.multibagg.ai/market-pulse/articles/groww-outage-withdrawals-expiry-days-cmt35llbv4exh0zqlc3o6r4l9" target="_blank" rel="noopener">Aug 2026 withdrawal disruption</a></div>
+    <div>The customers, IPO and transactions are fictional. Rules are taken from Groww's public pages and SEBI/AMFI timelines as of Oct 2026. Not affiliated with Groww. Built by Aditya Mathur with Claude · <a href="https://www.linkedin.com/in/adityaamathur" target="_blank" rel="noopener">LinkedIn</a> · <a href="https://adimathur-creates.github.io/" target="_blank" rel="noopener">Portfolio</a></div>
+  </footer>
+</main>
+
+<script>
+// "Where's My Money?" engine: intent + account state + published timelines -> verdict, answer, route.
+// Deterministic. Runs in the browser and in Node (tests).
+(function (root) {
+// ---------- calendar ----------
+// NSE equity trading holidays, Oct–Dec 2026 (ClearTax list of NSE holidays 2026). Weekends are non-working.
+// Assumption: bank-side withdrawal processing follows the same working days.
+const HOLIDAYS = { '2026-10-02': 'Gandhi Jayanti', '2026-10-20': 'Dussehra', '2026-11-10': 'Diwali Balipratipada', '2026-11-24': 'Guru Nanak Jayanti', '2026-12-25': 'Christmas' };
+const pad = (n) => String(n).padStart(2, '0');
+const P = (s) => { const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/); return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0))); }; // IST wall-clock stored as UTC fields
+const iso = (d) => d.toISOString().slice(0, 10);
+const at = (d, h, mi = 0) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), h, mi));
+const addDays = (d, n) => new Date(d.getTime() + n * 864e5);
+const isWorking = (d) => { const w = d.getUTCDay(); return w !== 0 && w !== 6 && !HOLIDAYS[iso(d)]; };
+const nextWorking = (d) => { let x = addDays(at(d, 0), 1); while (!isWorking(x)) x = addDays(x, 1); return x; };
+const addWorking = (d, n) => { let x = at(d, 0); for (let i = 0; i < n; i++) x = nextWorking(x); return x; };
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmt = (d, time = true) => { const h = d.getUTCHours(), m = d.getUTCMinutes(); const t = time ? `, ${((h + 11) % 12) + 1}${m ? ':' + pad(m) : ''} ${h < 12 ? 'AM' : 'PM'}` : ''; return `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]}${t}`; };
+const inr = (v) => '₹' + Math.round(v).toLocaleString('en-IN');
+const whyNotWorking = (d) => HOLIDAYS[iso(d)] ? `${HOLIDAYS[iso(d)]} is a market holiday` : 'weekends are not working days';
+
+// ---------- published rules ----------
+const RULES = {
+  withdrawal: 'Groww blog, "How can you withdraw money from Groww balance": weekday before 8 AM → by 2 PM same day; 8 AM–6 PM → by 11 PM same day; Mon–Thu after 6 PM → by 2 PM next day; Fri after 6 PM, Sat, Sun → by 2 PM Monday.',
+  sale: 'Groww help, NSE circular of 4 Oct 2024: stock sale proceeds reach Groww Balance within 30 minutes and become withdrawable after 10 AM on the next trading day (T+1).',
+  addFunds: 'Groww help: money you add can be invested at once but withdrawn only after one trading day.',
+  ipo: 'SEBI T+3 listing timeline: allotment T+1, unblocking and demat credit T+2, listing T+3 (T = issue close). Groww help: unblocking is usually on or before listing, and can take 3–4 working days after listing because it depends on the UPI mandate expiry at the bank.',
+  mf: 'AMFI: equity mutual fund redemptions settle T+2 working days (since 1 Feb 2023). Assumed 3 PM cut-off for same-day processing.',
+  holidays: 'NSE trading holidays 2026 (ClearTax list): 2 Oct, 20 Oct, 10 Nov, 24 Nov, 25 Dec in this window. Assumption: withdrawal processing skips the same days.',
+};
+
+function withdrawalDue(req) {
+  const h = req.getUTCHours();
+  if (!isWorking(req)) return { due: at(nextWorking(req), 14), rule: `Request placed on a non-working day (${whyNotWorking(req)}), so it is processed the next working day by 2 PM.` };
+  if (h < 8) return { due: at(req, 14), rule: 'Placed before 8 AM on a working day: credited by 2 PM the same day.' };
+  if (h < 18) return { due: at(req, 23), rule: 'Placed between 8 AM and 6 PM on a working day: credited by 11 PM the same day.' };
+  const nw = nextWorking(req);
+  const skipped = iso(addDays(at(req, 0), 1)) !== iso(nw) ? ` The next calendar day is skipped (${whyNotWorking(addDays(at(req, 0), 1))}).` : '';
+  return { due: at(nw, 14), rule: `Placed after 6 PM: credited by 2 PM on the next working day.${skipped}` };
+}
+const saleWithdrawableAt = (ex) => ({ due: at(nextWorking(ex), 10), rule: 'Sale proceeds become withdrawable after 10 AM on the next trading day (T+1).' });
+function ipoDates(close) { const T = at(close, 0); const allot = addWorking(T, 1), unblock = addWorking(T, 2), listing = addWorking(T, 3), late = at(addWorking(listing, 4), 23, 59); return { allot, unblock, listing, late }; }
+function mfDue(req) { let T = at(req, 0); if (!isWorking(req) || req.getUTCHours() >= 15) T = nextWorking(req); return { T, due: at(addWorking(T, 2), 23, 59), rule: 'Equity fund redemptions are paid by T+2 working days. Requests after 3 PM, or on a holiday, count from the next working day.' }; }
+
+// ---------- intent ----------
+const INTENTS = [
+  ['RISK', /(fraud|hack|unauthori[sz]ed|did ?n.?t (place|do|make|buy|sell)|not (placed|done|made) by me|maine nahi (kiya|kia|lagaya)|galat trade|stolen|scam|someone (logged|placed|took)|otp (shared|share kiya))/i],
+  ['ADVICE', /(which (stock|share|fund|ipo)|should i (buy|sell|invest|apply|hold)|kya (lu|lun|lena|kharid|bech)|recommend|tips?\b|best (stock|fund|share)|multibagger|target price|kaunsa|(apply|kharid\w*|le|lena|bech\w*|invest) (karna )?chahiye|good (buy|investment|time to)|worth (buying|investing)|accha hai kya|should i have)/i],
+  ['IPO', /(\bipo\b|allot|unblock|\bblock|listing|mandate.*ipo|ipo.*mandate|asba)/i],
+  ['SIP', /(\bsip\b|autopay|instal+ment|kisht|sip.*(fail|debit|nahi))/i],
+  ['MF_REDEEM', /(redeem|redemption|mutual fund|\bmf\b|nav|fund (se|ka) paisa)/i],
+  ['SALE', /(sold|\bsell\b|becha|bech(a|i)? diya|sale proceeds|withdrawable|withdraw.*(sold|sale)|not withdrawable)/i],
+  ['WITHDRAW', /(withdraw|nikal|payout|bank (me|mein|account) (nahi|not)|not (received|credited)|kab aayega|kab aaega|kab milega|credited|paisa|paise|money|refund|where is my)/i],
+];
+function classify(text) {
+  const t = String(text || '');
+  for (const [k, re] of INTENTS) if (re.test(t)) {
+    // a generic money question is resolved from account state, not from words
+    const generic = k === 'WITHDRAW' && !/(withdraw|nikal|payout)/i.test(t);
+    return { intent: generic ? 'MONEY_GENERIC' : k };
+  }
+  return { intent: 'UNKNOWN' };
+}
+
+// ---------- resolve ----------
+const ROUTE = { SELF: 'Answered in chat', PRIORITY: 'Priority human queue', SECURITY: 'Security team, immediately', STANDARD: 'Standard human queue', DECLINE: 'Declined: no advice' };
+function pickOpen(user, now) {
+  // most recent money movement that is not finished
+  const open = user.events.filter(e => ['WITHDRAWAL', 'IPO', 'MF_REDEEM', 'SELL'].includes(e.type) && !e.done).sort((a, b) => P(b.at).getTime() - P(a.at).getTime());
+  return open[0] || null;
+}
+function resolve(user, text, nowStr) {
+  const now = P(nowStr);
+  let { intent } = classify(text);
+  const out = (o) => ({ intent, ...o, now: fmt(now) });
+  if (intent === 'RISK') return out({ verdict: 'RISK', route: ROUTE.SECURITY, answer: 'This needs our security team now. We have flagged your account for review and a specialist will call you. Do not share any OTP or PIN with anyone, including people who say they are from Groww.', agent: 'Possible unauthorised activity reported. Freeze-review checklist; verify device and session logs before anything else.', ruleUsed: 'Hard rule: any report of unauthorised activity goes to a person, never to a bot answer.' });
+  if (intent === 'ADVICE') return out({ verdict: 'DECLINED', route: ROUTE.DECLINE, answer: 'We can\'t tell you what to buy or sell. That would be investment advice. We can show you how a stock or fund has done, what it costs, and how to read its details.', agent: null, ruleUsed: 'Hard rule: support never recommends securities.' });
+  const pick = (type) => user.events.filter(e => e.type === type && !e.done).sort((a, b) => P(b.at) - P(a.at))[0] || user.events.filter(e => e.type === type).sort((a, b) => P(b.at) - P(a.at))[0];
+  let ev = null;
+  if (intent === 'MONEY_GENERIC' || intent === 'UNKNOWN') { ev = pickOpen(user, now); if (ev) intent = ({ WITHDRAWAL: 'WITHDRAW', IPO: 'IPO', MF_REDEEM: 'MF_REDEEM', SELL: 'SALE' })[ev.type]; }
+  if (intent === 'MONEY_GENERIC') intent = 'WITHDRAW';
+  if (intent === 'UNKNOWN') return out({ verdict: 'UNKNOWN', route: ROUTE.STANDARD, answer: 'Let me get someone from the team to help with this.', agent: 'Intent not recognised and no open money movement on the account. Read the full message.', ruleUsed: 'Unrecognised questions go to a person.' });
+  const map = { WITHDRAW: 'WITHDRAWAL', SALE: 'SELL', IPO: 'IPO', MF_REDEEM: 'MF_REDEEM', SIP: 'SIP' };
+  ev = ev || pick(map[intent]);
+  if (!ev) return out({ verdict: 'NO_RECORD', route: ROUTE.STANDARD, answer: `I can't find a recent ${({ WITHDRAW: 'withdrawal request', SALE: 'stock sale', IPO: 'IPO application', MF_REDEEM: 'redemption', SIP: 'SIP' })[intent]} on your account. Sending this to the team so someone can check.`, agent: 'User asks about a transaction we cannot find. Check other linked accounts and payment references.', ruleUsed: 'No matching record: hand off, never guess.' });
+
+  const steps = []; const S = (label, when, state) => steps.push({ label, when: when ? fmt(when) : '', state });
+  if (ev.type === 'WITHDRAWAL') {
+    const req = P(ev.at), { due, rule } = withdrawalDue(req);
+    if (ev.status === 'FAILED') return out({ ev, verdict: 'FAILED', route: ROUTE.PRIORITY, answer: `Your withdrawal of ${inr(ev.amount)} could not be completed: ${ev.reason}. The money is back in your Groww Balance. A support specialist will help you fix the bank details.`, agent: `Withdrawal ${ev.id} failed (${ev.reason}). Amount returned to balance. Guide bank account update; confirm penny-drop name match.`, ruleUsed: rule, steps: [] });
+    S('Request placed', req, 'done'); S('Sent to your bank', null, now >= due ? 'done' : 'now'); S('Credited by', due, ev.status === 'CREDITED' ? 'done' : 'next');
+    if (ev.status === 'CREDITED') return out({ ev, verdict: 'DONE', route: ROUTE.SELF, answer: `Your withdrawal of ${inr(ev.amount)} was credited on ${fmt(P(ev.creditedAt))} (UTR ${ev.utr}). If you can't see it, your bank statement will show this UTR.`, agent: null, ruleUsed: rule, steps });
+    if (now < due) return out({ ev, verdict: 'NOT_DUE', route: ROUTE.SELF, answer: `Your withdrawal of ${inr(ev.amount)} is on time. You placed it on ${fmt(req)}. ${rule} It should reach your bank by ${fmt(due)}.`, agent: null, ruleUsed: rule, steps, due: fmt(due) });
+    const hrs = Math.round((now - due) / 36e5);
+    return out({ ev, verdict: 'OVERDUE', route: ROUTE.PRIORITY, answer: `Your withdrawal of ${inr(ev.amount)} should have reached your bank by ${fmt(due)}. It is late, so I've passed it to a specialist with all the details. You won't need to explain it again.`, agent: `Withdrawal ${ev.id}, ${inr(ev.amount)}, placed ${fmt(req)}. Due ${fmt(due)}; ${hrs}h overdue. Check payout batch and bank status; share UTR with the customer.`, ruleUsed: rule, steps, due: fmt(due) });
+  }
+  if (ev.type === 'SELL') {
+    const ex = P(ev.at), { due, rule } = saleWithdrawableAt(ex);
+    S('Sold ' + ev.symbol, ex, 'done'); S('Added to Groww Balance (usable for new investments)', addDays(ex, 0), 'done'); S('Withdrawable from', due, now >= due ? 'done' : 'next');
+    if (now < due) return out({ ev, verdict: 'NOT_DUE', route: ROUTE.SELF, answer: `You sold ${ev.symbol} for ${inr(ev.amount)} on ${fmt(ex)}. The money is already in your Groww Balance and you can invest it now. ${rule} You can withdraw it after ${fmt(due)}.${HOLIDAYS[iso(addDays(at(ex, 0), 1))] ? ' The next day, ' + HOLIDAYS[iso(addDays(at(ex, 0), 1))] + ', is a market holiday.' : ''}`, agent: null, ruleUsed: rule, steps, due: fmt(due) });
+    return out({ ev, verdict: 'ACTION_NEEDED', route: ROUTE.SELF, answer: `The ${inr(ev.amount)} from selling ${ev.symbol} has been withdrawable since ${fmt(due)}. Go to Profile → Stocks, F&O balance → Withdraw to move it to your bank.`, agent: null, ruleUsed: rule, steps, due: fmt(due) });
+  }
+  if (ev.type === 'IPO') {
+    const close = P(ev.closeDate), d = ipoDates(close);
+    if (ev.mandate !== 'APPROVED') {
+      if (now <= at(close, 17)) return out({ ev, verdict: 'ACTION_NEEDED', route: ROUTE.SELF, answer: `Your ${ev.name} IPO bid isn't placed yet. Approve the UPI mandate in your UPI app before the cut-off on ${fmt(close, false)}. Until then, no money is blocked.`, agent: null, ruleUsed: RULES.ipo, steps: [] });
+      return out({ ev, verdict: 'DONE', route: ROUTE.SELF, answer: `The UPI mandate for your ${ev.name} IPO bid was not approved before the issue closed, so the bid was not placed and no money was blocked. Nothing will be debited.`, agent: null, ruleUsed: RULES.ipo, steps: [] });
+    }
+    S('Issue closed (T)', close, 'done'); S('Allotment (T+1)', d.allot, now >= d.allot ? 'done' : 'next'); S('Unblock or shares credited (T+2)', d.unblock, now >= d.unblock ? 'done' : 'next'); S('Listing (T+3)', d.listing, now >= d.listing ? 'done' : 'next');
+    if (ev.allotted === true) return out({ ev, verdict: now >= d.unblock ? 'DONE' : 'NOT_DUE', route: ROUTE.SELF, answer: `You were allotted ${ev.name} shares. ${inr(ev.amount)} is debited and the shares reach your demat by ${fmt(d.unblock, false)}, ahead of listing on ${fmt(d.listing, false)}.`, agent: null, ruleUsed: RULES.ipo, steps });
+    if (now < at(d.allot, 20)) return out({ ev, verdict: 'NOT_DUE', route: ROUTE.SELF, answer: `Your ${ev.name} bid is in. ${inr(ev.amount)} is blocked in your bank, not debited. Allotment is on ${fmt(d.allot, false)}. If you don't get shares, the block is released, usually by listing day (${fmt(d.listing, false)}).`, agent: null, ruleUsed: RULES.ipo, steps });
+    if (ev.unblocked) return out({ ev, verdict: 'DONE', route: ROUTE.SELF, answer: `You weren't allotted ${ev.name} shares, and the ${inr(ev.amount)} block was released on ${fmt(P(ev.unblockedAt), false)}. Check your UPI app's blocked-amounts section if your bank balance doesn't show it yet.`, agent: null, ruleUsed: RULES.ipo, steps });
+    if (now <= d.late) return out({ ev, verdict: 'WITHIN_WINDOW', route: ROUTE.SELF, answer: `You weren't allotted ${ev.name} shares. Your ${inr(ev.amount)} is still blocked, which is normal for now. Your bank releases it when the UPI mandate expires: usually by listing (${fmt(d.listing, false)}), and up to 4 working days after that. If it's still blocked after ${fmt(d.late, false)}, we'll take it up with the bank and registrar for you.`, agent: null, ruleUsed: RULES.ipo, steps, due: fmt(d.late, false) });
+    return out({ ev, verdict: 'OVERDUE', route: ROUTE.PRIORITY, answer: `Your ${inr(ev.amount)} for the ${ev.name} IPO should have been released by ${fmt(d.late, false)}. That's late, so a specialist will raise it with your bank and the registrar. You don't need to call them yourself.`, agent: `Non-allotted IPO ${ev.name}, ${inr(ev.amount)} still blocked. Close ${fmt(close, false)}, listing ${fmt(d.listing, false)}, window ended ${fmt(d.late, false)}. Get mandate ID and UPI handle; raise with SCSB and RTA.`, ruleUsed: RULES.ipo, steps, due: fmt(d.late, false) });
+  }
+  if (ev.type === 'MF_REDEEM') {
+    const req = P(ev.at), { T, due, rule } = mfDue(req);
+    S('Redemption placed', req, 'done'); S('Processing day (T)', T, now >= T ? 'done' : 'next'); S('Paid to bank by (T+2)', due, ev.status === 'CREDITED' ? 'done' : 'next');
+    if (ev.status === 'CREDITED') return out({ ev, verdict: 'DONE', route: ROUTE.SELF, answer: `Your redemption of ${inr(ev.amount)} from ${ev.scheme} was paid on ${fmt(P(ev.creditedAt), false)}.`, agent: null, ruleUsed: rule, steps });
+    if (now <= due) return out({ ev, verdict: 'NOT_DUE', route: ROUTE.SELF, answer: `Your redemption of about ${inr(ev.amount)} from ${ev.scheme} is on time. ${rule} Expect it in your bank by end of ${fmt(due, false)}.`, agent: null, ruleUsed: rule, steps, due: fmt(due, false) });
+    return out({ ev, verdict: 'OVERDUE', route: ROUTE.PRIORITY, answer: `Your redemption from ${ev.scheme} should have been paid by ${fmt(due, false)}. It's late, so a specialist is checking with the fund house now.`, agent: `MF redemption ${ev.id}, ${ev.scheme}, ~${inr(ev.amount)}. T = ${fmt(T, false)}, due ${fmt(due, false)}. Check RTA payout file and bank status.`, ruleUsed: rule, steps, due: fmt(due, false) });
+  }
+  if (ev.type === 'SIP') {
+    const reasons = { INSUFFICIENT_BALANCE: `the bank account had too little balance on ${fmt(P(ev.at), false)}. Nothing was invested this month. Keep at least ${inr(ev.amount)} in the account a day before the next date (${fmt(P(ev.nextDate), false)}) and it will run automatically.`, MANDATE_PENDING: `the autopay mandate is not active yet. Approve it in your bank or UPI app; until then, each instalment has to be paid manually.`, MANDATE_LIMIT: `the instalment is higher than your autopay limit. Raise the mandate limit or lower the SIP amount.` };
+    return out({ ev, verdict: 'ACTION_NEEDED', route: ROUTE.SELF, answer: `Your ${inr(ev.amount)} SIP in ${ev.scheme} didn't go through because ${reasons[ev.reason] || 'of a bank-side failure.'}`, agent: null, ruleUsed: 'SIP failure reason read from the mandate and debit status.', steps: [] });
+  }
+  return out({ verdict: 'UNKNOWN', route: ROUTE.STANDARD, answer: 'Let me get someone from the team to help with this.', agent: 'Unhandled case.', ruleUsed: '' });
+}
+
+const api = { resolve, classify, withdrawalDue, saleWithdrawableAt, ipoDates, mfDue, P, fmt, iso, isWorking, nextWorking, addWorking, HOLIDAYS, RULES, ROUTE, inr };
+if (typeof module !== 'undefined') module.exports = api; else root.WMM = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+// Fictional customers and account states for the simulator. Times are IST.
+(function (root) {
+const USERS = [
+  { id: 'riya', name: 'Riya, 21, Pune', note: 'First-time investor. Withdrew the evening before Dussehra.', now: '2026-10-20T11:00',
+    queries: ['paise kab aayenge bank me? kal withdraw kiya tha', 'Where is my money?', 'Which stock should I buy for Diwali?'],
+    events: [{ type: 'WITHDRAWAL', id: 'WD-88213', amount: 12000, at: '2026-10-19T19:40', status: 'PROCESSING' }] },
+  { id: 'arjun', name: 'Arjun, 29, Bengaluru', note: 'Sold shares on Friday; wants the money first thing Monday.', now: '2026-10-19T09:20',
+    queries: ['I sold INFY on Friday, why can\'t I withdraw the money?', 'becha tha friday ko, withdraw nahi ho raha', 'Someone placed a trade I did not place'],
+    events: [{ type: 'SELL', id: 'ORD-55120', symbol: 'INFY', amount: 48500, at: '2026-10-16T14:10' }] },
+  { id: 'meera', name: 'Meera, 34, Jaipur', note: 'Not allotted in an IPO; money still blocked after listing.', now: '2026-11-12T10:00',
+    queries: ['IPO nahi laga, paisa abhi bhi block hai', 'When will my IPO amount be unblocked?', 'Kya mujhe yeh IPO apply karna chahiye tha?'],
+    events: [{ type: 'IPO', id: 'IPO-7781', name: 'Kaveri Foods', amount: 14800, at: '2026-11-03T12:00', closeDate: '2026-11-05', mandate: 'APPROVED', allotted: false, unblocked: false }] },
+  { id: 'kabir', name: 'Kabir, 41, Delhi', note: 'Large withdrawal that really is late.', now: '2026-10-15T16:00',
+    queries: ['My withdrawal of 2.4 lakh has not come yet', 'paisa kab milega?', 'This is fraud, where is my money?'],
+    events: [{ type: 'WITHDRAWAL', id: 'WD-90114', amount: 240000, at: '2026-10-14T10:15', status: 'PROCESSING' }] },
+  { id: 'sana', name: 'Sana, 26, Hyderabad', note: 'Redeemed a mutual fund after the cut-off, across a holiday.', now: '2026-10-21T18:00',
+    queries: ['I redeemed my mutual fund on Friday, still not received', 'redemption ka paisa kab aayega', 'Is the Nifty index fund a good buy now?'],
+    events: [{ type: 'MF_REDEEM', id: 'MFR-3301', scheme: 'Nifty 50 Index Fund', amount: 60000, at: '2026-10-16T16:30', status: 'PROCESSING' }] },
+  { id: 'dev', name: 'Dev, 23, Indore', note: 'SIP failed this month.', now: '2026-10-06T12:00',
+    queries: ['My SIP failed, why?', 'sip ka paisa kat nahi raha', 'I want to close my account'],
+    events: [{ type: 'SIP', id: 'SIP-1209', scheme: 'Midcap Fund', amount: 2000, at: '2026-10-05T09:00', reason: 'INSUFFICIENT_BALANCE', nextDate: '2026-11-05' }] },
+];
+if (typeof module !== 'undefined') module.exports = { USERS }; else root.WMMData = { USERS };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+// Eval set: message + account state + clock -> expected intent, verdict, route. Hard rules marked.
+(function (root) {
+const E = (typeof module !== 'undefined') ? require('./engine.js') : root.WMM;
+const W = (at, status = 'PROCESSING', extra = {}) => ({ id: 'x', events: [{ type: 'WITHDRAWAL', id: 'WD-1', amount: 5000, at, status, ...extra }] });
+const S = (at) => ({ id: 'x', events: [{ type: 'SELL', id: 'O-1', symbol: 'TCS', amount: 30000, at }] });
+const I = (close, o = {}) => ({ id: 'x', events: [{ type: 'IPO', id: 'I-1', name: 'Test Ltd', amount: 15000, at: close + 'T10:00', closeDate: close, mandate: 'APPROVED', allotted: false, unblocked: false, ...o }] });
+const M = (at, status = 'PROCESSING') => ({ id: 'x', events: [{ type: 'MF_REDEEM', id: 'M-1', scheme: 'Test Fund', amount: 10000, at, status }] });
+const CASES = [
+  // [name, user, message, now, expect {intent, verdict, route, due?}, hard]
+  ['Withdrawal at 7:30 AM Wednesday is due 2 PM the same day', W('2026-10-14T07:30'), 'withdrawal status?', '2026-10-14T12:00', { verdict: 'NOT_DUE', due: 'Wed 14 Oct, 2 PM' }],
+  ['Withdrawal at 10 AM Wednesday is due 11 PM the same day', W('2026-10-14T10:00'), 'withdraw kiya, kab aayega', '2026-10-14T20:00', { verdict: 'NOT_DUE', due: 'Wed 14 Oct, 11 PM' }],
+  ['Friday 7 PM withdrawal is due Monday 2 PM', W('2026-10-09T19:00'), 'where is my withdrawal', '2026-10-10T11:00', { verdict: 'NOT_DUE', due: 'Mon 12 Oct, 2 PM' }],
+  ['Saturday withdrawal is due Monday 2 PM', W('2026-10-10T11:00'), 'withdraw status', '2026-10-11T11:00', { verdict: 'NOT_DUE', due: 'Mon 12 Oct, 2 PM' }],
+  ['Monday 7:40 PM before Dussehra skips the holiday: due Wednesday 2 PM', W('2026-10-19T19:40'), 'paise kab aayenge', '2026-10-20T11:00', { verdict: 'NOT_DUE', due: 'Wed 21 Oct, 2 PM' }],
+  ['Withdrawal on Gandhi Jayanti (a Friday) is due Monday 2 PM', W('2026-10-02T10:00'), 'withdrawal not received', '2026-10-03T10:00', { verdict: 'NOT_DUE', due: 'Mon 5 Oct, 2 PM' }],
+  ['Withdrawal past its due time goes to a person with context', W('2026-10-14T10:15'), 'paisa kab milega?', '2026-10-15T16:00', { verdict: 'OVERDUE', route: 'Priority human queue' }],
+  ['A credited withdrawal is answered with the UTR', W('2026-10-14T10:15', 'CREDITED', { creditedAt: '2026-10-14T21:05', utr: 'N2871' }), 'not credited yet', '2026-10-15T09:00', { verdict: 'DONE', route: 'Answered in chat' }],
+  ['A failed withdrawal is never "on time": it goes to a person', W('2026-10-14T10:15', 'FAILED', { reason: 'bank account closed' }), 'withdraw nahi hua', '2026-10-14T12:00', { verdict: 'FAILED', route: 'Priority human queue' }],
+  ['Friday sale is withdrawable after 10 AM Monday', S('2026-10-16T14:10'), 'I sold TCS, why can\'t I withdraw?', '2026-10-19T09:20', { intent: 'SALE', verdict: 'NOT_DUE', due: 'Mon 19 Oct, 10 AM' }],
+  ['Sale on the day before Dussehra is withdrawable Wednesday 10 AM', S('2026-10-19T11:00'), 'becha tha, withdraw nahi ho raha', '2026-10-20T10:00', { intent: 'SALE', due: 'Wed 21 Oct, 10 AM' }],
+  ['After 10 AM next day, the user is told how to withdraw', S('2026-10-16T14:10'), 'sold shares money?', '2026-10-19T11:00', { verdict: 'ACTION_NEEDED' }],
+  ['IPO closing Thu 5 Nov lists Wed 11 Nov (Diwali holiday on Tue)', I('2026-11-05'), 'ipo refund', '2026-11-06T09:00', { intent: 'IPO', verdict: 'NOT_DUE' }, false, (r) => /Wed 11 Nov/.test(r.answer)],
+  ['Blocked IPO money 1 day after listing is within the window, not late', I('2026-11-05'), 'IPO nahi laga, paisa block hai', '2026-11-12T10:00', { verdict: 'WITHIN_WINDOW', route: 'Answered in chat' }],
+  ['Blocked IPO money after the window goes to a person', I('2026-11-05'), 'ipo amount still blocked', '2026-11-18T10:00', { verdict: 'OVERDUE', route: 'Priority human queue' }],
+  ['Mandate not approved after close: no money was blocked', I('2026-11-05', { mandate: 'PENDING' }), 'ipo mandate', '2026-11-06T10:00', { verdict: 'DONE' }, false, (r) => /no money was blocked/.test(r.answer)],
+  ['Mandate pending before close: tell the user to approve it', I('2026-11-05', { mandate: 'PENDING' }), 'ipo status', '2026-11-05T11:00', { verdict: 'ACTION_NEEDED' }],
+  ['Equity fund redeemed Fri 4:30 PM is paid by Thu (after cut-off, across Dussehra)', M('2026-10-16T16:30'), 'redemption ka paisa kab aayega', '2026-10-21T18:00', { intent: 'MF_REDEEM', verdict: 'NOT_DUE', due: 'Thu 22 Oct' }],
+  ['Equity fund redemption past T+2 goes to a person', M('2026-10-12T11:00'), 'mutual fund redemption not received', '2026-10-15T10:00', { verdict: 'OVERDUE', route: 'Priority human queue' }],
+  ['Generic "where is my money" is answered from the open transaction', W('2026-10-19T19:40'), 'Where is my money?', '2026-10-20T11:00', { intent: 'WITHDRAW', verdict: 'NOT_DUE' }],
+  ['HARD: unauthorised trade report goes to the security team', S('2026-10-16T14:10'), 'Someone placed a trade I did not place', '2026-10-19T09:20', { verdict: 'RISK', route: 'Security team, immediately' }, true],
+  ['HARD: Hinglish unauthorised trade report goes to the security team', S('2026-10-16T14:10'), 'yeh trade maine nahi kiya', '2026-10-19T09:20', { verdict: 'RISK' }, true],
+  ['HARD: "OTP share kiya" goes to the security team', W('2026-10-14T10:00'), 'maine kisi ko otp share kiya tha', '2026-10-14T12:00', { verdict: 'RISK' }, true],
+  ['HARD: "which stock should I buy" is declined, no advice', S('2026-10-16T14:10'), 'Which stock should I buy for Diwali?', '2026-10-19T09:20', { verdict: 'DECLINED' }, true],
+  ['HARD: "kya mujhe IPO apply karna chahiye tha" is declined', I('2026-11-05'), 'Kya mujhe yeh IPO apply karna chahiye tha?', '2026-11-12T10:00', { verdict: 'DECLINED' }, true],
+  ['HARD: "is this fund a good buy" is declined', M('2026-10-16T16:30'), 'Is the Nifty index fund a good buy now?', '2026-10-21T18:00', { verdict: 'DECLINED' }, true],
+  ['HARD: a question about money we cannot find is handed off, never guessed', { id: 'x', events: [] }, 'my refund is not received', '2026-10-14T12:00', { verdict: 'NO_RECORD', route: 'Standard human queue' }, true],
+  ['Unrecognised request goes to a person', { id: 'x', events: [] }, 'I want to close my account', '2026-10-14T12:00', { verdict: 'UNKNOWN', route: 'Standard human queue' }],
+  ['SIP failure explains the reason and the next date', { id: 'x', events: [{ type: 'SIP', id: 'S1', scheme: 'Midcap Fund', amount: 2000, at: '2026-10-05T09:00', reason: 'INSUFFICIENT_BALANCE', nextDate: '2026-11-05' }] }, 'sip ka paisa kat nahi raha', '2026-10-06T12:00', { intent: 'SIP', verdict: 'ACTION_NEEDED' }, false, (r) => /Thu 5 Nov/.test(r.answer)],
+  ['HARD: a late case is never told it is "on time"', W('2026-10-14T10:15'), 'withdrawal?', '2026-10-15T16:00', { verdict: 'OVERDUE' }, true, (r) => !/on time/.test(r.answer)],
+];
+function run() {
+  return CASES.map(([name, user, msg, now, exp, hard, extra]) => {
+    let r, ok = true, why = [];
+    try {
+      r = E.resolve(user, msg, now);
+      for (const k of Object.keys(exp)) { if (k === 'due') { if (r.due !== exp.due) { ok = false; why.push(`due ${r.due} ≠ ${exp.due}`); } } else if (r[k] !== exp[k]) { ok = false; why.push(`${k} ${r[k]} ≠ ${exp[k]}`); } }
+      if (extra && !extra(r)) { ok = false; why.push('answer text check failed'); }
+    } catch (e) { ok = false; why.push(e.message); }
+    return { name, ok, hard: !!hard, why: why.join('; '), msg };
+  });
+}
+if (typeof module !== 'undefined') module.exports = { run, CASES }; else root.WMMTests = { run };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+(function () {
+const E = window.WMM, U = window.WMMData.USERS, $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const VLABEL = { NOT_DUE: 'Not due yet', WITHIN_WINDOW: 'Within normal window', ACTION_NEEDED: 'Customer action needed', OVERDUE: 'Overdue', FAILED: 'Failed', DONE: 'Done', RISK: 'Possible unauthorised activity', DECLINED: 'Advice request', UNKNOWN: 'Not recognised', NO_RECORD: 'No matching record' };
+let user = U[0];
+
+function renderPersonas() {
+  $('personas').innerHTML = U.map(u => `<button type="button" class="chip" data-id="${u.id}" aria-pressed="${u.id === user.id}">${esc(u.name.split(',')[0])}</button>`).join('');
+  $('personas').querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => { user = U.find(u => u.id === b.dataset.id); renderPersonas(); ask(user.queries[0]); }));
+}
+function ask(text) {
+  const r = E.resolve(user, text, user.now);
+  $('who').textContent = user.name;
+  $('clock').textContent = r.now;
+  $('umsg').textContent = text;
+  let html = `<div>${esc(r.answer)}</div>`;
+  if (r.steps && r.steps.length) html += `<ol class="track">${r.steps.map(s => `<li class="${s.state}"><span>${esc(s.label)}<small>${esc(s.when)}</small></span></li>`).join('')}</ol>`;
+  if (r.route !== 'Answered in chat' && r.route !== 'Declined: no advice') html += `<div class="small muted">Connecting you to a person. Your case details are already attached.</div>`;
+  else html += `<div class="small muted">Not what you needed? <u>Talk to a person</u></div>`;
+  $('bmsg').innerHTML = html;
+  $('qchips').innerHTML = user.queries.map(q => `<button type="button">${esc(q)}</button>`).join('');
+  $('qchips').querySelectorAll('button').forEach(b => b.addEventListener('click', () => ask(b.textContent)));
+  const rows = [
+    ['Customer', esc(user.name) + '<br><span class="muted small">' + esc(user.note) + '</span>'],
+    ['Intent', `<span style="font-family:var(--mono)">${esc(r.intent)}</span>`],
+    ['Verdict', `<span class="pill v-${r.verdict}">${VLABEL[r.verdict] || r.verdict}</span>`],
+    ['Due by', esc(r.due || '—')],
+    ['Route', `<b>${esc(r.route)}</b>`],
+    ['Rule applied', `<span class="small">${esc(r.ruleUsed || '—')}</span>`],
+  ];
+  if (r.agent) rows.push(['Case packet', `<span class="small">${esc(r.agent)}</span>`]);
+  $('agentDl').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  $('agentNote').textContent = r.route === 'Answered in chat' ? 'No ticket created. If the customer writes again before the due time, the same answer comes back; after it, the case goes straight to the priority queue.' : r.route === 'Declined: no advice' ? 'No ticket. Logged as an advice request for content and education teams.' : 'Ticket created once for this transaction. Any repeat contact attaches here instead of opening a new ticket.';
+}
+$('askForm').addEventListener('submit', (e) => { e.preventDefault(); const v = $('ask').value.trim(); if (v) { ask(v); $('ask').value = ''; } });
+
+function renderEvals() {
+  const r = window.WMMTests.run(); const ok = r.filter(x => x.ok).length; const hard = r.filter(x => x.hard), hardOk = hard.filter(x => x.ok).length;
+  $('evsum').innerHTML = `<b>${ok} / ${r.length}</b><span class="muted">cases pass</span><b style="margin-left:18px">${hardOk} / ${hard.length}</b><span class="muted">hard rules hold</span>`;
+  $('evrows').innerHTML = r.map(x => `<tr><td class="${x.ok ? 'ok' : 'bad'}">${x.ok ? 'PASS' : 'FAIL'}</td><td>${esc(x.name.replace(/^HARD: /, ''))}${x.hard ? '<span class="hard">HARD</span>' : ''}${x.why ? '<br><span class="small bad">' + esc(x.why) + '</span>' : ''}</td><td class="small" style="font-family:var(--mono)">${esc(x.msg)}</td></tr>`).join('');
+}
+
+const INPUTS = [
+  ['users', 'Monthly transacting users', 22400000, 'Q1 FY27, as reported'],
+  ['cpk', 'Support contacts per 1,000 users a month', 40, 'Assumption: replace with Groww data'],
+  ['money', 'Share of contacts about money status (%)', 35, 'Assumption'],
+  ['early', 'Share of those that arrive before the due time (%)', 65, 'Assumption: the week-one SQL measures this'],
+  ['close', 'Not-due contacts closed in chat with a personal ETA (%)', 60, 'Assumption: target for the holdout test'],
+  ['cost', 'Cost per human-handled contact (₹)', 70, 'Assumption'],
+  ['mins', 'Minutes saved per overdue case by the case packet', 3, 'Assumption'],
+];
+const vals = {};
+function renderInputs() {
+  $('inputs').innerHTML = INPUTS.map(([k, l, v, s]) => { vals[k] = v; return `<label for="in_${k}">${l}<input id="in_${k}" type="number" min="0" value="${v}" data-k="${k}"></label><small>${s}</small>`; }).join('');
+  $('inputs').querySelectorAll('input').forEach(i => i.addEventListener('input', () => { vals[i.dataset.k] = parseFloat(i.value) || 0; renderOuts(); }));
+}
+function renderOuts() {
+  const n = (x) => Math.round(x).toLocaleString('en-IN');
+  const contacts = vals.users / 1000 * vals.cpk, money = contacts * vals.money / 100, early = money * vals.early / 100, late = money - early, closed = early * vals.close / 100;
+  const saved = closed * vals.cost * 12, hours = late * vals.mins / 60;
+  $('outs').innerHTML = [
+    ['Support contacts a month', n(contacts)], ['About money status', n(money)], ['…arriving before the money is due', n(early)], ['…arriving after it is late (to people, faster)', n(late)],
+    ['Human contacts avoided a month', n(closed), true], ['Cost avoided a year', '₹' + (saved / 1e7).toFixed(2) + ' crore', true], ['Agent hours freed a month on late cases', n(hours)],
+  ].map(([l, v, big]) => `<div class="out ${big ? 'big' : ''}"><span>${l}</span><b>${v}</b></div>`).join('') + '<p class="small muted">The bigger win is outside this sum: late cases reach a person sooner, which is what keeps them from becoming exchange complaints.</p>';
+}
+renderPersonas(); ask(user.queries[0]); renderEvals(); renderInputs(); renderOuts();
+})();
+
+</script>
+
+</body>
+</html>
