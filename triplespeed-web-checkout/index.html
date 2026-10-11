@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Link Out Without Leaks</title>
+<meta name="description" content="Independent concept by Aditya Mathur: when US iOS web checkout pays for a subscription app, with a break-even calculator, the four places it leaks, a 3-arm experiment, SQL and rollout.">
+<style>
+:root{
+  --bg:#f7f7f5; --surface:#ffffff; --ink:#1a1d23; --muted:#5b6270; --line:#e3e4e8;
+  --accent:#c2410c; --accent-soft:#fdeee6; --good:#18794e; --good-soft:#e6f4ec;
+  --warn:#9a5b00; --warn-soft:#fbf1dd; --bad:#b42318; --bad-soft:#fdeceb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1115; --surface:#171a21; --ink:#e8eaee; --muted:#9aa1ad; --line:#2a2f3a;
+    --accent:#fb923c; --accent-soft:#33200f; --good:#4cc38a; --good-soft:#12291e;
+    --warn:#e0a53c; --warn-soft:#2b2210; --bad:#f07167; --bad-soft:#2d1614;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1115; --surface:#171a21; --ink:#e8eaee; --muted:#9aa1ad; --line:#2a2f3a;
+  --accent:#fb923c; --accent-soft:#33200f; --good:#4cc38a; --good-soft:#12291e;
+  --warn:#e0a53c; --warn-soft:#2b2210; --bad:#f07167; --bad-soft:#2d1614;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;}
+.wrap{max-width:900px;margin:0 auto;padding:40px 16px 80px}
+.kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+h1{font-size:clamp(28px,5vw,40px);line-height:1.15;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-size:22px;margin:56px 0 12px;padding-top:8px;letter-spacing:-.005em}
+h3{font-size:17px;margin:28px 0 8px}
+p{margin:0 0 14px}
+a{color:var(--accent)}
+.lede{font-size:18px;color:var(--muted);margin-bottom:20px}
+.meta{font-size:14px;color:var(--muted);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0;margin:20px 0 28px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.note{font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.tldr{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card .label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.card p{margin:0;font-size:15px}
+ul,ol{padding-left:22px;margin:0 0 14px}
+li{margin:4px 0}
+.tbl{width:100%;overflow-x:auto;margin:10px 0 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;font-weight:600;white-space:nowrap}
+.p-good{background:var(--good-soft);color:var(--good)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-acc{background:var(--accent-soft);color:var(--accent)}
+.flow{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.step{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.num{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:13px}
+.step p{margin:0;font-size:15px}
+.step .t{font-weight:600;margin-bottom:2px}
+pre{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.5;margin:8px 0 18px;white-space:pre}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+p code, li code, td code{background:var(--accent-soft);color:var(--accent);padding:1px 5px;border-radius:5px}
+.grader{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin:16px 0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+select,textarea,input[type=file]{width:100%;font:inherit;font-size:14px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+textarea{min-height:130px;resize:vertical}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+button{font:inherit;font-size:14px;border:1px solid var(--accent);color:var(--accent);background:transparent;border-radius:999px;padding:6px 14px;cursor:pointer}
+button.primary{background:var(--accent);color:#fff}
+:root[data-theme="dark"] button.primary{color:#0f1115}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) button.primary{color:#0f1115}}
+button:hover{opacity:.9}
+.case-box{font-size:14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.case-box .msg{font-size:15px;margin-bottom:8px}
+.kv{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--muted);white-space:pre-wrap;word-break:break-word}
+.checks{list-style:none;padding:0;margin:10px 0 0}
+.checks li{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.checks li:last-child{border-bottom:none}
+.verdict{font-size:15px;font-weight:700;margin-top:10px}
+.why{background:var(--accent-soft);border-radius:12px;padding:18px 20px;margin-top:40px}
+.why h2{margin-top:0}
+footer{margin-top:48px;font-size:13px;color:var(--muted)}
+.small{font-size:13px;color:var(--muted)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0}
+summary{cursor:pointer;font-weight:600}
+@media (max-width:760px){
+  .tldr{grid-template-columns:1fr}
+  .row2{grid-template-columns:1fr}
+}
+.ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px}
+.ctrl-grid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.ctrl-grid input{width:100%;font:inherit;font-size:14px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
+.step ul{margin:6px 0 0;font-size:15px}
+@media (max-width:760px){.ctrl-grid{grid-template-columns:1fr}}
+
+input[type=checkbox]{accent-color:var(--accent)}
+.levers{display:flex;flex-direction:column;gap:8px}
+.lev{display:grid;grid-template-columns:22px 1fr 80px;gap:4px 10px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;color:var(--ink);margin:0}
+.lev input[type=number]{width:80px;font:inherit;font-size:14px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+.lev .small{grid-column:2 / 4}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin:18px 0 8px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.sw-t,.bt{background:var(--muted);opacity:.55}
+.sw-n,.bn{background:var(--accent)}
+.bars{display:flex;flex-direction:column;gap:10px}
+.brow{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center;font-size:14px}
+.bcol{line-height:1.2}
+.bar{display:inline-block;height:12px;border-radius:0 4px 4px 0;vertical-align:middle;margin:2px 0;max-width:calc(100% - 50px)}
+.bv{font-size:13px;margin-left:6px;vertical-align:middle;color:var(--ink)}
+@media (max-width:760px){.brow{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Independent product concept · Aditya Mathur · Oct 2026</p>
+<h1>Link out, without the leak: when web checkout pays for a US subscription app, and how to ship it</h1>
+<p class="lede">Since 2025, US iOS apps can send people to a web checkout and keep most of the 30% Apple used to take. The evidence on whether this works is split down the middle. This is how I'd decide it for a subscription app with numbers, test it without betting the app, and build the parts that quietly break: unlocking after payment, failed renewals, refunds and disputes.</p>
+
+<div class="meta">
+  <span>Built for: Product Manager, Triplespeed (Bengaluru)</span>
+  <span>Inside: the facts · problem statement · the decision model · calculator · the four places it leaks · experiment · SQL · rollout · risks</span>
+  <span><a href="#calc">Jump to the calculator</a></span>
+</div>
+
+<p class="note">Independent work. Not affiliated with Triplespeed, and I don't know which apps in the portfolio are subscription apps. All market and legal facts are from public reporting and cited, current as of October 2026. Calculator inputs are <strong>assumptions</strong> and editable. This is product thinking, not legal or tax advice.</p>
+
+<div class="tldr">
+  <div class="card"><div class="label">The prize</div><p>Up to 30% of US iOS subscription revenue moves from Apple to the app, and cash arrives in days instead of about two months. For a bootstrapped studio that funds ads from revenue, both matter.</p></div>
+  <div class="card"><div class="label">The catch</div><p>RevenueCat's own test saw 6% fewer paying customers and 36% more refunds on web. Others report the opposite. Leaving the app adds friction, and the app now owns billing problems Apple used to absorb.</p></div>
+  <div class="card"><div class="label">The plan</div><p>Decide with a break-even number, not a feeling. Ship it as a 3-arm test, fix the four leaks first, and make sure it still pays if Apple wins a 15% fee.</p></div>
+</div>
+
+<h2>1. The facts</h2>
+<div class="tbl"><table>
+<thead><tr><th>Fact</th><th>Detail</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>US rules today</td><td>Since the April 2025 contempt ruling, US iOS apps can link to outside checkout, and Apple currently charges <strong>no commission</strong> on those purchases. In 2026 the Ninth Circuit sent the question of a "reasonable" fee back to the trial court; Apple has proposed 15% / 10% / 5% tiers. The Supreme Court is reviewing the contempt finding.</td><td>AppleInsider, Apr 2026; MacDailyNews, Aug 2026</td></tr>
+<tr><td>EU</td><td>Apple allows in-app web checkout in the EU at 20%, or 10% for subscriptions after year one, with Apple's disclosure sheet and transaction reporting</td><td>RevenueCat, Oct 2026</td></tr>
+<tr><td>Rules of the road</td><td>The App Store purchase option must stay alongside the web link. An AI calorie app was removed in April 2026 over its flow.</td><td>Paddle guide, 2026</td></tr>
+<tr><td>Evidence against</td><td>RevenueCat's experiment: <strong>6% fewer paying customers</strong>, refunds <strong>+35.7%</strong>, and 2.7x more web subscribers set to renew (people forgetting, not loving it). Stripe's 2.9% + 30¢ plus 0.7% billing fee, tax and support eat into the saving.</td><td>RevenueCat</td></tr>
+<tr><td>Evidence for</td><td>Dipsea: higher trial-to-paid on web; only 2.5% of web subscribers turned off auto-renew vs 18% on the App Store. Runna: 15% better retention on web. Stoikk: slight conversion uplift with a 25% web discount.</td><td>Paddle guide, 2026</td></tr>
+<tr><td>Where churn hides</td><td>Billing failures cause 14% of App Store cancellations (31% on Google Play). On web, recovering them becomes the app's job. 84% of trial cancellations happen on day 0–1.</td><td>RevenueCat State of Subscription Apps 2026</td></tr>
+<tr><td>Cash timing</td><td>Apple pays out roughly 60–65 days after the sale; Stripe and Paddle can pay out within days</td><td>RevenueCat</td></tr>
+</tbody></table></div>
+
+<h2>2. The problem statement</h2>
+<p class="card" style="margin:10px 0 16px"><strong>For a US-heavy iOS subscription app, the App Store fee is one of the biggest costs after ad spend, and the web link is the first real chance to cut it. But the evidence is split, the legal fee could change, and moving billing to the web hands the app four new ways to lose money. Decide, with numbers, whether the link pays for this app, and if it does, ship it so that net revenue per paywall view rises without raising refunds, disputes or "I paid but nothing unlocked" tickets.</strong></p>
+
+<h2>3. The decision model</h2>
+<p>The question isn't "is web cheaper?" It obviously is. It's: <strong>how much conversion can web lose before the fee saving is gone?</strong> That break-even number is what the team should argue about, and it depends on four things:</p>
+<ul>
+  <li><strong>Plan mix.</strong> The 30¢ per charge costs 3.8% on a $7.99 weekly charge but 0.6% on a $49.99 annual one. Annual buyers are the best first candidates for web.</li>
+  <li><strong>Who picks web.</strong> If only 20% of buyers choose the link, a bad web flow can't hurt much, and can't help much either.</li>
+  <li><strong>Renewals.</strong> If web subscribers really renew better (Runna, Dipsea), it's a bigger win than the fee. If they renew better because they forgot (RevenueCat), it comes back as refunds and disputes.</li>
+  <li><strong>Apple's future fee.</strong> The decision should still work at 15%, the top of what Apple has proposed.</li>
+</ul>
+<p class="card" style="margin:10px 0 16px"><strong>What the middle-of-the-road numbers say</strong> (the calculator's defaults): with web converting 10% worse, the link adds about <strong>6% net revenue per paywall view</strong> today. If Apple wins a 15% fee, the same setup <strong>loses 0.7%</strong>, and the break-even shrinks from "web can be 24% worse" to "8% worse". So the fee saving alone is fragile. What decides this is how good the handoff is (leak 1 below), and that's where I'd spend the design and engineering effort.</p>
+
+<h2 id="calc">4. Calculator</h2>
+<div class="grader">
+<p class="small">All inputs are assumptions for a US iOS subscription app. "Web" means: the paywall shows both the App Store option and a link to web checkout, and some buyers choose the link. Year-one revenue only.</p>
+<h3 style="margin-top:6px">Traffic and conversion</h3>
+<div class="ctrl-grid">
+  <label>US iOS paywall views<input id="c_views" type="number" min="0"></label>
+  <label>Paywall view → paying subscriber, App Store (%)<input id="c_conv" type="number" min="0" step="0.1"></label>
+  <label>Share of buyers who choose the web link (%)<input id="c_webShare" type="number" min="0" max="100"></label>
+  <label>Web conversion vs App Store for those buyers (%, negative = worse)<input id="c_webConv" type="number" step="1"></label>
+</div>
+<h3>Plans and renewals</h3>
+<div class="ctrl-grid">
+  <label>Buyers choosing annual (%)<input id="c_annual" type="number" min="0" max="100"></label>
+  <label>Weekly price ($)<input id="c_pw" type="number" step="0.01"></label>
+  <label>Annual price ($)<input id="c_pa" type="number" step="0.01"></label>
+  <label>Weeks paid in year one per weekly subscriber<input id="c_weeks" type="number" step="0.5"></label>
+  <label>Web renewal effect on weekly plans (%)<input id="c_webRet" type="number" step="1"></label>
+</div>
+<h3>Fees, refunds and disputes</h3>
+<div class="ctrl-grid">
+  <label>App Store fee, year one (%)<input id="c_store" type="number" step="1"></label>
+  <label>Apple link-out fee (%, 0 today; test 15)<input id="c_link" type="number" step="1"></label>
+  <label>Card processing + billing (%)<input id="c_proc" type="number" step="0.1"></label>
+  <label>Fixed fee per charge ($)<input id="c_fixed" type="number" step="0.01"></label>
+  <label>Tax, fraud and support tooling (%)<input id="c_mor" type="number" step="0.1"></label>
+  <label>Refunds, App Store (%)<input id="c_refS" type="number" step="0.1"></label>
+  <label>Refunds, web (%)<input id="c_refW" type="number" step="0.1"></label>
+  <label>Disputes, web (% of web buyers)<input id="c_disp" type="number" step="0.1"></label>
+  <label>Dispute fee ($)<input id="c_dispFee" type="number" step="1"></label>
+</div>
+<div id="cOut"></div>
+</div>
+<p class="small">Default web refunds are set 35% above the App Store's, from RevenueCat's test. The default web conversion is 10% worse, a middle point between RevenueCat's -6% for all buyers and the 10–15% dips some apps report. Change both and watch the break-even.</p>
+
+<h2>5. The four places web checkout leaks, and the fix for each</h2>
+<div class="flow">
+  <div class="step"><div class="num">1</div><div><p class="t">The handoff: leaving the app</p><p>Every extra screen between "Continue" and "Paid" costs buyers. The fix: open checkout with the email and plan already filled in, put Apple Pay first on Safari, and keep it to one page. Test whether a small web discount (say 15%) is worth sharing part of the saving to raise the web share.</p></div></div>
+  <div class="step"><div class="num">2</div><div><p class="t">The return: "I paid but nothing unlocked"</p><p>Payment succeeds on the web, but the app only finds out when a webhook arrives. If it's late or fails, a paying customer sees a paywall again, and that becomes a refund, a dispute or a one-star review. The fix is a clear sequence with a timeout at every step:</p>
+  <ul><li><code>checkout_started → payment_succeeded → webhook_received → entitlement_granted → app_unlocked</code></li>
+  <li>The success page links straight back into the app. The app shows "Activating your plan…" and checks the entitlement for up to 60 seconds instead of showing the paywall.</li>
+  <li>A reconciliation job every 5 minutes finds payments with no entitlement and grants it. "Paid, not unlocked for over 5 minutes" is a metric that should be zero.</li></ul></div></div>
+  <div class="step"><div class="num">3</div><div><p class="t">Failed renewals: churn Apple used to handle</p><p>On the App Store, Apple retries cards and runs a grace period. On web, that's now our job, and billing failures already drive 14% of App Store cancellations. The fix: smart retries, automatic card updates where the network supports them, an email before a card expires, a 7-day grace period with access kept, and an in-app banner with a one-tap "update card". Track <strong>recovery rate of failed renewals</strong>.</p></div></div>
+  <div class="step"><div class="num">4</div><div><p class="t">Refunds and disputes: revenue built on forgetting</p><p>RevenueCat saw more web subscribers set to renew and more refunds. That's people forgetting, and it returns as disputes, which cost a fee and can get a merchant penalised by card networks. The fix: a reminder email before every annual renewal, cancellation that is genuinely easy (California's auto-renewal law requires it online anyway), and a cancellation page that offers a pause or a cheaper plan once, not five times. I'd rather lose a renewal than earn a dispute.</p></div></div>
+</div>
+
+<h2>6. The experiment</h2>
+<ul>
+  <li><strong>Who:</strong> new US iOS users who reach the paywall. Randomise by user; nothing here is shared between users, so a normal A/B test works.</li>
+  <li><strong>Arms:</strong> A) App Store only. B) App Store + web link at the same price. C) App Store + web link 15% cheaper.</li>
+  <li><strong>Primary metric:</strong> net revenue per paywall view, after all fees, refunds and disputes, read at day 35 (trials resolved, first weekly renewals in) and confirmed at day 95.</li>
+  <li><strong>Guardrails:</strong> trial starts, refund rate, dispute rate, "paid not unlocked" count, failed-renewal recovery rate, App Store rating and support tickets per 1,000 buyers.</li>
+  <li><strong>Size:</strong> to detect a 10% relative change in an 8% conversion rate (80% power, 5% significance), each arm needs about <strong>18,500 paywall views</strong>. For an app with a million users, that's days, not weeks. The slow part is waiting for renewals, not traffic.</li>
+  <li><strong>Decision rule, set before launch:</strong> ship B or C if net revenue per view beats A at day 35 <em>and</em> still beats it with Apple's fee set to 15% in the model, with no guardrail worse by more than its threshold.</li>
+</ul>
+
+<h2>7. SQL</h2>
+<p class="small">PostgreSQL. Assumed tables: <code>paywall_views</code>, <code>experiment_assignments</code>, <code>purchases</code> (channel = 'APP_STORE' or 'WEB'), <code>charges</code>, <code>refunds</code>, <code>disputes</code>, <code>entitlements</code>.</p>
+<details open><summary>1. Net revenue per paywall view by arm, day 35</summary>
+<pre><code>WITH v AS (
+  SELECT ea.arm, pv.user_id, min(pv.viewed_at) AS first_view
+  FROM paywall_views pv
+  JOIN experiment_assignments ea ON ea.user_id = pv.user_id AND ea.experiment = 'web_link_us_ios'
+  GROUP BY 1, 2
+),
+money AS (
+  SELECT v.arm, v.user_id,
+         coalesce(sum(c.net_amount_usd), 0)                         AS net_charges,   -- after store/processor fees
+         coalesce(sum(r.amount_usd), 0)                             AS refunded,
+         coalesce(sum(d.amount_usd + d.fee_usd), 0)                 AS dispute_cost
+  FROM v
+  LEFT JOIN charges  c ON c.user_id = v.user_id AND c.charged_at &lt; v.first_view + interval '35 days'
+  LEFT JOIN refunds  r ON r.charge_id = c.charge_id
+  LEFT JOIN disputes d ON d.charge_id = c.charge_id
+  GROUP BY 1, 2
+)
+SELECT arm,
+       count(*)                                                      AS paywall_viewers,
+       round(sum(net_charges - refunded - dispute_cost) / count(*), 4) AS net_rev_per_view,
+       round(100.0 * avg((net_charges &gt; 0)::int), 2)                 AS pct_paying
+FROM money GROUP BY 1 ORDER BY 1;</code></pre></details>
+
+<details><summary>2. Paid but not unlocked (should be zero)</summary>
+<pre><code>SELECT p.purchase_id, p.user_id, p.paid_at,
+       e.granted_at,
+       extract(epoch FROM (coalesce(e.granted_at, now()) - p.paid_at)) / 60 AS minutes_waiting
+FROM purchases p
+LEFT JOIN entitlements e ON e.purchase_id = p.purchase_id
+WHERE p.channel = 'WEB'
+  AND p.status = 'SUCCEEDED'
+  AND (e.granted_at IS NULL OR e.granted_at &gt; p.paid_at + interval '5 minutes')
+ORDER BY p.paid_at DESC;</code></pre></details>
+
+<details><summary>3. Failed renewals on web: how many we win back, and how fast</summary>
+<pre><code>SELECT date_trunc('week', f.failed_at)                                         AS week,
+       count(*)                                                                AS failed_renewals,
+       round(100.0 * avg((s.charged_at &lt;= f.failed_at + interval '7 days')::int), 1)  AS pct_recovered_7d,
+       round(100.0 * avg((s.charged_at &lt;= f.failed_at + interval '14 days')::int), 1) AS pct_recovered_14d
+FROM charges f
+LEFT JOIN LATERAL (
+  SELECT min(c2.charged_at) AS charged_at FROM charges c2
+  WHERE c2.subscription_id = f.subscription_id AND c2.status = 'SUCCEEDED' AND c2.charged_at &gt; f.failed_at
+) s ON true
+WHERE f.channel = 'WEB' AND f.status = 'FAILED' AND f.is_renewal
+GROUP BY 1 ORDER BY 1;</code></pre></details>
+
+<details><summary>4. Refund and dispute rates by channel and plan</summary>
+<pre><code>SELECT c.channel, c.plan,
+       count(DISTINCT c.charge_id)                                                    AS charges,
+       round(100.0 * count(DISTINCT r.charge_id) / count(DISTINCT c.charge_id), 2)    AS refund_rate_pct,
+       round(100.0 * count(DISTINCT d.charge_id) / count(DISTINCT c.charge_id), 3)    AS dispute_rate_pct
+FROM charges c
+LEFT JOIN refunds  r ON r.charge_id = c.charge_id
+LEFT JOIN disputes d ON d.charge_id = c.charge_id
+WHERE c.status = 'SUCCEEDED' AND c.charged_at &gt;= now() - interval '90 days'
+GROUP BY 1, 2 ORDER BY 1, 2;</code></pre></details>
+
+<details><summary>5. Did they forget? Refunds or disputes within 7 days of an annual renewal</summary>
+<pre><code>SELECT c.channel,
+       (c.reminder_sent_at IS NOT NULL)                                              AS got_reminder,
+       count(*)                                                                       AS annual_renewals,
+       round(100.0 * avg((r.charge_id IS NOT NULL OR d.charge_id IS NOT NULL)::int), 2) AS pct_refunded_or_disputed_7d
+FROM charges c
+LEFT JOIN refunds  r ON r.charge_id = c.charge_id AND r.created_at &lt;= c.charged_at + interval '7 days'
+LEFT JOIN disputes d ON d.charge_id = c.charge_id AND d.created_at &lt;= c.charged_at + interval '7 days'
+WHERE c.plan = 'ANNUAL' AND c.is_renewal AND c.status = 'SUCCEEDED'
+GROUP BY 1, 2;
+-- If reminders don't lower this number, the cancellation flow is too hard, not the reminder too loud.</code></pre></details>
+
+<h2>8. Rollout</h2>
+<div class="tbl"><table>
+<thead><tr><th>When</th><th>What</th><th>Done means</th></tr></thead>
+<tbody>
+<tr><td>Week 1</td><td>Fill the calculator with the app's real numbers. If the break-even needs web to convert better than the App Store, stop here.</td><td>A go/no-go the founders agree with, in one page</td></tr>
+<tr><td>Weeks 2–3</td><td>Build leaks 2 and 3 first: entitlement sync with reconciliation, retries, grace period, card-update banner. Pick processor and tax approach (merchant of record vs own Stripe + tax tool).</td><td>"Paid not unlocked" at zero in internal testing; retries live</td></tr>
+<tr><td>Weeks 3–4</td><td>3-arm test on new US iOS users, 10% of traffic per arm</td><td>Day-35 read; guardrails inside thresholds</td></tr>
+<tr><td>Weeks 5–8</td><td>Ship the winner to all new US iOS users; add renewal reminders and the cancellation page; offer web to existing annual subscribers at renewal</td><td>Day-95 read confirms day 35</td></tr>
+<tr><td>Then</td><td>Same playbook for the EU at its own fee (20%/10%) and for the next app in the portfolio</td><td>A repeatable playbook, not a one-off</td></tr>
+</tbody></table></div>
+
+<h2>9. Risks and what would prove this wrong</h2>
+<ul>
+  <li><strong>The law moves.</strong> Apple's fee on link-outs is 0% today and may not stay there. Every decision is tested at 15%, and the build is cheap enough to switch off.</li>
+  <li><strong>App review.</strong> One non-compliant flow can get an app pulled, as one was in April 2026. The App Store option stays visible, the disclosure is clear, and we never re-prompt after a "no".</li>
+  <li><strong>Tax becomes our problem.</strong> On the App Store, Apple is the seller and handles US sales tax. On the web, we are, unless a merchant of record does it for a fee. That fee is in the calculator.</li>
+  <li><strong>Fraud and trial abuse.</strong> Web trials invite stolen cards and repeat trials. Card checks, one trial per card and device, and dispute rate as a hard guardrail.</li>
+  <li><strong>Attribution.</strong> Purchases that leave the app are harder to tie back to the ad that drove them. Pass the install's campaign ID into checkout so paid social still sees what works.</li>
+  <li><strong>The honest null result.</strong> If web subscribers renew better only because they forget, the day-95 refund and dispute numbers will show it. Then the answer is "App Store only" for this app, and that's a fine answer.</li>
+</ul>
+
+<div class="why">
+<h2>Why I built this</h2>
+<p>At EnKash I owned the payments side of an acquiring product: checkout, payment links, transaction-status webhooks, refunds, settlement and reconciliation. That's where I learnt how a payment can succeed while the product never finds out. Before that I spent a year at Stripe in fraud and AML for the US market, where spotting abuse patterns was the daily work. Triplespeed is hiring a payments engineer and a retention marketing lead at the same time as this PM role, which suggests this problem is close to the top of the list. It's the one I'd want to own.</p>
+</div>
+
+<footer>
+<p><strong>Sources</strong> (accessed Oct 2026):
+<a href="https://appleinsider.com/articles/26/04/29/app-store-policy-must-change-as-epic-convinces-us-circuit-court-to-reverse-stay">AppleInsider, Apr 2026</a> ·
+<a href="https://macdailynews.com/2026/08/14/u-s-supreme-court-clears-path-for-app-store-commission-showdown-as-apple-must-defend-its-rates-in-lower-court/">MacDailyNews, Aug 2026</a> ·
+<a href="https://www.revenuecat.com/blog/company/apple-in-app-web-checkouts-eu">RevenueCat: EU web checkouts</a> ·
+<a href="https://www.revenuecat.com/blog/growth/why-you-shouldnt-use-app-to-web">RevenueCat: why you shouldn't use app-to-web</a> ·
+<a href="https://www.revenuecat.com/blog/growth/external-ios-payments-pros-cons-gotchas">RevenueCat: pros, cons and gotchas</a> ·
+<a href="https://www.paddle.com/resources/external-payments-guide-ios-app-developers">Paddle: external payments guide</a> ·
+<a href="https://www.revenuecat.com/blog/growth/subscription-app-trends-benchmarks-2026">RevenueCat: subscription benchmarks 2026</a> ·
+<a href="https://www.triplespeed.com/careers">Triplespeed careers</a></p>
+<p>Aditya Mathur · <a href="https://adimathur-creates.github.io">adimathur-creates.github.io</a> · <a href="https://www.linkedin.com/in/adityaamathur">LinkedIn</a> · adityamathur2004@gmail.com</p>
+</footer>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+// Defaults are ASSUMPTIONS for a US iOS subscription app. Edit them.
+const C = {views:100000, conv:8, webShare:35, webConv:-10, annual:40, pw:7.99, pa:49.99, weeks:8, webRet:0,
+           store:30, link:0, proc:3.6, fixed:0.30, mor:1, refS:2, refW:2.7, disp:0.5, dispFee:15};
+const usd = x => (x<0?'-$':'$') + Math.abs(Math.round(x)).toLocaleString('en-US');
+function econ(P, conv, webShareOverride){
+  // returns net year-1 revenue for P paywall views, split by channel
+  const payers = P.views*conv/100;
+  const ws = webShareOverride==null ? 0 : webShareOverride;
+  const webPayers = payers*ws, iapPayers = payers*(1-ws);
+  const a = P.annual/100, w = 1-a;
+  // IAP channel
+  const iapGross = iapPayers*(a*P.pa + w*P.weeks*P.pw);
+  const iapNet = iapGross*(1-P.store/100)*(1-P.refS/100);
+  // Web channel: renewals shift by webRet % for weekly plans
+  const wk = P.weeks*(1+P.webRet/100);
+  const webGross = webPayers*(a*P.pa + w*wk*P.pw);
+  const charges = webPayers*(a*1 + w*wk);
+  const pctFees = webGross*(P.link+P.proc+P.mor)/100;
+  const fixed = charges*P.fixed;
+  const refunds = webGross*P.refW/100;
+  const disputes = webPayers*P.disp/100*(P.dispFee + (a*P.pa + w*P.pw));
+  const webNet = webGross - pctFees - fixed - refunds - disputes;
+  return {payers, iapNet, webNet, net: iapNet+webNet, webGross, webFeesPct: webGross? (pctFees+fixed)/webGross*100:0};
+}
+function effFee(price, P){ return (P.link+P.proc+P.mor) + P.fixed/price*100; }
+function calc(){
+  Object.keys(C).forEach(k=>{ const v=parseFloat($('#c_'+k).value); if(!isNaN(v)) C[k]=v; });
+  const base = econ(C, C.conv, 0);
+  const convMixed = C.conv*(1 - C.webShare/100) + C.conv*(1+C.webConv/100)*(C.webShare/100);
+  // Mixed arm: some users who would have chosen web convert at webConv; their share of payers:
+  const webPayersRatio = (C.conv*(1+C.webConv/100)*(C.webShare/100))/convMixed;
+  const mixed = econ(C, convMixed, webPayersRatio);
+  // break-even web conversion penalty
+  let lo=-95, hi=100;
+  for(let i=0;i<60;i++){ const mid=(lo+hi)/2; const cm=C.conv*(1-C.webShare/100)+C.conv*(1+mid/100)*(C.webShare/100);
+    const r=(C.conv*(1+mid/100)*(C.webShare/100))/cm; const m=econ(C,cm,r).net; if(m>base.net) hi=mid; else lo=mid; }
+  const be = (lo+hi)/2;
+  const r = (l,x,y,d) => `<tr><td>${l}</td><td>${x}</td><td>${y}</td><td>${d}</td></tr>`;
+  let h = `<div class="tbl"><table><thead><tr><th>Per ${C.views.toLocaleString('en-US')} US iOS paywall views, year-one</th><th>App Store only</th><th>App Store + web link</th><th>Difference</th></tr></thead><tbody>`;
+  h += r('Paying subscribers', Math.round(base.payers).toLocaleString('en-US'), Math.round(mixed.payers).toLocaleString('en-US'), (mixed.payers-base.payers>=0?'+':'')+Math.round(mixed.payers-base.payers).toLocaleString('en-US'));
+  h += r('<strong>Net revenue kept</strong>', '<strong>'+usd(base.net)+'</strong>', '<strong>'+usd(mixed.net)+'</strong>', '<strong>'+(mixed.net-base.net>=0?'+':'')+usd(mixed.net-base.net)+'</strong>');
+  h += r('Net revenue per paywall view', '$'+(base.net/C.views).toFixed(3), '$'+(mixed.net/C.views).toFixed(3), ((mixed.net/base.net-1)*100).toFixed(1)+'%');
+  h += '</tbody></table></div>';
+  h += `<div class="tldr" style="margin-top:14px">
+   <div class="card"><div class="label">Break-even</div><p>${be<0 ? `Web can convert up to <strong>${be<=-95?'95%+':Math.abs(be).toFixed(0)+'%'} worse</strong> than the App Store before the link loses money.` : `Web must convert at least <strong>${be.toFixed(0)}% better</strong> than the App Store just to break even.`}</p></div>
+   <div class="card"><div class="label">Fee on a weekly charge</div><p><strong>${effFee(C.pw,C).toFixed(1)}%</strong> on web vs ${C.store}% on the App Store. The fixed ${'$'+C.fixed.toFixed(2)} per charge hits weekly plans hardest.</p></div>
+   <div class="card"><div class="label">Fee on an annual charge</div><p><strong>${effFee(C.pa,C).toFixed(1)}%</strong> on web vs ${C.store}% on the App Store.</p></div>
+  </div>`;
+  const notes=[];
+  notes.push(mixed.net>base.net ? `With these inputs the web link adds <strong>${usd(mixed.net-base.net)}</strong> of year-one revenue per ${C.views.toLocaleString('en-US')} paywall views.` : `With these inputs the web link <strong>loses</strong> money. Check the conversion drop, refund and dispute inputs before building.`);
+  if(C.link>0) notes.push(`This already assumes Apple charges ${C.link}% on link-out purchases. Apple has proposed 5–15%; the decision should survive the top of that range.`);
+  else notes.push(`Set "Apple link-out fee" to 15% to test the worst case Apple has proposed. If the answer flips, build the cheap version first.`);
+  notes.push(`Not counted here: cash timing. App Store payouts arrive roughly 60 days after the sale; Stripe-style payouts arrive in days. For a bootstrapped studio that funds ads from revenue, that is growth, not just margin.`);
+  h += '<ul class="small">'+notes.map(n=>'<li>'+n+'</li>').join('')+'</ul>';
+  $('#cOut').innerHTML = h;
+}
+Object.keys(C).forEach(k=>{ const el=$('#c_'+k); el.value=C[k]; el.oninput=calc; });
+calc();
+
+</script>
+</body>
+</html>

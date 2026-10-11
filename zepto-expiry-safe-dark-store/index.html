@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Expiry-Safe Dark Store</title>
+<meta name="description" content="Independent concept by Aditya Mathur: an expiry-safe inventory system for Zepto dark stores, from mother hub date capture to pick-time blocks, with a 60-day store simulator, metrics, rollout, adoption plan and SQL.">
+<style>
+:root{
+  --bg:#f7f7f5; --surface:#ffffff; --ink:#1a1d23; --muted:#5b6270; --line:#e3e4e8;
+  --accent:#5b21b6; --accent-soft:#efe9fc; --good:#18794e; --good-soft:#e6f4ec;
+  --warn:#9a5b00; --warn-soft:#fbf1dd; --bad:#b42318; --bad-soft:#fdeceb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1115; --surface:#171a21; --ink:#e8eaee; --muted:#9aa1ad; --line:#2a2f3a;
+    --accent:#c4a8ff; --accent-soft:#251a3d; --good:#4cc38a; --good-soft:#12291e;
+    --warn:#e0a53c; --warn-soft:#2b2210; --bad:#f07167; --bad-soft:#2d1614;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1115; --surface:#171a21; --ink:#e8eaee; --muted:#9aa1ad; --line:#2a2f3a;
+  --accent:#c4a8ff; --accent-soft:#251a3d; --good:#4cc38a; --good-soft:#12291e;
+  --warn:#e0a53c; --warn-soft:#2b2210; --bad:#f07167; --bad-soft:#2d1614;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;}
+.wrap{max-width:900px;margin:0 auto;padding:40px 16px 80px}
+.kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+h1{font-size:clamp(28px,5vw,40px);line-height:1.15;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-size:22px;margin:56px 0 12px;padding-top:8px;letter-spacing:-.005em}
+h3{font-size:17px;margin:28px 0 8px}
+p{margin:0 0 14px}
+a{color:var(--accent)}
+.lede{font-size:18px;color:var(--muted);margin-bottom:20px}
+.meta{font-size:14px;color:var(--muted);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0;margin:20px 0 28px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.note{font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.tldr{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card .label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.card p{margin:0;font-size:15px}
+ul,ol{padding-left:22px;margin:0 0 14px}
+li{margin:4px 0}
+.tbl{width:100%;overflow-x:auto;margin:10px 0 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;font-weight:600;white-space:nowrap}
+.p-good{background:var(--good-soft);color:var(--good)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-acc{background:var(--accent-soft);color:var(--accent)}
+.flow{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.step{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.num{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:13px}
+.step p{margin:0;font-size:15px}
+.step .t{font-weight:600;margin-bottom:2px}
+pre{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.5;margin:8px 0 18px;white-space:pre}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+p code, li code, td code{background:var(--accent-soft);color:var(--accent);padding:1px 5px;border-radius:5px}
+.grader{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin:16px 0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+select,textarea,input[type=file]{width:100%;font:inherit;font-size:14px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+textarea{min-height:130px;resize:vertical}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+button{font:inherit;font-size:14px;border:1px solid var(--accent);color:var(--accent);background:transparent;border-radius:999px;padding:6px 14px;cursor:pointer}
+button.primary{background:var(--accent);color:#fff}
+:root[data-theme="dark"] button.primary{color:#0f1115}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) button.primary{color:#0f1115}}
+button:hover{opacity:.9}
+.case-box{font-size:14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.case-box .msg{font-size:15px;margin-bottom:8px}
+.kv{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--muted);white-space:pre-wrap;word-break:break-word}
+.checks{list-style:none;padding:0;margin:10px 0 0}
+.checks li{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.checks li:last-child{border-bottom:none}
+.verdict{font-size:15px;font-weight:700;margin-top:10px}
+.why{background:var(--accent-soft);border-radius:12px;padding:18px 20px;margin-top:40px}
+.why h2{margin-top:0}
+footer{margin-top:48px;font-size:13px;color:var(--muted)}
+.small{font-size:13px;color:var(--muted)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0}
+summary{cursor:pointer;font-weight:600}
+@media (max-width:760px){
+  .tldr{grid-template-columns:1fr}
+  .row2{grid-template-columns:1fr}
+}
+.ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px}
+.ctrl-grid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.ctrl-grid input{width:100%;font:inherit;font-size:14px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
+.step ul{margin:6px 0 0;font-size:15px}
+@media (max-width:760px){.ctrl-grid{grid-template-columns:1fr}}
+
+input[type=checkbox]{accent-color:var(--accent)}
+.levers{display:flex;flex-direction:column;gap:8px}
+.lev{display:grid;grid-template-columns:22px 1fr 80px;gap:4px 10px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;color:var(--ink);margin:0}
+.lev input[type=number]{width:80px;font:inherit;font-size:14px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+.lev .small{grid-column:2 / 4}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin:18px 0 8px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.sw-t,.bt{background:var(--muted);opacity:.55}
+.sw-n,.bn{background:var(--accent)}
+.bars{display:flex;flex-direction:column;gap:10px}
+.brow{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center;font-size:14px}
+.bcol{line-height:1.2}
+.bar{display:inline-block;height:12px;border-radius:0 4px 4px 0;vertical-align:middle;margin:2px 0;max-width:calc(100% - 50px)}
+.bv{font-size:13px;margin-left:6px;vertical-align:middle;color:var(--ink)}
+@media (max-width:760px){.brow{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Independent product concept · Aditya Mathur · Oct 2026</p>
+<h1>No expired item leaves a dark store: an expiry-safe inventory system for Zepto</h1>
+<p class="lede">In August 2026, Maharashtra's food regulator inspected 86 quick-commerce sites and suspended 14 licences, five of them Zepto's; items past their use-by date were found at a Zepto store in Mulund. With 1,139 dark stores, nearly 50,000 SKUs per city and 2.3 million orders a day, no store manager can read every label. This is how I'd make expiry a field the warehouse system knows, uses and enforces, from the mother hub to the picker's hand.</p>
+
+<div class="meta">
+  <span>Built for: Product Manager, Supply Chain, Zepto</span>
+  <span>Inside: the facts · problem statement · where expired items come from · the fix across WMS stages · a store simulator · metrics · rollout · on-ground adoption · SQL · roadmap · risks</span>
+  <span><a href="#sim">Jump to the simulator</a></span>
+</div>
+
+<p class="note">Independent work. Not affiliated with Zepto; no internal data used. Zepto facts are from its draft IPO prospectus as reported, regulator actions as reported in the press, and public analyses, all cited. The simulator uses <strong>assumed</strong> demand, shelf lives, case packs and staff behaviour; it shows how the changes interact, not Zepto's real rates.</p>
+
+<div class="tldr">
+  <div class="card"><div class="label">The problem</div><p>Expired stock reaches shelves and customers because the system often doesn't know the expiry date of what's on the shelf, so nothing downstream can act on it.</p></div>
+  <div class="card"><div class="label">The insight</div><p>Blocking expired items at pick only works for batches whose date was captured at inbound. Capture is the foundation; every other fix depends on it.</p></div>
+  <div class="card"><div class="label">The plan</div><p>Capture dates at the mother hub and carry them to the store, slot one batch per bin, guide FEFO picks, block expired picks, generate the daily sweep, and mark down near-expiry stock instead of binning it.</p></div>
+</div>
+
+<h2>1. The facts</h2>
+<div class="tbl"><table>
+<thead><tr><th>Fact</th><th>Detail</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Scale</td><td>1,139 dark stores and 75 warehouses/mother hubs across 66 cities (31 Mar 2026). About 2.33M orders a day in Q4 FY26. Roughly 46,600–49,600 SKUs per dark-store geography.</td><td>DRHP via Yahoo Finance; MoneyFlow India</td></tr>
+<tr><td>Flow through the chain</td><td>FMCG inbound 8.49M units/day; cold chain 3.83M units/day; fresh fruit and vegetables 2.3M units/day in dark stores (Q4 FY26)</td><td>MoneyFlow India (from DRHP)</td></tr>
+<tr><td>Cost</td><td>Supply chain variable cost about ₹61 per order, barely moving (₹63.03 → ₹61.24 across FY25–FY26): the line most resistant to compression. Adjusted EBITDA loss ₹79 per order in FY26.</td><td>MoneyFlow India; Contrary Research</td></tr>
+<tr><td>Regulator, Maharashtra</td><td>Aug 2026: 86 quick-commerce sites inspected; 14 licences suspended (5 Zepto, 5 Blinkit, 2 Instamart); Zepto Mulund cited for items past use-by dates</td><td>Scanura (citing press reports)</td></tr>
+<tr><td>Regulator, Karnataka</td><td>11 Aug 2026: a Zepto warehouse in Hoskote, Bengaluru Rural, sealed for unhygienic handling and labelling issues</td><td>Scanura; Contrary Research</td></tr>
+<tr><td>Tech</td><td>Zepto runs an in-house warehouse management system that maps picker paths and forecasts demand at PIN-code level</td><td>Contrary Research</td></tr>
+</tbody></table></div>
+
+<h2>2. The problem statement</h2>
+<p class="card" style="margin:10px 0 16px"><strong>Across 1,139 dark stores, expired and near-expiry stock is found by people reading labels, when they have time. That's why it reaches shelves, inspectors and customers. Make expiry a field the warehouse system captures at inbound, carries to the store and enforces at pick, so that expired items delivered per million orders goes to zero, near-expiry stock is sold rather than binned, and picking stays as fast as it is today.</strong></p>
+
+<h2>3. Where an expired item comes from</h2>
+<div class="flow">
+  <div class="step"><div class="num">1</div><div><p class="t">Inbound without a date</p><p>At the mother hub, a case is received against a purchase order by SKU and quantity. Under time pressure, the batch's expiry date often isn't recorded. Everything downstream inherits that blind spot.</p></div></div>
+  <div class="step"><div class="num">2</div><div><p class="t">Batches mixed in one bin</p><p>A new delivery goes into a bin that still holds an older batch. The system sees one SKU with one quantity; the shelf holds two dates.</p></div></div>
+  <div class="step"><div class="num">3</div><div><p class="t">Front-of-shelf picking</p><p>A picker racing a 76-second packing target takes whatever is nearest, usually the newest stock. The oldest batch moves to the back and quietly expires.</p></div></div>
+  <div class="step"><div class="num">4</div><div><p class="t">Sweeps that slip</p><p>Expiry checks are a manual walk. On a busy day they get skipped, and with thousands of date-sensitive SKUs nobody catches everything anyway.</p></div></div>
+  <div class="step"><div class="num">5</div><div><p class="t">Returns put back on the shelf</p><p>A returned food item goes back into stock without a date or integrity check. (Swiggy Instamart received FSSAI notices in July 2026 over infant formula allegedly resupplied after a return.)</p></div></div>
+</div>
+
+<h2>4. The fix, stage by stage through the warehouse system</h2>
+<div class="tbl"><table>
+<thead><tr><th>Stage</th><th>What changes</th><th>Why it works</th></tr></thead>
+<tbody>
+<tr><td><strong>Inbound (mother hub)</strong></td><td>Capture expiry per batch at receipt: scan the GS1 barcode's expiry field (AI 17) where suppliers print it; read the printed date with the camera where they don't; manual entry only as a last resort for food categories. The date travels to the dark store in the shipment notice, so the store never re-enters it.</td><td>One capture at the hub covers dozens of stores. It has to add under 5 seconds per case or it won't happen.</td></tr>
+<tr><td><strong>Putaway (dark store)</strong></td><td>One batch per bin for date-sensitive SKUs; a newer batch goes to an adjacent bin, and the app says which.</td><td>The system's record matches the shelf, so the picker's instruction can be precise.</td></tr>
+<tr><td><strong>Pick</strong></td><td>The pick list directs to the oldest batch (FEFO). If the scanned batch is past its date, the app blocks it: "Set aside, pick from bin B-14 instead", in the picker's language, one tap.</td><td>The last line of defence, and the only one that protects the customer even when a sweep was missed.</td></tr>
+<tr><td><strong>Daily sweep</strong></td><td>The system generates a short list each morning: batches within their pull window, sorted by aisle, with the action for each (mark down, return to hub, discard with photo).</td><td>Turns a full-store walk into a 10-minute task that actually gets done.</td></tr>
+<tr><td><strong>Near-expiry</strong></td><td>Items inside a markdown window are offered at a discount in the app with the date shown; if unsold, routed back to the hub for donation or liquidation.</td><td>Recovers value from stock that would otherwise be binned, which pays for catching more of it.</td></tr>
+<tr><td><strong>Returns</strong></td><td>Returned food is quarantined until scanned for date and seal; it can't re-enter sellable stock otherwise.</td><td>Closes the path regulators have already cited at a competitor.</td></tr>
+<tr><td><strong>Store score</strong></td><td>A daily expiry-readiness score per store for city managers: share of date-sensitive stock with a known date, sweep completed, blocks, items found expired.</td><td>Gives managers something to manage, and compliance a view before an inspector arrives.</td></tr>
+</tbody></table></div>
+
+<h2 id="sim">5. Simulator: one dark store, 60 days</h2>
+<div class="grader">
+<p class="small">The simulator runs about 800 date-sensitive SKUs across six categories (dairy, bakery, eggs and paneer, packaged staples, snacks and beverages, baby and health food), each with its own demand, shelf life, case pack and replenishment cycle. All inputs below are assumptions.</p>
+<h3 style="margin-top:6px">How the store works today</h3>
+<div class="ctrl-grid">
+  <label>Batches with a recorded expiry date (%)<input id="t_cap" type="number" min="0" max="100"></label>
+  <label>Picks that take the oldest batch (%)<input id="t_fefo" type="number" min="0" max="100"></label>
+  <label>Days the expiry sweep actually happens (%)<input id="t_done" type="number" min="0" max="100"></label>
+  <label>Undated expiring batches a person spots during a sweep (%)<input id="t_manual" type="number" min="0" max="100"></label>
+  <label>Sweep every N days<input id="t_sweep" type="number" min="0" max="7"></label>
+  <label>Orders per day at this store<input id="t_opd" type="number" min="100"></label>
+</div>
+<h3>Changes (switch on/off, edit the target)</h3>
+<div class="levers">
+  <label class="lev"><input type="checkbox" id="l_cap"> <span>1. Capture expiry at inbound</span><input id="lv_cap" type="number" min="0" max="100"><span class="small">% of batches with a known date</span></label>
+  <label class="lev"><input type="checkbox" id="l_block"> <span>2. Block expired items at pick</span><span></span><span class="small">only works for batches with a known date</span></label>
+  <label class="lev"><input type="checkbox" id="l_fefo"> <span>3. FEFO pick guidance</span><input id="lv_fefo" type="number" min="0" max="100"><span class="small">% of picks taking the oldest batch</span></label>
+  <label class="lev"><input type="checkbox" id="l_done"> <span>4. System-made sweep list</span><input id="lv_done" type="number" min="0" max="100"><span class="small">% of days the sweep is completed</span></label>
+  <label class="lev"><input type="checkbox" id="l_markdown"> <span>5. Near-expiry markdown</span><span></span><span class="small">half of pulled near-expiry stock sells at 40% off</span></label>
+</div>
+<div id="out"></div>
+</div>
+
+<h2>6. Metrics</h2>
+<ul>
+  <li><strong>North star: expired items delivered per million orders.</strong> Measured from customer complaints with photos plus a weekly random audit of packed orders. Target: zero.</li>
+  <li><strong>What drives it:</strong> share of date-sensitive on-hand stock with a known expiry; share of picks that take the oldest batch; sweep completion rate; pick-time blocks per 1,000 picks (falls as upstream fixes work).</li>
+  <li><strong>Money:</strong> write-off per store per day; value recovered through markdowns; return-to-hub volume.</li>
+  <li><strong>Guardrails:</strong> picker seconds per item (the block must not slow picking); inbound seconds per case at the hub; item fill rate and stockouts (pulling stock too early empties shelves); inspection findings per store.</li>
+</ul>
+
+<h2>7. Rollout and test design</h2>
+<ul>
+  <li><strong>Randomise by store, not by order.</strong> Shelves and staff are shared inside a store, so orders can't be split into test and control. Pick 40 Mumbai stores (where the regulator acted), pair them by orders per day and category mix, and switch on the changes in one store of each pair. Read results as difference-in-differences against the control stores.</li>
+  <li><strong>Shadow first.</strong> For two weeks the pick-time block runs silently: it logs what it would have blocked without interrupting pickers. That sizes the problem with real data and tunes the rules before any picker sees a message.</li>
+  <li><strong>Inbound before store.</strong> Date capture starts at the two hubs feeding the pilot stores, because nothing downstream works without it.</li>
+  <li><strong>Exit criteria to scale:</strong> zero expired deliveries found in audits for 4 weeks; picker seconds per item unchanged within 5%; fill rate unchanged; net write-off (after markdowns) at or below control.</li>
+</ul>
+
+<h2>8. Getting it used on the ground</h2>
+<div class="row2">
+<div class="card"><div class="label">Who has to change, and what makes them</div>
+<ul class="small" style="margin-top:6px">
+  <li><strong>Hub inbound teams:</strong> scan, don't type. If capture slows receipt, it gets skipped.</li>
+  <li><strong>Category and procurement:</strong> ask top suppliers to print GS1 date barcodes over two quarters; track coverage by supplier.</li>
+  <li><strong>Pickers:</strong> one-tap "set aside", local language, never a dead end.</li>
+  <li><strong>Store managers:</strong> the daily score, and a 10-minute sweep list instead of a full-store walk.</li>
+  <li><strong>Finance:</strong> told in advance that write-offs rise before markdowns catch up.</li>
+</ul></div>
+<div class="card"><div class="label">Milestones</div>
+<ul class="small" style="margin-top:6px">
+  <li><strong>Weeks 1–2:</strong> measure today: date coverage, FEFO rate, sweep completion in 10 stores</li>
+  <li><strong>Weeks 3–6:</strong> hub date capture and shipment-notice dates live for pilot hubs</li>
+  <li><strong>Weeks 5–8:</strong> one batch per bin, FEFO guidance, block in shadow mode</li>
+  <li><strong>Weeks 9–12:</strong> block enforced, sweep list and markdowns live; read the test</li>
+  <li><strong>Quarter 2:</strong> city by city, starting where inspections are most active</li>
+</ul></div>
+</div>
+
+<h2>9. SQL</h2>
+<p class="small">PostgreSQL. Assumed tables: <code>inventory_batches</code> (store_id, sku_id, batch_id, bin_id, qty, expiry_date, received_at), <code>skus</code> (category, is_date_sensitive), <code>picks</code>, <code>pick_blocks</code>, <code>sweep_tasks</code>, <code>write_offs</code>, <code>markdown_sales</code>.</p>
+<details open><summary>1. How much date-sensitive stock has no known expiry, by store and category</summary>
+<pre><code>SELECT b.store_id, s.category,
+       SUM(b.qty)                                                          AS units_on_hand,
+       ROUND(100.0 * SUM(CASE WHEN b.expiry_date IS NULL THEN b.qty ELSE 0 END) / NULLIF(SUM(b.qty), 0), 1) AS pct_no_expiry
+FROM inventory_batches b
+JOIN skus s USING (sku_id)
+WHERE s.is_date_sensitive AND b.qty &gt; 0
+GROUP BY 1, 2
+ORDER BY pct_no_expiry DESC;</code></pre></details>
+
+<details><summary>2. Tomorrow's sweep list: what to pull, in aisle order</summary>
+<pre><code>SELECT b.store_id, b.bin_id, s.sku_name, b.batch_id, b.qty, b.expiry_date,
+       CASE WHEN b.expiry_date &lt; CURRENT_DATE + 1 THEN 'DISCARD (photo)'
+            WHEN b.expiry_date &lt;= CURRENT_DATE + s.markdown_window_days THEN 'MARK DOWN'
+            ELSE 'RETURN TO HUB' END                                        AS action
+FROM inventory_batches b
+JOIN skus s USING (sku_id)
+WHERE b.qty &gt; 0
+  AND b.expiry_date &lt;= CURRENT_DATE + s.pull_window_days
+ORDER BY b.store_id, b.bin_id;</code></pre></details>
+
+<details><summary>3. FEFO violations: picks of a newer batch while an older one was in stock</summary>
+<pre><code>SELECT p.store_id, DATE(p.picked_at) AS day,
+       COUNT(*)                                                           AS picks,
+       ROUND(100.0 * AVG(CASE WHEN EXISTS (
+           SELECT 1 FROM inventory_batches o
+           WHERE o.store_id = p.store_id AND o.sku_id = p.sku_id AND o.qty &gt; 0
+             AND o.expiry_date &lt; pb.expiry_date AND o.received_at &lt;= p.picked_at)
+         THEN 1 ELSE 0 END), 1)                                           AS pct_not_oldest
+FROM picks p
+JOIN inventory_batches pb ON pb.batch_id = p.batch_id
+WHERE p.picked_at &gt;= CURRENT_DATE - 7
+GROUP BY 1, 2 ORDER BY pct_not_oldest DESC;</code></pre></details>
+
+<details><summary>4. Blocks at pick: how often, and is the problem shrinking?</summary>
+<pre><code>SELECT DATE_TRUNC('week', k.blocked_at)                                   AS week,
+       k.store_id,
+       COUNT(*)                                                           AS blocks,
+       ROUND(1000.0 * COUNT(*) / NULLIF((SELECT COUNT(*) FROM picks p
+             WHERE p.store_id = k.store_id
+               AND DATE_TRUNC('week', p.picked_at) = DATE_TRUNC('week', k.blocked_at)), 0), 2) AS blocks_per_1000_picks
+FROM pick_blocks k
+GROUP BY 1, 2 ORDER BY 1 DESC, 4 DESC;</code></pre></details>
+
+<details><summary>5. Write-off vs recovery, by store and reason</summary>
+<pre><code>SELECT w.store_id, w.reason,                     -- 'EXPIRED', 'NEAR_EXPIRY_UNSOLD', 'DAMAGED', 'RETURN_REJECTED'
+       SUM(w.value_inr)                                                   AS written_off_inr,
+       COALESCE(SUM(m.recovered_inr), 0)                                  AS recovered_inr
+FROM write_offs w
+LEFT JOIN markdown_sales m ON m.store_id = w.store_id AND m.sale_date = w.write_off_date
+WHERE w.write_off_date &gt;= CURRENT_DATE - 30
+GROUP BY 1, 2 ORDER BY written_off_inr DESC;</code></pre></details>
+
+<h2>10. Roadmap</h2>
+<div class="tbl"><table>
+<thead><tr><th>Now</th><th>Next</th><th>Later</th></tr></thead>
+<tbody><tr>
+<td>Date capture at pilot hubs; one batch per bin; block in shadow mode; daily sweep list</td>
+<td>Block enforced; markdowns in the customer app; returns quarantine; store score for city managers</td>
+<td>Expiry-aware replenishment: order less of slow SKUs with short shelf life, so less expires in the first place; supplier scorecards on date coverage and remaining shelf life at delivery</td>
+</tr></tbody></table></div>
+
+<h2>11. Risks and limits</h2>
+<ul>
+  <li><strong>Suppliers without date barcodes.</strong> Camera reading of printed dates will make mistakes. Low-confidence reads go to a person; supplier coverage is tracked and pushed through category teams.</li>
+  <li><strong>Picker friction.</strong> If the block slows picking, people find ways around it. Shadow mode first, and picker seconds per item as a hard guardrail.</li>
+  <li><strong>Pulling too early empties shelves.</strong> Pull windows are set per category and checked against fill rate.</li>
+  <li><strong>Markdowns can train customers to wait.</strong> Keep them small, limited to genuinely near-expiry stock, and dated.</li>
+  <li><strong>The simulator is mine.</strong> Its numbers depend on my assumptions. Its conclusions about how the changes interact (capture first, block as backup, markdowns to pay for it) are what matter.</li>
+</ul>
+
+<div class="why">
+<h2>Why I built this</h2>
+<p>At EnKash I owned a product whose job was to make the system's record match reality: settlement and reconciliation for every payment. I drove delivery across engineering, risk, reconciliation, onboarding, integrations and support. At Stripe I worked in AML investigations, where one missed detail is a regulatory problem, and absorbed three times the caseload at a 0% error rate. Earlier I modelled a quick-commerce kitchen's peak hours, stockouts and stale stock sync for Swish. An expired item on a Zepto shelf is the same kind of problem: the system and the shelf disagree, and a regulator or a customer finds out first.</p>
+</div>
+
+<footer>
+<p><strong>Sources</strong> (accessed Oct 2026):
+<a href="https://finance.yahoo.com/markets/stocks/articles/quick-commerce-company-zepto-targets-094837090.html">Zepto updated DRHP, via Yahoo Finance</a> ·
+<a href="https://moneyflowindia.substack.com/p/moneyflow-india-deep-dive-3-zepto">MoneyFlow India deep dive on Zepto</a> ·
+<a href="https://research.contrary.com/company/zepto">Contrary Research on Zepto</a> ·
+<a href="https://www.scanura.com/blog/zepto-blinkit-instamart-food-safe-dark-stores">Scanura on dark-store food safety raids, 2026</a></p>
+<p>Aditya Mathur · <a href="https://adimathur-creates.github.io">adimathur-creates.github.io</a> · <a href="https://www.linkedin.com/in/adityaamathur">LinkedIn</a> · adityamathur2004@gmail.com</p>
+</footer>
+</div>
+<script>
+// Expiry simulation for ONE dark store's date-sensitive food SKUs. All inputs are ASSUMPTIONS.
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function poisson(l, r){ if(l<=0) return 0; if(l>30){ return Math.max(0, Math.round(l + Math.sqrt(l)*(r()+r()+r()-1.5)*2)); } let L=Math.exp(-l),k=0,p=1; do{k++;p*=r();}while(p>L); return k-1; }
+const CATS = [
+ {c:'Dairy',            n:60,  mean:6,   L:7,   R:1, D:1.5, lag:[1,1],    price:60, pack:6},
+ {c:'Bakery',           n:40,  mean:4,   L:5,   R:1, D:1.5, lag:[0.5,1],  price:45, pack:4},
+ {c:'Eggs, paneer, ready-to-cook', n:60, mean:3, L:10, R:2, D:3, lag:[1,2], price:85, pack:6},
+ {c:'Packaged staples', n:400, mean:0.7, L:180, R:3, D:12, lag:[0.1,0.6], price:120, pack:6},
+ {c:'Snacks, beverages',n:200, mean:2,   L:120, R:3, D:8, lag:[0.1,0.5], price:50, pack:12},
+ {c:'Baby and health food', n:40, mean:0.25, L:270, R:7, D:20, lag:[0.1,0.5], price:380, pack:3}];
+function simulate(P, seed){
+  const r = mulberry32(seed||7), days = 60;
+  const skus=[];
+  CATS.forEach(cat=>{ for(let i=0;i<cat.n;i++){ const lam = cat.mean*Math.exp((r()-0.5)*3.5); skus.push({cat, lam, batches:[]}); } });
+  const out = {expDelivered:0, blocked:0, writeoffUnits:0, writeoffValue:0, markdownUnits:0, recovered:0, sold:0, shelfExpiredSum:0, unknownShelfSum:0, shelfSum:0, byCat:{}};
+  CATS.forEach(c=>out.byCat[c.c]={exp:0, wo:0});
+  const thr = L => Math.max(1, Math.round(0.04*L));
+  for(let d=0; d<days; d++){
+    const sweepToday = P.sweep>0 && d % P.sweep === 0 && r() < P.done/100;   // busy days: the sweep gets skipped
+    for(const s of skus){
+      for(const b of s.batches) b.rem -= 1;
+      if(d % s.cat.R === 0){
+        const on = s.batches.reduce((a,b)=>a+b.qty,0);
+        const fc = s.lam * Math.exp((r()-0.5)*0.8);   // forecast error
+        const target = Math.max(2, Math.ceil(fc * s.cat.D));
+        let q = target - on;
+        if(q>0){ q = Math.ceil(q / s.cat.pack) * s.cat.pack;   /* case packs */ const lf = s.cat.lag[0] + r()*(s.cat.lag[1]-s.cat.lag[0]); const lagDays = s.cat.L < 15 ? lf : lf*s.cat.L;
+          s.batches.push({qty:q, rem: Math.round(s.cat.L - lagDays), cap: r() < P.cap/100}); }
+      }
+      // demand
+      let n = poisson(s.lam * Math.exp((r()-0.5)*0.7), r);   // day-to-day swings
+      while(n>0 && s.batches.length){
+        const fefo = r() < P.fefo/100;
+        let bi = 0;
+        for(let i=1;i<s.batches.length;i++){ if(fefo ? s.batches[i].rem < s.batches[bi].rem : s.batches[i].rem > s.batches[bi].rem) bi=i; }
+        const b = s.batches[bi];
+        if(b.rem <= 0){
+          if(P.block && b.cap){ out.blocked += b.qty; out.writeoffUnits += b.qty; out.writeoffValue += b.qty*s.cat.price; out.byCat[s.cat.c].wo += b.qty*s.cat.price; s.batches.splice(bi,1); continue; }
+          out.expDelivered++; out.byCat[s.cat.c].exp++;
+        } else out.sold++;
+        b.qty--; n--; if(b.qty<=0) s.batches.splice(bi,1);
+      }
+      // sweep
+      if(sweepToday){
+        for(let i=s.batches.length-1;i>=0;i--){ const b=s.batches[i];
+          if(b.rem <= thr(s.cat.L)){
+            const found = b.cap || r() < P.manual/100;   // undated batches: found only by a person reading labels
+            if(!found) continue;
+            if(P.markdown && b.rem > 0){ const sell = Math.round(b.qty*0.5); out.markdownUnits += sell; out.recovered += sell*s.cat.price*0.6; out.writeoffUnits += b.qty-sell; out.writeoffValue += (b.qty-sell)*s.cat.price; out.byCat[s.cat.c].wo += (b.qty-sell)*s.cat.price; }
+            else { out.writeoffUnits += b.qty; out.writeoffValue += b.qty*s.cat.price; out.byCat[s.cat.c].wo += b.qty*s.cat.price; }
+            s.batches.splice(i,1); } }
+      }
+      for(const b of s.batches){ out.shelfSum += b.qty; if(b.rem<=0) out.shelfExpiredSum += b.qty; if(!b.cap) out.unknownShelfSum += b.qty; }
+    }
+  }
+  const orders = P.opd*days;
+  out.expPer10k = out.expDelivered/orders*10000;
+  out.woPerDay = out.writeoffValue/days;
+  out.recPerDay = out.recovered/days;
+  out.shelfExpiredAvg = out.shelfExpiredSum/days;
+  out.unknownPct = 100*out.unknownShelfSum/Math.max(1,out.shelfSum);
+  return out;
+}
+
+
+const $ = s => document.querySelector(s);
+const T = {cap:50, fefo:85, sweep:1, done:70, manual:50, opd:1700};
+const L = {
+  cap:   {on:true,  v:95, label:'1. Capture expiry at inbound', unit:'% of batches with a known date'},
+  block: {on:true,  label:'2. Block expired items at pick'},
+  fefo:  {on:true,  v:95, label:'3. FEFO pick guidance', unit:'% of picks taking the oldest batch'},
+  done:  {on:true,  v:95, label:'4. System-made sweep list', unit:'% of days the sweep is completed'},
+  markdown:{on:true, label:'5. Near-expiry markdown'}
+};
+const SEEDS=[7,11];
+function avg(P){ let a={exp:0,wo:0,rec:0,shelf:0,unk:0}; SEEDS.forEach(s=>{const o=simulate(P,s); a.exp+=o.expPer10k; a.wo+=o.woPerDay; a.rec+=o.recPerDay; a.shelf+=o.shelfExpiredAvg; a.unk+=o.unknownPct;}); Object.keys(a).forEach(k=>a[k]/=SEEDS.length); return a; }
+function params(on){ const P={...T, block:false, markdown:false};
+  if(on.cap) P.cap=L.cap.v; if(on.block) P.block=true; if(on.fefo) P.fefo=L.fefo.v; if(on.done) P.done=L.done.v; if(on.markdown) P.markdown=true; return P; }
+const inr = x => '₹'+Math.round(x).toLocaleString('en-IN');
+function render(){
+  Object.keys(T).forEach(k=>{ const v=parseFloat($('#t_'+k).value); if(!isNaN(v)) T[k]=v; });
+  Object.keys(L).forEach(k=>{ L[k].on=$('#l_'+k).checked; const el=$('#lv_'+k); if(el){ const v=parseFloat(el.value); if(!isNaN(v)) L[k].v=v; } });
+  const onAll={}; Object.keys(L).forEach(k=>onAll[k]=L[k].on);
+  const a = avg(params({})), b = avg(params(onAll));
+  const r=(l,x,y)=>`<tr><td>${l}</td><td>${x}</td><td>${y}</td></tr>`;
+  let h = `<div class="tbl"><table><thead><tr><th>One dark store, 60 days, ~800 date-sensitive SKUs</th><th>Today (assumed)</th><th>With the changes on</th></tr></thead><tbody>`;
+  h += r('<strong>Expired items delivered, per 10,000 orders</strong>', '<strong>'+a.exp.toFixed(1)+'</strong>', '<strong>'+b.exp.toFixed(1)+'</strong>');
+  h += r('Expired units sitting on the shelf, average day (what an inspector finds)', a.shelf.toFixed(1), b.shelf.toFixed(1));
+  h += r('Units on the shelf with no recorded expiry date', a.unk.toFixed(0)+'%', b.unk.toFixed(0)+'%');
+  h += r('Write-off per day', inr(a.wo), inr(b.wo));
+  h += r('Recovered by near-expiry markdowns per day', inr(a.rec), inr(b.rec));
+  h += '</tbody></table></div>';
+  const solo = Object.keys(L).map(k=>{ const o={}; o[k]=true; const x=avg(params(o)); return [L[k].label, x.exp, x.wo-x.rec]; });
+  h += '<h3>Each change on its own</h3><div class="tbl"><table><thead><tr><th>Change</th><th>Expired per 10k orders</th><th>Net write-off per day</th></tr></thead><tbody>';
+  h += `<tr><td><em>Today</em></td><td>${a.exp.toFixed(1)}</td><td>${inr(a.wo-a.rec)}</td></tr>`;
+  solo.forEach(([l,e,w])=>{ h+=`<tr><td>${l}</td><td>${e.toFixed(1)}</td><td>${inr(w)}</td></tr>`; });
+  const cb = avg(params({cap:true, block:true}));
+  h += `<tr><td>1 + 2 together</td><td>${cb.exp.toFixed(1)}</td><td>${inr(cb.wo-cb.rec)}</td></tr>`;
+  h += '</tbody></table></div>';
+  const notes=[];
+  const blockSolo = solo.find(x=>x[0].startsWith('2.'))[1], capSolo = solo.find(x=>x[0].startsWith('1.'))[1];
+  notes.push(`On its own, the pick-time block only cuts it from ${a.exp.toFixed(1)} to ${blockSolo.toFixed(1)}: it can only block batches whose date the system knows. With dates captured at inbound, the two together take it to ${cb.exp.toFixed(1)}. <strong>Capture is the foundation; the block is the safety net.</strong>`);
+  if(cb.wo > a.wo) notes.push(`Catching expired stock before it reaches customers raises write-offs at first (${inr(a.wo)} → ${inr(cb.wo)} a day): those units used to be "sold". Near-expiry markdowns are what pay for it, so finance should see this coming in the plan, not discover it in the P&L.`);
+  notes.push('All numbers come from a simulation with assumed demand, shelf lives, case packs and staff behaviour. They show the direction and the interactions between changes, not Zepto\'s actual rates.');
+  h += '<ul class="small">'+notes.map(n=>'<li>'+n+'</li>').join('')+'</ul>';
+  $('#out').innerHTML = h;
+}
+function init(){
+  Object.keys(T).forEach(k=>{ const el=$('#t_'+k); el.value=T[k]; el.onchange=render; });
+  Object.keys(L).forEach(k=>{ $('#l_'+k).checked=L[k].on; $('#l_'+k).onchange=render; const el=$('#lv_'+k); if(el){ el.value=L[k].v; el.onchange=render; } });
+  render();
+}
+init();
+
+</script>
+</body>
+</html>
