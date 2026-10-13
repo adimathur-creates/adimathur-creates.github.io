@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head><body>
+<title>The Forty Percent Question</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700;800&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 780px column read like a founder memo; the rollout simulator sits inside as a working sheet. */
+:root{
+  --paper:#F4F6F5; --panel:#FFFFFF; --ink:#11201D; --muted:#56655F; --rule:#D3DCD8;
+  --accent:#1F4FBF; --accent-soft:#E2E9F8; --amber:#A35F00; --amber-soft:#F7EAD3;
+  --good:#1D7A4A; --good-soft:#DDF0E4; --bad:#B42318;
+  --f-display:"Schibsted Grotesk","Arial Narrow",Arial,sans-serif;
+  --f-body:"Source Sans 3","Segoe UI",Helvetica,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0D1513; --panel:#141E1B; --ink:#E2EAE6; --muted:#9DB0A8; --rule:#26352F;
+  --accent:#86A6F5; --accent-soft:#1A2440; --amber:#EDB45E; --amber-soft:#36290F;
+  --good:#5FCB8E; --good-soft:#143023; --bad:#F2867E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0D1513; --panel:#141E1B; --ink:#E2EAE6; --muted:#9DB0A8; --rule:#26352F;
+  --accent:#86A6F5; --accent-soft:#1A2440; --amber:#EDB45E; --amber-soft:#36290F;
+  --good:#5FCB8E; --good-soft:#143023; --bad:#F2867E; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.08;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.6rem,9vw,4.4rem);font-weight:800;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+h2{font-size:clamp(1.55rem,4.8vw,2.05rem);font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.12rem;font-weight:700}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:16px}
+.eyebrow,.k{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.k{margin-bottom:6px}
+.dek{font-size:1.16rem;max-width:62ch}
+.by{font-size:.92rem;color:var(--muted)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:4px}
+.note strong{color:var(--ink)}
+.secnum{font-family:var(--f-mono);font-size:.76rem;color:var(--accent);letter-spacing:.06em}
+.pstate{border-left:3px solid var(--accent);padding:6px 0 6px 16px;font-size:1.08rem;font-weight:600}
+ul.plain{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.grid2>div{min-width:0}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:1.8rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.82rem;white-space:nowrap}
+.good{color:var(--good)} .bad{color:var(--bad)}
+.finding{background:var(--accent-soft);border-radius:4px;padding:12px 14px}
+.warn{background:var(--amber-soft);border-radius:4px;padding:12px 14px}
+.toggles{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+.tg{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--rule);border-radius:4px;padding:10px 12px;cursor:pointer;background:var(--paper);min-width:0}
+.tg input{margin-top:5px;accent-color:var(--accent)}
+.tg b{display:block;font-size:.95rem}
+.tg span{font-size:.83rem;color:var(--muted);line-height:1.4;display:block}
+.tag2{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);display:block;margin-top:4px}
+input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chartwrap{overflow-x:auto}
+svg text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.84rem;color:var(--muted)}
+.sw{display:inline-block;width:12px;height:3px;margin-right:6px;vertical-align:4px;border-radius:2px}
+.chip{display:inline-flex;font-family:var(--f-mono);font-size:.72rem;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.chip.ok{background:var(--good-soft);color:var(--good)} .chip.no{background:var(--amber-soft);color:var(--amber)}
+.checks{display:flex;flex-direction:column;gap:8px;font-size:.92rem}
+.checks div{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.rank{counter-reset:r;display:flex;flex-direction:column;gap:16px;margin:0;padding:0;list-style:none}
+.rank li{display:grid;grid-template-columns:34px 1fr;gap:12px}
+.rank li::before{counter-increment:r;content:counter(r);font-family:var(--f-display);font-weight:800;font-size:1.6rem;color:var(--accent);line-height:1.05}
+.rank li>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.req{display:flex;flex-direction:column;gap:8px}
+.req div{display:grid;grid-template-columns:40px 1fr;gap:10px;font-size:.95rem}
+.tag{font-family:var(--f-mono);font-size:.72rem;color:var(--accent);font-weight:500;padding-top:2px}
+.pitch{border:1px solid var(--rule);background:var(--panel);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.pitch blockquote{margin:0;font-family:var(--f-display);font-size:1.25rem;font-weight:600;line-height:1.3}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.timeline>div{border-top:2px solid var(--accent);padding-top:10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.src{font-size:.86rem;color:var(--muted)}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--rule);margin:0}
+.busy{font-size:.8rem;color:var(--muted);min-height:1.2em}
+@media (max-width:520px){th,td{padding:7px 8px}table{font-size:.85rem}.num{font-size:.76rem}}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">Independent work · Founder's Office, Generalist</div>
+  <h1>The <span>Forty Percent</span> Question</h1>
+  <p class="dek">Leucine's job post asks: "How do we cut customer onboarding time by 40%?" This is my answer, worked through the way I would in the role: define the metric, find the real bottleneck, test the changes on a model, and turn the result into a spec, a sales line and a 90-day plan.</p>
+  <p class="by">Aditya Mathur · October 2026 · prepared for Leucine's founder's office</p>
+  <div class="note"><strong>Read this first.</strong> I do not work at Leucine and have no internal data. The model simulates 30 synthetic generic-pharma sites with 40 to 100 master batch records each. Its baseline is set to land close to Leucine's published rollout plan, which has batch records live in months 3 to 6. Every rate is my assumption and is listed below. The method is what I would bring: with real rollout logs, the same model can be rebuilt in a week.</div>
+</header>
+
+<section id="problem">
+  <span class="secnum">1 · DEFINE THE PROBLEM</span>
+  <h2>"Onboarding" needs one number first</h2>
+  <p>Leucine's MES page says most sites go live in 8 to 12 weeks. That is the logbook phase. Its own rollout plan then puts batch records in months 3 to 6 and the AI layer in months 4 to 9. The value customers buy, such as Valent BioSciences cutting batch review from 20 days to 1, only arrives once batches run on electronic records. So I would measure onboarding like this:</p>
+  <p class="pstate">Weeks from contract until 80% of a site's batch volume runs on electronic batch records. How do we cut that by 40% without loosening a single quality check?</p>
+  <div class="grid2">
+    <div><div class="k">Why 80% of volume, not every product</div><p>A generic site may hold 40 to 100 or more master batch records, but a few products make most batches. Counting products rewards finishing the long tail. Counting volume rewards what customers and auditors feel.</p></div>
+    <div><div class="k">Why it matters to Leucine</div><ul class="plain"><li>Every week on paper is a week of batches that can miss a step.</li><li>Faster first-site value is the case for the next site, and customers like Cipla run 30.</li><li>Shorter rollouts free the configuration team for more sites.</li></ul></div>
+  </div>
+</section>
+
+<section id="process">
+  <span class="secnum">2 · ASSUMED CURRENT PROCESS</span>
+  <h2>Five handoffs per batch record</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Step</th><th>Owner</th><th>Assumed today</th></tr></thead>
+    <tbody>
+      <tr><td><b>Site foundation</b></td><td>Leucine + site IT</td><td>Logbooks, master data, ERP link and installation checks. Done by week 8</td></tr>
+      <tr><td><b>Configure each record</b></td><td>Leucine</td><td>Built from the paper record, 10 to 45 hours each by complexity. Starts in week 8, in the order of the customer's product list</td></tr>
+      <tr><td><b>Review and approve</b></td><td>Customer SMEs and QA</td><td>About 3 reviewer hours per round. 60% approved first time. QA sign-off takes about a week</td></tr>
+      <tr><td><b>Parallel run</b></td><td>Customer production</td><td>The next scheduled batch runs on paper and electronic together, then gets reviewed. Rare products can wait weeks for a batch</td></tr>
+      <tr><td><b>Live</b></td><td>Site</td><td>Every later batch of that product runs electronically</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="diagnostic">
+  <span class="secnum">3 · FIND THE BOTTLENECK</span>
+  <h2>It is not Leucine's team</h2>
+  <div class="sheet">
+    <div class="kpis" id="kpis"></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>What if we only added capacity</th><th class="num">Weeks to 80% volume</th></tr></thead>
+      <tbody id="bneck"></tbody></table></div>
+    <p class="finding"><b>Finding:</b> four times more Leucine configurators saves about one week. Twice the customer review hours saves about four. The real limit is the order of work and the speed of customer decisions: reviewers spend their scarce hours on low-volume products while the products that make most batches wait in the queue.</p>
+  </div>
+</section>
+
+<section id="levers">
+  <span class="secnum">4 · TEST THE CHANGES</span>
+  <h2>Switch them on and off</h2>
+  <p>Every run replays the same 30 sites with the same random draws, so differences come from the change alone.</p>
+  <div class="sheet">
+    <div class="toggles">
+      <label class="tg" for="o-vol"><input type="checkbox" id="o-vol" checked><div><b>Volume-first order</b><span>Configure and review records in order of batches per month, not the order of the customer's list.</span><span class="tag2">Process change</span></div></label>
+      <label class="tg" for="o-sprint"><input type="checkbox" id="o-sprint" checked><div><b>Review sprint in the contract</b><span>The customer commits a fixed weekly review block and a 2-day sign-off during rollout. The total hours stay the same, just front-loaded.</span><span class="tag2">Contract change</span></div></label>
+      <label class="tg" for="o-early"><input type="checkbox" id="o-early" checked><div><b>Start batch records in week 2</b><span>Configure records alongside logbooks instead of after them. Go-live still waits for the site foundation.</span><span class="tag2">Process change</span></div></label>
+      <label class="tg" for="o-lib"><input type="checkbox" id="o-lib"><div><b>Shared block library by process</b><span>Pre-reviewed blocks for granulation, compression, coating and so on. Less configuration and more first-time approvals.</span><span class="tag2">Product change</span></div></label>
+      <label class="tg" for="o-ai"><input type="checkbox" id="o-ai"><div><b>AI draft from the paper record</b><span>AI drafts each record and a configurator checks it. Halves build time, but some drafts need more review.</span><span class="tag2">Product change</span></div></label>
+      <label class="tg" for="o-fam"><input type="checkbox" id="o-fam"><div><b>Parallel run once per process family</b><span>Only the first product in each family waits for a parallel run. Needs the customer's QA to agree.</span><span class="tag2">Needs customer QA approval</span></div></label>
+    </div>
+    <div class="busy" id="busy" aria-live="polite"></div>
+    <div class="kpis" id="skpis"></div>
+    <div class="chartwrap"><svg id="curve" viewBox="0 0 700 300" width="100%" role="img" aria-label="Share of batch volume live by week, today against your selection"></svg></div>
+    <div class="legend"><span><i class="sw" style="background:var(--muted)"></i>Today (assumed)</span><span><i class="sw" style="background:var(--accent)"></i>Your selection</span></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Change on its own</th><th class="num">50% volume</th><th class="num">80% volume</th><th class="num">95% products</th><th class="num">Leucine hours</th></tr></thead>
+      <tbody id="cmp"></tbody></table></div>
+    <div class="checks" id="checks"></div>
+  </div>
+  <p><b>Stress test.</b> I reran the model with two other seeds, bigger and smaller sites, fewer and more reviewer hours, a lower first-time approval rate, and a smaller configuration team. The three no-engineering changes were 32% to 56% faster in every run. AI drafting on its own was never faster than today.</p>
+</section>
+
+<section id="recommend">
+  <span class="secnum">5 · RECOMMENDATION</span>
+  <h2>Hit 40% without writing code, then compound</h2>
+  <ol class="rank">
+    <li><div><h3>Change the kickoff, this quarter</h3><p>Rank every master batch record by batches per month at kickoff and work in that order. Put a review sprint into the order form: named reviewers, a weekly block, and a 2-day sign-off. Start record configuration in week 2. In the model, these three changes alone take the median from 31 to 17 weeks, 45% faster.</p></div></li>
+    <li><div><h3>Build the block library next</h3><p>It adds another three weeks of speed and cuts Leucine's configuration hours by about 45% per site. That turns into margin and capacity for more sites. Generic sites share process families, so the library compounds with every customer.</p></div></li>
+    <li><div><h3>Ship AI drafting only with the library</h3><p>On its own, AI drafting moves rework onto the customer's reviewers, who are the bottleneck. With pre-reviewed blocks underneath, drafts start from approved parts, and the gain holds.</p></div></li>
+    <li><div><h3>Propose family-level parallel runs, never assume them</h3><p>It shortens the long tail the most (95% of products live much sooner). But it is the customer's QA decision. GAMP 5's second edition supports risk-based testing. FDA's final CSA guidance (September 2025) is written for device makers, so for drug makers it is supporting thinking, not a rule.</p></div></li>
+  </ol>
+</section>
+
+<section id="spec">
+  <span class="secnum">6 · SYSTEMATISE IT</span>
+  <h2>A rollout control tower</h2>
+  <p>The job post asks for every win to become a dashboard, an SOP or an automation. This is the dashboard that makes the playbook stick.</p>
+  <div class="req">
+    <div><span class="tag">P0</span><span>One row per master batch record: batches per month, complexity, family, owner, current step and days in that step.</span></div>
+    <div><span class="tag">P0</span><span>Site view: share of batch volume live, and the next five records by volume and their blocker.</span></div>
+    <div><span class="tag">P0</span><span>Review-sprint tracker: hours committed against hours used, and sign-offs past 2 days, sent weekly to the customer's site head.</span></div>
+    <div><span class="tag">P1</span><span>Batch calendar link, so parallel runs are booked against the production schedule instead of waited for.</span></div>
+    <div><span class="tag">P1</span><span>Portfolio view across sites, to compare rollouts and spot the reviewer who is holding three sites.</span></div>
+  </div>
+  <div class="grid2">
+    <div><div class="k">Metrics</div><ul class="plain"><li><b>Main:</b> median weeks to 80% of batch volume live.</li><li><b>Leading:</b> first-time approval rate and sign-off days.</li><li><b>Efficiency:</b> Leucine configuration hours per site.</li><li><b>Guardrail:</b> deviations in the first 30 days live, which must not rise.</li></ul></div>
+    <div><div class="k">How to prove it</div><ul class="plain"><li>Run the new kickoff on the next 4 to 6 site rollouts and compare with the last 6.</li><li>Read the result at 80% volume live, not at contract plus a fixed number of weeks.</li></ul></div>
+  </div>
+</section>
+
+<section id="sales">
+  <span class="secnum">7 · HAND IT TO SALES</span>
+  <h2>The line sales can run with</h2>
+  <div class="pitch">
+    <blockquote>"Commit a weekly review block during rollout, and most of your batch volume runs on electronic records in about four months."</blockquote>
+    <p><b>Objection: "Our QA team is stretched."</b> The total review hours stay the same. They come earlier, and they go to the products that make most of your batches first.</p>
+    <p><b>Objection: "Can we skip parallel runs?"</b> Only where your QA agrees. We will propose one per process family, with the evidence.</p>
+  </div>
+</section>
+
+<section id="plan">
+  <span class="secnum">8 · FIRST 90 DAYS</span>
+  <h2>Shadow, then own</h2>
+  <div class="timeline">
+    <div><div class="k">Days 1–30</div><p>Shadow two live rollouts and one sales cycle. Pull the record-level history of the last 6 sites. Rebuild this model on it and check whether reviewers really are the bottleneck.</p></div>
+    <div><div class="k">Days 31–60</div><p>Write the new kickoff SOP and order-form clause with CS and sales. Build the control tower in Sheets first, then hand it to product.</p></div>
+    <div><div class="k">Days 61–90</div><p>Run the new kickoff on the next rollouts. Report weeks to 80% volume to the founders, and write the block library business case with product.</p></div>
+  </div>
+</section>
+
+<section id="limits">
+  <span class="secnum">9 · LIMITS</span>
+  <h2>What this model does not know</h2>
+  <ul class="plain">
+    <li>Every rate is an assumption: record counts, hours, approval rates, reviewer time and batch frequency. The ranking held in every stress test; the sizes will change with real data.</li>
+    <li>Sites are treated one at a time. Customers rolling out several sites at once share reviewers, which makes the review sprint more valuable, not less.</li>
+    <li>Integration work (ERP, equipment) is folded into the site foundation. On some sites it is the true critical path.</li>
+  </ul>
+</section>
+
+<hr>
+<section id="sources" class="src">
+  <span class="secnum">SOURCES</span>
+  <ul class="plain">
+    <li><a href="https://leucine.ai/mes/" target="_blank" rel="noopener">Leucine MES page</a>: 8–12 week site go-live, phased plan (logbooks weeks 1–8, batch records months 3–6, AI months 4–9), Cipla, Valent and Piramal figures, GAMP 5 validation package</li>
+    <li><a href="https://www.fiercepharma.com/manufacturing/leucine-reaps-7m-series-money-fund-ai-digital-twin-platform-manufacturing" target="_blank" rel="noopener">Fierce Pharma: Leucine Series A</a> ($7M led by Ecolab, 2023)</li>
+    <li><a href="https://www.capgemini.com/wp-content/uploads/2022/09/PoV_eBR-1.pdf" target="_blank" rel="noopener">Capgemini: electronic batch records</a> (reusable blocks, about 50% of batch record data removed through standardisation)</li>
+    <li><a href="https://www.nsf.org/life-science-regulatory-news/fda-final-guidance-computer-software-assurance-csa" target="_blank" rel="noopener">NSF: FDA final CSA guidance</a> (24 September 2025)</li>
+  </ul>
+  <p>Model: 30 synthetic sites, 40–100 master batch records each, weekly steps over 80 weeks, seeded so results repeat. Eight automated checks and nine stress-test runs on the engine.</p>
+</section>
+
+</div>
+
+<script>
+var BNECK = {"base":{"w50":23,"w80":31,"w95p":56},"cfg4":{"w50":23,"w80":30,"w95p":56},"sme2":{"w50":22,"w80":27,"w95p":52}};
+</script>
+<script>
+// Forty Percent engine. Pure functions, no DOM. Synthetic data only.
+// Simulates one pharma site's batch-record rollout week by week: configure each master batch record (MBR),
+// customer review and QA approval, first electronic batch, then live. Measures time until most batch volume is live.
+var LZ = (function () {
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function normal(r) { var u = 1 - r(), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+
+  // Process families for oral solid and liquid generics; each MBR belongs to one.
+  var FAMILIES = [
+    { name: 'Wet granulation tablet', share: 0.24 }, { name: 'Direct compression tablet', share: 0.18 },
+    { name: 'Film-coated tablet', share: 0.16 }, { name: 'Hard gelatin capsule', share: 0.14 },
+    { name: 'Modified-release tablet', share: 0.08 }, { name: 'Oral liquid', share: 0.08 },
+    { name: 'Topical cream / ointment', share: 0.06 }, { name: 'Sterile injectable', share: 0.06 }
+  ];
+  var TIERS = [{ name: 'Simple', share: 0.4, hours: 10 }, { name: 'Medium', share: 0.4, hours: 22 }, { name: 'Complex', share: 0.2, hours: 45 }];
+  var HORIZON = 80; // weeks
+
+  function pick(r, arr) { var u = r(), a = 0; for (var i = 0; i < arr.length; i++) { a += arr[i].share; if (u < a) return i; } return arr.length - 1; }
+
+  function makeSite(r, id, opts) {
+    var lo = opts.minP || 40, hi = opts.maxP || 100;
+    var nProducts = Math.round(lo + r() * (hi - lo));
+    var products = [];
+    for (var p = 0; p < nProducts; p++) {
+      var tier = pick(r, TIERS), fam = pick(r, FAMILIES);
+      if (FAMILIES[fam].name === 'Sterile injectable' && tier === 0) tier = 1;
+      products.push({
+        id: p, fam: fam, tier: tier,
+        perMonth: Math.min(40, Math.exp(Math.log(1.2) + 1.1 * normal(r))), // batches per month; few products carry most volume
+        listPos: r(), // position in the customer's own list
+        draws: Array.from({ length: 24 }, r) // random numbers for review and batch outcomes, shared by every policy
+      });
+    }
+    return { id: id, products: products, smeEff: 0.7 + r() * 0.6, cfgEff: 0.85 + r() * 0.3 };
+  }
+
+  function generate(opts) {
+    opts = opts || {};
+    var r = rng(opts.seed || 20261014);
+    var sites = [];
+    for (var i = 0; i < (opts.sites || 30); i++) sites.push(makeSite(r, i, opts));
+    return { sites: sites };
+  }
+
+  // Policy options:
+  // volumeFirst: configure and review MBRs in order of batch volume, not the customer's list order
+  // library:     shared block library for each process family (less configuration, more first-pass approvals)
+  // aiDraft:     AI drafts the MBR from the paper record; a configurator verifies (less time, slightly more review rework)
+  // reviewSprint: customer commits a fixed weekly review block with a 2-day turnaround
+  // familyPQ:    parallel paper + electronic run only for the first product in each family; others go live on approval
+  // earlyStart:  start MBR work in week 2 alongside logbooks instead of week 8
+  function simulateSite(site, o) {
+    o = o || {};
+    var cfgCap = (o.cfgCap || 120) * site.cfgEff;           // Leucine configuration hours per week
+    var smeCap = (o.reviewSprint ? (o.smeSprint || 40) : (o.smeBase || 24)) * site.smeEff;   // customer SME + QA review hours per week
+    var reviewLag = o.reviewSprint ? 0 : 1;                  // weeks between a review and the QA sign-off
+    var foundationDone = 8;                                  // logbooks, master data, ERP link, IQ/OQ
+    var mbrStart = o.earlyStart ? 2 : 8;
+    var reuse = o.library ? 0.45 : 0.1;
+    var aiCut = o.aiDraft ? 0.5 : 1;
+    var passRate = Math.min(0.92, (o.basePass || 0.6) + (o.library ? 0.15 : 0) - (o.aiDraft && !o.library ? 0.08 : 0));
+    var reviewHours = 3;
+    var dualRunPass = 0.88;
+
+    var P = site.products.map(function (p) {
+      var hours = TIERS[p.tier].hours * (1 - reuse) * aiCut + (o.aiDraft ? TIERS[p.tier].hours * 0.12 : 0);
+      return { p: p, state: 'todo', cfgLeft: hours, cfgHours: hours, d: 0, readyAt: 0, liveWeek: null, reviews: 0, cfgSpent: 0 };
+    });
+    var order = P.slice().sort(o.volumeFirst ? function (a, b) { return b.p.perMonth - a.p.perMonth; } : function (a, b) { return a.p.listPos - b.p.listPos; });
+    var famValidated = FAMILIES.map(function () { return false; });
+    var totalVol = P.reduce(function (s, x) { return s + x.p.perMonth; }, 0);
+    var res = { week80: null, week100: null, week50: null, week95p: null, cfgHours: 0, smeHours: 0, curve: [] };
+    function draw(x) { var v = x.p.draws[x.d % x.p.draws.length]; x.d++; return v; }
+
+    for (var w = 0; w < HORIZON; w++) {
+      if (w >= mbrStart) {
+        // 1. configuration
+        var cap = cfgCap;
+        for (var i = 0; i < order.length && cap > 0; i++) {
+          var x = order[i];
+          if (x.state !== 'todo' && x.state !== 'rework') continue;
+          var use = Math.min(cap, x.cfgLeft); x.cfgLeft -= use; cap -= use; res.cfgHours += use;
+          if (x.cfgLeft <= 1e-9) { x.state = 'review'; x.readyAt = w + 1; }
+        }
+        // 2. review and approval
+        var sme = smeCap;
+        for (i = 0; i < order.length && sme >= reviewHours; i++) {
+          x = order[i];
+          if (x.state !== 'review' || x.readyAt > w) continue;
+          sme -= reviewHours; res.smeHours += reviewHours; x.reviews++;
+          if (draw(x) < passRate) { x.state = 'approved'; x.readyAt = w + reviewLag; }
+          else { x.state = 'rework'; x.cfgLeft = x.cfgHours * 0.3; }
+        }
+        // 3. go-live: needs the site foundation and, unless the family is validated, a parallel run on the next batch
+        for (i = 0; i < order.length; i++) {
+          x = order[i];
+          if (x.state === 'approved' && x.readyAt <= w && w >= foundationDone) {
+            if (o.familyPQ && famValidated[x.p.fam]) { x.state = 'live'; x.liveWeek = w; continue; }
+            // wait for the next scheduled batch of this product
+            var perWeek = x.p.perMonth / 4.33;
+            var wait = -Math.log(1 - draw(x)) / perWeek;
+            x.state = 'dualrun'; x.readyAt = w + Math.ceil(wait) + 1; // +1 week to review the parallel run
+          } else if (x.state === 'dualrun' && x.readyAt <= w) {
+            if (draw(x) < dualRunPass) { x.state = 'live'; x.liveWeek = w; famValidated[x.p.fam] = true; }
+            else { x.state = 'rework'; x.cfgLeft = x.cfgHours * 0.3; }
+          }
+        }
+      }
+      var liveVol = 0, liveN = 0;
+      P.forEach(function (x) { if (x.state === 'live') { liveVol += x.p.perMonth; liveN++; } });
+      var share = liveVol / totalVol;
+      res.curve.push(share);
+      if (res.week50 === null && share >= 0.5) res.week50 = w;
+      if (res.week80 === null && share >= 0.8) res.week80 = w;
+      if (res.week100 === null && liveN === P.length) res.week100 = w;
+      if (res.week95p === null && liveN >= 0.95 * P.length) res.week95p = w;
+    }
+    res.products = P.length;
+    res.paperBatches = 0; // batches still run on paper before going live
+    P.forEach(function (x) { var lw = x.liveWeek == null ? HORIZON : x.liveWeek; res.paperBatches += x.p.perMonth / 4.33 * Math.max(0, lw - foundationDone); });
+    return res;
+  }
+
+  function med(a) { var s = a.slice().sort(function (x, y) { return x - y; }); return s[Math.floor((s.length - 1) / 2)]; }
+  function q(a, p) { var s = a.slice().sort(function (x, y) { return x - y; }); return s[Math.floor((s.length - 1) * p)]; }
+
+  function run(data, o) {
+    var rs = data.sites.map(function (s) { return simulateSite(s, o); });
+    function get(f) { return rs.map(function (r) { return r[f] == null ? HORIZON : r[f]; }); }
+    var curve = []; for (var w = 0; w < HORIZON; w++) curve.push(rs.reduce(function (a, r) { return a + r.curve[w]; }, 0) / rs.length);
+    return {
+      sites: rs.length,
+      w50: med(get('week50')), w80: med(get('week80')), w80p90: q(get('week80'), 0.9), w100: med(get('week100')), w95p: med(get('week95p')),
+      cfgHours: rs.reduce(function (a, r) { return a + r.cfgHours; }, 0) / rs.length,
+      smeHours: rs.reduce(function (a, r) { return a + r.smeHours; }, 0) / rs.length,
+      paperBatches: rs.reduce(function (a, r) { return a + r.paperBatches; }, 0) / rs.length,
+      products: rs.reduce(function (a, r) { return a + r.products; }, 0) / rs.length,
+      curve: curve
+    };
+  }
+
+  return { FAMILIES: FAMILIES, TIERS: TIERS, HORIZON: HORIZON, generate: generate, simulateSite: simulateSite, run: run };
+})();
+
+
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function kpi(v, label, sub) { return '<div class="kpi"><span class="k" style="margin:0">' + label + '</span><span class="v">' + v + '</span><span class="s">' + sub + '</span></div>'; }
+  function wk(x) { return x >= LZ.HORIZON ? '80+' : String(x); }
+  var data = LZ.generate();
+  var cache = {};
+  function run(o) { var k = JSON.stringify(o); if (!cache[k]) cache[k] = LZ.run(data, o); return cache[k]; }
+  var T = run({});
+
+  $('kpis').innerHTML =
+    kpi(wk(T.w50), 'Weeks to 50%', 'of batch volume live') +
+    kpi(wk(T.w80), 'Weeks to 80%', 'median; slowest 1 in 10 sites: ' + wk(T.w80p90)) +
+    kpi(wk(T.w95p), 'Weeks to 95%', 'of products live') +
+    kpi(Math.round(T.paperBatches).toLocaleString('en-IN'), 'Paper batches', 'run after week 8, per site');
+  $('bneck').innerHTML =
+    '<tr><td>Today (assumed)</td><td class="num">' + BNECK.base.w80 + '</td></tr>' +
+    '<tr><td>4x Leucine configuration team</td><td class="num">' + BNECK.cfg4.w80 + '</td></tr>' +
+    '<tr><td>2x customer review hours</td><td class="num">' + BNECK.sme2.w80 + '</td></tr>' +
+    '<tr><td>Same people, volume-first order</td><td class="num">' + run({ volumeFirst: true }).w80 + '</td></tr>';
+
+  function opts() {
+    return { volumeFirst: $('o-vol').checked, reviewSprint: $('o-sprint').checked, earlyStart: $('o-early').checked,
+      library: $('o-lib').checked, aiDraft: $('o-ai').checked, familyPQ: $('o-fam').checked };
+  }
+  function curve(a, b) {
+    var svg = $('curve'), W = 700, H = 300, L = 46, R = 14, Tp = 12, B = 40, maxW = 60;
+    function X(v) { return L + v / maxW * (W - L - R); }
+    function Y(v) { return Tp + (1 - v) * (H - Tp - B); }
+    var h = '';
+    [0, 10, 20, 30, 40, 50, 60].forEach(function (v) { h += '<line x1="' + X(v) + '" x2="' + X(v) + '" y1="' + Tp + '" y2="' + (H - B) + '" stroke="var(--rule)"/><text x="' + X(v) + '" y="' + (H - B + 16) + '" text-anchor="middle">' + v + '</text>'; });
+    [0, 0.5, 0.8, 1].forEach(function (v) { h += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="var(--rule)"' + (v === 0.8 ? ' stroke-dasharray="4 4"' : '') + '/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + Math.round(v * 100) + '%</text>'; });
+    h += '<text x="' + ((L + W - R) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">Weeks from contract</text>';
+    function path(c, col) { var d = ''; for (var w = 0; w <= maxW; w++) d += (w ? 'L' : 'M') + X(w).toFixed(1) + ' ' + Y(c[w]).toFixed(1); return '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2.5"/>'; }
+    h += path(a.curve, 'var(--muted)') + path(b.curve, 'var(--accent)');
+    svg.innerHTML = h;
+  }
+  function levers() {
+    var o = opts(), s = run(o);
+    var pct = Math.round((1 - s.w80 / T.w80) * 100);
+    $('skpis').innerHTML =
+      kpi(wk(s.w80), 'Weeks to 80%', 'today ' + wk(T.w80) + ' · <b class="' + (pct >= 40 ? 'good' : '') + '">' + (pct >= 0 ? pct + '% faster' : (-pct) + '% slower') + '</b>') +
+      kpi(wk(s.w50), 'Weeks to 50%', 'today ' + wk(T.w50)) +
+      kpi(wk(s.w95p), 'Weeks to 95%', 'of products; today ' + wk(T.w95p)) +
+      kpi(Math.round(s.cfgHours).toLocaleString('en-IN'), 'Leucine hours', 'configuration per site; today ' + Math.round(T.cfgHours).toLocaleString('en-IN'));
+    curve(T, s);
+    var rows = [['Today (assumed)', {}], ['Volume-first order', { volumeFirst: true }], ['Review sprint', { reviewSprint: true }],
+      ['Start in week 2', { earlyStart: true }], ['Block library', { library: true }], ['AI draft', { aiDraft: true }],
+      ['Family-level parallel run', { familyPQ: true }], ['Your selection', o]];
+    $('cmp').innerHTML = rows.map(function (r) {
+      var x = run(r[1]);
+      function c(v, base) { return '<td class="num ' + (v < base ? 'good' : v > base ? 'bad' : '') + '">' + wk(v) + '</td>'; }
+      return '<tr><td>' + r[0] + '</td>' + c(x.w50, T.w50) + c(x.w80, T.w80) + c(x.w95p, T.w95p) +
+        '<td class="num ' + (x.cfgHours < T.cfgHours * 0.97 ? 'good' : x.cfgHours > T.cfgHours * 1.03 ? 'bad' : '') + '">' + Math.round(x.cfgHours).toLocaleString('en-IN') + '</td></tr>';
+    }).join('');
+    $('checks').innerHTML =
+      '<div><span class="chip ' + (pct >= 40 ? 'ok' : 'no') + '">' + (pct >= 40 ? 'TARGET MET' : 'BELOW TARGET') + '</span> ' + pct + '% faster to 80% of batch volume (target 40%)</div>' +
+      '<div><span class="chip ok">HELD</span> Every record still gets customer QA approval before it goes live</div>' +
+      (o.familyPQ ? '<div><span class="chip no">ASK FIRST</span> Family-level parallel runs need written agreement from the customer\'s QA</div>' : '');
+  }
+  var timer = null;
+  ['o-vol', 'o-sprint', 'o-early', 'o-lib', 'o-ai', 'o-fam'].forEach(function (id) {
+    $(id).addEventListener('change', function () { $('busy').textContent = 'Replaying 30 site rollouts…'; clearTimeout(timer); timer = setTimeout(function () { levers(); $('busy').textContent = ''; }, 30); });
+  });
+  levers();
+})();
+
+</script>
+
+</body></html>
