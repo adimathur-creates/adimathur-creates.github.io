@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head><body>
+<title>Time to Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,500..800&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+/* Layout: one 760px reading column, like an onboarding control file; interactive panels sit inside the column as working sheets. */
+:root{
+  --paper:#F5F6F9; --panel:#FFFFFF; --ink:#141A2C; --muted:#586079; --rule:#DADFE9;
+  --accent:#2A47AE; --accent-soft:#E4E9F8; --wait:#B9720F; --wait-soft:#F7EBD7;
+  --good:#1D7650; --good-soft:#E0F1E8; --bad:#B0281F;
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --f-body:"Public Sans","Segoe UI",Helvetica,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0E1220; --panel:#151A2B; --ink:#E5E8F1; --muted:#9AA2B8; --rule:#283048;
+  --accent:#86A0F2; --accent-soft:#1F2948; --wait:#E4A84A; --wait-soft:#3A2D16;
+  --good:#55C792; --good-soft:#15342A; --bad:#F0776C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0E1220; --panel:#151A2B; --ink:#E5E8F1; --muted:#9AA2B8; --rule:#283048;
+  --accent:#86A0F2; --accent-soft:#1F2948; --wait:#E4A84A; --wait-soft:#3A2D16;
+  --good:#55C792; --good-soft:#15342A; --bad:#F0776C; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6;padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);font-stretch:88%;line-height:1.12;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.6rem,9vw,4.2rem);font-weight:800;letter-spacing:-.01em}
+h2{font-size:clamp(1.5rem,4.6vw,2rem);font-weight:750}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:16px}
+.eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dek{font-size:1.15rem;color:var(--ink);max-width:62ch}
+.by{font-size:.92rem;color:var(--muted)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.9rem;color:var(--muted);border-radius:4px}
+.note strong{color:var(--ink)}
+ul.plain{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.secnum{font-family:var(--f-mono);font-size:.78rem;color:var(--accent);letter-spacing:.06em}
+.pstate{border-left:3px solid var(--accent);padding:6px 0 6px 16px;font-size:1.08rem;font-weight:600}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.grid2>div{min-width:0}
+.k{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:560px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono)}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.controls{display:flex;flex-wrap:wrap;gap:12px}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted);flex:1 1 150px;min-width:0}
+select{font:inherit;font-size:.92rem;padding:7px 8px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);color:var(--ink)}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-stretch:95%;font-size:1.7rem;font-weight:750;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.78rem;color:var(--muted)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar-row{display:grid;grid-template-columns:minmax(0,190px) 1fr 56px;gap:10px;align-items:center;font-size:.85rem}
+.bar-row .lbl{min-width:0;line-height:1.25}
+.bar-row .lbl small{display:block;color:var(--muted);font-size:.72rem}
+.track{height:16px;display:flex;background:var(--paper);border-radius:2px;overflow:hidden}
+.seg{height:100%}
+.seg.touch{background:var(--accent)} .seg.wait{background:var(--wait)} .seg.rw{background:repeating-linear-gradient(135deg,var(--wait) 0 3px,var(--wait-soft) 3px 6px)}
+.bar-row .val{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:.8rem}
+@media (max-width:520px){.bar-row{grid-template-columns:1fr 50px}.bar-row .lbl{grid-column:1 / -1}}
+.finding{background:var(--wait-soft);border-radius:4px;padding:12px 14px;font-size:.95rem}
+.toggles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.tg{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--rule);border-radius:4px;padding:10px 12px;cursor:pointer;background:var(--paper);min-width:0}
+.tg input{margin-top:4px;accent-color:var(--accent)}
+.tg b{display:block;font-size:.92rem}
+.tg span{font-size:.8rem;color:var(--muted);line-height:1.4;display:block}
+.slider{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted)}
+.slider input{width:100%;accent-color:var(--accent)}
+.cmp{display:flex;flex-direction:column;gap:8px}
+.cmp-row{display:grid;grid-template-columns:minmax(0,150px) 1fr 70px;gap:10px;align-items:center;font-size:.85rem}
+.cmp-row .track{height:12px}
+.seg.base{background:var(--muted);opacity:.45} .seg.after{background:var(--good)}
+.delta{font-family:var(--f-mono);font-size:.8rem;text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:.74rem;padding:3px 8px;border-radius:999px}
+.chip.ok{background:var(--good-soft);color:var(--good)} .chip.warn{background:var(--wait-soft);color:var(--wait)}
+.checks{display:flex;flex-direction:column;gap:8px;font-size:.88rem}
+.checks div{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.rank{counter-reset:r;display:flex;flex-direction:column;gap:14px;margin:0;padding:0;list-style:none}
+.rank li{display:grid;grid-template-columns:34px 1fr;gap:12px}
+.rank li::before{counter-increment:r;content:counter(r);font-family:var(--f-display);font-weight:800;font-size:1.5rem;color:var(--accent);line-height:1.1}
+.rank li>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.req{display:flex;flex-direction:column;gap:8px}
+.req div{display:grid;grid-template-columns:44px 1fr;gap:10px;font-size:.92rem}
+.tag{font-family:var(--f-mono);font-size:.7rem;padding:2px 0;color:var(--accent);font-weight:500}
+.never{color:var(--bad)}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.timeline>div{border-top:2px solid var(--accent);padding-top:10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.src{font-size:.85rem;color:var(--muted)}
+.src a{color:var(--accent)}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--rule);margin:0}
+@media (prefers-reduced-motion:no-preference){.seg{transition:width .35s ease}}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">Independent product work · Associate Product Manager, Onboarding</div>
+  <h1>Time to Trade</h1>
+  <p class="dek">Where a new institutional client waits between "application complete" and "ready to trade", and the four changes I would test first, without weakening a single control.</p>
+  <p class="by">Aditya Mathur · October 2026 · prepared for the StoneX onboarding modernisation programme</p>
+  <div class="note"><strong>Read this first.</strong> I do not work at StoneX and have no internal data. Every number in the model comes from a synthetic event log of 2,400 onboarding cases I generated, using assumptions written out on this page. The method is the point: on day one I would swap the synthetic log for real workflow timestamps and rerun it. Company facts come from public filings and press, linked at the end.</div>
+</header>
+
+<section id="problem">
+  <span class="secnum">1 · THE PROBLEM</span>
+  <h2>One question for the programme</h2>
+  <p class="pstate">Of the elapsed time between a complete client application and a client being ready to trade, how much is work and how much is waiting, and which changes remove the most waiting while every control stays in place?</p>
+  <p>The programme brief describes replacing fragmented and duplicated processes with one controlled flow, from due diligence and KYC/AML through account creation, entitlements, credit and risk setup, reference data and trading readiness. That is a long relay with many handoffs. In relays like this, the time usually goes into the gaps between teams, not into the work itself. If that is true here, the biggest gains come from changing the order of the relay, not from making each team faster.</p>
+  <div class="grid2">
+    <div><div class="k">Why now</div>
+      <ul class="plain">
+        <li>StoneX closed the R.J. O'Brien deal on 31 July 2025, adding 75,000+ client accounts and about 300 introducing brokers, plus the Benchmark acquisition. More books means more duplicated onboarding paths to fold into one.</li>
+        <li>The firm already runs Fenergo for client lifecycle management, so workflow timestamps should exist to measure this properly.</li>
+        <li>Management said in the Q3 FY2026 call that AI has moved to an enterprise-wide rollout, so an AI-assisted step is in scope.</li>
+      </ul></div>
+    <div><div class="k">Scope</div>
+      <ul class="plain">
+        <li><b>In:</b> new institutional and commercial clients, from complete application to trading-ready.</li>
+        <li><b>Out:</b> self-directed retail apps, periodic KYC refresh, payments clients. Same method applies later.</li>
+        <li><b>Main metric:</b> median and 90th-percentile business days to trading-ready.</li>
+        <li><b>Guardrails:</b> zero accounts enabled before KYC and credit approval; enhanced due diligence (EDD) rules unchanged; wasted setup hours on rejected clients tracked.</li>
+      </ul></div>
+  </div>
+</section>
+
+<section id="flow">
+  <span class="secnum">2 · ASSUMED CURRENT FLOW</span>
+  <h2>Seven handoffs, run one after another</h2>
+  <p>This is how I assume a new client moves today, based on how futures commission merchants and prime brokers typically onboard. Every stage waits for the one before it to finish. Each team also re-keys client data from the record before it.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Stage</th><th>What happens</th><th>Owner (assumed)</th><th>Typical failure</th></tr></thead>
+    <tbody>
+      <tr><td><b>Intake & documents</b></td><td>Application, entity documents, signatories, tax forms, client categorisation (UK/EU)</td><td>Client onboarding</td><td>Form incomplete, pack sent back</td></tr>
+      <tr><td><b>KYC / due diligence</b></td><td>Identity checks, beneficial ownership, screening, risk rating; EDD for high-risk clients</td><td>KYC & compliance</td><td>Missing or expired documents found mid-review</td></tr>
+      <tr><td><b>Account & entity creation</b></td><td>Legal entity and accounts set up in the back-office clearing system</td><td>Account operations</td><td>Data re-keyed from onboarding record</td></tr>
+      <tr><td><b>Credit & margin limits</b></td><td>Financials reviewed, credit and pre-trade limits approved</td><td>Credit risk</td><td>Financial statements out of date</td></tr>
+      <tr><td><b>Entitlements & platform access</b></td><td>Exchange and product permissions, trading platform users, market data</td><td>Client services</td><td>Request missing exchanges or users</td></tr>
+      <tr><td><b>Reference data & SSIs</b></td><td>Settlement instructions, static data, give-up links</td><td>Static data team</td><td>SSI or static data mismatch</td></tr>
+      <tr><td><b>Trading-readiness check</b></td><td>Final check that every approval is in place, then the account is enabled</td><td>Client onboarding</td><td>Rarely fails; waits for the last team</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="diagnostic">
+  <span class="secnum">3 · DIAGNOSTIC</span>
+  <h2>Where the days go</h2>
+  <p>Average business days per stage for clients who reached trading-ready. Filter by business line, region or risk tier to see how the picture shifts.</p>
+  <div class="sheet">
+    <div class="controls">
+      <label for="f-line">Business line<select id="f-line"></select></label>
+      <label for="f-region">Region<select id="f-region"></select></label>
+      <label for="f-risk">Risk tier<select id="f-risk">
+        <option value="all">All tiers</option><option value="low">Low</option><option value="standard">Standard</option><option value="high">High (EDD)</option></select></label>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="legend"><span><i class="sw" style="background:var(--accent)"></i>Hands-on work</span><span><i class="sw" style="background:var(--wait)"></i>Waiting in a queue</span><span><i class="sw seg rw"></i>Waiting on the client (rework)</span></div>
+    <div class="bars" id="stagebars"></div>
+    <p class="finding" id="finding"></p>
+  </div>
+  <div class="grid2">
+    <div><h3 style="margin-bottom:10px">Top reasons work goes back</h3><div class="tablewrap"><table style="min-width:0"><thead><tr><th>Reason</th><th class="num">Cases</th></tr></thead><tbody id="reasons"></tbody></table></div></div>
+    <div style="display:flex;flex-direction:column;gap:10px"><h3>What the pattern says</h3>
+      <ul class="plain">
+        <li>Work is only about a tenth of elapsed time. The rest is queues and waiting on the client.</li>
+        <li>KYC carries the largest single block, but credit, entitlements and reference data together wait longer, and they cannot start until KYC ends.</li>
+        <li>Most KYC send-backs are document problems that could be caught at intake, before an analyst picks up the case.</li>
+      </ul></div>
+  </div>
+</section>
+
+<section id="levers">
+  <span class="secnum">4 · LEVERS</span>
+  <h2>Test the fixes on the same cases</h2>
+  <p>Each switch reruns all 2,400 cases with one change. The same random draws are reused, so differences come from the change alone. Your filters above still apply.</p>
+  <div class="sheet">
+    <div class="toggles">
+      <label class="tg" for="o-parallel"><input type="checkbox" id="o-parallel" checked><div><b>Build in parallel, gate at go-live</b><span>For low and standard risk clients, account shell, credit, entitlements and SSIs start once the pack is complete. Trading stays locked until KYC and credit are approved. EDD clients unchanged.</span></div></label>
+      <label class="tg" for="o-precheck"><input type="checkbox" id="o-precheck" checked><div><b>Intake completeness pre-check</b><span>An AI-assisted check flags missing or expired documents before KYC picks the case up. A person confirms every flag. It never approves anything.</span></div></label>
+      <label class="tg" for="o-collect"><input type="checkbox" id="o-collect"><div><b>Collect once, reuse everywhere</b><span>One client record feeds account, credit and static data systems, so data is not re-keyed. Cuts re-keying time and SSI mismatches.</span></div></label>
+      <label class="tg" for="o-templates"><input type="checkbox" id="o-templates"><div><b>Entitlement templates by segment</b><span>Pre-approved permission bundles for standard client types. Prime stays bespoke.</span></div></label>
+    </div>
+    <div class="slider"><label for="o-catch">Pre-check catch rate on preventable document issues: <b id="catchv">60%</b></label><input type="range" id="o-catch" min="0" max="100" step="5" value="60"></div>
+    <div class="kpis" id="scenkpis"></div>
+    <div><div class="k">Median business days, each lever alone vs today</div><div class="cmp" id="ranking"></div></div>
+    <div class="checks" id="checks"></div>
+  </div>
+  <p>I also reran the model with every wait assumption moved 30% up or down, and rework durations moved from 0.6x to 1.5x. Parallel build was the biggest lever in every run, cutting between 5 and 8 days off the median. The other three each moved the median by under one day. Their value shows up in fewer client chasers and fewer analyst hours, not in headline days.</p>
+</section>
+
+<section id="recommend">
+  <span class="secnum">5 · RECOMMENDATION</span>
+  <h2>What I would ship, in this order</h2>
+  <ol class="rank">
+    <li><div><h3>Build in parallel, gate at go-live (pilot)</h3><p>Biggest effect on time to trade. It changes workflow order, not policy, so control risk is low if the gate is hard-coded. The cost is setup work on clients later rejected, which the model shows as a few hours per rejected case. Pilot on one business line, one region, low and standard risk only.</p></div></li>
+    <li><div><h3>Intake completeness pre-check</h3><p>Small effect on days, large effect on client experience: fewer mid-review chasers and fewer cases bouncing back to KYC analysts. It also makes the pilot above cleaner, because parallel setup only starts on complete packs.</p></div></li>
+    <li><div><h3>Collect once, reuse everywhere</h3><p>The structural fix the programme already describes. Slow to build because it touches every downstream system, so it runs as a platform track behind the first two.</p></div></li>
+    <li><div><h3>Entitlement templates</h3><p>Cheap and quick for commercial and clearing clients. Needs sign-off from client services and exchange-permission owners on the standard bundles.</p></div></li>
+  </ol>
+</section>
+
+<section id="spec">
+  <span class="secnum">6 · SPEC FOR LEVER 1</span>
+  <h2>Build in parallel, gate at go-live</h2>
+  <div class="grid2">
+    <div><div class="k">User story</div><p>As an onboarding lead, I want account, credit, entitlements and SSI setup to start as soon as a low or standard risk client's pack is complete, so that the client can trade the day KYC is approved instead of a week later.</p></div>
+    <div><div class="k">Users</div><p>Onboarding analysts, KYC analysts, credit officers, client services, static data team, relationship managers, and the client waiting on the other side.</p></div>
+  </div>
+  <div class="req">
+    <div><span class="tag">P0</span><span>A trading-enable gate that requires KYC approved, credit approved, entitlements done and SSIs verified. No manual override without a second approver and a logged reason.</span></div>
+    <div><span class="tag">P0</span><span>Setup tasks are created in a <i>pending</i> state: accounts exist but are blocked for trading and for receiving client money until the gate passes.</span></div>
+    <div><span class="tag">P0</span><span>Eligibility rule: low or standard provisional risk tier and a pack marked complete. High-risk and EDD clients stay sequential.</span></div>
+    <div><span class="tag">P0</span><span>If KYC rejects, every pending setup task is cancelled and the accounts are closed automatically, with an audit entry.</span></div>
+    <div><span class="tag">P1</span><span>One status view per client showing each stage, its owner and its age, for the RM and the client.</span></div>
+    <div><span class="tag">P1</span><span>If the KYC risk tier is raised to high mid-review, pending setup pauses and the case moves to the EDD path.</span></div>
+  </div>
+  <div class="grid2">
+    <div><div class="k">Acceptance checks</div>
+      <ul class="plain"><li>Zero accounts enabled before both approvals, tested on every pilot case.</li><li>A rejected client leaves no open account or live entitlement within one business day.</li><li>A risk-tier upgrade pauses all pending setup within the same day.</li></ul></div>
+    <div><div class="k">Metrics</div>
+      <ul class="plain"><li><b>Main:</b> median and P90 days to trading-ready for pilot clients vs a matched control group.</li><li><b>Guardrails:</b> control breaches (target 0), wasted setup hours per rejected client, KYC decision quality on QA sample.</li><li><b>Read-out:</b> after 8 weeks or 150 pilot clients, whichever comes first.</li></ul></div>
+  </div>
+  <div class="grid2">
+    <div><div class="k">Risks</div>
+      <ul class="plain"><li>Compliance may see early setup as pre-judging KYC. Mitigation: pending accounts are inert, and the gate is system-enforced, not a checklist.</li><li>Credit teams may resist work on clients who may not pass KYC. Mitigation: track and share wasted hours weekly.</li></ul></div>
+    <div><div class="k">Dependencies</div>
+      <ul class="plain"><li>Workflow change in the client lifecycle platform to fork tasks after pack completion.</li><li>Back-office ability to hold an account in a blocked state.</li><li>Sign-off from compliance, credit risk and each entity's MLRO.</li></ul></div>
+  </div>
+</section>
+
+<section id="ai">
+  <span class="secnum">7 · THE AI STEP</span>
+  <h2>A pre-check that flags, never approves</h2>
+  <div class="grid2">
+    <div><div class="k">What it does</div><ul class="plain"><li>Reads the uploaded pack and checks it against the document list for that client type and region.</li><li>Flags missing items, expired documents, unsigned tax forms and ownership charts that do not reach 100%.</li><li>Drafts one clear request to the client listing everything missing, for an analyst to send.</li></ul></div>
+    <div><div class="k never">What it never does</div><ul class="plain"><li>Approve, reject or risk-rate a client.</li><li>Clear a screening or adverse media hit.</li><li>Send anything to a client without a person reviewing it.</li></ul></div>
+  </div>
+  <div><div class="k">Evaluation before go-live</div>
+    <ul class="plain">
+      <li>A labelled test set of past packs, split by client type and region, with known missing or expired documents.</li>
+      <li>Go-live bar: catches at least 60% of preventable document issues, false alarms on no more than 10% of complete packs, and zero cases where a flag is skipped without a person signing it off.</li>
+      <li>Every flag, the document it points to and the analyst's decision go into the audit record.</li>
+      <li>Weekly sample review by KYC QA for the first quarter. If the catch rate drops below the bar, the check falls back to a plain checklist.</li>
+    </ul></div>
+</section>
+
+<section id="plan">
+  <span class="secnum">8 · FIRST 90 DAYS</span>
+  <h2>How I would run this as the APM</h2>
+  <div class="timeline">
+    <div><div class="k">Days 1–30</div><p>Pull real stage timestamps for one workstream. Rebuild this model on that data. Sit with KYC, credit and static data teams for a day each and map the real flow, including the work-arounds.</p></div>
+    <div><div class="k">Days 31–60</div><p>Share the real wait-vs-work picture with the senior PM and stakeholders. Agree the pilot scope for parallel build. Write the requirements and the test set for the pre-check.</p></div>
+    <div><div class="k">Days 61–90</div><p>Run the pilot with a matched control group. Report days saved, chasers avoided, wasted hours and control breaches. Decide with the team whether to scale, change or stop.</p></div>
+  </div>
+</section>
+
+<section id="limits">
+  <span class="secnum">9 · LIMITS AND OPEN QUESTIONS</span>
+  <h2>What this model cannot tell you</h2>
+  <ul class="plain">
+    <li>All durations, rework rates and rejection rates are my assumptions. The ranking held under the stress test above, but the size of each saving will change with real data.</li>
+    <li>The model treats each stage as one queue. Real teams share people across stages and entities, which can make parallel work slower than shown.</li>
+    <li>I do not know which steps the firm already runs in parallel, or how each entity's rules differ. Those are the first questions I would ask.</li>
+  </ul>
+  <div class="k" style="margin-top:6px">Questions I would bring to the team</div>
+  <ul class="plain">
+    <li>Which onboarding paths still run outside the client lifecycle platform after the RJO and Benchmark integrations?</li>
+    <li>Where do the onboarding timestamps live today, and are queue times recorded or only completion times?</li>
+    <li>Which setup steps do compliance teams in each entity already allow before final KYC approval?</li>
+    <li>How many times is the same client data keyed today, and into which systems?</li>
+  </ul>
+</section>
+
+<hr>
+<section id="sources" class="src">
+  <span class="secnum">SOURCES</span>
+  <ul class="plain">
+    <li><a href="https://ir.stonex.com/news-releases/news-release-details/stonex-completes-acquisition-rj-obrien-becoming-largest-non-bank" target="_blank" rel="noopener">StoneX: completion of the R.J. O'Brien acquisition</a> and <a href="https://www.thetradenews.com/stonex-completes-rj-obrien-acquisition/" target="_blank" rel="noopener">The TRADE coverage</a> (75,000+ accounts, about 300 introducing brokers)</li>
+    <li><a href="https://www.sec.gov/Archives/edgar/data/913760/000091376025000191/snex2025er_exhq4roll.htm" target="_blank" rel="noopener">StoneX FY2025 results, SEC filing</a> (deal closed 31 July 2025; Benchmark closed)</li>
+    <li><a href="https://www.easternprogress.com/stonex-q3-earnings-call-focuses-on-rjo-synergies-prime-growth/article_bb5b2dbe-0a7c-5264-8edb-ff81f59e7ae4.html" target="_blank" rel="noopener">Q3 FY2026 earnings call summary</a> (RJO synergies, prime growth, enterprise AI rollout)</li>
+    <li><a href="https://resources.fenergo.com/case-studies/stonex-case-study" target="_blank" rel="noopener">Fenergo case study: StoneX client lifecycle management</a></li>
+    <li>Programme description: StoneX job posting, Associate Product Manager, Onboarding (2026)</li>
+  </ul>
+  <p>Model: 2,400 synthetic cases, seeded so results repeat. Seven automated checks run on the engine, including zero control breaches in every scenario.</p>
+</section>
+
+</div>
+
+<script>
+// Time-to-Trade engine. Pure functions, no DOM. Synthetic data only.
+// Units: wait in business days, touch in hours (8 hours = 1 business day).
+var TTT = (function () {
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function normal(r) {
+    var u = 1 - r(), v = r();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+  function logn(r, mean, sigma) {
+    var mu = Math.log(mean) - (sigma * sigma) / 2;
+    return Math.exp(mu + sigma * normal(r));
+  }
+  function pick(r, items) {
+    var u = r(), acc = 0;
+    for (var i = 0; i < items.length; i++) { acc += items[i].share; if (u < acc) return items[i]; }
+    return items[items.length - 1];
+  }
+
+  var LINES = [
+    { id: 'commercial', name: 'Commercial hedgers', share: 0.32, credit: 1.0, ent: 0.9, high: 0.10 },
+    { id: 'clearing', name: 'Institutional futures clearing', share: 0.30, credit: 1.1, ent: 1.2, high: 0.12 },
+    { id: 'prime', name: 'Global prime', share: 0.18, credit: 1.5, ent: 1.3, high: 0.18 },
+    { id: 'securities', name: 'Fixed income & equities', share: 0.20, credit: 1.2, ent: 1.0, high: 0.12 }
+  ];
+  var REGIONS = [
+    { id: 'us', name: 'US', share: 0.50, kycTouch: 0, wait: 0 },
+    { id: 'ukeu', name: 'UK & EU', share: 0.35, kycTouch: 1.5, wait: 0 },
+    { id: 'apac', name: 'APAC', share: 0.15, kycTouch: 0.5, wait: 0.5 }
+  ];
+  var DOC_REASONS = [
+    { id: 'ubo', name: 'Beneficial ownership documents missing', share: 0.30, preventable: true },
+    { id: 'tax', name: 'Tax form (W-8BEN-E / W-9) errors', share: 0.20, preventable: true },
+    { id: 'expired', name: 'Expired ID or proof of address', share: 0.18, preventable: true },
+    { id: 'entity', name: 'Entity documents or signatory list missing', share: 0.14, preventable: true },
+    { id: 'sof', name: 'Source of funds clarification', share: 0.10, preventable: false },
+    { id: 'media', name: 'Screening or adverse media follow-up', share: 0.08, preventable: false }
+  ];
+  var STAGES = [
+    { id: 'intake', name: 'Intake & documents', owner: 'Client onboarding' },
+    { id: 'kyc', name: 'KYC / due diligence', owner: 'KYC & compliance' },
+    { id: 'acct', name: 'Account & entity creation', owner: 'Account operations' },
+    { id: 'credit', name: 'Credit & margin limits', owner: 'Credit risk' },
+    { id: 'ent', name: 'Entitlements & platform access', owner: 'Client services' },
+    { id: 'ref', name: 'Reference data & SSIs', owner: 'Static data team' },
+    { id: 'ready', name: 'Trading-readiness check', owner: 'Client onboarding' }
+  ];
+  var P = {
+    intakeRework: 0.25, kycRework: { low: 0.22, standard: 0.30, high: 0.45 },
+    creditRework: 0.10, entRework: 0.18, refRework: 0.14,
+    reject: { low: 0.01, standard: 0.03, high: 0.12 }
+  };
+
+  function generate(n, seed) {
+    var r = rng(seed || 20261013), cases = [];
+    for (var i = 0; i < n; i++) {
+      var line = pick(r, LINES), region = pick(r, REGIONS);
+      var u = r();
+      var risk = u < line.high ? 'high' : u < line.high + 0.35 ? 'low' : 'standard';
+      var c = {
+        id: i + 1, line: line.id, region: region.id, risk: risk,
+        rejected: r() < P.reject[risk],
+        intake: { w: logn(r, 1.4, 0.6), t: logn(r, 1.5, 0.4), u: r(), rw: logn(r, 3, 0.5) },
+        kyc: { w: logn(r, 3.0, 0.6) + region.wait, t: logn(r, 3, 0.4) + region.kycTouch,
+          eddW: risk === 'high' ? logn(r, 5, 0.5) : 0, eddT: risk === 'high' ? logn(r, 6, 0.4) : 0,
+          u: r(), rw: logn(r, 4, 0.5), reason: pick(r, DOC_REASONS).id, uc: r() },
+        acct: { w: logn(r, 1.5, 0.5), t: logn(r, 1.5, 0.4) },
+        credit: { w: logn(r, 2.0, 0.6) * line.credit, t: logn(r, 2.5, 0.4) * line.credit, u: r(), rw: logn(r, 3, 0.5) },
+        ent: { w: logn(r, 1.6, 0.6) * line.ent, t: logn(r, 1.5, 0.4) * line.ent, u: r(), rw: logn(r, 2, 0.5) },
+        ref: { w: logn(r, 1.0, 0.5), t: logn(r, 1.0, 0.4), u: r(), rw: logn(r, 1.5, 0.5) },
+        ready: { w: logn(r, 0.5, 0.5) + region.wait, t: logn(r, 0.5, 0.3) },
+        ufa: r()
+      };
+      cases.push(c);
+    }
+    return cases;
+  }
+
+  function reasonById(id) { for (var i = 0; i < DOC_REASONS.length; i++) if (DOC_REASONS[i].id === id) return DOC_REASONS[i]; }
+
+  // Scenario options: { precheck:bool, catchRate:0..1, falseAlarm:0..1, parallel:bool, collectOnce:bool, templates:bool }
+  function run(c, o) {
+    o = o || {};
+    var s = {}, rework = [], touchH = 0;
+    function stage(id, w, t, rw) { s[id] = { wait: w, touch: t / 8, rework: rw || 0 }; touchH += t; }
+
+    // Intake
+    var iT = c.intake.t, iRw = c.intake.u < P.intakeRework ? c.intake.rw : 0;
+    if (iRw) rework.push({ stage: 'intake', reason: 'Application form incomplete' });
+    // KYC document rework
+    var kRwHit = c.kyc.u < P.kycRework[c.risk], kRw = 0, reason = reasonById(c.kyc.reason);
+    var caught = false;
+    if (kRwHit && o.precheck && reason.preventable && c.kyc.uc < (o.catchRate == null ? 0.6 : o.catchRate)) caught = true;
+    if (caught) { iRw += 1.0; iT += 0.25; rework.push({ stage: 'intake', reason: reason.name, caught: true }); }
+    else if (kRwHit) { kRw = c.kyc.rw; rework.push({ stage: 'kyc', reason: reason.name }); }
+    if (o.precheck && c.ufa < (o.falseAlarm == null ? 0.08 : o.falseAlarm)) iT += 0.3;
+    stage('intake', c.intake.w, iT, iRw);
+    stage('kyc', c.kyc.w + c.kyc.eddW, c.kyc.t + c.kyc.eddT, kRw);
+
+    var intakeEnd = s.intake.wait + s.intake.touch + s.intake.rework;
+    var kycDur = s.kyc.wait + s.kyc.touch + s.kyc.rework;
+    var kycEnd = intakeEnd + kycDur;
+
+    var co = !!o.collectOnce, tp = !!o.templates && c.line !== 'prime';
+    var aT = c.acct.t * (co ? 0.6 : 1);
+    var cRw = c.credit.u < P.creditRework ? c.credit.rw : 0;
+    var eRw = c.ent.u < P.entRework * (tp ? 0.4 : 1) * (co ? 0.7 : 1) ? c.ent.rw : 0;
+    var rRw = c.ref.u < P.refRework * (co ? 0.3 : 1) ? c.ref.rw : 0;
+    if (cRw) rework.push({ stage: 'credit', reason: 'Financial statements out of date' });
+    if (eRw) rework.push({ stage: 'ent', reason: 'Exchange or product request incomplete' });
+    if (rRw) rework.push({ stage: 'ref', reason: 'SSI or static data mismatch' });
+    stage('acct', c.acct.w, aT, 0);
+    stage('credit', c.credit.w, c.credit.t, cRw);
+    stage('ent', c.ent.w * (tp ? 0.7 : 1), c.ent.t * (tp ? 0.5 : 1), eRw);
+    stage('ref', c.ref.w, c.ref.t * (co ? 0.6 : 1), rRw);
+    stage('ready', c.ready.w, c.ready.t, 0);
+
+    function d(id) { return s[id].wait + s[id].touch + s[id].rework; }
+    var setupTouchH = (aT + c.credit.t + s.ent.touch * 8 + s.ref.touch * 8);
+    var res = { c: c, stages: s, rework: rework, kycApproved: kycEnd };
+
+    if (c.rejected) {
+      // Rejected at KYC. Under parallel build, low/standard cases may have started setup work that is now wasted.
+      var startedEarly = o.parallel && c.risk !== 'high';
+      res.rejected = true; res.wastedH = startedEarly ? setupTouchH : 0;
+      return res;
+    }
+    var creditApproved, setupEnd;
+    if (o.parallel) {
+      // Build in parallel, gate at go-live. High-risk (EDD) cases do not start setup before KYC approval.
+      var setupStart = c.risk === 'high' ? kycEnd : intakeEnd;
+      var acctEnd = setupStart + d('acct');
+      creditApproved = acctEnd + d('credit');
+      setupEnd = Math.max(creditApproved, acctEnd + d('ent'), acctEnd + d('ref'));
+    } else {
+      var a = kycEnd + d('acct');
+      creditApproved = a + d('credit');
+      setupEnd = creditApproved + d('ent') + d('ref');
+    }
+    // Control gate: the readiness check cannot start before KYC approval and credit approval.
+    var gate = Math.max(kycEnd, creditApproved, setupEnd);
+    res.creditApproved = creditApproved;
+    res.readyStart = gate;
+    res.days = gate + d('ready');
+    res.touchDays = touchH / 8;
+    res.wastedH = 0;
+    return res;
+  }
+
+  function quantile(sorted, q) {
+    if (!sorted.length) return 0;
+    var pos = (sorted.length - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
+  }
+
+  function summarize(cases, o, filter) {
+    var live = [], rej = 0, wasted = 0, withRw = 0, breaches = 0, touch = 0, elapsed = 0, n = 0;
+    var stageAgg = {}, reasons = {}, caught = 0;
+    STAGES.forEach(function (st) { stageAgg[st.id] = { wait: 0, touch: 0, rework: 0, rwCount: 0 }; });
+    cases.forEach(function (c) {
+      if (filter && !filter(c)) return;
+      n++;
+      var r = run(c, o);
+      r.rework.forEach(function (x) {
+        if (x.caught) { caught++; return; }
+        reasons[x.reason] = (reasons[x.reason] || 0) + 1;
+      });
+      if (r.rejected) { rej++; wasted += r.wastedH; return; }
+      live.push(r.days); touch += r.touchDays; elapsed += r.days;
+      if (r.rework.some(function (x) { return !x.caught; })) withRw++;
+      if (r.readyStart < r.kycApproved - 1e-9 || r.readyStart < r.creditApproved - 1e-9) breaches++;
+      STAGES.forEach(function (st) {
+        var a = stageAgg[st.id], x = r.stages[st.id];
+        a.wait += x.wait; a.touch += x.touch; a.rework += x.rework; if (x.rework > 0) a.rwCount++;
+      });
+    });
+    live.sort(function (a, b) { return a - b; });
+    var m = live.length || 1;
+    var stagesOut = STAGES.map(function (st) {
+      var a = stageAgg[st.id];
+      return { id: st.id, name: st.name, owner: st.owner, wait: a.wait / m, touch: a.touch / m, rework: a.rework / m, reworkRate: a.rwCount / m };
+    });
+    var reasonList = Object.keys(reasons).map(function (k) { return { reason: k, count: reasons[k] }; })
+      .sort(function (a, b) { return b.count - a.count; });
+    return {
+      n: n, live: live.length, rejected: rej,
+      median: quantile(live, 0.5), p90: quantile(live, 0.9),
+      mean: elapsed / m, workShare: elapsed ? touch / elapsed : 0,
+      reworkRate: withRw / m, breaches: breaches, wastedH: wasted, caught: caught,
+      stages: stagesOut, reasons: reasonList
+    };
+  }
+
+  return { generate: generate, run: run, summarize: summarize, quantile: quantile,
+    LINES: LINES, REGIONS: REGIONS, STAGES: STAGES, DOC_REASONS: DOC_REASONS, P: P };
+})();
+
+
+</script>
+<script>
+(function () {
+  var cases = TTT.generate(2400);
+  var $ = function (id) { return document.getElementById(id); };
+  function fill(sel, items, allLabel) {
+    sel.innerHTML = '<option value="all">' + allLabel + '</option>' +
+      items.map(function (x) { return '<option value="' + x.id + '">' + x.name + '</option>'; }).join('');
+  }
+  fill($('f-line'), TTT.LINES, 'All business lines');
+  fill($('f-region'), TTT.REGIONS, 'All regions');
+
+  function filter() {
+    var l = $('f-line').value, g = $('f-region').value, k = $('f-risk').value;
+    return function (c) { return (l === 'all' || c.line === l) && (g === 'all' || c.region === g) && (k === 'all' || c.risk === k); };
+  }
+  function opts() {
+    return { parallel: $('o-parallel').checked, precheck: $('o-precheck').checked, collectOnce: $('o-collect').checked,
+      templates: $('o-templates').checked, catchRate: +$('o-catch').value / 100, falseAlarm: 0.08 };
+  }
+  function f1(x) { return x.toFixed(1); }
+  function pct(x) { return Math.round(x * 100) + '%'; }
+  function kpi(v, label, sub) { return '<div class="kpi"><span class="k" style="margin:0">' + label + '</span><span class="v">' + v + '</span><span class="s">' + sub + '</span></div>'; }
+
+  function renderDiag() {
+    var s = TTT.summarize(cases, {}, filter());
+    $('kpis').innerHTML =
+      kpi(f1(s.median), 'Median days', 'to trading-ready') +
+      kpi(f1(s.p90), 'P90 days', 'slowest 1 in 10') +
+      kpi(pct(s.workShare), 'Work share', 'of elapsed time') +
+      kpi(pct(s.reworkRate), 'Sent back', 'at least once');
+    var max = 0;
+    s.stages.forEach(function (x) { max = Math.max(max, x.wait + x.touch + x.rework); });
+    $('stagebars').innerHTML = s.stages.map(function (x) {
+      var tot = x.wait + x.touch + x.rework, sc = 100 / max;
+      return '<div class="bar-row"><div class="lbl">' + x.name + '<small>' + x.owner + (x.reworkRate > 0 ? ' · ' + pct(x.reworkRate) + ' sent back' : '') + '</small></div>' +
+        '<div class="track" role="img" aria-label="' + x.name + ': ' + f1(tot) + ' days"><div class="seg touch" style="width:' + (x.touch * sc) + '%"></div><div class="seg wait" style="width:' + (x.wait * sc) + '%"></div><div class="seg rw" style="width:' + (x.rework * sc) + '%"></div></div>' +
+        '<div class="val">' + f1(tot) + 'd</div></div>';
+    }).join('');
+    var post = ['credit', 'ent', 'ref'].reduce(function (a, id) {
+      var x = s.stages.filter(function (y) { return y.id === id; })[0]; return a + x.wait + x.touch + x.rework; }, 0);
+    var kyc = s.stages[1], kycT = kyc.wait + kyc.touch + kyc.rework;
+    $('finding').innerHTML = s.live ? '<b>Finding for this filter (' + s.live.toLocaleString() + ' clients):</b> only ' + pct(s.workShare) +
+      ' of elapsed time is hands-on work. Credit, entitlements and reference data add ' + f1(post) +
+      ' days after KYC finishes, against ' + f1(kycT) + ' days for KYC itself. Those three could run while KYC is under way.' : 'No clients match this filter.';
+    var tot = s.reasons.reduce(function (a, r) { return a + r.count; }, 0) || 1;
+    $('reasons').innerHTML = s.reasons.slice(0, 6).map(function (r) {
+      return '<tr><td>' + r.reason + '</td><td class="num">' + r.count + ' <span style="color:var(--muted)">(' + pct(r.count / tot) + ')</span></td></tr>';
+    }).join('');
+  }
+
+  function renderLevers() {
+    var f = filter(), o = opts();
+    $('catchv').textContent = $('o-catch').value + '%';
+    var b = TTT.summarize(cases, {}, f), s = TTT.summarize(cases, o, f);
+    function d(a, z) { var x = a - z; return (x > 0 ? '−' : x < 0 ? '+' : '') + f1(Math.abs(x)); }
+    $('scenkpis').innerHTML =
+      kpi(f1(s.median), 'Median days', d(b.median, s.median) + ' vs today (' + f1(b.median) + ')') +
+      kpi(f1(s.p90), 'P90 days', d(b.p90, s.p90) + ' vs today (' + f1(b.p90) + ')') +
+      kpi(pct(s.reworkRate), 'Sent back', 'today ' + pct(b.reworkRate)) +
+      kpi(s.caught.toLocaleString(), 'Caught at intake', 'send-backs moved before KYC');
+    var levers = [
+      { name: 'Parallel build', o: { parallel: true } },
+      { name: 'Intake pre-check', o: { precheck: true, catchRate: o.catchRate } },
+      { name: 'Collect once', o: { collectOnce: true } },
+      { name: 'Entitlement templates', o: { templates: true } },
+      { name: 'Your selection', o: o }
+    ];
+    $('ranking').innerHTML = levers.map(function (l) {
+      var m = TTT.summarize(cases, l.o, f).median, sc = 100 / (b.median || 1);
+      return '<div class="cmp-row"><div>' + l.name + '</div><div class="track"><div class="seg after" style="width:' + (m * sc) + '%"></div><div class="seg base" style="width:' + ((b.median - m) * sc) + '%"></div></div><div class="delta">' + f1(m) + 'd</div></div>';
+    }).join('');
+    var perRej = s.rejected ? s.wastedH / s.rejected : 0;
+    $('checks').innerHTML =
+      '<div><span class="chip ' + (s.breaches === 0 ? 'ok' : 'warn') + '">' + (s.breaches === 0 ? 'PASS' : 'FAIL') + '</span> Accounts enabled before KYC and credit approval: <b>' + s.breaches + '</b></div>' +
+      '<div><span class="chip ok">HELD</span> High-risk (EDD) clients follow the current sequential path</div>' +
+      '<div><span class="chip ' + (s.wastedH > 0 ? 'warn' : 'ok') + '">COST</span> Setup hours spent on clients later rejected: <b>' + Math.round(s.wastedH) + '</b> across ' + s.rejected + ' rejections (' + f1(perRej) + ' h each)</div>';
+  }
+
+  function all() { renderDiag(); renderLevers(); }
+  ['f-line', 'f-region', 'f-risk'].forEach(function (id) { $(id).addEventListener('change', all); });
+  ['o-parallel', 'o-precheck', 'o-collect', 'o-templates'].forEach(function (id) { $(id).addEventListener('change', renderLevers); });
+  $('o-catch').addEventListener('input', renderLevers);
+  all();
+})();
+
+</script>
+
+</body></html>
