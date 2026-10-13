@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head><body>
+<title>The Complete Basket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single 780px column read like a planning memo; live simulator panels sit inside the column as work sheets. */
+:root{
+  --paper:#F2F5F1; --panel:#FFFFFF; --ink:#13221B; --muted:#5A6B62; --rule:#D5DED7;
+  --accent:#C4501F; --accent-soft:#F8E6DC; --leaf:#2F6B4F; --leaf-soft:#DDEDE3;
+  --waste:#8A5A2B; --waste-soft:#F1E7DA; --bad:#B3261E;
+  --f-display:"Bricolage Grotesque","Arial Narrow",Arial,sans-serif;
+  --f-body:"Source Sans 3","Segoe UI",Helvetica,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0F1713; --panel:#16211B; --ink:#E4EBE6; --muted:#9DB0A5; --rule:#283A30;
+  --accent:#F08A5D; --accent-soft:#3A2419; --leaf:#6FC79A; --leaf-soft:#173326;
+  --waste:#D9A86F; --waste-soft:#33281A; --bad:#F2867E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F1713; --panel:#16211B; --ink:#E4EBE6; --muted:#9DB0A5; --rule:#283A30;
+  --accent:#F08A5D; --accent-soft:#3A2419; --leaf:#6FC79A; --leaf-soft:#173326;
+  --waste:#D9A86F; --waste-soft:#33281A; --bad:#F2867E; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.08;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.7rem,9.5vw,4.6rem);font-weight:800;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--accent)}
+h2{font-size:clamp(1.55rem,4.8vw,2.1rem);font-weight:750;letter-spacing:-.01em}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:16px}
+.eyebrow,.k{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.k{margin-bottom:6px}
+.dek{font-size:1.18rem;max-width:62ch}
+.by{font-size:.92rem;color:var(--muted)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:4px}
+.note strong{color:var(--ink)}
+.secnum{font-family:var(--f-mono);font-size:.76rem;color:var(--accent);letter-spacing:.06em}
+.pstate{border-left:3px solid var(--accent);padding:6px 0 6px 16px;font-size:1.1rem;font-weight:600}
+ul.plain{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.grid2>div{min-width:0}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.controls{display:flex;flex-wrap:wrap;gap:12px}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);flex:1 1 160px;min-width:0}
+select{font:inherit;font-size:.95rem;padding:7px 8px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);color:var(--ink)}
+select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:1.8rem;font-weight:750;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.82rem;white-space:nowrap}
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;align-items:end}
+.calc label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted);min-width:0}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.big{font-family:var(--f-display);font-size:2.6rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.callout{background:var(--accent-soft);border-radius:4px;padding:12px 14px}
+.finding{background:var(--leaf-soft);border-radius:4px;padding:12px 14px}
+.chartwrap{overflow-x:auto}
+svg text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.84rem;color:var(--muted)}
+.sw{display:inline-block;width:12px;height:3px;margin-right:6px;vertical-align:4px;border-radius:2px}
+.toggles{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+.tg{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--rule);border-radius:4px;padding:10px 12px;cursor:pointer;background:var(--paper);min-width:0}
+.tg input{margin-top:5px;accent-color:var(--accent)}
+.tg b{display:block;font-size:.95rem}
+.tg span{font-size:.83rem;color:var(--muted);line-height:1.4;display:block}
+.tg.off{opacity:.55}
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.sliders label{display:flex;flex-direction:column;gap:4px;font-size:.84rem;color:var(--muted)}
+.cmp{display:flex;flex-direction:column;gap:8px}
+.cmp-row{display:grid;grid-template-columns:minmax(0,190px) 1fr 92px;gap:10px;align-items:center;font-size:.88rem}
+.track{height:12px;background:var(--paper);border-radius:2px;position:relative;overflow:hidden}
+.zero{position:absolute;top:0;bottom:0;width:1px;background:var(--muted)}
+.bar{position:absolute;top:0;bottom:0}
+.bar.pos{background:var(--leaf)} .bar.neg{background:var(--bad)}
+.delta{font-family:var(--f-mono);font-size:.8rem;text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:520px){.cmp-row{grid-template-columns:1fr 84px}.cmp-row>div:first-child{grid-column:1 / -1}}
+.chip{display:inline-flex;font-family:var(--f-mono);font-size:.72rem;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.chip.ok{background:var(--leaf-soft);color:var(--leaf)} .chip.warn{background:var(--waste-soft);color:var(--waste)}
+.checks{display:flex;flex-direction:column;gap:8px;font-size:.9rem}
+.checks div{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.rank{counter-reset:r;display:flex;flex-direction:column;gap:16px;margin:0;padding:0;list-style:none}
+.rank li{display:grid;grid-template-columns:34px 1fr;gap:12px}
+.rank li::before{counter-increment:r;content:counter(r);font-family:var(--f-display);font-weight:800;font-size:1.6rem;color:var(--accent);line-height:1.05}
+.rank li>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.req{display:flex;flex-direction:column;gap:8px}
+.req div{display:grid;grid-template-columns:40px 1fr;gap:10px;font-size:.95rem}
+.tag{font-family:var(--f-mono);font-size:.72rem;color:var(--accent);font-weight:500;padding-top:2px}
+.tl{display:grid;grid-template-columns:110px 1fr;gap:8px 14px;font-size:.93rem}
+.tl .k{margin:0;padding-top:3px}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.timeline>div{border-top:2px solid var(--leaf);padding-top:10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.src{font-size:.86rem;color:var(--muted)}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--rule);margin:0}
+.busy{font-size:.8rem;color:var(--muted);min-height:1.2em}
+@media (max-width:520px){th,td{padding:7px 8px}table{font-size:.85rem}.num{font-size:.76rem}}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">Independent product work · Product Manager, Supply Chain</div>
+  <h1>The <em>Complete</em> Basket</h1>
+  <p class="dek">How much of each fresh item should go to each clubhouse every morning, so a customer's whole basket arrives without premium produce being thrown away. A working replenishment simulator, the policy I would ship, and how I would test it.</p>
+  <p class="by">Aditya Mathur · October 2026 · prepared for the FirstClub supply chain product team</p>
+  <div class="note"><strong>Read this first.</strong> I do not work at FirstClub and have no internal data. The model runs on synthetic orders for 24 clubhouses (21 in Bengaluru, 3 in Hyderabad, matching public counts) and 78 fresh items. All demand, shelf life, margin and cost figures are my assumptions and are listed on this page. The method is what transfers: with real order and stock logs, the same simulator can be rerun in a week.</div>
+</header>
+
+<section id="problem">
+  <span class="secnum">1 · THE PROBLEM</span>
+  <h2>Quality is promised per basket, not per item</h2>
+  <p class="pstate">Every morning, how much of each fresh item should the hub send to each clubhouse, so that a customer's basket arrives complete while waste on short-life, premium produce stays low, and how should that change as FirstClub adds clubhouses, cities and categories?</p>
+  <p>The founder's promise is "the right quality selection, consistently delivered every single time". Customers buy about ten items per order. A basket is only as good as its weakest item: if one of them is missing, the order fails the promise even when the other nine are perfect. Three things make this harder for FirstClub than for a mass-market dark store.</p>
+  <ul class="plain">
+    <li><b>Low stock per store by design.</b> Clubhouses keep thin inventory to protect freshness, so there is little buffer when demand jumps.</li>
+    <li><b>Premium, short-life items lead.</b> Top sellers include avocados, persimmons and Modi apples, not onions and potatoes. Each unit thrown away costs more.</li>
+    <li><b>Quality checks use up shelf life.</b> Stock is checked at the warehouse, at the clubhouse and before dispatch. Every hour a lot waits for release is an hour of life lost on the shelf.</li>
+  </ul>
+  <div class="sheet">
+    <div class="k" style="margin:0">Basket maths: why 95% in stock is not good enough</div>
+    <div class="calc">
+      <label for="c-items">Fresh items in a basket: <b id="c-items-v">3</b><input type="range" id="c-items" min="1" max="10" value="3"></label>
+      <label for="c-avail">Chance each item is in stock: <b id="c-avail-v">95%</b><input type="range" id="c-avail" min="80" max="100" step="0.5" value="95"></label>
+      <div><div class="k">Baskets that arrive complete</div><div class="big" id="c-out">85.7%</div></div>
+    </div>
+    <p class="callout" id="c-say"></p>
+  </div>
+</section>
+
+<section id="today">
+  <span class="secnum">2 · ASSUMED CURRENT PROCESS</span>
+  <h2>How I assume fresh is allocated today</h2>
+  <p>This is a typical setup for a young quick-commerce network. I would confirm it in week one.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Step</th><th>Assumed today</th><th>Why it hurts</th></tr></thead>
+    <tbody>
+      <tr><td><b>Stock levels</b></td><td>A fixed level per item per clubhouse, set at launch from an estimate (1.3x expected daily sales)</td><td>Wrong from day one for items and stores that differ from the estimate</td></tr>
+      <tr><td><b>Minimum stock</b></td><td>A floor of 3 units for every item, so nothing shows as sold out</td><td>Slow, short-life items at small clubhouses expire before they sell</td></tr>
+      <tr><td><b>Updates</b></td><td>Levels refreshed monthly from the sales report</td><td>Sales hide demand that was lost when stock ran out, so popular items stay short</td></tr>
+      <tr><td><b>Deliveries</b></td><td>One hub-to-clubhouse drop at 6 am</td><td>Evening demand is covered by the morning guess</td></tr>
+      <tr><td><b>Quality release</b></td><td>Lots tested the day after they arrive at the hub, then sent out the next morning</td><td>About one day of shelf life is used up before the item reaches a clubhouse</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="diagnostic">
+  <span class="secnum">3 · DIAGNOSTIC</span>
+  <h2>Where baskets break and where money is thrown away</h2>
+  <p>The model plays out 49 days of orders, one at a time, across every clubhouse. Choose a city to see how a new city differs.</p>
+  <div class="sheet">
+    <div class="controls">
+      <label for="f-city">City<select id="f-city"><option value="all">All clubhouses</option><option value="Bengaluru">Bengaluru (21)</option><option value="Hyderabad">Hyderabad (3, new)</option></select></label>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2">
+      <div><h3 style="margin-bottom:8px">Most money thrown away</h3><div class="tablewrap"><table><thead><tr><th>Item</th><th class="num">Life</th><th class="num">Wasted</th><th class="num">Rs/day</th></tr></thead><tbody id="t-waste"></tbody></table></div></div>
+      <div><h3 style="margin-bottom:8px">Most margin lost to stock-outs</h3><div class="tablewrap"><table><thead><tr><th>Item</th><th class="num">Sales/day</th><th class="num">In stock</th><th class="num">Rs/day</th></tr></thead><tbody id="t-lost"></tbody></table></div></div>
+    </div>
+    <p class="finding" id="d-find"></p>
+  </div>
+  <p>Two different problems sit inside one number. Waste comes from slow, short-life items held at the 3-unit floor at small clubhouses. Broken baskets come from fast and fast-growing items, like avocados, persimmons and strawberries coming into season, whose stock levels never catch up because the sales report cannot see the lost demand.</p>
+</section>
+
+<section id="frontier">
+  <span class="secnum">4 · THE TRADE-OFF</span>
+  <h2>More complete baskets usually cost more waste. It does not have to.</h2>
+  <p>Each line shows one way of setting stock, from cautious to generous. Up is more complete baskets. Left is less money thrown away. The best policies sit top-left.</p>
+  <div class="sheet">
+    <div class="chartwrap"><svg id="fchart" viewBox="0 0 700 380" width="100%" role="img" aria-label="Complete baskets against waste for three ways of setting stock"></svg></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--muted)"></i>One target for every item</span>
+      <span><i class="sw" style="background:var(--accent)"></i>Target priced per item</span>
+      <span><i class="sw" style="background:var(--leaf)"></i>Priced, plus same-morning quality release</span>
+      <span>● Today (assumed)</span>
+    </div>
+    <p class="finding">At about 97% complete baskets, one target for every item throws away about Rs 2,570 per clubhouse per day. Pricing the target per item cuts that to about Rs 1,660. Adding same-morning quality release brings it to about Rs 510, and items reach customers with more life left.</p>
+  </div>
+  <p><b>What "priced per item" means:</b> for each item at each clubhouse, the target is set by comparing two costs. One is the cost of running out: the lost margin plus a penalty for breaking the basket. The other is the cost of having too much: the unit's cost times the chance it expires before it sells. Milk at a busy clubhouse gets a high target, because leftovers sell tomorrow. A Rs 349 tray of raspberries at a small clubhouse gets a lower one.</p>
+</section>
+
+<section id="levers">
+  <span class="secnum">5 · TEST THE LEVERS</span>
+  <h2>Switch the changes on and off</h2>
+  <p>Every run replays the same customers, so differences come from the change alone. Margin is fresh gross margin after waste and after any extra trip or staff cost.</p>
+  <div class="sheet">
+    <div class="toggles">
+      <label class="tg" for="o-forecast"><input type="checkbox" id="o-forecast" checked><div><b>Daily forecast from real demand</b><span>Stock levels reset every morning from a weekday-aware forecast. It learns from sales plus orders that could not be filled, logged by the app.</span></div></label>
+      <label class="tg" for="o-priced" id="tg-priced"><input type="checkbox" id="o-priced" checked><div><b>Price the target per item</b><span>Each item's target comes from the cost of running out against the cost of waste, instead of one number for everything.</span></div></label>
+      <label class="tg" for="o-fast"><input type="checkbox" id="o-fast" checked><div><b>Same-morning quality release</b><span>Lots arrive at the hub by night and are tested before the 6 am drop, instead of a day later. Every test still runs before dispatch. Adds a night QC shift.</span></div></label>
+      <label class="tg" for="o-drops"><input type="checkbox" id="o-drops"><div><b>Second drop at 2 pm</b><span>A top-up run for items with 3 days of life or less, sized on that morning's actual orders. Costs one extra trip per clubhouse.</span></div></label>
+    </div>
+    <div class="sliders">
+      <label for="o-pen">Cost of a broken basket, beyond the item's margin: <b id="o-pen-v">Rs 50</b><input type="range" id="o-pen" min="0" max="200" step="10" value="50"></label>
+      <label for="o-target">Flat in-stock target (used when pricing is off): <b id="o-target-v">97%</b><input type="range" id="o-target" min="85" max="99.5" step="0.5" value="97"></label>
+      <label for="o-trip">Cost of the extra 2 pm trip per clubhouse: <b id="o-trip-v">Rs 400</b><input type="range" id="o-trip" min="100" max="800" step="50" value="400"></label>
+    </div>
+    <div class="busy" id="busy" aria-live="polite"></div>
+    <div class="kpis" id="skpis"></div>
+    <div><div class="k">Margin change per clubhouse per day, each change added on its own to today</div><div class="cmp" id="ranking"></div></div>
+    <div class="checks" id="checks"></div>
+  </div>
+  <p><b>Stress test.</b> I reran the model with two other random seeds, more accurate launch estimates, a floor of 1 unit instead of 3, 20% fewer orders, and a cheaper trip. Priced targets beat today in every run, adding Rs 750 to 1,400 per clubhouse per day. Same-morning release added Rs 700 to 810 on top in every run. The second drop lost money in every run except when a trip cost Rs 200, where it added about Rs 60.</p>
+</section>
+
+<section id="recommend">
+  <span class="secnum">6 · RECOMMENDATION</span>
+  <h2>What I would ship, in order</h2>
+  <ol class="rank">
+    <li><div><h3>Daily, priced targets per item and clubhouse</h3><p>The biggest single gain, and it is software only. It needs one data fix first: the app must log every item a customer wanted but could not add, or the forecast learns from a number that hides the problem. In the model, complete baskets rise from about 84% to about 95% while waste falls by about a quarter.</p></div></li>
+    <li><div><h3>Same-morning quality release, as a hub pilot</h3><p>Not fewer tests. The same tests, done overnight. It needs a supplier arrival cut-off and a night QC shift, so it is an operations change that product has to make visible. It gives customers fresher produce, which is the brand.</p></div></li>
+    <li><div><h3>New clubhouse launch playbook</h3><p>Hyderabad shows the cost of copying Bengaluru levels: in the model only about 64% of baskets arrive complete. Start new clubhouses on the daily forecast from day one, seeded from the three most similar existing clubhouses, and review daily for the first two weeks.</p></div></li>
+    <li><div><h3>Hold the second drop</h3><p>At Rs 400 a trip, the waste it saves does not cover the trip. Revisit it for bakery only, or once trips can be shared with another flow such as new categories or returns.</p></div></li>
+  </ol>
+</section>
+
+<section id="spec">
+  <span class="secnum">7 · SPEC FOR THE FIRST CHANGE</span>
+  <h2>Daily priced replenishment</h2>
+  <div class="grid2">
+    <div><div class="k">Users</div><ul class="plain"><li><b>Hub planner:</b> reviews and releases the overnight allocation.</li><li><b>Clubhouse lead:</b> receives stock and flags damage or mismatch.</li><li><b>Category manager:</b> sets the basket penalty and protects launch items.</li></ul></div>
+    <div><div class="k">User story</div><p>As a hub planner, I want each clubhouse's fresh allocation to be calculated every night from real demand and from what running out or wasting each item costs, so I spend my time on the exceptions, not on typing in numbers.</p></div>
+  </div>
+  <div class="req">
+    <div><span class="tag">P0</span><span>Log lost demand: every add-to-cart blocked by stock, every "notify me" tap, and every substitution, by item, clubhouse and hour.</span></div>
+    <div><span class="tag">P0</span><span>Nightly forecast per item and clubhouse, adjusted for weekday, with a warm start for new items and clubhouses from similar ones.</span></div>
+    <div><span class="tag">P0</span><span>Target per item and clubhouse from the two costs, using margin, landed cost, shelf life left after release, and the basket penalty set by category.</span></div>
+    <div><span class="tag">P0</span><span>Planner view: allocation by clubhouse, items flagged when the change from yesterday is large, override with a reason.</span></div>
+    <div><span class="tag">P1</span><span>Event uplifts (festivals, weather, launches) entered by category managers, applied to the forecast and tracked for accuracy.</span></div>
+    <div><span class="tag">P1</span><span>Daily report: complete-basket rate, waste by item and clubhouse, and which items broke baskets.</span></div>
+  </div>
+  <div class="grid2">
+    <div><div class="k">Metrics</div><ul class="plain"><li><b>North star:</b> share of orders delivered with every item.</li><li><b>Waste:</b> fresh write-offs as % of fresh cost of goods.</li><li><b>Quality:</b> average shelf life left when the item reaches the customer.</li><li><b>Guardrails:</b> substitution rate, refund rate for quality, planner overrides per day.</li></ul></div>
+    <div><div class="k">How to test it</div><ul class="plain"><li>Split Bengaluru clubhouses into matched pairs by size and area. One of each pair gets the new allocation, the other keeps today's levels.</li><li>Run for 4 weeks, so every item cycles through its shelf life several times.</li><li>Ship if complete baskets rise and waste does not, with no rise in quality refunds.</li></ul></div>
+  </div>
+  <div class="grid2">
+    <div><div class="k">Risks</div><ul class="plain"><li>Planners distrust the numbers and override everything. Mitigation: show why each number changed, and track override accuracy.</li><li>A new item has no history. Mitigation: seed from similar items and keep a launch floor for its first two weeks.</li></ul></div>
+    <div><div class="k">Dependencies</div><ul class="plain"><li>App events for lost demand.</li><li>Landed cost and shelf life per lot in the warehouse system.</li><li>Sign-off from category and hub operations on the basket penalty.</li></ul></div>
+  </div>
+</section>
+
+<section id="qc">
+  <span class="secnum">8 · THE QUALITY TIMELINE</span>
+  <h2>Same tests, fewer hours waiting</h2>
+  <div class="grid2">
+    <div><div class="k">Assumed today</div><div class="tl">
+      <span class="k">Day 0, eve</span><span>Lot arrives at the hub</span>
+      <span class="k">Day 1</span><span>Lot is tested and released</span>
+      <span class="k">Day 2, 6 am</span><span>Lot goes to clubhouses with one day of life already used</span></div></div>
+    <div><div class="k">Proposed</div><div class="tl">
+      <span class="k">Day 0, 10 pm</span><span>Supplier arrival cut-off</span>
+      <span class="k">Overnight</span><span>Night QC shift runs the same checks</span>
+      <span class="k">Day 1, 6 am</span><span>Released lots go out; anything not cleared waits, as today</span></div></div>
+  </div>
+  <p>Any test that cannot finish overnight keeps today's timing for that item. Which tests those are is the first thing I would ask the quality team. The model charges Rs 250 per clubhouse per day for the night shift.</p>
+</section>
+
+<section id="plan">
+  <span class="secnum">9 · FIRST 90 DAYS</span>
+  <h2>How I would run this</h2>
+  <div class="timeline">
+    <div><div class="k">Days 1–30</div><p>Walk the hub at night and three clubhouses at peak. Pull order, stock and write-off logs. Rebuild this model on real data and agree the complete-basket metric with category and operations.</p></div>
+    <div><div class="k">Days 31–60</div><p>Ship lost-demand logging. Build the nightly forecast and priced targets behind a planner review screen. Pick matched clubhouse pairs and start the test.</p></div>
+    <div><div class="k">Days 61–90</div><p>Read out the test. Scale to all Bengaluru clubhouses if it passes. Start the night-QC pilot with the hub team, and use the forecast for the next Hyderabad openings.</p></div>
+  </div>
+</section>
+
+<section id="limits">
+  <span class="secnum">10 · LIMITS AND OPEN QUESTIONS</span>
+  <h2>What this model does not know</h2>
+  <ul class="plain">
+    <li>Every number is an assumption, including demand, shelf life, margins, trip and shift costs. The ranking of the changes held in every stress test, but the size of each gain will change with real data.</li>
+    <li>The hub is assumed to always have stock. Supplier shortfalls and fill rates are not modelled.</li>
+    <li>Each item is sold as one unit and there are no substitutes. Real customers sometimes swap, which softens a stock-out.</li>
+  </ul>
+  <div class="k" style="margin-top:6px">Questions I would bring to the team</div>
+  <ul class="plain">
+    <li>How are clubhouse stock levels set today, and how often do planners override them?</li>
+    <li>Does the app log items customers wanted but could not add?</li>
+    <li>How long does a lot wait between arriving at the hub and being released?</li>
+    <li>How do substitutions and refunds for quality show up in the data?</li>
+  </ul>
+</section>
+
+<hr>
+<section id="sources" class="src">
+  <span class="secnum">SOURCES</span>
+  <ul class="plain">
+    <li><a href="https://techcrunch.com/2026/06/03/firstclub-doubles-valuation-to-255m-in-nine-months-on-quality-first-grocery-bet/" target="_blank" rel="noopener">TechCrunch, June 2026</a>: Series B, 21 Bengaluru stores and 3 in Hyderabad, about 4,000 SKUs, top sellers, Rs 1,200 average order, founder quote</li>
+    <li><a href="https://inc42.com/startups/firstclub-betting-quality-convenience-quick-commerce-giants/" target="_blank" rel="noopener">Inc42</a>: low inventory per clubhouse, checks at warehouse, store and dispatch, own first and middle mile, 10+ items per order</li>
+    <li><a href="https://startupfox.in/article/firstclub-raises-55-million-series-b-funding" target="_blank" rel="noopener">Series B coverage</a>: funds for dark stores and supply chain technology, lab testing before dispatch, 30-minute delivery</li>
+    <li><a href="https://indianstartupnews.com/funding/quality-first-quick-commerce-startup-firstclub-raises-23-million-ceo-says-every-product-is-tested-tasted-9986787" target="_blank" rel="noopener">Indian Startup News</a>: "every product is tested, tasted, and vetted end to end"</li>
+  </ul>
+  <p>Model: 24 clubhouses, 78 fresh items, 63 days with a 14-day warm-up, seeded so results repeat. Eight automated checks and seven stress-test runs on the engine.</p>
+</section>
+
+</div>
+
+<script>
+var FRONTIER = {"base":{"w":1836,"c":83.54,"m":12499},"flat":[{"t":0.85,"w":1238,"c":88.86,"m":13601},{"t":0.9,"w":1565,"c":91.93,"m":13536},{"t":0.93,"w":1863,"c":93.91,"m":13395},{"t":0.95,"w":2146,"c":95.32,"m":13220},{"t":0.97,"w":2571,"c":96.82,"m":12908},{"t":0.98,"w":2930,"c":97.66,"m":12606},{"t":0.99,"w":3520,"c":98.61,"m":12081},{"t":0.995,"w":4136,"c":99.18,"m":11503}],"priced":[{"p":0,"w":840,"c":90.93,"m":14074},{"p":10,"w":999,"c":92.89,"m":14025},{"p":25,"w":1167,"c":94.28,"m":13951},{"p":50,"w":1370,"c":95.48,"m":13849},{"p":100,"w":1661,"c":96.62,"m":13659},{"p":200,"w":2032,"c":97.57,"m":13393},{"p":400,"w":2471,"c":98.24,"m":13032}],"pricedFast":[{"p":0,"w":250,"c":92.82,"m":14578},{"p":10,"w":293,"c":94.41,"m":14624},{"p":25,"w":342,"c":95.51,"m":14647},{"p":50,"w":407,"c":96.46,"m":14661},{"p":100,"w":511,"c":97.33,"m":14642},{"p":200,"w":655,"c":98.06,"m":14578},{"p":400,"w":824,"c":98.55,"m":14469}]};
+</script>
+<script>
+// Complete Basket engine. Pure functions, no DOM. Synthetic data only.
+// Simulates fresh replenishment from one mother hub to every clubhouse, order by order.
+var FC = (function () {
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function normal(r) { var u = 1 - r(), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function poisson(r, lam) {
+    if (lam <= 0) return 0;
+    if (lam > 40) return Math.max(0, Math.round(lam + Math.sqrt(lam) * normal(r)));
+    var L = Math.exp(-lam), k = 0, p = 1;
+    do { k++; p *= r(); } while (p > L);
+    return k - 1;
+  }
+
+  // name, category, price (Rs), gross margin, shelf life in days from hub receipt, popularity weight, daily trend
+  var SKUS = [
+    ['Fresh milk 1L', 'Dairy & eggs', 84, 0.14, 3, 70, 0],
+    ['A2 cow milk 1L', 'Dairy & eggs', 110, 0.18, 3, 14, 0],
+    ['Curd 400g', 'Dairy & eggs', 70, 0.22, 7, 28, 0],
+    ['Paneer 200g', 'Dairy & eggs', 120, 0.22, 5, 20, 0],
+    ['Greek yogurt', 'Dairy & eggs', 95, 0.28, 10, 7, 0],
+    ['Buttermilk 500ml', 'Dairy & eggs', 35, 0.25, 3, 8, 0],
+    ['Fresh cream 200ml', 'Dairy & eggs', 75, 0.24, 5, 3, 0],
+    ['Mozzarella 200g', 'Dairy & eggs', 210, 0.28, 14, 2.5, 0],
+    ['Free-range eggs, 6', 'Dairy & eggs', 120, 0.25, 14, 24, 0],
+    ['Country eggs, 6', 'Dairy & eggs', 110, 0.25, 14, 6, 0],
+    ['Sourdough loaf', 'Bakery', 220, 0.40, 3, 7, 0],
+    ['Japanese milk bread', 'Bakery', 160, 0.38, 4, 5, 0],
+    ['Multigrain bread', 'Bakery', 75, 0.30, 4, 18, 0],
+    ['Whole wheat bread', 'Bakery', 60, 0.28, 4, 14, 0],
+    ['Burger buns, 4', 'Bakery', 60, 0.32, 3, 4, 0],
+    ['Pav, 6', 'Bakery', 45, 0.30, 3, 7, 0],
+    ['Bagels, 2', 'Bakery', 140, 0.40, 4, 1.5, 0],
+    ['Focaccia', 'Bakery', 190, 0.42, 2, 1.2, 0],
+    ['Butter croissant, 2', 'Bakery', 180, 0.42, 2, 2.5, 0],
+    ['Banana bread', 'Bakery', 240, 0.40, 5, 1.5, 0],
+    ['Cinnamon roll', 'Bakery', 120, 0.45, 2, 1.2, 0],
+    ['Pita, 4', 'Bakery', 90, 0.35, 4, 1.5, 0],
+    ['Robusta banana, 1kg', 'Fruit', 70, 0.30, 4, 30, 0],
+    ['Modi apple, 4', 'Fruit', 260, 0.32, 14, 12, 0],
+    ['Green apple, 4', 'Fruit', 220, 0.30, 14, 3, 0],
+    ['Hass avocado', 'Fruit', 199, 0.35, 4, 12, 0.008],
+    ['Persimmon, 2', 'Fruit', 180, 0.35, 5, 3, 0.02],
+    ['Blueberries 125g', 'Fruit', 349, 0.30, 5, 2.5, 0],
+    ['Strawberries 200g', 'Fruit', 149, 0.30, 3, 3.5, 0.015],
+    ['Raspberries 125g', 'Fruit', 399, 0.30, 3, 0.8, 0],
+    ['Papaya', 'Fruit', 90, 0.30, 4, 7, 0],
+    ['Pomegranate, 2', 'Fruit', 180, 0.30, 10, 10, 0],
+    ['Kiwi, 3', 'Fruit', 150, 0.30, 10, 5, 0],
+    ['Dragon fruit', 'Fruit', 140, 0.33, 7, 1.5, 0],
+    ['Nagpur orange, 1kg', 'Fruit', 120, 0.28, 10, 6, 0.01],
+    ['Guava, 500g', 'Fruit', 70, 0.30, 5, 4, 0],
+    ['Pineapple', 'Fruit', 90, 0.30, 5, 3, 0],
+    ['Red grapes, 500g', 'Fruit', 140, 0.30, 6, 4, 0],
+    ['Pear, 4', 'Fruit', 180, 0.30, 8, 2.5, 0],
+    ['Custard apple, 500g', 'Fruit', 150, 0.33, 3, 1.5, 0.012],
+    ['Fresh figs, 6', 'Fruit', 220, 0.35, 3, 0.8, 0],
+    ['Tender coconut', 'Fruit', 60, 0.25, 5, 5, 0],
+    ['Mangosteen, 250g', 'Fruit', 299, 0.35, 5, 0.6, 0],
+    ['Plum, 250g', 'Fruit', 160, 0.32, 5, 1, 0],
+    ['Tomato 500g', 'Vegetables', 40, 0.30, 5, 30, 0],
+    ['Onion 1kg', 'Vegetables', 55, 0.25, 20, 26, 0],
+    ['Potato 1kg', 'Vegetables', 50, 0.25, 20, 22, 0],
+    ['Coriander', 'Vegetables', 25, 0.35, 2, 20, 0],
+    ['Mint', 'Vegetables', 20, 0.35, 2, 6, 0],
+    ['Curry leaves', 'Vegetables', 15, 0.35, 4, 7, 0],
+    ['Spinach', 'Vegetables', 35, 0.35, 2, 8, 0],
+    ['Methi', 'Vegetables', 30, 0.35, 2, 4, 0],
+    ['Cucumber', 'Vegetables', 40, 0.30, 5, 12, 0],
+    ['Lemons, 4', 'Vegetables', 40, 0.35, 10, 14, 0],
+    ['Ginger 100g', 'Vegetables', 40, 0.30, 14, 10, 0],
+    ['Garlic 100g', 'Vegetables', 45, 0.30, 20, 9, 0],
+    ['Green chilli 100g', 'Vegetables', 20, 0.35, 6, 10, 0],
+    ['Carrot 500g', 'Vegetables', 45, 0.30, 8, 10, 0],
+    ['Beans 250g', 'Vegetables', 40, 0.32, 4, 6, 0],
+    ['Capsicum 250g', 'Vegetables', 40, 0.30, 6, 6, 0],
+    ['Red & yellow peppers', 'Vegetables', 140, 0.35, 6, 2, 0],
+    ['Cauliflower', 'Vegetables', 50, 0.30, 5, 4, 0],
+    ['Okra 250g', 'Vegetables', 35, 0.32, 3, 4, 0],
+    ['Beetroot 500g', 'Vegetables', 40, 0.30, 10, 3, 0],
+    ['Sweet potato 500g', 'Vegetables', 60, 0.30, 14, 2, 0],
+    ['Spring onion', 'Vegetables', 30, 0.35, 3, 3, 0],
+    ['Broccoli', 'Vegetables', 120, 0.32, 4, 4, 0],
+    ['Button mushroom 200g', 'Vegetables', 70, 0.30, 3, 7, 0],
+    ['Shiitake 100g', 'Vegetables', 199, 0.38, 4, 0.6, 0],
+    ['Cherry tomatoes 200g', 'Vegetables', 99, 0.35, 5, 4, 0],
+    ['Zucchini', 'Vegetables', 80, 0.32, 5, 2, 0],
+    ['Iceberg lettuce', 'Vegetables', 90, 0.35, 4, 2, 0],
+    ['Kale 100g', 'Vegetables', 120, 0.38, 3, 0.7, 0],
+    ['Basil 50g', 'Vegetables', 60, 0.38, 3, 1, 0],
+    ['Baby spinach mix', 'Vegetables', 149, 0.38, 3, 1.2, 0],
+    ['Microgreens 50g', 'Vegetables', 99, 0.42, 3, 0.7, 0],
+    ['Asparagus 200g', 'Vegetables', 349, 0.38, 3, 0.5, 0],
+    ['Sweet corn', 'Vegetables', 35, 0.30, 3, 4, 0]
+  ].map(function (a, i) { return { i: i, name: a[0], cat: a[1], price: a[2], margin: a[3], life: a[4], w: a[5], trend: a[6] }; });
+
+  var QC_REJECT = { 'Dairy & eggs': 0.01, 'Bakery': 0.01, 'Fruit': 0.04, 'Vegetables': 0.03 };
+  var HOURS = [0, 0, 0, 0, 0, 0, 0, 7, 9, 8, 7, 6, 6, 6, 4, 4, 4, 5, 7, 9, 8, 6, 3, 1]; // order share by hour
+  var HSUM = HOURS.reduce(function (a, b) { return a + b; }, 0);
+  var PM_HOUR = 14;
+  var AM_SHARE = HOURS.slice(0, PM_HOUR).reduce(function (a, b) { return a + b; }, 0) / HSUM;
+  var WEEKDAY = [1.25, 0.95, 0.92, 0.94, 0.97, 1.05, 1.3]; // Sun..Sat
+  var DAYS = 63, WARMUP = 14, SHORT = 3; // second drop covers SKUs with 3 days of life or less
+    var WSUM = SKUS.reduce(function (a, s) { return a + s.w; }, 0);
+  var LINES_PER_ORDER = WSUM / 200; // fresh lines per fresh order at a size-1 clubhouse
+  var CUM = []; (function () { var acc = 0; SKUS.forEach(function (s) { acc += s.w / WSUM; CUM.push(acc); }); })();
+
+  function makeStores(seed) {
+    var r = rng(seed + 7), out = [];
+    var blr = ['Bellandur', 'HSR Layout', 'Whitefield', 'Koramangala', 'Indiranagar', 'Sarjapur Rd', 'Marathahalli', 'Hebbal',
+      'JP Nagar', 'Jayanagar', 'Electronic City', 'Yelahanka', 'Kasavanahalli', 'Brookefield', 'Domlur', 'Banashankari',
+      'Malleshwaram', 'Frazer Town', 'RT Nagar', 'Kanakapura Rd', 'Hennur'];
+    var hyd = ['Gachibowli', 'Kondapur', 'Jubilee Hills'];
+    blr.forEach(function (n, i) { out.push({ id: i, name: n, city: 'Bengaluru', size: 0.55 + r() * 0.95, isNew: false }); });
+    hyd.forEach(function (n, j) { out.push({ id: blr.length + j, name: n, city: 'Hyderabad', size: 0.4 + r() * 0.3, isNew: true }); });
+    return out;
+  }
+
+  // Pre-generate the demand stream once, so every policy faces identical customers.
+  function generate(opts) {
+    opts = opts || {};
+    var seed = opts.seed || 20261014, r = rng(seed);
+    var stores = makeStores(seed);
+    var baseOrders = opts.ordersPerStore || 200;
+    var data = { stores: stores, days: [] };
+    // Each store-sku has a hidden local taste multiplier.
+    var taste = stores.map(function () { return SKUS.map(function () { return Math.exp(0.25 * normal(r)); }); });
+    data.taste = taste;
+    for (var d = 0; d < DAYS; d++) {
+      var dayStores = [];
+      for (var s = 0; s < stores.length; s++) {
+        var st = stores[s];
+        var growth = st.isNew ? Math.min(1, 0.6 + d * 0.012) : 1;
+        var n = poisson(r, baseOrders * st.size * WEEKDAY[d % 7] * growth * Math.exp(0.08 * normal(r)));
+        var hours = new Uint8Array(n), starts = new Uint32Array(n + 1), lines = [];
+        for (var o = 0; o < n; o++) {
+          var u = r() * HSUM, acc = 0, h = 0;
+          for (h = 0; h < 24; h++) { acc += HOURS[h]; if (u < acc) break; }
+          hours[o] = h;
+          starts[o] = lines.length;
+          var k = 1 + poisson(r, LINES_PER_ORDER - 1), seen = {};
+          for (var j = 0; j < k; j++) {
+            // weighted pick adjusted by local taste and trend, via rejection sampling
+            for (var tries = 0; tries < 20; tries++) {
+              var x = r(), idx = 0;
+              while (idx < CUM.length - 1 && x > CUM[idx]) idx++;
+              var sk = SKUS[idx];
+              var mult = taste[s][idx] * (1 + sk.trend * d);
+              if (r() < mult / 2.2 && !seen[idx]) { seen[idx] = 1; lines.push(idx); break; }
+            }
+          }
+        }
+        // sort orders by hour so the day plays out in time order
+        var order = []; for (o = 0; o < n; o++) order.push(o);
+        order.sort(function (a, b) { return hours[a] - hours[b]; });
+        var H = new Uint8Array(n), S = new Uint32Array(n + 1), L = [];
+        order.forEach(function (oi, pos) {
+          H[pos] = hours[oi]; S[pos] = L.length;
+          var end = oi + 1 < n ? starts[oi + 1] : lines.length;
+          for (var q = starts[oi]; q < end; q++) L.push(lines[q]);
+        });
+        S[n] = L.length;
+        dayStores.push({ n: n, hours: H, starts: S, lines: Uint8Array.from(L) });
+      }
+      data.days.push(dayStores);
+    }
+    // Launch-time estimate of daily demand per store-sku (what a planner set pars from). Noisy; worse for new city.
+    var r2 = rng(seed + 99);
+    data.launchEst = stores.map(function (st, s) {
+      var trueMean = SKUS.map(function () { return 0; });
+      // true mean from the first week of demand
+      for (var d = 0; d < 7; d++) { var ds = data.days[d][s]; for (var q = 0; q < ds.lines.length; q++) trueMean[ds.lines[q]] += 1 / 7; }
+      return trueMean.map(function (m) { return m * Math.exp((st.isNew ? (opts.launchErrNew == null ? 0.5 : opts.launchErrNew) : (opts.launchErr == null ? 0.3 : opts.launchErr)) * normal(r2)); });
+    });
+    return data;
+  }
+
+  function poissonQuantile(lam, p) {
+    if (lam <= 0) return 0;
+    var k = 0, pmf = Math.exp(-lam), cdf = pmf;
+    if (lam > 60) return Math.ceil(lam + normalQ(p) * Math.sqrt(lam));
+    while (cdf < p && k < 1000) { k++; pmf *= lam / k; cdf += pmf; }
+    return k;
+  }
+  function normalQ(p) { // Acklam approximation
+    var a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.357751867269, -30.66479806614716, 2.506628277459239];
+    var b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771720, -13.28068155288572];
+    var c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
+    var d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
+    var q, rr;
+    if (p < 0.02425) { q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+    if (p > 1 - 0.02425) { q = Math.sqrt(-2 * Math.log(1 - p)); return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+    q = p - 0.5; rr = q * q;
+    return (((((a[0] * rr + a[1]) * rr + a[2]) * rr + a[3]) * rr + a[4]) * rr + a[5]) * q / (((((b[0] * rr + b[1]) * rr + b[2]) * rr + b[3]) * rr + b[4]) * rr + 1);
+  }
+
+  // Policy options:
+  // forecast: daily forecast-driven order-up-to (false = par levels with display minimum)
+  // lostDemand: forecast learns from sales + lost lines logged by the app (false = sales only)
+  // twoDrops: add a 2 pm top-up drop sized on that morning's sales
+  // fastRelease: QC lots released the same morning they arrive (every test kept), +1 day of shelf life
+  // target: in-stock target per item at each drop (0.80-0.995)
+  // tripCost: Rs per extra middle-mile trip per clubhouse
+  function simulate(data, o) {
+    o = o || {};
+    var target = o.target == null ? 0.97 : o.target;
+    var tripCost = o.tripCost == null ? 400 : o.tripCost;
+    var qcShiftCost = o.qcShiftCost == null ? 250 : o.qcShiftCost;
+    var penalty = o.penalty == null ? 50 : o.penalty;
+    var floor = o.floor == null ? 3 : o.floor;
+    var qcHold = o.fastRelease ? 0 : 1;
+    var nS = data.stores.length, nK = SKUS.length;
+    var rq = rng(4242);
+    var res = data.stores.map(function () {
+      return { orders: 0, complete: 0, lines: 0, filled: 0, revenue: 0, margin: 0, wasteCost: 0, wasteUnits: 0,
+        received: 0, receivedCost: 0, trips: 0, lifeAtSale: 0, sold: 0,
+        sku: SKUS.map(function () { return { dem: 0, sold: 0, lost: 0, waste: 0, recv: 0 }; }) };
+    });
+    // inventory: per store per sku: arrays of [qty, expiryDay] in FEFO order
+    var inv = [], fc = [], par = [];
+    for (var s = 0; s < nS; s++) {
+      inv.push([]); fc.push([]); par.push([]);
+      for (var k = 0; k < nK; k++) {
+        inv[s].push([]);
+        var est = data.launchEst[s][k];
+        fc[s].push(est);
+        par[s].push(Math.max(floor, Math.ceil(1.3 * est)));
+      }
+    }
+    var obsSum = []; for (s = 0; s < nS; s++) { obsSum.push(new Float64Array(nK)); }
+    var obsDays = 0;
+
+    // In-stock target for one SKU at one clubhouse.
+    // Flat: the same target everywhere. Priced: newsvendor critical ratio = Cu / (Cu + Co), where
+    // Cu = margin lost + basket penalty (what a broken basket costs beyond the item), and
+    // Co = unit cost x chance a leftover unit expires before it sells (fewer chances when demand is thin or life is short).
+    function tgt(s, k, d) {
+      if (!o.priced) return target;
+      var sk = SKUS[k], cost = sk.price * (1 - sk.margin);
+      var lifeAtStore = Math.max(1, sk.life - qcHold);
+      var salesOverLife = Math.max(0.05, fc[s][k] * lifeAtStore);
+      var pExpire = Math.min(1, 1 / (1 + salesOverLife));
+      var cu = sk.price * sk.margin + penalty, co = cost * pExpire;
+      return Math.max(0.5, Math.min(0.995, cu / (cu + co)));
+    }
+    function onHand(s, k, uptoDay) { // usable units that do not expire before end of uptoDay
+      var b = inv[s][k], t = 0;
+      for (var i = 0; i < b.length; i++) if (b[i][1] >= uptoDay) t += b[i][0];
+      return t;
+    }
+    function receive(s, k, qty, d, measure) {
+      if (qty <= 0) return;
+      var ship = 0;
+      for (var u = 0; u < qty; u++) if (rq() >= QC_REJECT[SKUS[k].cat]) ship++;
+      if (ship <= 0) return;
+      // shelf life left at the clubhouse: life minus QC hold days; expires at end of day d + left - 1
+      var left = Math.max(1, SKUS[k].life - qcHold);
+      inv[s][k].push([ship, d + left - 1]);
+      if (measure) { res[s].received += ship; res[s].receivedCost += ship * SKUS[k].price * (1 - SKUS[k].margin); res[s].sku[k].recv += ship; }
+    }
+
+    for (var d = 0; d < DAYS; d++) {
+      var measure = d >= WARMUP, wd = WEEKDAY[d % 7];
+      // Par refresh every 28 days from observed sales (sales only: that is what a sales report shows)
+      if (!o.forecast && d > 0 && d % 28 === 0 && obsDays > 0) {
+        for (s = 0; s < nS; s++) for (k = 0; k < nK; k++) par[s][k] = Math.max(floor, Math.ceil(1.3 * obsSum[s][k] / obsDays));
+        for (s = 0; s < nS; s++) obsSum[s].fill(0); obsDays = 0;
+      }
+      var amSoldToday = [];
+      for (s = 0; s < nS; s++) {
+        amSoldToday.push(new Float64Array(nK));
+        if (measure) res[s].trips += 1;
+        for (k = 0; k < nK; k++) {
+          var want;
+          if (o.forecast) {
+            var horizonShare = (o.twoDrops && SKUS[k].life <= SHORT) ? AM_SHARE : 1;
+            var lam = fc[s][k] * wd * horizonShare;
+            want = poissonQuantile(lam, tgt(s, k, d));
+          } else {
+            want = par[s][k];
+          }
+          var have = onHand(s, k, d);
+          receive(s, k, want - have, d, measure);
+        }
+      }
+      // play the day
+      var dayStores = data.days[d];
+      var dmd = [], sold = [];
+      for (s = 0; s < nS; s++) { dmd.push(new Float64Array(nK)); sold.push(new Float64Array(nK)); }
+      for (s = 0; s < nS; s++) {
+        var ds = dayStores[s], R = res[s], pmDone = false;
+        for (var oi = 0; oi < ds.n; oi++) {
+          if (o.twoDrops && !pmDone && ds.hours[oi] >= PM_HOUR) {
+            pmDone = true;
+            if (measure) R.trips += 1;
+            for (k = 0; k < nK; k++) {
+              if (SKUS[k].life > SHORT) continue;
+              var expectAM = fc[s][k] * wd * AM_SHARE;
+              // re-estimate today from this morning's actual demand, blended with forecast
+              var amSeen = o.lostDemand !== false ? dmd[s][k] : sold[s][k];
+              var todayEst = 0.5 * (expectAM > 0 ? amSeen / AM_SHARE : 0) + 0.5 * fc[s][k] * wd;
+              var lamPM = todayEst * (1 - AM_SHARE); // covers until close
+              var wantPM = o.forecast ? poissonQuantile(lamPM, tgt(s, k, d)) : 0;
+              if (!o.forecast) { // par policy with two drops: top back up to the evening share of par
+                wantPM = Math.ceil(par[s][k] * (1 - AM_SHARE));
+              }
+              receive(s, k, wantPM - onHand(s, k, d), d, measure);
+            }
+          }
+          var a = ds.starts[oi], b = ds.starts[oi + 1], ok = true;
+          for (var q = a; q < b; q++) {
+            k = ds.lines[q];
+            dmd[s][k] += 1;
+            var bat = inv[s][k];
+            while (bat.length && (bat[0][0] <= 0 || bat[0][1] < d)) bat.shift();
+            if (bat.length) {
+              bat[0][0] -= 1; sold[s][k] += 1;
+              if (measure) {
+                R.filled++; R.revenue += SKUS[k].price; R.margin += SKUS[k].price * SKUS[k].margin;
+                R.lifeAtSale += bat[0][1] - d + 1; R.sold++; R.sku[k].sold++;
+              }
+              if (bat[0][0] <= 0) bat.shift();
+            } else { ok = false; if (measure) R.sku[k].lost++; }
+            if (measure) { R.lines++; R.sku[k].dem++; }
+          }
+          if (measure) { R.orders++; if (ok) R.complete++; }
+        }
+        // end of day: write off what expires today
+        for (k = 0; k < nK; k++) {
+          var bb = inv[s][k];
+          while (bb.length && bb[0][1] <= d) {
+            var x = bb.shift();
+            if (x[0] > 0 && measure) {
+              R.wasteUnits += x[0]; R.wasteCost += x[0] * SKUS[k].price * (1 - SKUS[k].margin); R.sku[k].waste += x[0];
+            }
+          }
+        }
+      }
+      // learn
+      obsDays++;
+      for (s = 0; s < nS; s++) for (k = 0; k < nK; k++) {
+        var seen2 = (o.forecast && o.lostDemand !== false) ? dmd[s][k] : sold[s][k];
+        obsSum[s][k] += seen2;
+        var deseason = seen2 / WEEKDAY[d % 7];
+        fc[s][k] = 0.7 * fc[s][k] + 0.3 * deseason;
+      }
+    }
+    res.forEach(function (R) { R.tripCostTotal = (R.trips - (DAYS - WARMUP)) * tripCost + (o.fastRelease ? (DAYS - WARMUP) * qcShiftCost : 0); });
+    return res;
+  }
+
+  function summarize(data, res, filter) {
+    var t = { orders: 0, complete: 0, lines: 0, filled: 0, revenue: 0, margin: 0, wasteCost: 0, wasteUnits: 0, received: 0,
+      receivedCost: 0, extraTripCost: 0, lifeAtSale: 0, sold: 0, stores: 0 };
+    var sku = SKUS.map(function () { return { dem: 0, sold: 0, lost: 0, waste: 0, recv: 0 }; });
+    res.forEach(function (R, s) {
+      if (filter && !filter(data.stores[s])) return;
+      t.stores++;
+      ['orders', 'complete', 'lines', 'filled', 'revenue', 'margin', 'wasteCost', 'wasteUnits', 'received', 'receivedCost', 'lifeAtSale', 'sold']
+        .forEach(function (f) { t[f] += R[f]; });
+      t.extraTripCost += R.tripCostTotal;
+      R.sku.forEach(function (x, k) { ['dem', 'sold', 'lost', 'waste', 'recv'].forEach(function (f) { sku[k][f] += x[f]; }); });
+    });
+    var days = DAYS - WARMUP, sd = Math.max(1, t.stores * days);
+    return {
+      stores: t.stores, days: days,
+      completeRate: t.orders ? t.complete / t.orders : 0,
+      itemFill: t.lines ? t.filled / t.lines : 0,
+      wasteShare: t.received ? t.wasteUnits / t.received : 0,
+      wasteValueShare: t.receivedCost ? t.wasteCost / t.receivedCost : 0,
+      wastePerStoreDay: t.wasteCost / sd,
+      lostMarginPerStoreDay: sku.reduce(function (a, x, k) { return a + x.lost * SKUS[k].price * SKUS[k].margin; }, 0) / sd,
+      marginAfterWastePerStoreDay: (t.margin - t.wasteCost - t.extraTripCost) / sd,
+      extraTripCostPerStoreDay: t.extraTripCost / sd,
+      lifeAtSale: t.sold ? t.lifeAtSale / t.sold : 0,
+      ordersPerStoreDay: t.orders / sd,
+      sku: sku.map(function (x, k) {
+        return { name: SKUS[k].name, cat: SKUS[k].cat, life: SKUS[k].life, perStoreDay: x.dem / sd,
+          fill: x.dem ? x.sold / x.dem : 1, waste: x.recv ? x.waste / x.recv : 0,
+          wasteRs: x.waste * SKUS[k].price * (1 - SKUS[k].margin) / sd,
+          lostRs: x.lost * SKUS[k].price * SKUS[k].margin / sd };
+      })
+    };
+  }
+
+  return { SKUS: SKUS, generate: generate, simulate: simulate, summarize: summarize, poissonQuantile: poissonQuantile,
+    DAYS: DAYS, WARMUP: WARMUP, SHORT: SHORT, AM_SHARE: AM_SHARE, WEEKDAY: WEEKDAY };
+})();
+
+
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function pct(x, d) { return (x * 100).toFixed(d == null ? 1 : d) + '%'; }
+  function rs(x) { return 'Rs ' + Math.round(x).toLocaleString('en-IN'); }
+  function sgn(x) { return (x >= 0 ? '+' : '−') + 'Rs ' + Math.abs(Math.round(x)).toLocaleString('en-IN'); }
+  function kpi(v, label, sub) { return '<div class="kpi"><span class="k" style="margin:0">' + label + '</span><span class="v">' + v + '</span><span class="s">' + sub + '</span></div>'; }
+
+  // Basket maths
+  function calc() {
+    var n = +$('c-items').value, a = +$('c-avail').value / 100, c = Math.pow(a, n);
+    $('c-items-v').textContent = n; $('c-avail-v').textContent = (a * 100).toFixed(1).replace('.0', '') + '%';
+    $('c-out').textContent = pct(c);
+    var one = c < 1 ? Math.round(1 / (1 - c)) : null;
+    $('c-say').textContent = one ? 'About 1 in ' + one + ' baskets is missing at least one item. For a customer paying for quality, that is the order they remember.' : 'Every basket arrives complete.';
+  }
+  ['c-items', 'c-avail'].forEach(function (id) { $(id).addEventListener('input', calc); });
+  calc();
+
+  // Frontier chart
+  function chart() {
+    var svg = $('fchart'), W = 700, H = 380, L = 56, R = 16, T = 14, B = 46;
+    var xs = [0, 4500], ys = [82, 100];
+    function X(v) { return L + (v - xs[0]) / (xs[1] - xs[0]) * (W - L - R); }
+    function Y(v) { return T + (ys[1] - v) / (ys[1] - ys[0]) * (H - T - B); }
+    var h = '';
+    [0, 1000, 2000, 3000, 4000].forEach(function (v) {
+      h += '<line x1="' + X(v) + '" x2="' + X(v) + '" y1="' + T + '" y2="' + (H - B) + '" stroke="var(--rule)"/>';
+      h += '<text x="' + X(v) + '" y="' + (H - B + 16) + '" text-anchor="middle">' + v.toLocaleString('en-IN') + '</text>';
+    });
+    [85, 90, 95, 100].forEach(function (v) {
+      h += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="var(--rule)"/>';
+      h += '<text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + v + '%</text>';
+    });
+    h += '<text x="' + ((L + W - R) / 2) + '" y="' + (H - 8) + '" text-anchor="middle">Waste, Rs per clubhouse per day (at cost)</text>';
+    h += '<text transform="translate(14 ' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle">Complete baskets</text>';
+    function line(pts, color, lab) {
+      var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + X(p.w).toFixed(1) + ' ' + Y(p.c).toFixed(1); }).join(' ');
+      var o = '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2.5"/>';
+      pts.forEach(function (p) { o += '<circle cx="' + X(p.w) + '" cy="' + Y(p.c) + '" r="3.5" fill="' + color + '"/>'; });
+      var e = pts[pts.length - 1];
+      o += '<text x="' + (X(e.w) + 8) + '" y="' + (Y(e.c) + 4) + '" style="fill:' + color + '">' + lab + '</text>';
+      return o;
+    }
+    h += line(FRONTIER.flat, 'var(--muted)', '');
+    h += line(FRONTIER.priced, 'var(--accent)', '');
+    h += line(FRONTIER.pricedFast, 'var(--leaf)', '');
+    var b = FRONTIER.base;
+    h += '<circle cx="' + X(b.w) + '" cy="' + Y(b.c) + '" r="6" fill="var(--ink)"/>';
+    h += '<text x="' + (X(b.w) + 10) + '" y="' + (Y(b.c) + 4) + '" style="fill:var(--ink)">Today: ' + b.c.toFixed(1) + '% complete</text>';
+    svg.innerHTML = h;
+  }
+  chart();
+
+  // Simulator
+  var data = FC.generate();
+  var baseRes = FC.simulate(data, {});
+  function filt() { var c = $('f-city').value; return c === 'all' ? null : function (s) { return s.city === c; }; }
+
+  function diag() {
+    var s = FC.summarize(data, baseRes, filt());
+    $('kpis').innerHTML =
+      kpi(pct(s.completeRate), 'Complete baskets', 'every fresh item delivered') +
+      kpi(pct(s.itemFill), 'Items in stock', 'when the customer ordered') +
+      kpi(pct(s.wasteShare), 'Fresh units wasted', 'of units received') +
+      kpi(rs(s.wastePerStoreDay), 'Waste per clubhouse', 'per day, at cost');
+    var w = s.sku.slice().sort(function (a, b) { return b.wasteRs - a.wasteRs; }).slice(0, 7);
+    $('t-waste').innerHTML = w.map(function (x) { return '<tr><td>' + x.name + '</td><td class="num">' + x.life + 'd</td><td class="num">' + pct(x.waste, 0) + '</td><td class="num">' + Math.round(x.wasteRs) + '</td></tr>'; }).join('');
+    var l = s.sku.slice().sort(function (a, b) { return b.lostRs - a.lostRs; }).slice(0, 7);
+    $('t-lost').innerHTML = l.map(function (x) { return '<tr><td>' + x.name + '</td><td class="num">' + x.perStoreDay.toFixed(1) + '</td><td class="num">' + pct(x.fill, 0) + '</td><td class="num">' + Math.round(x.lostRs) + '</td></tr>'; }).join('');
+    var short = 0, all = 0;
+    s.sku.forEach(function (x) { all += x.wasteRs; if (x.life <= 3) short += x.wasteRs; });
+    $('d-find').innerHTML = '<b>Finding (' + s.stores + ' clubhouses):</b> ' + pct(1 - s.completeRate, 0) + ' of fresh baskets miss at least one item, about 1 in ' + Math.round(1 / Math.max(0.001, 1 - s.completeRate)) +
+      '. Items with 3 days of life or less cause ' + pct(all ? short / all : 0, 0) + ' of the money thrown away.';
+  }
+
+  function opts() {
+    var f = $('o-forecast').checked;
+    $('o-priced').disabled = !f; $('tg-priced').classList.toggle('off', !f);
+    return { forecast: f, priced: f && $('o-priced').checked, fastRelease: $('o-fast').checked, twoDrops: $('o-drops').checked,
+      penalty: +$('o-pen').value, target: +$('o-target').value / 100, tripCost: +$('o-trip').value };
+  }
+  var cache = {};
+  function run(o) { var key = JSON.stringify(o); if (!cache[key]) cache[key] = FC.simulate(data, o); return cache[key]; }
+
+  function levers() {
+    var o = opts();
+    $('o-pen-v').textContent = 'Rs ' + o.penalty; $('o-target-v').textContent = (o.target * 100).toFixed(1).replace('.0', '') + '%'; $('o-trip-v').textContent = 'Rs ' + o.tripCost;
+    var f = filt();
+    var b = FC.summarize(data, baseRes, f), s = FC.summarize(data, run(o), f);
+    $('skpis').innerHTML =
+      kpi(pct(s.completeRate), 'Complete baskets', 'today ' + pct(b.completeRate)) +
+      kpi(rs(s.wastePerStoreDay), 'Waste per clubhouse', 'today ' + rs(b.wastePerStoreDay)) +
+      kpi(sgn(s.marginAfterWastePerStoreDay - b.marginAfterWastePerStoreDay), 'Margin per clubhouse', 'per day, after waste and costs') +
+      kpi(s.lifeAtSale.toFixed(1) + ' d', 'Life left at delivery', 'today ' + b.lifeAtSale.toFixed(1) + ' d');
+    var common = { penalty: o.penalty, target: o.target, tripCost: o.tripCost };
+    var rows = [
+      { name: 'Daily forecast, one target', o: Object.assign({ forecast: true }, common) },
+      { name: 'Daily forecast, priced per item', o: Object.assign({ forecast: true, priced: true }, common) },
+      { name: 'Same-morning quality release', o: Object.assign({ fastRelease: true }, common) },
+      { name: 'Second drop at 2 pm', o: Object.assign({ twoDrops: true }, common) },
+      { name: 'Your selection', o: o }
+    ];
+    var vals = rows.map(function (r) { return FC.summarize(data, run(r.o), f).marginAfterWastePerStoreDay - b.marginAfterWastePerStoreDay; });
+    var mx = Math.max.apply(null, vals.map(Math.abs).concat([1]));
+    $('ranking').innerHTML = rows.map(function (r, i) {
+      var v = vals[i], wpct = Math.abs(v) / mx * 50;
+      return '<div class="cmp-row"><div>' + r.name + '</div><div class="track"><span class="zero" style="left:50%"></span><span class="bar ' + (v >= 0 ? 'pos' : 'neg') + '" style="' + (v >= 0 ? 'left:50%' : 'left:' + (50 - wpct) + '%') + ';width:' + wpct + '%"></span></div><div class="delta">' + sgn(v) + '</div></div>';
+    }).join('');
+    $('checks').innerHTML =
+      '<div><span class="chip ok">HELD</span> Every quality check still runs before a lot leaves the hub</div>' +
+      '<div><span class="chip ' + (s.completeRate >= b.completeRate ? 'ok' : 'warn') + '">' + (s.completeRate >= b.completeRate ? 'BETTER' : 'WORSE') + '</span> Complete baskets: ' + pct(b.completeRate) + ' today, ' + pct(s.completeRate) + ' with this selection</div>' +
+      '<div><span class="chip ' + (s.wastePerStoreDay <= b.wastePerStoreDay ? 'ok' : 'warn') + '">' + (s.wastePerStoreDay <= b.wastePerStoreDay ? 'BETTER' : 'WORSE') + '</span> Waste: ' + rs(b.wastePerStoreDay) + ' today, ' + rs(s.wastePerStoreDay) + ' with this selection</div>' +
+      (s.extraTripCostPerStoreDay > 0 ? '<div><span class="chip warn">COST</span> Extra trips and night shift: ' + rs(s.extraTripCostPerStoreDay) + ' per clubhouse per day, included in margin</div>' : '');
+  }
+
+  var timer = null;
+  function schedule() {
+    $('busy').textContent = 'Replaying 49 days of orders…';
+    clearTimeout(timer);
+    timer = setTimeout(function () { levers(); $('busy').textContent = ''; }, 30);
+  }
+  $('f-city').addEventListener('change', function () { diag(); schedule(); });
+  ['o-forecast', 'o-priced', 'o-fast', 'o-drops'].forEach(function (id) { $(id).addEventListener('change', schedule); });
+  ['o-pen', 'o-target', 'o-trip'].forEach(function (id) { $(id).addEventListener('change', schedule); $(id).addEventListener('input', function () {
+    $('o-pen-v').textContent = 'Rs ' + $('o-pen').value; $('o-target-v').textContent = $('o-target').value + '%'; $('o-trip-v').textContent = 'Rs ' + $('o-trip').value; }); });
+  diag(); levers();
+})();
+
+</script>
+
+</body></html>
