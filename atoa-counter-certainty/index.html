@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head><body>
+<title>Counter Certainty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 780px reading column; the counter screen mock and simulator sit inside it as working panels. */
+:root{
+  --paper:#F3F5F7; --panel:#FFFFFF; --ink:#0F1A2A; --muted:#566275; --rule:#D6DCE4;
+  --accent:#0E7268; --accent-soft:#DCEFEC;
+  --paid:#1C7A45; --paid-soft:#DFF2E6; --hold:#A8640A; --hold-soft:#F8EBD6; --stop:#B42318; --stop-soft:#FBE3E0;
+  --code:#EEF1F5;
+  --f-display:"Familjen Grotesk","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",Helvetica,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0C121C; --panel:#131B28; --ink:#E3E8EF; --muted:#9AA6B8; --rule:#263243;
+  --accent:#4FC7B8; --accent-soft:#12302D;
+  --paid:#5BD18C; --paid-soft:#133222; --hold:#E9B45C; --hold-soft:#372a14; --stop:#F48A7F; --stop-soft:#3A1A17;
+  --code:#0F1722; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0C121C; --panel:#131B28; --ink:#E3E8EF; --muted:#9AA6B8; --rule:#263243;
+  --accent:#4FC7B8; --accent-soft:#12302D;
+  --paid:#5BD18C; --paid-soft:#133222; --hold:#E9B45C; --hold-soft:#372a14; --stop:#F48A7F; --stop-soft:#3A1A17;
+  --code:#0F1722; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.08;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.7rem,9.5vw,4.5rem);font-weight:700;letter-spacing:-.02em}
+h2{font-size:clamp(1.55rem,4.8vw,2.05rem);font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.12rem;font-weight:700}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:16px}
+.eyebrow,.k{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.k{margin-bottom:6px}
+.dek{font-size:1.16rem;max-width:62ch}
+.by{font-size:.92rem;color:var(--muted)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:4px}
+.note strong{color:var(--ink)}
+.secnum{font-family:var(--f-mono);font-size:.76rem;color:var(--accent);letter-spacing:.06em}
+.pstate{border-left:3px solid var(--accent);padding:6px 0 6px 16px;font-size:1.08rem;font-weight:600}
+ul.plain{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.grid2>div{min-width:0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.screen{border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0;border:1px solid var(--rule)}
+.screen .st{font-family:var(--f-display);font-size:1.45rem;font-weight:700}
+.screen .amt{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
+.screen p{font-size:.9rem}
+.screen.paid{background:var(--paid-soft)} .screen.paid .st{color:var(--paid)}
+.screen.hold{background:var(--hold-soft)} .screen.hold .st{color:var(--hold)}
+.screen.stop{background:var(--stop-soft)} .screen.stop .st{color:var(--stop)}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:1.75rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.82rem;white-space:nowrap}
+code,.mono{font-family:var(--f-mono);font-size:.84em}
+pre{margin:0;background:var(--code);border:1px solid var(--rule);border-radius:4px;padding:14px;overflow-x:auto;font-family:var(--f-mono);font-size:.8rem;line-height:1.5;color:var(--ink)}
+.pill{display:inline-block;font-family:var(--f-mono);font-size:.72rem;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.paid{background:var(--paid-soft);color:var(--paid)} .pill.hold{background:var(--hold-soft);color:var(--hold)} .pill.stop{background:var(--stop-soft);color:var(--stop)}
+.finding{background:var(--accent-soft);border-radius:4px;padding:12px 14px}
+.toggles{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+.tg{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--rule);border-radius:4px;padding:10px 12px;cursor:pointer;background:var(--paper);min-width:0}
+.tg input{margin-top:5px;accent-color:var(--accent)}
+.tg b{display:block;font-size:.95rem}
+.tg span{font-size:.83rem;color:var(--muted);line-height:1.4;display:block}
+.tg.off{opacity:.55}
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.sliders label{display:flex;flex-direction:column;gap:4px;font-size:.84rem;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cmp{display:flex;flex-direction:column;gap:6px}
+.cmp-row{display:grid;grid-template-columns:minmax(0,170px) repeat(3,minmax(0,1fr));gap:8px;align-items:center;font-size:.86rem}
+.cmp-row.head{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cell{font-family:var(--f-mono);font-size:.8rem;text-align:right;font-variant-numeric:tabular-nums}
+.good{color:var(--paid)} .bad{color:var(--stop)}
+@media (max-width:520px){.cmp-row{grid-template-columns:repeat(3,minmax(0,1fr))}.cmp-row>div:first-child{grid-column:1 / -1;font-weight:600}.cmp-row.head>div:first-child{display:none}}
+.chip{display:inline-flex;font-family:var(--f-mono);font-size:.72rem;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.chip.ok{background:var(--paid-soft);color:var(--paid)} .chip.warn{background:var(--hold-soft);color:var(--hold)}
+.checks{display:flex;flex-direction:column;gap:8px;font-size:.9rem}
+.checks div{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.rank{counter-reset:r;display:flex;flex-direction:column;gap:16px;margin:0;padding:0;list-style:none}
+.rank li{display:grid;grid-template-columns:34px 1fr;gap:12px}
+.rank li::before{counter-increment:r;content:counter(r);font-family:var(--f-display);font-weight:700;font-size:1.6rem;color:var(--accent);line-height:1.05}
+.rank li>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.req{display:flex;flex-direction:column;gap:8px}
+.req div{display:grid;grid-template-columns:40px 1fr;gap:10px;font-size:.95rem}
+.tag{font-family:var(--f-mono);font-size:.72rem;color:var(--accent);font-weight:500;padding-top:2px}
+.flow{display:flex;flex-direction:column;gap:0;border:1px solid var(--rule);border-radius:6px;background:var(--panel);overflow:hidden}
+.flow div{display:grid;grid-template-columns:76px 1fr;gap:12px;padding:10px 14px;border-bottom:1px solid var(--rule);font-size:.93rem}
+.flow div:last-child{border-bottom:0}
+.flow .t{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding-top:2px}
+.flow .risk{background:var(--hold-soft)}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.timeline>div{border-top:2px solid var(--accent);padding-top:10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.chartwrap{overflow-x:auto}
+svg text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.84rem;color:var(--muted)}
+.sw{display:inline-block;width:12px;height:3px;margin-right:6px;vertical-align:4px;border-radius:2px}
+.src{font-size:.86rem;color:var(--muted)}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--rule);margin:0}
+.busy{font-size:.8rem;color:var(--muted);min-height:1.2em}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">Independent product work · Associate Product Manager</div>
+  <h1>Counter Certainty</h1>
+  <p class="dek">A card machine says "Approved" in two seconds. Pay by Bank at a shop counter often cannot. This page works out what the counter screen should say at every second, when Atoa can safely say "hand it over", and what that costs. It includes a working simulator, a webhook contract and a test plan.</p>
+  <p class="by">Aditya Mathur · October 2026 · prepared for the Atoa product team</p>
+  <div class="note"><strong>Read this first.</strong> I do not work at Atoa and have no internal data. The simulator runs 120,000 synthetic in-store payments across 10 anonymised banks over 20 trading days. Every rate in it, including bank behaviour, fraud, pending share and customer patience, is my assumption and is listed on this page. Banks are anonymised because real per-bank data is not public. Industry facts come from Pay.UK, Open Banking and Atoa's own help centre, linked at the end.</div>
+</header>
+
+<section id="problem">
+  <span class="secnum">1 · THE PROBLEM</span>
+  <h2>"Has it gone through?"</h2>
+  <p>Atoa's core bet is in-person payments for small UK businesses, including salons, garages, clinics, bars and shops. At the counter, the merchant has to decide in under a minute whether to hand over the goods. Cards solved this with an approval code. Pay by Bank has no equivalent yet.</p>
+  <ul class="plain">
+    <li><b>Banks do not push status.</b> A payment initiation provider has to keep asking the customer's bank for the status. Pay.UK names this as a gap in its 2025 "Certainty of Fate" work.</li>
+    <li><b>Some payments are accepted but not finished.</b> About 5% of single immediate payments got a "qualified accept" between January 2024 and September 2025, per Pay.UK. The money can take until the end of the next business day.</li>
+    <li><b>Banks hold some payments for review.</b> Atoa's own help centre says a customer's bank "may hold larger payments for manual review".</li>
+  </ul>
+  <p>When the status is unclear, one of three bad things happens: the queue waits, the customer pays again by card and gets charged twice, or the merchant accepts a banking-app screenshot and hands over goods that are never paid for.</p>
+  <p class="pstate">At the counter, how should Atoa decide what the merchant sees at every second of a Pay by Bank payment, and when it can safely say "release the goods", so that more sales complete, nobody is charged twice, and merchants stop losing goods to payments that never arrive, at a cost Atoa can carry?</p>
+</section>
+
+<section id="flow">
+  <span class="secnum">2 · THE COUNTER MOMENT</span>
+  <h2>Where the seconds go</h2>
+  <div class="flow">
+    <div><span class="t">0–12 s</span><span>Customer scans the QR code, checks the business name and amount, and picks their bank</span></div>
+    <div><span class="t">12–35 s</span><span>Bank app opens; customer approves with Face ID or passcode. Some fail here: app errors, bank outages, extra checks</span></div>
+    <div><span class="t">35–45 s</span><span>The bank has a status. Atoa only learns it on its next poll</span></div>
+    <div class="risk"><span class="t">45 s+</span><span><b>The risky part.</b> If the status is still "in process", today's screen keeps spinning. The customer shows their bank app. The merchant has to guess</span></div>
+  </div>
+  <h3>Proposed: three counter states, never a spinner</h3>
+  <div class="grid3">
+    <div class="screen paid"><span class="amt">£42.50 · Bank A</span><span class="st">Paid</span><p>The money has arrived. Hand it over.</p></div>
+    <div class="screen hold"><span class="amt">£42.50 · Bank C</span><span class="st">Safe to release</span><p>The bank accepted it and it is still settling. Atoa guarantees it. Hand it over.</p></div>
+    <div class="screen stop"><span class="amt">£320.00 · Bank I</span><span class="st">Not confirmed yet</span><p>Do not accept a screenshot. Take another payment method. If this one lands later, it is refunded automatically.</p></div>
+  </div>
+  <p><b>Rules for "Safe to release":</b> the bank has accepted the payment; the amount is at or below a cap (£150 in the model); this bank's in-process payments complete at least 99% of the time; and the payer has completed a Pay by Bank payment with Atoa before. The last rule is the important one, as section 5 shows.</p>
+</section>
+
+<section id="diagnostic">
+  <span class="secnum">3 · DIAGNOSTIC</span>
+  <h2>What today's counter costs</h2>
+  <p>The assumed current process: show "Paid" only when the bank confirms completion, poll every 5 seconds for a minute and then every 30 seconds, and leave everything else to the merchant.</p>
+  <div class="sheet">
+    <div class="sliders"><label for="o-shot">Merchants who accept a banking-app screenshot when the status is unclear: <b id="o-shot-v">40%</b><input type="range" id="o-shot" min="0" max="80" step="5" value="40"></label></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="tablewrap"><table><thead><tr><th>Bank</th><th class="num">Share</th><th class="num">Paid by bank</th><th class="num">Avg time</th></tr></thead><tbody id="banks"></tbody></table></div>
+    <p class="finding" id="d-find"></p>
+  </div>
+</section>
+
+<section id="levers">
+  <span class="secnum">4 · TEST THE CHANGES</span>
+  <h2>Switch them on and off</h2>
+  <p>Every run replays the same 120,000 customers, so differences come from the change alone.</p>
+  <div class="sheet">
+    <div class="toggles">
+      <label class="tg" for="o-release"><input type="checkbox" id="o-release" checked><div><b>Three-state counter screen with "Safe to release"</b><span>Atoa guarantees eligible in-process payments. Everything else is shown as "Not confirmed yet", so screenshots stop being accepted.</span></div></label>
+      <label class="tg" for="o-ret" id="tg-ret"><input type="checkbox" id="o-ret" checked><div><b>Guarantee returning payers only</b><span>The payer must have completed a Pay by Bank payment with Atoa before. Most fraud comes from first-time payers.</span></div></label>
+      <label class="tg" for="o-refund"><input type="checkbox" id="o-refund" checked><div><b>Automatic refund of double payments</b><span>If the customer paid another way and the bank payment lands later, refund it straight away and say so on the receipt.</span></div></label>
+      <label class="tg" for="o-listen"><input type="checkbox" id="o-listen" checked><div><b>Confirm from the incoming credit</b><span>Mark "Paid" when the money lands in the collection account, instead of waiting for the next status poll.</span></div></label>
+      <label class="tg" for="o-health"><input type="checkbox" id="o-health"><div><b>Bank health warning</b><span>If a bank's success rate over the last 15 minutes is below 80%, warn customers before they pick it.</span></div></label>
+    </div>
+    <div class="sliders"><label for="o-cap">Largest payment Atoa guarantees: <b id="o-cap-v">£150</b><input type="range" id="o-cap" min="25" max="600" step="25" value="150"></label></div>
+    <div class="busy" id="busy" aria-live="polite"></div>
+    <div class="kpis" id="skpis"></div>
+    <div class="cmp" id="cmp"></div>
+    <div class="checks" id="checks"></div>
+  </div>
+  <p><b>Stress test.</b> I reran the model with two other random seeds, half and double the fraud rate, 60% more in-process payments, and 20% or 60% of merchants accepting screenshots. In every run, the recommended set cut merchant losses by over 75% and left no double charges unresolved. The guarantee for returning payers cost 0–1.1% of Atoa's fee revenue. Guaranteeing anyone cost 10–28%.</p>
+</section>
+
+<section id="guarantee">
+  <span class="secnum">5 · THE GUARANTEE</span>
+  <h2>Who you guarantee matters more than how much</h2>
+  <div class="sheet">
+    <div class="chartwrap"><svg id="gchart" viewBox="0 0 700 330" width="100%" role="img" aria-label="Guarantee cost as a share of fee revenue by cap, for returning payers only and for anyone"></svg></div>
+    <div class="legend"><span><i class="sw" style="background:var(--accent)"></i>Returning payers only</span><span><i class="sw" style="background:var(--stop)"></i>Anyone</span></div>
+    <p class="finding">For returning payers, the cost stays under 1% of fee revenue at any cap, because genuine in-process payments almost always complete. For anyone, it climbs past 13% at £150 and past 50% at £400. A fraudster with someone else's bank login is always a first-time payer, and their payments are the ones banks hold and then reject.</p>
+  </div>
+</section>
+
+<section id="api">
+  <span class="secnum">6 · API AND WEBHOOK CONTRACT</span>
+  <h2>One decision, sent to every counter</h2>
+  <p>Point-of-sale partners such as Epos Now, and Atoa's own app, should not each work out what a bank status means. Atoa should send one decision.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Open Banking status</th><th>Extra facts</th><th>Counter state</th></tr></thead>
+    <tbody>
+      <tr><td><code>AcceptedCreditSettlementCompleted</code>, or credit seen in collection account</td><td>none</td><td><span class="pill paid">PAID</span></td></tr>
+      <tr><td><code>AcceptedSettlementCompleted</code></td><td>none</td><td><span class="pill paid">PAID</span></td></tr>
+      <tr><td><code>AcceptedSettlementInProcess</code></td><td>amount ≤ cap, bank completion ≥ 99%, returning payer</td><td><span class="pill hold">SAFE_TO_RELEASE</span></td></tr>
+      <tr><td><code>AcceptedSettlementInProcess</code></td><td>any rule not met</td><td><span class="pill stop">NOT_CONFIRMED</span></td></tr>
+      <tr><td><code>Pending</code> after 20 s</td><td>none</td><td><span class="pill stop">NOT_CONFIRMED</span></td></tr>
+      <tr><td><code>Rejected</code></td><td>none</td><td><span class="pill stop">FAILED</span></td></tr>
+    </tbody></table></div>
+  <div class="grid2">
+    <div><div class="k">Webhook: payment.counter_decision</div>
+<pre>{
+  "event": "payment.counter_decision",
+  "payment_id": "pay_8Hq2xR4",
+  "merchant_id": "mer_51c0",
+  "amount": { "value": 42.50, "currency": "GBP" },
+  "decision": "SAFE_TO_RELEASE",
+  "bank_status": "AcceptedSettlementInProcess",
+  "guaranteed_by_atoa": true,
+  "reasons": ["returning_payer", "under_cap",
+              "bank_completion_99_7"],
+  "decided_at": "2026-10-14T12:31:07Z",
+  "seconds_since_scan": 38
+}</pre></div>
+    <div><div class="k">Webhook: payment.auto_refunded</div>
+<pre>{
+  "event": "payment.auto_refunded",
+  "payment_id": "pay_8Hq2xR4",
+  "reason": "paid_by_other_method",
+  "superseded_by": "card_txn_77a1",
+  "refund": { "value": 42.50, "currency": "GBP" },
+  "customer_notified": "sms",
+  "refunded_at": "2026-10-14T12:39:52Z"
+}</pre></div>
+  </div>
+  <p><b>Rules for the contract:</b> decisions only ever move forward (NOT_CONFIRMED can become PAID, but PAID never goes back); each event carries an idempotency key so a till that receives it twice acts once; and <code>GET /payments/{id}/decision</code> returns the same object for tills that poll instead of listening.</p>
+</section>
+
+<section id="recommend">
+  <span class="secnum">7 · RECOMMENDATION</span>
+  <h2>What I would ship, in order</h2>
+  <ol class="rank">
+    <li><div><h3>Three-state counter screen and automatic refunds</h3><p>Ship the "Not confirmed yet" state and auto-refund first. They need no guarantee and no change in risk appetite, and they remove the two problems merchants and customers feel most: unpaid goods and double charges.</p></div></li>
+    <li><div><h3>"Safe to release" for returning payers, £150 cap</h3><p>In the model it costs about 0.6% of fee revenue and turns most in-process waits into instant decisions. It needs sign-off from risk, finance and compliance, because Atoa is taking on a loss it does not take today.</p></div></li>
+    <li><div><h3>Confirm from the incoming credit</h3><p>A small gain on its own, but it makes "Paid" honest: the money has actually arrived. It also feeds the bank completion rates the guarantee depends on.</p></div></li>
+    <li><div><h3>Hold the bank health warning</h3><p>In the model it sends more customers to cards than it saves. A better version may tell customers "your bank is slow, it may take a minute" rather than steer them away. That needs a test, not a launch.</p></div></li>
+  </ol>
+</section>
+
+<section id="spec">
+  <span class="secnum">8 · SPEC FOR THE FIRST RELEASE</span>
+  <h2>Three-state counter and auto-refund</h2>
+  <div class="grid2">
+    <div><div class="k">Users</div><ul class="plain"><li><b>Shop staff:</b> need a yes or no they can act on in seconds.</li><li><b>Customer:</b> needs to know they will not pay twice.</li><li><b>Merchant owner:</b> needs a record of every decision for disputes.</li></ul></div>
+    <div><div class="k">User story</div><p>As a member of staff at the till, I want the screen to tell me clearly whether I can hand the goods over, so I never have to judge a customer's banking-app screenshot.</p></div>
+  </div>
+  <div class="req">
+    <div><span class="tag">P0</span><span>Counter states PAID, SAFE_TO_RELEASE (behind a flag), NOT_CONFIRMED and FAILED, in the Atoa app and through the webhook to POS partners.</span></div>
+    <div><span class="tag">P0</span><span>After 20 seconds without a final status, show NOT_CONFIRMED with "do not accept a screenshot" and a one-tap switch to card or a new link.</span></div>
+    <div><span class="tag">P0</span><span>Link any later payment from the same till and amount within 10 minutes; if both settle, refund the bank payment automatically and notify the customer by SMS.</span></div>
+    <div><span class="tag">P0</span><span>Decision log per payment: every status seen, when it was seen, and what the screen showed.</span></div>
+    <div><span class="tag">P1</span><span>Per-bank completion rates for in-process payments, refreshed daily, as an input to the guarantee rules.</span></div>
+    <div><span class="tag">P1</span><span>Merchant setting to require PAID only, for businesses that prefer to wait.</span></div>
+  </div>
+  <div class="grid2">
+    <div><div class="k">Metrics</div><ul class="plain"><li><b>Main:</b> share of in-store payments decided within 45 seconds.</li><li><b>Merchant losses:</b> goods released on payments that never arrived, per 1,000 payments.</li><li><b>Double charges</b> left unresolved after 24 hours.</li><li><b>Guardrails:</b> Pay by Bank share of counter payments, support contacts per 1,000 payments, guarantee loss as % of fees (below 2%).</li></ul></div>
+    <div><div class="k">How to test it</div><ul class="plain"><li>Randomise by merchant, not by payment, so staff see one consistent screen.</li><li>Run for 4 weeks across a mix of verticals (salons, garages, bars, clinics).</li><li>Turn on the guarantee for half of the test merchants only after two clean weeks.</li></ul></div>
+  </div>
+  <div class="grid2">
+    <div><div class="k">Risks</div><ul class="plain"><li>Fraudsters learn the rules. Mitigation: returning-payer rule, cap, per-merchant limits and a daily loss alarm.</li><li>Refunds need the payer's account details. Mitigation: capture them from the payment and confirm the route before launch.</li></ul></div>
+    <div><div class="k">Open questions for the team</div><ul class="plain"><li>Does a guarantee change Atoa's regulatory or capital position?</li><li>How often does the "in process" status appear per bank today?</li><li>If Pay.UK's rule changes land, how much of this problem goes away?</li></ul></div>
+  </div>
+</section>
+
+<section id="plan">
+  <span class="secnum">9 · FIRST 90 DAYS</span>
+  <h2>How I would run this</h2>
+  <div class="timeline">
+    <div><div class="k">Days 1–30</div><p>Pull status logs per bank. Rebuild this model on real data. Stand at three merchant counters at peak, and read every support ticket that says "paid" and "not received".</p></div>
+    <div><div class="k">Days 31–60</div><p>Ship the decision log and the NOT_CONFIRMED state. Build auto-refund with engineering, and write the webhook docs for POS partners. Start the merchant-level test.</p></div>
+    <div><div class="k">Days 61–90</div><p>Read out the test. Bring the guarantee proposal to risk and compliance with real completion rates. Scale what worked.</p></div>
+  </div>
+</section>
+
+<section id="limits">
+  <span class="secnum">10 · LIMITS</span>
+  <h2>What this model does not know</h2>
+  <ul class="plain">
+    <li>Every rate is an assumption: bank behaviour, fraud share, pending share, patience and screenshot habits. The ranking held in every stress test, but the sizes will change with real data.</li>
+    <li>Card fallback is assumed to be available. Merchants without a terminal lose the sale instead.</li>
+    <li>Refunds are treated as always possible and free. In Pay by Bank, refunds need the payer's account details, which is a design problem of its own.</li>
+  </ul>
+</section>
+
+<hr>
+<section id="sources" class="src">
+  <span class="secnum">SOURCES</span>
+  <ul class="plain">
+    <li><a href="https://www.wearepay.uk/wp-content/uploads/2025/11/Pay.UKs-work-on-Certainty-of-Fate-to-support-A2A-retail-transactions-1.pdf" target="_blank" rel="noopener">Pay.UK: Certainty of Fate for A2A retail transactions (2025)</a>: qualified accepts in ~5% of payments, status polling gap, proposed rule changes</li>
+    <li><a href="https://help.paywithatoa.co.uk/hc/atoa-help-center/articles/1773742361-my-settlement-has-occurred-yet-help" target="_blank" rel="noopener">Atoa help centre: settlement timing</a> (larger payments may be held for review)</li>
+    <li><a href="https://help.paywithatoa.co.uk/hc/atoa-help-center/articles/1745914145-paying-in_store-with-atoa" target="_blank" rel="noopener">Atoa help centre: paying in store</a> and <a href="https://help.paywithatoa.co.uk/hc/atoa-help-center/articles/1711031931-a-customer-bank-declined-a-payment-through-atoa-what-happens-next" target="_blank" rel="noopener">declined payments</a></li>
+    <li><a href="https://www.electronicpaymentsinternational.com/news/payments-fintech-atoa-secures-6-5m-in-seed-funding-round/" target="_blank" rel="noopener">Electronic Payments International: Atoa seed round</a> (in-person SME focus)</li>
+    <li><a href="https://standards.openbanking.org.uk/customer-experience-guidelines/appendices/info-flow-payment-status/latest" target="_blank" rel="noopener">Open Banking standards: payment status information flow</a></li>
+  </ul>
+  <p>Model: 120,000 synthetic payments, 10 anonymised banks, 20 trading days, seeded so results repeat. Ten automated checks and eight stress-test runs on the engine.</p>
+</section>
+
+</div>
+
+<script>
+var CAPS = {"caps":[25,50,100,150,250,400,600],"ret":[{"g":0.09,"m":5.2,"cov":4.6},{"g":0.22,"m":5.2,"cov":7.8},{"g":0.64,"m":5.2,"cov":9.6},{"g":0.64,"m":5.2,"cov":10.1},{"g":0.64,"m":5.2,"cov":10.4},{"g":0.63,"m":5.2,"cov":10.8},{"g":0.63,"m":5.2,"cov":10.9}],"any":[{"g":0.09,"m":5.2,"cov":8.5},{"g":0.48,"m":5.2,"cov":14.3},{"g":4.17,"m":4.4,"cov":17.8},{"g":13.58,"m":4.4,"cov":18.9},{"g":38.76,"m":2.5,"cov":19.8},{"g":55.14,"m":0,"cov":20.5},{"g":61.69,"m":0,"cov":20.7}]};
+</script>
+<script>
+// Counter Certainty engine. Pure functions, no DOM. Synthetic data only.
+// Simulates in-store Pay by Bank attempts at small UK merchants, second by second, and what the counter decides.
+var CC = (function () {
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function normal(r) { var u = 1 - r(), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function logn(r, median, sigma) { return median * Math.exp(sigma * normal(r)); }
+
+  // Anonymised bank profiles (real per-bank data is not public).
+  // share, auth median (s), auth failure, status latency median (s), share of payments that go pending,
+  // share of pending payments that later complete, chance of an incident on a given day
+  var BANKS = [
+    ['Bank A', 0.20, 14, 0.04, 3, 0.03, 0.997, 0.06],
+    ['Bank B', 0.17, 16, 0.05, 4, 0.04, 0.995, 0.06],
+    ['Bank C', 0.15, 18, 0.06, 5, 0.05, 0.993, 0.08],
+    ['Bank D', 0.13, 11, 0.04, 2, 0.03, 0.996, 0.08],
+    ['Bank E', 0.10, 10, 0.03, 2, 0.02, 0.998, 0.08],
+    ['Bank F', 0.08, 20, 0.07, 6, 0.06, 0.990, 0.12],
+    ['Bank G', 0.06, 22, 0.08, 8, 0.07, 0.985, 0.12],
+    ['Bank H', 0.05, 17, 0.06, 5, 0.05, 0.992, 0.12],
+    ['Bank I', 0.04, 25, 0.10, 10, 0.08, 0.980, 0.15],
+    ['Bank J', 0.02, 30, 0.12, 12, 0.10, 0.975, 0.15]
+  ].map(function (a, i) { return { i: i, name: a[0], share: a[1], authMed: a[2], authFail: a[3], statusMed: a[4], pend: a[5], pendOk: a[6], incident: a[7] }; });
+
+  var DAYS = 20, OPEN = 12 * 3600; // 12 trading hours
+  var POLL_FAST = 5, POLL_FAST_FOR = 60, POLL_SLOW = 30;
+
+  function pollDelay(r, tFinalSinceAuth) {
+    // Today: the provider polls the bank every 5 s for the first minute, then every 30 s.
+    if (tFinalSinceAuth <= POLL_FAST_FOR) return POLL_FAST * r();
+    return POLL_SLOW * r();
+  }
+
+  function generate(opts) {
+    opts = opts || {};
+    var r = rng(opts.seed || 20261014);
+    var perDay = opts.perDay || 6000;
+    var cum = [], acc = 0; BANKS.forEach(function (b) { acc += b.share; cum.push(acc); });
+    var incidents = [];
+    for (var d = 0; d < DAYS; d++) {
+      var day = BANKS.map(function (b) {
+        if (r() < b.incident) { var start = r() * (OPEN - 3600); return [start, start + 60 * (20 + r() * 70)]; }
+        return null;
+      });
+      incidents.push(day);
+    }
+    var attempts = [];
+    for (d = 0; d < DAYS; d++) {
+      for (var n = 0; n < perDay; n++) {
+        var x = r(), bi = 0; while (bi < cum.length - 1 && x > cum[bi]) bi++;
+        var b = BANKS[bi];
+        var fraud = r() < (opts.fraudRate == null ? 0.0015 : opts.fraudRate);
+        var returning = !fraud && r() < 0.55;
+        var amount = fraud ? Math.min(900, logn(r, 180, 0.5)) : Math.min(1500, logn(r, 28, 0.9));
+        var t = r() * OPEN;
+        var inc = incidents[d][bi];
+        var down = !!(inc && t >= inc[0] && t <= inc[1]);
+        // pre-draw every random number the attempt can need, so all policies see the same customer
+        var a = {
+          id: attempts.length, day: d, t: t, bank: bi, amount: amount, fraud: fraud, returning: returning, down: down,
+          select: logn(r, 12, 0.35),
+          auth1: logn(r, b.authMed * (down ? 2.5 : 1), 0.45), fail1: r() < (down ? 0.45 : b.authFail),
+          retry: r() < 0.5, auth2: logn(r, b.authMed * (down ? 2.5 : 1), 0.45), fail2: r() < (down ? 0.45 : b.authFail),
+          status: logn(r, b.statusMed, 0.6),
+          pending: fraud ? r() < 0.8 : r() < Math.min(0.6, b.pend * (opts.pendMult || 0.6) + (amount > 250 ? 0.10 : 0)),
+          pendDraw: r(), pendWait: logn(r, 8 * 60, 1.0),
+          rejectedFast: r() < 0.005,
+          patience: logn(r, 90, 0.35), follow: r(), poll1: r(), poll2: r(), screenshot: r(), card: r() < 0.98,
+          otherBank: r() < 0.25
+        };
+        // what eventually happens to an authorised payment
+        if (fraud) a.finalOk = a.pending ? a.pendDraw < 0.1 : true;
+        else a.finalOk = a.pending ? a.pendDraw < b.pendOk : !a.rejectedFast;
+        attempts.push(a);
+      }
+    }
+    attempts.sort(function (p, q) { return p.day - q.day || p.t - q.t; });
+    return { attempts: attempts, incidents: incidents };
+  }
+
+  // Policy options:
+  // health:   bank health warning before the customer picks a bank (live success rate, trailing 15 minutes)
+  // release:  "Safe to release" for pending payments that meet the rules, guaranteed by Atoa
+  // returningOnly: guarantee only payers who have completed a Pay by Bank payment before
+  // cap:      largest amount the guarantee covers (GBP)
+  // listen:   confirm from the credit arriving in the collection account, not only from polling
+  // autoRefund: if the customer paid by card after a pending payment that later completes, refund it automatically
+  function simulate(data, o) {
+    o = o || {};
+    var cap = o.cap == null ? 150 : o.cap;
+    var returningOnly = o.returningOnly !== false;
+    var cardFee = 0.015, pbbFee = o.pbbFee == null ? 0.007 : o.pbbFee;
+    var res = { n: 0, pbb: 0, card: 0, walked: 0, released: 0, guaranteeLoss: 0, guaranteeCount: 0, merchantLoss: 0,
+      doubleCharged: 0, autoRefunded: 0, failedFirst: 0, warned: 0, decisionTimes: [], pbbValue: 0, fees: 0, savings: 0,
+      bank: BANKS.map(function () { return { n: 0, pbb: 0, time: 0 }; }) };
+    // trailing health window per bank
+    var win = BANKS.map(function () { return []; });
+    function health(bi, day, t) {
+      var w = win[bi];
+      while (w.length && (w[0][0] < day || w[0][1] < t - 900)) w.shift();
+      if (w.length < 8) return 1;
+      var ok = 0; for (var i = 0; i < w.length; i++) ok += w[i][2];
+      return ok / w.length;
+    }
+    data.attempts.forEach(function (a) {
+      var b = BANKS[a.bank], R = res, Bk = res.bank[a.bank];
+      R.n++; Bk.n++;
+      var clock = a.select, outcome = null, decision = 0;
+      function toCard(extra) {
+        clock += extra || 0;
+        if (a.card) { outcome = 'card'; decision = clock + 15; }
+        else { outcome = 'walked'; decision = clock; }
+      }
+      // 1. Bank health warning
+      if (o.health && health(a.bank, a.day, a.t) < 0.8) {
+        R.warned++;
+        if (a.follow < 0.7) {
+          if (a.otherBank) { /* customer switches to another account at a healthy bank: treated as Bank E profile */
+            clock += 6;
+            var e = BANKS[4];
+            clock += a.auth2 * e.authMed / b.authMed;
+            var tStatus2 = clock + a.status * e.statusMed / b.statusMed;
+            var seen2 = o.listen ? tStatus2 + 1.5 : tStatus2 + POLL_FAST * a.poll2;
+            outcome = 'pbb'; decision = seen2;
+            finish(); return;
+          }
+          toCard(5); finish(); return;
+        }
+      }
+      // 2. Authorise in the bank app (one retry allowed)
+      clock += a.auth1;
+      var authed = !a.fail1;
+      if (!authed) {
+        R.failedFirst++;
+        win[a.bank].push([a.day, a.t, 0]);
+        if (a.retry && clock + 10 < a.patience) { clock += 10 + a.auth2; authed = !a.fail2; if (!authed) win[a.bank].push([a.day, a.t, 0]); }
+      }
+      if (!authed) { toCard(0); finish(); return; }
+      win[a.bank].push([a.day, a.t, 1]);
+      // 3. Status from the bank
+      var tStatus = clock + a.status;                // bank has a status (completed, pending or rejected)
+      var tSeenStatus = tStatus + pollDelay(function () { return a.poll1; }, a.status);
+      if (o.listen) tSeenStatus = tStatus + 1.5;
+      var tComplete = a.pending ? tStatus + a.pendWait : tStatus;
+      var tSeenComplete = a.pending ? (o.listen ? tComplete + 1.5 : tComplete + POLL_SLOW * a.poll2) : tSeenStatus;
+      var patience = Math.max(a.patience, clock + 20); // after approving in the bank app, a customer waits at least 20 s more
+      if (a.finalOk && tSeenComplete <= patience) { outcome = 'pbb'; decision = tSeenComplete; finish(); return; }
+      if (!a.pending && !a.finalOk) { toCard(Math.max(0, tSeenStatus - clock)); finish(); return; }
+      // Pending at the counter
+      if (o.release && a.pending) {
+        var eligible = a.amount <= cap && b.pendOk >= 0.99 && (!returningOnly || a.returning);
+        if (eligible) {
+          outcome = 'pbb'; decision = tSeenStatus; R.released++; R.guaranteeCount++;
+          if (!a.finalOk) R.guaranteeLoss += a.amount;
+          finish(); return;
+        }
+      }
+      // Customer waits until patience runs out. Some merchants accept a banking-app screenshot.
+      clock = patience;
+      var screenshotRate = o.release ? 0.05 : (o.screenshot == null ? 0.4 : o.screenshot);
+      if (a.screenshot < screenshotRate) {
+        outcome = a.finalOk ? 'pbb' : 'unpaid'; decision = patience;
+        if (!a.finalOk) R.merchantLoss += a.amount;
+        finish(); return;
+      }
+      toCard(0);
+      if (outcome === 'card' && a.finalOk) { if (o.autoRefund) R.autoRefunded++; else R.doubleCharged++; }
+      finish();
+
+      function finish() {
+        if (outcome === 'pbb') { R.pbb++; Bk.pbb++; R.pbbValue += a.amount; R.fees += a.amount * pbbFee; R.savings += a.amount * (cardFee - pbbFee); }
+        else if (outcome === 'card') R.card++;
+        else if (outcome === 'walked') R.walked++;
+        R.decisionTimes.push(decision); Bk.time += decision;
+      }
+    });
+    return res;
+  }
+
+  function q(arr, p) { var s = arr.slice().sort(function (a, b) { return a - b; }); return s[Math.floor((s.length - 1) * p)]; }
+
+  function summarize(res) {
+    var per = 1000 / res.n;
+    return {
+      n: res.n, pbbShare: res.pbb / res.n, cardShare: res.card / res.n, walked: res.walked * per,
+      median: q(res.decisionTimes, 0.5), p90: q(res.decisionTimes, 0.9),
+      doublePer1000: res.doubleCharged * per, autoRefundPer1000: res.autoRefunded * per,
+      merchantLossPer1000: res.merchantLoss * per, guaranteeLossPer1000: res.guaranteeLoss * per,
+      guaranteePer1000: res.guaranteeCount * per, feesPer1000: res.fees * per, savingsPer1000: res.savings * per,
+      guaranteeShareOfFees: res.fees ? res.guaranteeLoss / res.fees : 0,
+      failedFirstPer1000: res.failedFirst * per, warnedPer1000: res.warned * per,
+      bank: res.bank.map(function (x, i) { return { name: BANKS[i].name, share: x.n / res.n, pbb: x.n ? x.pbb / x.n : 0, avg: x.n ? x.time / x.n : 0 }; })
+    };
+  }
+
+  return { BANKS: BANKS, DAYS: DAYS, generate: generate, simulate: simulate, summarize: summarize };
+})();
+
+
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function pct(x) { return (x * 100).toFixed(1) + '%'; }
+  function gbp(x) { return '£' + x.toFixed(x < 10 ? 2 : 0); }
+  function kpi(v, label, sub) { return '<div class="kpi"><span class="k" style="margin:0">' + label + '</span><span class="v">' + v + '</span><span class="s">' + sub + '</span></div>'; }
+
+  // Guarantee chart
+  (function () {
+    var svg = $('gchart'), W = 700, H = 330, L = 52, R = 18, T = 14, B = 44;
+    var xs = [0, 625], ys = [0, 70];
+    function X(v) { return L + (v - xs[0]) / (xs[1] - xs[0]) * (W - L - R); }
+    function Y(v) { return T + (ys[1] - v) / (ys[1] - ys[0]) * (H - T - B); }
+    var h = '';
+    [0, 150, 300, 450, 600].forEach(function (v) {
+      h += '<line x1="' + X(v) + '" x2="' + X(v) + '" y1="' + T + '" y2="' + (H - B) + '" stroke="var(--rule)"/>';
+      h += '<text x="' + X(v) + '" y="' + (H - B + 16) + '" text-anchor="middle">£' + v + '</text>';
+    });
+    [0, 20, 40, 60].forEach(function (v) {
+      h += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="var(--rule)"/>';
+      h += '<text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + v + '%</text>';
+    });
+    h += '<text x="' + ((L + W - R) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">Largest payment guaranteed</text>';
+    h += '<text transform="translate(13 ' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle">Guarantee loss, % of fees</text>';
+    function line(pts, col) {
+      var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + X(CAPS.caps[i]).toFixed(1) + ' ' + Y(p.g).toFixed(1); }).join(' ');
+      var o = '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2.5"/>';
+      pts.forEach(function (p, i) { o += '<circle cx="' + X(CAPS.caps[i]) + '" cy="' + Y(p.g) + '" r="3.5" fill="' + col + '"/>'; });
+      return o;
+    }
+    h += line(CAPS.any, 'var(--stop)') + line(CAPS.ret, 'var(--accent)');
+    var e = CAPS.any[CAPS.any.length - 1];
+    h += '<text x="' + (X(600) - 6) + '" y="' + (Y(e.g) - 10) + '" text-anchor="end" style="fill:var(--stop)">anyone: ' + e.g.toFixed(0) + '%</text>';
+    h += '<text x="' + (X(600) - 6) + '" y="' + (Y(CAPS.ret[CAPS.ret.length - 1].g) - 10) + '" text-anchor="end" style="fill:var(--accent)">returning only: under 1%</text>';
+    svg.innerHTML = h;
+  })();
+
+  var data = CC.generate();
+  var cache = {};
+  function run(o) { var k = JSON.stringify(o); if (!cache[k]) cache[k] = CC.summarize(CC.simulate(data, o)); return cache[k]; }
+
+  function diag() {
+    var shot = +$('o-shot').value / 100;
+    $('o-shot-v').textContent = Math.round(shot * 100) + '%';
+    var s = run({ screenshot: shot });
+    $('kpis').innerHTML =
+      kpi(pct(s.pbbShare), 'Paid by bank', 'of counter payments') +
+      kpi(s.median.toFixed(0) + ' s', 'Median wait', 'scan to "you can go"; slowest 1 in 10: ' + s.p90.toFixed(0) + ' s') +
+      kpi(s.doublePer1000.toFixed(1), 'Charged twice', 'per 1,000 payments') +
+      kpi(gbp(s.merchantLossPer1000), 'Unpaid goods', 'merchant loss per 1,000 payments');
+    $('banks').innerHTML = s.bank.map(function (b) {
+      return '<tr><td>' + b.name + '</td><td class="num">' + pct(b.share) + '</td><td class="num">' + pct(b.pbb) + '</td><td class="num">' + b.avg.toFixed(0) + ' s</td></tr>';
+    }).join('');
+    $('d-find').innerHTML = '<b>Finding:</b> about ' + s.doublePer1000.toFixed(0) + ' in every 1,000 counter payments end with the customer charged twice. Merchants lose ' + gbp(s.merchantLossPer1000) +
+      ' per 1,000 payments on goods handed over against a screenshot, which is ' + pct(s.merchantLossPer1000 / Math.max(1, s.feesPer1000)) + ' of what they pay Atoa in fees. Most of that loss is fraud: stolen bank logins produce payments the bank holds and then rejects.';
+  }
+
+  function opts() {
+    var rel = $('o-release').checked;
+    $('o-ret').disabled = !rel; $('tg-ret').classList.toggle('off', !rel);
+    return { release: rel, returningOnly: $('o-ret').checked, autoRefund: $('o-refund').checked, listen: $('o-listen').checked,
+      health: $('o-health').checked, cap: +$('o-cap').value, screenshot: +$('o-shot').value / 100 };
+  }
+  function levers() {
+    var o = opts();
+    $('o-cap-v').textContent = '£' + o.cap;
+    var b = run({ screenshot: o.screenshot }), s = run(o);
+    function d(x, y, lowerBetter, fmt) {
+      var diff = y - x, good = lowerBetter ? diff < 0 : diff > 0;
+      return '<span class="' + (Math.abs(diff) < 1e-9 ? '' : good ? 'good' : 'bad') + '">' + fmt(y) + '</span>';
+    }
+    $('skpis').innerHTML =
+      kpi(pct(s.pbbShare), 'Paid by bank', 'today ' + pct(b.pbbShare)) +
+      kpi(s.doublePer1000.toFixed(1), 'Charged twice', 'per 1,000; today ' + b.doublePer1000.toFixed(1)) +
+      kpi(gbp(s.merchantLossPer1000), 'Unpaid goods', 'per 1,000; today ' + gbp(b.merchantLossPer1000)) +
+      kpi(pct(s.guaranteeShareOfFees), 'Guarantee cost', 'share of Atoa fee revenue');
+    var common = { screenshot: o.screenshot, cap: o.cap };
+    var rows = [
+      ['Today (assumed)', { screenshot: o.screenshot }],
+      ['Three-state screen + guarantee', Object.assign({ release: true, returningOnly: o.returningOnly }, common)],
+      ['Automatic refunds', Object.assign({ autoRefund: true }, common)],
+      ['Confirm from incoming credit', Object.assign({ listen: true }, common)],
+      ['Bank health warning', Object.assign({ health: true }, common)],
+      ['Your selection', o]
+    ];
+    var h = '<div class="cmp-row head"><div>Change</div><div class="cell">Paid by bank</div><div class="cell">Charged twice /1k</div><div class="cell">Unpaid goods /1k</div></div>';
+    rows.forEach(function (r) {
+      var x = run(r[1]);
+      h += '<div class="cmp-row"><div>' + r[0] + '</div><div class="cell">' + d(b.pbbShare, x.pbbShare, false, pct) + '</div><div class="cell">' +
+        d(b.doublePer1000, x.doublePer1000, true, function (v) { return v.toFixed(1); }) + '</div><div class="cell">' + d(b.merchantLossPer1000, x.merchantLossPer1000, true, gbp) + '</div></div>';
+    });
+    $('cmp').innerHTML = h;
+    var gs = s.guaranteeShareOfFees;
+    $('checks').innerHTML =
+      '<div><span class="chip ' + (gs < 0.02 ? 'ok' : 'warn') + '">' + (gs < 0.02 ? 'WITHIN LIMIT' : 'OVER LIMIT') + '</span> Guarantee loss ' + gbp(s.guaranteeLossPer1000) + ' per 1,000 payments, ' + pct(gs) + ' of fees (limit 2%)</div>' +
+      '<div><span class="chip ' + (s.doublePer1000 === 0 ? 'ok' : 'warn') + '">' + (s.doublePer1000 === 0 ? 'NONE LEFT' : 'OPEN') + '</span> Double charges left for the customer to chase: ' + s.doublePer1000.toFixed(1) + ' per 1,000</div>' +
+      '<div><span class="chip ok">NO SCREENSHOTS</span> ' + (o.release ? 'Unclear payments are shown as "Not confirmed yet"' : 'Off: staff still judge screenshots') + '</div>';
+  }
+  var timer = null;
+  function schedule(all) {
+    $('busy').textContent = 'Replaying 120,000 payments…';
+    clearTimeout(timer);
+    timer = setTimeout(function () { if (all) diag(); levers(); $('busy').textContent = ''; }, 30);
+  }
+  $('o-shot').addEventListener('input', function () { $('o-shot-v').textContent = $('o-shot').value + '%'; });
+  $('o-shot').addEventListener('change', function () { schedule(true); });
+  $('o-cap').addEventListener('input', function () { $('o-cap-v').textContent = '£' + $('o-cap').value; });
+  $('o-cap').addEventListener('change', function () { schedule(false); });
+  ['o-release', 'o-ret', 'o-refund', 'o-listen', 'o-health'].forEach(function (id) { $(id).addEventListener('change', function () { schedule(false); }); });
+  diag(); levers();
+})();
+
+</script>
+
+</body></html>
