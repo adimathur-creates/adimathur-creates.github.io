@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head><body>
+<title>Card Payback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@500;600;700;800&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;1,6..12,400&display=swap">
+<style>
+/* Layout: one 780px column like a product memo; funnel, unit economics and the simulator sit inside as working sheets. */
+:root{
+  --paper:#F5F4F9; --panel:#FFFFFF; --ink:#16132B; --muted:#5D5A73; --rule:#DCD9E8;
+  --accent:#5B2BE0; --accent-soft:#ECE6FD; --cash:#0F7B53; --cash-soft:#DDF2E8; --leak:#B4361C; --leak-soft:#FBE5DE;
+  --code:#F0EEF7;
+  --f-display:"Sora","Arial Narrow",Arial,sans-serif;
+  --f-body:"Nunito Sans","Segoe UI",Helvetica,Arial,sans-serif;
+  --f-mono:"Space Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0F0D1C; --panel:#18152B; --ink:#E8E6F3; --muted:#A6A2BF; --rule:#2C2845;
+  --accent:#A68BFF; --accent-soft:#2A2152; --cash:#5ED3A2; --cash-soft:#14322A; --leak:#F48C73; --leak-soft:#3A1E17;
+  --code:#141126; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F0D1C; --panel:#18152B; --ink:#E8E6F3; --muted:#A6A2BF; --rule:#2C2845;
+  --accent:#A68BFF; --accent-soft:#2A2152; --cash:#5ED3A2; --cash-soft:#14322A; --leak:#F48C73; --leak-soft:#3A1E17;
+  --code:#141126; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.6rem,9vw,4.3rem);font-weight:800;letter-spacing:-.03em}
+h2{font-size:clamp(1.5rem,4.8vw,2rem);font-weight:700;letter-spacing:-.015em}
+h3{font-size:1.1rem;font-weight:700}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:16px}
+.eyebrow,.k{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.k{margin-bottom:6px}
+.dek{font-size:1.15rem;max-width:62ch}
+.by{font-size:.92rem;color:var(--muted)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:4px}
+.note strong{color:var(--ink)}
+.secnum{font-family:var(--f-mono);font-size:.76rem;color:var(--accent);letter-spacing:.05em}
+.pstate{border-left:3px solid var(--accent);padding:6px 0 6px 16px;font-size:1.08rem;font-weight:700}
+ul.plain{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.grid2>div{min-width:0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:1.75rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:400}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.8rem;white-space:nowrap}
+.pos{color:var(--cash)} .neg{color:var(--leak)}
+.finding{background:var(--accent-soft);border-radius:4px;padding:12px 14px}
+.funnel{display:flex;flex-direction:column;gap:8px}
+.frow{display:grid;grid-template-columns:minmax(0,210px) 1fr 70px;gap:10px;align-items:center;font-size:.88rem}
+.track{height:14px;background:var(--paper);border-radius:2px;overflow:hidden;position:relative}
+.bar{position:absolute;top:0;bottom:0;left:0;background:var(--accent)}
+.bar.ghost{background:var(--muted);opacity:.25}
+.fval{font-family:var(--f-mono);font-size:.78rem;text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:520px){.frow{grid-template-columns:1fr 60px}.frow>div:first-child{grid-column:1 / -1}}
+.toggles{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+.tg{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--rule);border-radius:4px;padding:10px 12px;cursor:pointer;background:var(--paper);min-width:0}
+.tg input{margin-top:5px;accent-color:var(--accent)}
+.tg b{display:block;font-size:.95rem}
+.tg span{font-size:.83rem;color:var(--muted);line-height:1.4;display:block}
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.sliders label{display:flex;flex-direction:column;gap:4px;font-size:.84rem;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.scan{border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;border:1px solid var(--rule);background:var(--panel);min-width:0}
+.scan .m{font-family:var(--f-mono);font-size:.76rem;color:var(--muted)}
+.scan .pick{font-family:var(--f-display);font-weight:700;font-size:1.1rem}
+.scan.card .pick{color:var(--accent)} .scan.bank .pick{color:var(--cash)}
+.scan p{font-size:.88rem}
+pre{margin:0;background:var(--code);border:1px solid var(--rule);border-radius:4px;padding:14px;overflow-x:auto;font-family:var(--f-mono);font-size:.76rem;line-height:1.55;color:var(--ink)}
+.chip{display:inline-flex;font-family:var(--f-mono);font-size:.7rem;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.chip.ok{background:var(--cash-soft);color:var(--cash)} .chip.no{background:var(--leak-soft);color:var(--leak)}
+.checks{display:flex;flex-direction:column;gap:8px;font-size:.92rem}
+.checks div{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.rank{counter-reset:r;display:flex;flex-direction:column;gap:16px;margin:0;padding:0;list-style:none}
+.rank li{display:grid;grid-template-columns:34px 1fr;gap:12px}
+.rank li::before{counter-increment:r;content:counter(r);font-family:var(--f-display);font-weight:800;font-size:1.6rem;color:var(--accent);line-height:1.05}
+.rank li>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.req{display:flex;flex-direction:column;gap:8px}
+.req div{display:grid;grid-template-columns:40px 1fr;gap:10px;font-size:.95rem}
+.tag{font-family:var(--f-mono);font-size:.72rem;color:var(--accent);padding-top:3px}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.timeline>div{border-top:2px solid var(--accent);padding-top:10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.src{font-size:.86rem;color:var(--muted)}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--rule);margin:0}
+.busy{font-size:.8rem;color:var(--muted);min-height:1.2em}
+@media (max-width:520px){th,td{padding:7px 8px}table{font-size:.85rem}}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">Independent product work · Associate Product Manager, Fintech</div>
+  <h1>Card Payback</h1>
+  <p class="dek">super.money is turning free UPI into a business through FD-backed secured credit cards. This page works out what one card earns and costs in its first year, where the funnel leaks, and three product changes that turn a loss-making card into a profitable one.</p>
+  <p class="by">Aditya Mathur · October 2026 · prepared for the super.money product team</p>
+  <div class="note"><strong>Read this first.</strong> I do not work at super.money and have no internal data. The model runs 100,000 synthetic users through the secured-card funnel and 12 months of use. Funnel rates, fees, revenue shares and spending patterns are my assumptions, and every one is listed. Public facts are linked at the end. Treat the rupee figures as directions, not forecasts. With real funnel and transaction data, the same model rebuilds in a week.</div>
+</header>
+
+<section id="problem">
+  <span class="secnum">1 · THE PROBLEM</span>
+  <h2>Most of the card's spend earns nothing</h2>
+  <ul class="plain">
+    <li><b>UPI is free and costs money.</b> 5% cashback is the hook. The company has said it costs ₹10–20 per user per month.</li>
+    <li><b>Revenue comes from cross-sell.</b> Per TechCrunch (October 2025): about 80% personal loans, 10% cards and 10% payment products. The Kotak811 partnership aims for about 200,000 secured cards a month, about 60% to first-time borrowers.</li>
+    <li><b>The catch.</b> RuPay credit cards on UPI earn zero interchange on payments up to ₹2,000 at small merchants. 85% of super.money transactions are scan-and-pay, and the average RuPay-on-UPI ticket is about ₹850. So most card spend earns nothing while cashback is still paid on it. Axis capped the super.money card's 3% cashback from January 2026, which points to the same pressure.</li>
+  </ul>
+  <p class="pstate">Which users should get the secured-card offer, how should the card be used at the scanner, and what has to happen after issue, so that a card pays for itself in its first 12 months?</p>
+</section>
+
+<section id="leaks">
+  <span class="secnum">2 · THE FUNNEL TODAY (ASSUMED)</span>
+  <h2>Where 100,000 offers go</h2>
+  <div class="sheet">
+    <div class="funnel" id="funnel"></div>
+    <p class="finding" id="f-find"></p>
+  </div>
+</section>
+
+<section id="economics">
+  <span class="secnum">3 · ONE CARD, ONE YEAR</span>
+  <h2>What a card earns and costs</h2>
+  <div class="sheet">
+    <div class="kpis" id="ekpis"></div>
+    <div class="tablewrap"><table><thead><tr><th>Per issued card, 12 months</th><th class="num">Today</th><th class="num">With the three fixes</th></tr></thead><tbody id="waterfall"></tbody></table></div>
+    <p class="finding" id="e-find"></p>
+  </div>
+</section>
+
+<section id="levers">
+  <span class="secnum">4 · TEST THE FIXES</span>
+  <h2>Switch them on and off</h2>
+  <p>Every run replays the same 100,000 users with the same random draws, so differences come from the change alone.</p>
+  <div class="sheet">
+    <div class="toggles">
+      <label class="tg" for="o-fd"><input type="checkbox" id="o-fd" checked><div><b>One-tap FD funding</b><span>Fund the FD from the linked bank account in one tap, with ₹3,000 suggested instead of the minimum. Fewer people drop after KYC, and limits are larger.</span></div></label>
+      <label class="tg" for="o-smart"><input type="checkbox" id="o-smart" checked><div><b>Smart pay at the scanner</b><span>Suggest the card where it earns interchange (large merchants, payments over ₹2,000) and the bank account elsewhere. Card cashback only on earning payments. The user can always switch.</span></div></label>
+      <label class="tg" for="o-builder"><input type="checkbox" id="o-builder" checked><div><b>Credit-builder path</b><span>Autopay from the FD-linked account, a visible repayment streak, and a pre-approved personal loan offer from month 6 for clean repayers.</span></div></label>
+      <label class="tg" for="o-target"><input type="checkbox" id="o-target"><div><b>Offer only to high spenders</b><span>Show the offer only to users who spend ₹8,000+ a month on UPI or pay large merchants often.</span></div></label>
+    </div>
+    <div class="sliders">
+      <label for="o-acq">Bank's acquisition fee per activated card: <b id="o-acq-v">₹400</b><input type="range" id="o-acq" min="100" max="700" step="50" value="400"></label>
+      <label for="o-cb">Card cashback rate: <b id="o-cb-v">1.0%</b><input type="range" id="o-cb" min="0" max="3" step="0.25" value="1"></label>
+      <label for="o-loan">Commission per personal loan: <b id="o-loan-v">₹1,200</b><input type="range" id="o-loan" min="400" max="2400" step="100" value="1200"></label>
+    </div>
+    <div class="busy" id="busy" aria-live="polite"></div>
+    <div class="kpis" id="skpis"></div>
+    <div class="tablewrap"><table><thead><tr><th>Change on its own</th><th class="num">Cards</th><th class="num">₹ per card</th><th class="num">Loans</th><th class="num">Cashback / active month</th></tr></thead><tbody id="cmp"></tbody></table></div>
+    <div class="checks" id="checks"></div>
+  </div>
+  <p><b>Stress test.</b> I reran the model with two other seeds, acquisition fees of ₹200 and ₹600, loan commissions of ₹800 and ₹1,600, cashback of 0.5% and 2%, and an interchange share of 20% and 60%. The three fixes beat today in every run. The only run where the fixed card still lost money was the ₹200 acquisition fee.</p>
+</section>
+
+<section id="scanner">
+  <span class="secnum">5 · THE SCANNER MOMENT</span>
+  <h2>Smart pay, in practice</h2>
+  <div class="grid3">
+    <div class="scan bank"><span class="m">Kirana · ₹120</span><span class="pick">Pay from bank account</span><p>"Save your card limit for bigger buys." No card cashback here, because the payment earns none.</p></div>
+    <div class="scan card"><span class="m">Electronics store · ₹2,400</span><span class="pick">Pay with superCard</span><p>"Earns 1% cashback and builds your credit score." The payment earns interchange.</p></div>
+    <div class="scan card"><span class="m">Online checkout · ₹900</span><span class="pick">Pay with superCard</span><p>Large merchant, so interchange applies even under ₹2,000.</p></div>
+  </div>
+  <p>It is a suggestion, not a block. The user can switch with one tap, and the choice is remembered per merchant. The credit-building message matters for the 60% who are first-time borrowers. For them, any on-time repayment counts, wherever they spend.</p>
+</section>
+
+<section id="breakeven">
+  <span class="secnum">6 · THE NUMBER TO NEGOTIATE</span>
+  <h2>The fixes halve the fee the bank must pay</h2>
+  <div class="sheet">
+    <div class="tablewrap"><table><thead><tr><th>Bank's acquisition fee per activated card</th><th class="num">₹ per card today</th><th class="num">₹ per card with fixes</th></tr></thead><tbody id="acqtable"></tbody></table></div>
+    <p class="finding">In this model, a card breaks even today only if the bank pays about ₹480 per activated card. With the three fixes, about ₹255 is enough. That is a stronger position in any partner negotiation, and it means new bank partners can be signed on thinner terms.</p>
+  </div>
+</section>
+
+<section id="recommend">
+  <span class="secnum">7 · RECOMMENDATION</span>
+  <h2>What I would ship, in order</h2>
+  <ol class="rank">
+    <li><div><h3>Smart pay at the scanner</h3><p>The biggest single fix. Cashback per active card falls from about ₹14 to about ₹4 a month, and it mirrors what Axis already did by capping cashback. It is a product change, not a contract change, so we control it.</p></div></li>
+    <li><div><h3>One-tap FD funding</h3><p>The biggest leak is between KYC done and FD funded: KYC has been paid for, and no card comes out. One tap with a suggested amount converts more of them and lifts limits.</p></div></li>
+    <li><div><h3>Credit-builder path to loans</h3><p>Loans are 80% of revenue. A visible streak, autopay and a pre-approved offer at month 6 roughly triple loans from each card cohort in the model.</p></div></li>
+    <li><div><h3>Do not narrow the offer to high spenders</h3><p>It sounds right but loses money per card in the model. At these limits, interchange is small for everyone. What pays is activation and the loan path, not spend size.</p></div></li>
+  </ol>
+</section>
+
+<section id="spec">
+  <span class="secnum">8 · SPEC FOR SMART PAY</span>
+  <h2>Feature spec</h2>
+  <div class="grid2">
+    <div><div class="k">User story</div><p>As a superCard holder scanning a QR, I want the app to suggest the right way to pay, so that I earn cashback where it is offered, keep my limit for bigger buys, and build my credit score.</p></div>
+    <div><div class="k">Scope</div><p>Scan-and-pay and in-app checkout for users with an active secured card. Not P2P transfers.</p></div>
+  </div>
+  <div class="req">
+    <div><span class="tag">P0</span><span>Classify each payment at scan: merchant type from the QR (small or large merchant), amount, online or offline.</span></div>
+    <div><span class="tag">P0</span><span>Preselect the card where the payment earns interchange, and the bank account elsewhere. One tap to switch. Remember the choice per merchant.</span></div>
+    <div><span class="tag">P0</span><span>Card cashback rules updated to earning payments only, with plain-language terms shown before the first payment.</span></div>
+    <div><span class="tag">P1</span><span>Monthly card summary: cashback earned, limit used, repayment streak and score progress.</span></div>
+  </div>
+  <div class="grid2">
+    <div><div class="k">Metrics</div><ul class="plain"><li><b>Main:</b> card contribution per active card per month.</li><li><b>Secondary:</b> share of card spend that earns interchange.</li><li><b>Guardrails:</b> month-3 card activity, overrides of the suggestion, cashback complaints, and 30-day UPI retention.</li></ul></div>
+    <div><div class="k">Test design</div><ul class="plain"><li>Randomise by user, 50/50, among active card holders.</li><li>Run 4 weeks, so every user passes a full statement cycle.</li><li>Ship if contribution rises and month-3 activity does not fall by more than 2 points.</li></ul></div>
+  </div>
+  <div><div class="k">Funnel query (stage conversion by weekly cohort)</div>
+<pre>SELECT DATE_TRUNC('week', offer_seen_at)               AS cohort_week,
+       COUNT(*)                                         AS offered,
+       COUNT(started_at)        * 1.0 / COUNT(*)        AS start_rate,
+       COUNT(kyc_done_at)       * 1.0 / NULLIF(COUNT(started_at), 0)  AS kyc_rate,
+       COUNT(fd_funded_at)      * 1.0 / NULLIF(COUNT(kyc_done_at), 0) AS fd_rate,
+       COUNT(upi_linked_at)     * 1.0 / NULLIF(COUNT(fd_funded_at), 0) AS link_rate,
+       COUNT(CASE WHEN first_credit_txn_at &lt;= upi_linked_at + INTERVAL '30 days'
+                  THEN 1 END)   * 1.0 / NULLIF(COUNT(upi_linked_at), 0) AS first_spend_rate,
+       AVG(fd_amount)                                   AS avg_fd
+FROM   secured_card_funnel
+GROUP  BY 1
+ORDER  BY 1;</pre></div>
+</section>
+
+<section id="plan">
+  <span class="secnum">9 · FIRST 90 DAYS</span>
+  <h2>How I would run this as the APM</h2>
+  <div class="timeline">
+    <div><div class="k">Days 1–30</div><p>Rebuild this funnel and the per-card P&amp;L on real data. Check the two biggest assumptions first: the share of card spend that earns interchange, and the drop between KYC and FD funding.</p></div>
+    <div><div class="k">Days 31–60</div><p>Ship one-tap FD funding behind a flag. Write the smart pay spec with design and the bank partner, including the cashback terms change.</p></div>
+    <div><div class="k">Days 61–90</div><p>Run the smart pay test. Start the credit-builder streak and the month-6 loan offer with the lending team.</p></div>
+  </div>
+</section>
+
+<section id="limits">
+  <span class="secnum">10 · LIMITS</span>
+  <h2>What this model does not know</h2>
+  <ul class="plain">
+    <li>Every rate is an assumption: funnel rates, FD sizes, the bank's acquisition fee, super.money's share of interchange, cashback funding and loan commissions. The direction held in every stress test; the sizes will not.</li>
+    <li>The interchange rule for RuPay credit on UPI can change. A change at small merchants would shift the whole picture, so the classifier should read the rule from config, not code.</li>
+    <li>Revolving interest, card fees and the effect on the core 5% UPI cashback are left out.</li>
+  </ul>
+</section>
+
+<hr>
+<section id="sources" class="src">
+  <span class="secnum">SOURCES</span>
+  <ul class="plain">
+    <li><a href="https://techcrunch.com/2025/10/29/flipkarts-super-money-teams-up-with-kotak-bank-to-make-indias-free-upi-payments-pay" target="_blank" rel="noopener">TechCrunch (Oct 2025)</a>: Kotak811 partnership, 200,000 cards a month target, revenue mix, 10M active users</li>
+    <li><a href="https://entrackr.com/interview/supermoney-founder-prakash-sikaria-on-250-mn-transactions-cashback-and-profitability-9768814" target="_blank" rel="noopener">Entrackr interview with Prakash Sikaria</a>: 85% scan-and-pay, cashback funded by cross-sell, retention</li>
+    <li><a href="https://www.business-standard.com/amp/finance/news/rupay-credit-card-upi-transactions-double-in-first-seven-months-of-fy25-124120301103_1.html" target="_blank" rel="noopener">Business Standard (Dec 2024)</a>: zero interchange on RuPay credit on UPI up to ₹2,000 at small merchants; volumes</li>
+    <li><a href="https://cardinsider.com/blog/axis-bank-revises-super-money-rupay-credit-card-benefits-effective-january/" target="_blank" rel="noopener">CardInsider</a>: Axis super.money card cashback revision, January 2026</li>
+    <li><a href="https://www.angelone.in/news/market-updates/flipkart-backed-super-money-targets-top-5-neo-bank-position-in-india" target="_blank" rel="noopener">Angel One</a>: 5% cashback costs ₹10–20 per user per month</li>
+  </ul>
+  <p>Model: 100,000 synthetic users, 12 months, seeded so results repeat. Nine automated checks and eleven stress-test runs on the engine.</p>
+</section>
+
+</div>
+
+<script>
+var PRE = {"today":{"funnel":[100000,11286,7439,4393,3803,2138,1728],"cards":4393},"rec":{"funnel":[100000,11286,7439,5599,4843,2721,2200],"cards":5599},"acq":[{"a":100,"t":-185,"r":-75},{"a":200,"t":-136,"r":-26},{"a":300,"t":-88,"r":22},{"a":400,"t":-39,"r":71},{"a":500,"t":10,"r":119},{"a":600,"t":58,"r":168}]};
+</script>
+<script>
+// Card Payback engine. Pure functions, no DOM. Synthetic data only.
+// Simulates a base of UPI users offered an FD-backed secured RuPay credit card on UPI, through the funnel and 12 months of use.
+var SM = (function () {
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function normal(r) { var u = 1 - r(), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function logn(r, med, sig) { return med * Math.exp(sig * normal(r)); }
+
+  var MONTHS = 12;
+  var STAGES = ['Saw the offer', 'Started', 'KYC done', 'FD funded', 'Card linked to UPI', 'First credit payment (30 days)', 'Active in month 3'];
+
+  // Pre-draw users and every random number they need, so all policies see the same people.
+  function generate(opts) {
+    opts = opts || {};
+    var r = rng(opts.seed || 20261014), n = opts.users || 100000, users = [];
+    for (var i = 0; i < n; i++) {
+      var upi = Math.min(150000, logn(r, 6500, 0.9));            // monthly UPI spend in the app, Rs
+      var smallShare = Math.min(0.98, Math.max(0.3, 0.82 + 0.12 * normal(r) - (upi > 20000 ? 0.12 : 0))); // share of spend at small merchants under Rs 2,000
+      var u = { upi: upi, smallShare: smallShare, thin: r() < 0.6, d: [] };
+      for (var k = 0; k < 64; k++) u.d.push(r());
+      users.push(u);
+    }
+    return { users: users };
+  }
+
+  // Policy options:
+  // target:   offer only to users likely to earn interchange or spend enough (else everyone)
+  // oneTapFD: one-tap FD funding from the linked account with a suggested amount
+  // smartPay: at the scanner, suggest the card where it earns interchange, the bank account where it does not;
+  //           cashback paid only on card spends that earn interchange
+  // builder:  credit-builder path: autopay from the FD-linked account, score milestones, pre-approved loan at month 6
+  // Assumptions (adjustable): acqFee Rs per activated card from the bank, ixShare super.money share of issuer interchange,
+  // ixRate issuer interchange on earning spends, cashback rate, loan commission.
+  function simulate(data, o) {
+    o = o || {};
+    var A = {
+      acqFee: o.acqFee == null ? 400 : o.acqFee,
+      ixRate: 0.011, ixShare: o.ixShare == null ? 0.4 : o.ixShare,
+      cashback: o.cashback == null ? 0.01 : o.cashback,
+      kycCost: 120, loanCommission: o.loanCommission == null ? 1200 : o.loanCommission
+    };
+    var funnel = STAGES.map(function () { return 0; });
+    var res = { offered: 0, cards: 0, active3: 0, revenue: 0, cost: 0, rev: { acq: 0, ix: 0, loan: 0 }, costs: { kyc: 0, cb: 0 },
+      loans: 0, thinLoans: 0, activeMonths: 0, monthly: [], creditSpend: 0, earningSpend: 0 };
+    for (var m = 0; m < MONTHS; m++) res.monthly.push(0);
+    data.users.forEach(function (u) {
+      var d = u.d;
+      var earnShare = 1 - u.smallShare * 0.95;
+      if (o.target && !(u.upi >= 8000 || earnShare >= 0.3)) return;
+      res.offered++; funnel[0]++;
+      // propensity rises with UPI engagement
+      var eng = Math.min(1.6, Math.max(0.6, Math.log(u.upi / 2000)));
+      if (d[0] >= 0.10 * eng) return; funnel[1]++;
+      if (d[1] >= 0.65) return; funnel[2]++;
+      res.costs.kyc += A.kycCost; res.cost += A.kycCost; res.monthly[0] -= A.kycCost;
+      if (d[2] >= (o.oneTapFD ? 0.74 : 0.58)) return; funnel[3]++;
+      var fd = Math.max(1000, Math.round((o.oneTapFD ? 3000 : 2000) * Math.exp(0.6 * (d[3] * 2 - 1))));
+      var limit = 0.9 * fd;
+      res.cards++;
+      if (d[4] >= 0.86) return; funnel[4]++;
+      if (d[5] >= 0.56) { return; } funnel[5]++;
+      res.rev.acq += A.acqFee; res.revenue += A.acqFee;
+      // monthly behaviour
+      var active = true, onTime = 0, loanTaken = false;
+      var shift = 0.18 + 0.2 * d[6];                        // share of UPI spend the user moves to the card
+      var onTimeP = o.builder ? 0.95 : 0.84;
+      var churn = 0.07;
+      for (var mm = 0; mm < MONTHS; mm++) {
+        if (!active) break;
+        if (d[7 + mm] < churn) { active = false; break; }
+        if (mm === 2) { funnel[6]++; res.active3++; }
+        res.activeMonths++;
+        var spend = Math.min(limit * 0.85, u.upi * shift);
+        var earnSpend = spend * earnShare, smallSpend = spend - earnSpend;
+        if (o.smartPay) { smallSpend *= 0.55; earnSpend *= 1.1; }   // card suggested where it earns; bank account elsewhere
+        var cbBase = o.smartPay ? earnSpend : earnSpend + smallSpend;
+        var cb = cbBase * A.cashback;
+        var ix = earnSpend * A.ixRate * A.ixShare;
+        res.costs.cb += cb; res.cost += cb; res.rev.ix += ix; res.revenue += ix;
+        res.creditSpend += earnSpend + smallSpend; res.earningSpend += earnSpend;
+        if (d[20 + mm] < onTimeP) onTime++;
+        // loan cross-sell from month 6 for users with a clean repayment record
+        if (!loanTaken && mm >= 5 && onTime >= mm - 0) {
+          var eligible = u.thin ? 0.35 : 0.6;
+          var conv = o.builder ? 0.06 : 0.03;
+          if (d[34] < eligible && d[36 + mm] < conv) {
+            loanTaken = true; res.loans++; if (u.thin) res.thinLoans++;
+            res.rev.loan += A.loanCommission; res.revenue += A.loanCommission; res.monthly[mm] += A.loanCommission;
+          }
+        }
+        res.monthly[mm] += (ix - cb) + (mm === 0 ? A.acqFee : 0);
+      }
+    });
+    res.funnel = funnel;
+    res.contribution = res.revenue - res.cost;
+    res.perCard = res.cards ? res.contribution / res.cards : 0;
+    res.perOffered = res.offered ? res.contribution / res.offered : 0;
+    res.earningShare = res.creditSpend ? res.earningSpend / res.creditSpend : 0;
+    res.ixPerActiveMonth = res.activeMonths ? res.rev.ix / res.activeMonths : 0;
+    res.cbPerActiveMonth = res.activeMonths ? res.costs.cb / res.activeMonths : 0;
+    var cum = 0; res.payback = null; res.cumulative = [];
+    for (var q = 0; q < MONTHS; q++) { cum += res.monthly[q]; res.cumulative.push(cum); if (res.payback === null && cum >= 0) res.payback = q + 1; }
+    res.assumptions = A;
+    return res;
+  }
+
+  return { STAGES: STAGES, MONTHS: MONTHS, generate: generate, simulate: simulate };
+})();
+
+
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function rs(x) { var s = Math.round(Math.abs(x)).toLocaleString('en-IN'); return (x < 0 ? '−₹' : '₹') + s; }
+  function sg(x) { return (x >= 0 ? '+' : '') + rs(x); }
+  function kpi(v, label, sub) { return '<div class="kpi"><span class="k" style="margin:0">' + label + '</span><span class="v">' + v + '</span><span class="s">' + sub + '</span></div>'; }
+  var data = SM.generate();
+  var cache = {};
+  function run(o) { var k = JSON.stringify(o); if (!cache[k]) cache[k] = SM.simulate(data, o); return cache[k]; }
+  var REC = { oneTapFD: true, smartPay: true, builder: true };
+  var T = run({}), R = run(REC);
+
+  // Funnel
+  var max = T.funnel[0];
+  $('funnel').innerHTML = SM.STAGES.map(function (s, i) {
+    var v = T.funnel[i], w = v / max * 100, rw = R.funnel[i] / max * 100;
+    return '<div class="frow"><div>' + s + '</div><div class="track"><span class="bar ghost" style="width:' + rw + '%"></span><span class="bar" style="width:' + w + '%"></span></div><div class="fval">' + v.toLocaleString('en-IN') + '</div></div>';
+  }).join('') + '<div class="frow"><div></div><div style="font-size:.78rem;color:var(--muted)">Dark bar: today. Light bar behind: with the three fixes.</div><div></div></div>';
+  var kyc = T.funnel[2], fd = T.funnel[3];
+  $('f-find').innerHTML = '<b>Finding:</b> ' + (kyc - fd).toLocaleString('en-IN') + ' people finish KYC and then never fund the FD. KYC has been paid for and no card comes out. Of the cards issued, only ' +
+    Math.round(T.funnel[5] / T.cards * 100) + '% make a credit payment in the first 30 days.';
+
+  // Economics
+  function per(r, x) { return r.cards ? x / r.cards : 0; }
+  $('ekpis').innerHTML =
+    kpi(rs(T.perCard), 'Per card today', '12-month contribution') +
+    kpi(rs(R.perCard), 'With the fixes', 'same users, same assumptions') +
+    kpi('₹' + T.ixPerActiveMonth.toFixed(1), 'Interchange earned', 'per active card per month') +
+    kpi('₹' + T.cbPerActiveMonth.toFixed(1), 'Cashback paid', 'per active card per month');
+  var rows = [
+    ['Bank acquisition fee', per(T, T.rev.acq), per(R, R.rev.acq)],
+    ['Interchange share', per(T, T.rev.ix), per(R, R.rev.ix)],
+    ['Personal loan commissions', per(T, T.rev.loan), per(R, R.rev.loan)],
+    ['KYC cost (incl. people who never fund)', -per(T, T.costs.kyc), -per(R, R.costs.kyc)],
+    ['Card cashback', -per(T, T.costs.cb), -per(R, R.costs.cb)]
+  ];
+  $('waterfall').innerHTML = rows.map(function (r) {
+    return '<tr><td>' + r[0] + '</td><td class="num ' + (r[1] < 0 ? 'neg' : 'pos') + '">' + sg(r[1]) + '</td><td class="num ' + (r[2] < 0 ? 'neg' : 'pos') + '">' + sg(r[2]) + '</td></tr>';
+  }).join('') + '<tr><td><b>Contribution per issued card</b></td><td class="num ' + (T.perCard < 0 ? 'neg' : 'pos') + '"><b>' + sg(T.perCard) + '</b></td><td class="num ' + (R.perCard < 0 ? 'neg' : 'pos') + '"><b>' + sg(R.perCard) + '</b></td></tr>';
+  $('e-find').innerHTML = '<b>Finding:</b> interchange earns about ₹' + T.ixPerActiveMonth.toFixed(1) + ' per active card per month, while cashback costs about ₹' + T.cbPerActiveMonth.toFixed(1) +
+    '. At a ₹2,000 FD limit, interchange will never pay for this card. It pays back through the bank\'s acquisition fee and the personal loan it leads to.';
+
+  // Acquisition fee table
+  $('acqtable').innerHTML = PRE.acq.map(function (x) {
+    return '<tr><td>₹' + x.a + '</td><td class="num ' + (x.t < 0 ? 'neg' : 'pos') + '">' + sg(x.t) + '</td><td class="num ' + (x.r < 0 ? 'neg' : 'pos') + '">' + sg(x.r) + '</td></tr>';
+  }).join('');
+
+  // Levers
+  function opts() {
+    return { oneTapFD: $('o-fd').checked, smartPay: $('o-smart').checked, builder: $('o-builder').checked, target: $('o-target').checked,
+      acqFee: +$('o-acq').value, cashback: +$('o-cb').value / 100, loanCommission: +$('o-loan').value };
+  }
+  function labels() {
+    $('o-acq-v').textContent = '₹' + $('o-acq').value;
+    $('o-cb-v').textContent = (+$('o-cb').value).toFixed(2).replace(/0$/, '') + '%';
+    $('o-loan-v').textContent = '₹' + (+$('o-loan').value).toLocaleString('en-IN');
+  }
+  function levers() {
+    var o = opts(); labels();
+    var base = { acqFee: o.acqFee, cashback: o.cashback, loanCommission: o.loanCommission };
+    var b = run(base), s = run(o);
+    $('skpis').innerHTML =
+      kpi(rs(s.perCard), 'Per card', 'today ' + rs(b.perCard)) +
+      kpi(s.cards.toLocaleString('en-IN'), 'Cards issued', 'per 100,000 offers; today ' + b.cards.toLocaleString('en-IN')) +
+      kpi(s.loans.toLocaleString('en-IN'), 'Loans in 12 months', 'today ' + b.loans.toLocaleString('en-IN')) +
+      kpi(rs(s.contribution / 100000 * 1000), 'Per 1,000 offers', 'cohort contribution; today ' + rs(b.contribution / 100000 * 1000));
+    var list = [['Today (assumed)', base], ['One-tap FD funding', Object.assign({ oneTapFD: true }, base)], ['Smart pay at the scanner', Object.assign({ smartPay: true }, base)],
+      ['Credit-builder path', Object.assign({ builder: true }, base)], ['Offer only to high spenders', Object.assign({ target: true }, base)], ['Your selection', o]];
+    $('cmp').innerHTML = list.map(function (l) {
+      var x = run(l[1]);
+      return '<tr><td>' + l[0] + '</td><td class="num">' + x.cards.toLocaleString('en-IN') + '</td><td class="num ' + (x.perCard < 0 ? 'neg' : 'pos') + '">' + sg(x.perCard) + '</td><td class="num">' + x.loans + '</td><td class="num">₹' + x.cbPerActiveMonth.toFixed(1) + '</td></tr>';
+    }).join('');
+    $('checks').innerHTML =
+      '<div><span class="chip ' + (s.perCard > 0 ? 'ok' : 'no') + '">' + (s.perCard > 0 ? 'PAYS BACK' : 'LOSES MONEY') + '</span> Each issued card ' + (s.perCard > 0 ? 'earns ' : 'loses ') + rs(Math.abs(s.perCard)) + ' over its first 12 months</div>' +
+      '<div><span class="chip ' + (s.earningShare > b.earningShare ? 'ok' : 'no') + '">EARNING SPEND</span> ' + Math.round(s.earningShare * 100) + '% of card spend earns interchange (today ' + Math.round(b.earningShare * 100) + '%)</div>' +
+      '<div><span class="chip ok">USER CHOICE</span> Smart pay only suggests; every payment can still go on the card</div>';
+  }
+  var timer = null;
+  function schedule() { $('busy').textContent = 'Replaying 100,000 users…'; clearTimeout(timer); timer = setTimeout(function () { levers(); $('busy').textContent = ''; }, 30); }
+  ['o-fd', 'o-smart', 'o-builder', 'o-target'].forEach(function (id) { $(id).addEventListener('change', schedule); });
+  ['o-acq', 'o-cb', 'o-loan'].forEach(function (id) { $(id).addEventListener('input', labels); $(id).addEventListener('change', schedule); });
+  levers();
+})();
+
+</script>
+
+</body></html>
