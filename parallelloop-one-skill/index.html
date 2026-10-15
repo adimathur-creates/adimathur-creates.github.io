@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head><body>
+<title>One Skill, Three Clients</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 800px column read like an engineering-and-product memo; the skill runs live inside working sheets. */
+:root{
+  --paper:#F3F4F6; --panel:#FFFFFF; --ink:#111827; --muted:#5B6474; --rule:#D9DDE4;
+  --accent:#D2491C; --accent-soft:#FBE7DF; --ai:#6D3FD6; --ai-soft:#EEE8FB; --rule-c:#0F6E8C; --rule-soft:#DEF0F5;
+  --good:#18794E; --good-soft:#DDF1E6; --bad:#B42318; --bad-soft:#FBE4E1;
+  --code:#EEF0F3;
+  --f-display:"Onest","Segoe UI",Helvetica,Arial,sans-serif;
+  --f-body:"Onest","Segoe UI",Helvetica,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0E1117; --panel:#161A22; --ink:#E6E9EF; --muted:#9AA3B2; --rule:#272D38;
+  --accent:#F27A4D; --accent-soft:#3A2017; --ai:#A98BF5; --ai-soft:#251C3E; --rule-c:#5BC0DE; --rule-soft:#13303A;
+  --good:#5CCB92; --good-soft:#143022; --bad:#F2867E; --bad-soft:#3A1A17; --code:#11151C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0E1117; --panel:#161A22; --ink:#E6E9EF; --muted:#9AA3B2; --rule:#272D38;
+  --accent:#F27A4D; --accent-soft:#3A2017; --ai:#A98BF5; --ai-soft:#251C3E; --rule-c:#5BC0DE; --rule-soft:#13303A;
+  --good:#5CCB92; --good-soft:#143022; --bad:#F2867E; --bad-soft:#3A1A17; --code:#11151C; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.08;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.6rem,9vw,4.4rem);font-weight:800;letter-spacing:-.03em}
+h1 span{color:var(--accent)}
+h2{font-size:clamp(1.5rem,4.8vw,2rem);font-weight:700;letter-spacing:-.02em}
+h3{font-size:1.1rem;font-weight:700}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:16px}
+.eyebrow,.k{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.k{margin-bottom:6px}
+.dek{font-size:1.15rem;max-width:64ch}
+.by{font-size:.92rem;color:var(--muted)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:4px}
+.note strong{color:var(--ink)}
+.secnum{font-family:var(--f-mono);font-size:.74rem;color:var(--accent);letter-spacing:.05em}
+.pstate{border-left:3px solid var(--accent);padding:6px 0 6px 16px;font-size:1.08rem;font-weight:600}
+ul.plain{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.grid2>div{min-width:0}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.flow{display:flex;flex-direction:column;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--panel)}
+.flow div{display:grid;grid-template-columns:86px 1fr;gap:12px;padding:10px 14px;border-bottom:1px solid var(--rule);font-size:.93rem}
+.flow div:last-child{border-bottom:0}
+.flow .t{font-family:var(--f-mono);font-size:.7rem;padding:3px 8px;border-radius:999px;height:fit-content;text-align:center}
+.t.ai{background:var(--ai-soft);color:var(--ai)} .t.rule{background:var(--rule-soft);color:var(--rule-c)} .t.out{background:var(--accent-soft);color:var(--accent)}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted);flex:1 1 180px;min-width:0}
+select{font:inherit;font-size:.95rem;padding:7px 8px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.chk{display:flex;gap:8px;align-items:center;font-size:.9rem;color:var(--ink);flex:1 1 180px}
+.chk input{accent-color:var(--accent)}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:1.75rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+tr.sel td{background:var(--accent-soft)}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.8rem;white-space:nowrap}
+.good{color:var(--good)} .bad{color:var(--bad)}
+.finding{background:var(--accent-soft);border-radius:4px;padding:12px 14px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button{font:inherit;font-size:.88rem;padding:6px 12px;border-radius:999px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.case{border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.case-h{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 14px;background:var(--paper);border-bottom:1px solid var(--rule)}
+.status{font-family:var(--f-mono);font-size:.74rem;padding:3px 10px;border-radius:999px}
+.status.ready{background:var(--good-soft);color:var(--good)} .status.wait{background:var(--accent-soft);color:var(--accent)} .status.person{background:var(--ai-soft);color:var(--ai)}
+.case-b{padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:.92rem}
+pre{margin:0;background:var(--code);border:1px solid var(--rule);border-radius:4px;padding:12px;overflow-x:auto;font-family:var(--f-mono);font-size:.74rem;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+.msg{background:var(--code);border-radius:4px;padding:10px 12px;font-size:.9rem;border-left:3px solid var(--accent)}
+.btn{font:inherit;font-size:.88rem;padding:7px 14px;border-radius:4px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);cursor:pointer}
+.rank{counter-reset:r;display:flex;flex-direction:column;gap:16px;margin:0;padding:0;list-style:none}
+.rank li{display:grid;grid-template-columns:34px 1fr;gap:12px}
+.rank li::before{counter-increment:r;content:counter(r);font-family:var(--f-display);font-weight:800;font-size:1.6rem;color:var(--accent);line-height:1.05}
+.rank li>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.timeline>div{border-top:2px solid var(--accent);padding-top:10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.src{font-size:.86rem;color:var(--muted)}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--rule);margin:0}
+@media (max-width:520px){th,td{padding:7px 8px}table{font-size:.84rem}.flow div{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">Independent work · Product, Parallel Loop</div>
+  <h1>One Skill, <span>Three Clients</span></h1>
+  <p class="dek">The question that decides how Parallel Loop gets valued: does the AI Stack become a product, or does every client become a custom build? I took one workflow your own industry pages name, chasing missing and invalid documents, and built it once. It is rules-first, with a small AI step, a confidence gate and evals. Then I ran it unchanged for an insurer, a lender and a consumer durables maker.</p>
+  <p class="by">Aditya Mathur · October 2026 · prepared for the Parallel Loop team</p>
+  <div class="note"><strong>Read this first.</strong> I do not work at Parallel Loop and have no client data. The AI step is simulated: each document reading comes with a confidence score and a known error rate, and the golden dataset of 1,000 cases per client is synthetic. Everything else runs for real in your browser: the shared engine, the three rule packs, the evals and the time model. Every assumption is on this page.</div>
+</header>
+
+<section id="why">
+  <span class="secnum">1 · WHY THIS PROBLEM</span>
+  <h2>The same workflow shows up on three of your industry pages</h2>
+  <ul class="plain">
+    <li><b>Financial services:</b> "Onboarding delays revenue… new clients wait while staff chase missing items." Use case: "show missing documents and pending approvals so each team knows its next step."</li>
+    <li><b>Insurance:</b> "Handlers must gather and verify documents before they can progress." Use case: "claims document tracking."</li>
+    <li><b>Retail and consumer:</b> Havells is working with you on sales teams and channel partners. Every new dealer starts with a document pack and a credit check.</li>
+  </ul>
+  <p>Your CTO has said about 90% of a workflow should be codified rules, with AI kept for the roughly 10% that needs classification or judgement. Investors are asking whether the stack becomes reusable or every engagement turns bespoke. This prototype tests both ideas on one real workflow.</p>
+  <p class="pstate">Can one document-chase skill, built once with deterministic rules and a narrow AI step, serve very different clients by changing only a small rule pack, while never passing an incomplete file and getting files ready faster than people chasing by hand?</p>
+</section>
+
+<section id="how">
+  <span class="secnum">2 · HOW THE SKILL WORKS</span>
+  <h2>Rules do the deciding. AI only reads.</h2>
+  <div class="flow">
+    <div><span class="t ai">AI</span><span><b>Read each document.</b> Classify it and read the fields the checks need. Every reading carries a confidence score.</span></div>
+    <div><span class="t ai">GATE</span><span><b>Confidence gate.</b> Below the threshold, a person checks that one item. The AI never decides alone when it is unsure.</span></div>
+    <div><span class="t rule">RULE</span><span><b>Apply the client's pack.</b> Which documents this case needs, from whom, and the checks each must pass (names match, not expired, covers 6 months).</span></div>
+    <div><span class="t rule">RULE</span><span><b>High-value sign-off.</b> Above a set value, a named person signs before the file moves on.</span></div>
+    <div><span class="t out">OUT</span><span><b>One status, one owner, one next action.</b> Chase every owner at once, with daily reminders. Every step goes into the audit trail.</span></div>
+  </div>
+</section>
+
+<section id="packs">
+  <span class="secnum">3 · WHAT CHANGES PER CLIENT</span>
+  <h2>A new client is a pack, not a project</h2>
+  <div class="sheet">
+    <div class="tabs" id="packtabs" role="group" aria-label="Choose a client"></div>
+    <div class="tablewrap"><table><thead><tr><th>Document</th><th>Needed when</th><th>From</th><th>Checks</th></tr></thead><tbody id="packtable"></tbody></table></div>
+    <p class="finding"><b>Reuse:</b> the shared engine is <b>133 lines</b>. Each client pack is <b>21 to 23 lines</b> of rules. Adding a client means writing its pack and its golden test set. The engine, the confidence gate, the audit trail and the evals stay the same.</p>
+  </div>
+</section>
+
+<section id="evals">
+  <span class="secnum">4 · EVALS</span>
+  <h2>Test it before it touches a real file</h2>
+  <p>Each client gets a golden set of 1,000 cases with known answers. The engine runs on every case, and the evals count what matters to the client.</p>
+  <div class="sheet">
+    <div class="controls">
+      <label for="e-pack">Client<select id="e-pack"></select></label>
+      <label for="e-th">Confidence threshold: <b id="e-th-v">0.85</b><input type="range" id="e-th" min="0.6" max="0.95" step="0.05" value="0.85"></label>
+      <label class="chk" for="e-so"><input type="checkbox" id="e-so" checked> Named sign-off above a set value</label>
+    </div>
+    <div class="kpis" id="ekpis"></div>
+    <div class="tablewrap"><table><thead><tr><th>Threshold</th><th class="num">Wrongly passed / 1,000</th><th class="num">Files to a person</th><th class="num">Wrong chases</th><th class="num">Median days</th></tr></thead><tbody id="ethr"></tbody></table></div>
+    <p class="finding" id="e-find"></p>
+  </div>
+  <p><b>Same engine, three different answers.</b> With sign-off on, the insurer reaches zero wrongly passed files at a threshold of 0.80, sending 23% of files to a person. The lender only gets there at 0.95, sending 77%. The dealer workflow never reaches zero at any threshold, which means its checks need a stronger rule (for example, matching the GST and PAN names against each other), not a stricter model. A default threshold would have been wrong for all three. That is why every client needs its own golden set.</p>
+  <p><b>Stress test.</b> I reran the evals with another seed, and with the AI's error rate at 2% and 8% instead of 4%. In every run and every client, the median days to a ready file fell from 6–8 to 3. Wrongly passed files stayed between 0 and 3 per 1,000. At 8% AI error, the share of files going to a person rose to about 40%, which is the signal to fix the model before go-live, not after.</p>
+</section>
+
+<section id="cases">
+  <span class="secnum">5 · LOOK AT REAL OUTPUT</span>
+  <h2>One case, start to finish</h2>
+  <div class="sheet">
+    <div class="controls">
+      <label for="c-pack">Client<select id="c-pack"></select></label>
+      <label for="c-filter">Show<select id="c-filter"><option value="all">Any case</option><option value="Waiting">Waiting on someone</option><option value="Needs a person">Needs a person</option><option value="Ready to assess">Ready to assess</option></select></label>
+      <button class="btn" id="c-next" type="button">Next case</button>
+    </div>
+    <div id="casecard"></div>
+  </div>
+</section>
+
+<section id="recommend">
+  <span class="secnum">6 · WHAT I WOULD DO AS PM</span>
+  <h2>Make skills the unit of the product</h2>
+  <ol class="rank">
+    <li><div><h3>Track reuse as a product metric</h3><p>For every skill: lines of shared engine against lines of client pack, and days from kickoff to the first live workflow at each new client. If the pack share keeps rising, the stack is drifting into services.</p></div></li>
+    <li><div><h3>No skill goes live without a golden set</h3><p>Build 300 to 1,000 labelled cases from the client's first two weeks of real files. Set the confidence threshold per client from the evals, not by default. Every production miss becomes a new test case.</p></div></li>
+    <li><div><h3>Rules as data, written with the client</h3><p>Packs should be edited in the Skills Platform by the forward-deployed team and the client's process owner together, versioned like code, with the client signing off each version.</p></div></li>
+    <li><div><h3>Measure what the client feels</h3><p>Days to a ready file, files bounced back by the assessor, and wrong chases sent to customers. Not model accuracy on its own.</p></div></li>
+  </ol>
+</section>
+
+<section id="fde">
+  <span class="secnum">7 · FIRST TWO WEEKS AT A NEW CLIENT</span>
+  <h2>How I would deploy this skill</h2>
+  <div class="timeline">
+    <div><div class="k">Days 1–3</div><p>Sit with the people who chase files today. List every document, who sends it, and why files get bounced. Draft the pack.</p></div>
+    <div><div class="k">Days 4–8</div><p>Label 300 recent files to build the golden set. Run the evals and agree a threshold and sign-off limit with the process owner.</p></div>
+    <div><div class="k">Days 9–14</div><p>Run the skill alongside the team on live files without sending chases. Compare its decisions with theirs daily, then switch on chasing for one team.</p></div>
+  </div>
+</section>
+
+<section id="limits">
+  <span class="secnum">8 · LIMITS</span>
+  <h2>What this prototype does not prove</h2>
+  <ul class="plain">
+    <li>The AI step is simulated with a fixed error rate. A real model's errors cluster, for example on blurred photos or regional-language documents, and the golden set must reflect that.</li>
+    <li>Response rates and the "today" process are assumptions. The 6–8 day baseline needs checking against a client's real logs.</li>
+    <li>In production, rules live as data in a rules engine. Here they are small functions, to keep the prototype readable.</li>
+  </ul>
+</section>
+
+<hr>
+<section id="sources" class="src">
+  <span class="secnum">SOURCES</span>
+  <ul class="plain">
+    <li><a href="https://parallelloop.ai/stack" target="_blank" rel="noopener">Parallel Loop: the AI Stack</a> (Skills Platform, Rules Engine, Evals Pipeline with golden dataset)</li>
+    <li><a href="https://parallelloop.ai/financial-services" target="_blank" rel="noopener">Financial services</a>, <a href="https://parallelloop.ai/insurance" target="_blank" rel="noopener">insurance</a> and <a href="https://parallelloop.ai/retail-consumer" target="_blank" rel="noopener">retail</a> pages</li>
+    <li><a href="https://inc42.com/buzz/parallel-loop-raises-6-6-mn-to-integrate-ai-into-enterprise-workflows/" target="_blank" rel="noopener">Inc42</a>: deterministic workflows, AI for about 10% of steps; Havells work with sales teams and channel partners</li>
+    <li><a href="https://e27.co/parallel-loop-nets-us6-6m-to-sell-enterprises-the-one-thing-ai-models-lack-context-20261014/" target="_blank" rel="noopener">e27</a>: whether the stack becomes reusable or each engagement bespoke</li>
+  </ul>
+  <p>Prototype: one shared engine, three client packs, 1,000 synthetic cases per client, seeded so results repeat. Seven automated checks and four stress runs.</p>
+</section>
+
+</div>
+
+<script>
+// Domain packs: everything client-specific lives here. The engine never changes between clients.
+// Each pack lists case attributes, the documents a case needs, when each is needed, who provides it,
+// and the deterministic checks each document must pass. In production these would be rows in a rules engine.
+var PACKS = [
+  {
+    id: 'claims', client: 'General insurer', workflow: 'Motor claim documents', caseLabel: 'Claim', sla: 5, signoff: 150000, signoffLabel: '\u20b91.5 lakh', signoffBy: 'Claims manager',
+    attrs: [
+      { id: 'type', values: ['Own damage', 'Theft', 'Third party'], weights: [0.7, 0.1, 0.2] },
+      { id: 'amount', range: [8000, 400000] }
+    ],
+    owners: { customer: 'Policyholder', garage: 'Garage', police: 'Policyholder (from police)' },
+    docs: [
+      { id: 'claim_form', name: 'Signed claim form', owner: 'customer', when: function () { return true; },
+        fields: ['policy_no', 'signed'], checks: [['policy_matches', 'Policy number matches'], ['signed', 'Form is signed']] },
+      { id: 'rc', name: 'Vehicle registration (RC)', owner: 'customer', when: function () { return true; },
+        fields: ['name', 'reg_no'], checks: [['name_matches', 'Owner name matches policy'], ['reg_matches', 'Registration matches policy']] },
+      { id: 'dl', name: 'Driving licence', owner: 'customer', when: function (c) { return c.type !== 'Theft'; },
+        fields: ['valid_till'], checks: [['valid_on_loss', 'Valid on the date of loss']] },
+      { id: 'estimate', name: 'Repair estimate', owner: 'garage', when: function (c) { return c.type === 'Own damage'; },
+        fields: ['amount'], checks: [['estimate_within', 'Within 20% of the claimed amount']] },
+      { id: 'fir', name: 'Police FIR', owner: 'police', when: function (c) { return c.type !== 'Own damage'; },
+        fields: ['date'], checks: [['fir_after_loss', 'Filed after the date of loss']] },
+      { id: 'photos', name: 'Damage photos', owner: 'customer', when: function (c) { return c.type === 'Own damage'; },
+        fields: ['count'], checks: [['enough_photos', 'At least 4 photos']] }
+    ]
+  },
+  {
+    id: 'lending', client: 'Lender', workflow: 'Business loan onboarding', caseLabel: 'Application', sla: 3, signoff: 2500000, signoffLabel: '\u20b925 lakh', signoffBy: 'Credit manager',
+    attrs: [
+      { id: 'type', values: ['Sole proprietor', 'Partnership', 'Private limited'], weights: [0.5, 0.2, 0.3] },
+      { id: 'amount', range: [200000, 5000000] }
+    ],
+    owners: { customer: 'Applicant', ca: 'Applicant\'s CA', branch: 'Branch RM' },
+    docs: [
+      { id: 'pan', name: 'PAN card', owner: 'customer', when: function () { return true; },
+        fields: ['name'], checks: [['name_matches', 'Name matches application']] },
+      { id: 'kyc', name: 'Aadhaar or address proof', owner: 'customer', when: function () { return true; },
+        fields: ['name', 'valid_till'], checks: [['name_matches', 'Name matches application'], ['not_expired', 'Not expired']] },
+      { id: 'bank', name: 'Bank statements', owner: 'customer', when: function () { return true; },
+        fields: ['months'], checks: [['covers_6m', 'Covers the last 6 months']] },
+      { id: 'gst', name: 'GST certificate', owner: 'customer', when: function () { return true; },
+        fields: ['name'], checks: [['name_matches', 'Business name matches']] },
+      { id: 'itr', name: 'ITR, last 2 years', owner: 'ca', when: function (c) { return c.amount > 1000000; },
+        fields: ['years'], checks: [['two_years', 'Two years present']] },
+      { id: 'resolution', name: 'Board resolution', owner: 'customer', when: function (c) { return c.type === 'Private limited'; },
+        fields: ['signed'], checks: [['signed', 'Signed by a director']] }
+    ]
+  },
+  {
+    id: 'dealers', client: 'Consumer durables maker', workflow: 'New dealer onboarding', caseLabel: 'Dealer', sla: 7, signoff: 1000000, signoffLabel: '\u20b910 lakh credit', signoffBy: 'Regional finance head',
+    attrs: [
+      { id: 'type', values: ['Retailer', 'Distributor'], weights: [0.8, 0.2] },
+      { id: 'amount', range: [100000, 3000000] }  // credit limit requested
+    ],
+    owners: { customer: 'Dealer', sales: 'Area sales manager', finance: 'Finance desk' },
+    docs: [
+      { id: 'gst', name: 'GST certificate', owner: 'customer', when: function () { return true; },
+        fields: ['name'], checks: [['name_matches', 'Trade name matches']] },
+      { id: 'pan', name: 'PAN card', owner: 'customer', when: function () { return true; },
+        fields: ['name'], checks: [['name_matches', 'Name matches']] },
+      { id: 'cheque', name: 'Cancelled cheque', owner: 'customer', when: function () { return true; },
+        fields: ['name'], checks: [['name_matches', 'Account name matches']] },
+      { id: 'shop', name: 'Shop photos and geo-tag', owner: 'sales', when: function () { return true; },
+        fields: ['count'], checks: [['enough_photos', 'At least 2 photos with location']] },
+      { id: 'agreement', name: 'Signed dealer agreement', owner: 'customer', when: function () { return true; },
+        fields: ['signed'], checks: [['signed', 'Signed and stamped']] },
+      { id: 'financials', name: 'Last year\'s financials', owner: 'finance', when: function (c) { return c.amount > 1000000 || c.type === 'Distributor'; },
+        fields: ['years'], checks: [['one_year', 'At least one year present']] }
+    ]
+  }
+];
+
+
+</script>
+<script>
+// File Chase engine: one shared skill for every client. Pure functions, no DOM. Synthetic data only.
+// Flow per case: classify and extract each document (the AI step, with confidence) -> deterministic rules
+// -> one status, one next action, one owner, and an audit trail. Low-confidence AI output goes to a person.
+var FC = (function () {
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function pickW(r, values, weights) { var u = r(), a = 0; for (var i = 0; i < values.length; i++) { a += weights[i]; if (u < a) return values[i]; } return values[values.length - 1]; }
+
+  // ---- Synthetic golden dataset -------------------------------------------------------------
+  // Each case has the TRUTH (which docs arrived, which are genuinely valid) and the AI OUTPUT
+  // (doc type guess and a pass/fail reading per check, each with a confidence). The AI is right
+  // most of the time; when it is wrong its confidence is lower on average, but the two overlap.
+  function generate(pack, n, seed, opts) {
+    opts = opts || {};
+    var r = rng(seed || 7), cases = [];
+    var aiErr = opts.aiErr == null ? 0.04 : opts.aiErr;
+    for (var i = 0; i < n; i++) {
+      var c = { id: pack.caseLabel + ' ' + (1001 + i), attrs: {}, docs: [] };
+      pack.attrs.forEach(function (a) {
+        c.attrs[a.id] = a.values ? pickW(r, a.values, a.weights) : Math.round(a.range[0] + r() * (a.range[1] - a.range[0]));
+      });
+      pack.docs.forEach(function (d) {
+        if (!d.when(c.attrs)) return;
+        var received = r() < 0.78;
+        var doc = { id: d.id, received: received, checks: [] };
+        if (received) {
+          var misfiled = r() < aiErr * 0.5; // AI thinks it is a different document
+          doc.typeConf = misfiled ? 0.35 + r() * 0.63 : 1 - 0.12 * Math.pow(r(), 6);
+          doc.typeOk = !misfiled;
+          d.checks.forEach(function (ch) {
+            var truthPass = r() < 0.86;                 // most documents are genuinely fine
+            var aiWrong = r() < aiErr;
+            var conf = aiWrong ? 0.4 + r() * 0.58 : 1 - 0.12 * Math.pow(r(), 6);
+            doc.checks.push({ id: ch[0], label: ch[1], truth: truthPass, ai: aiWrong ? !truthPass : truthPass, conf: conf });
+          });
+        }
+        c.docs.push(doc);
+      });
+      cases.push(c);
+    }
+    return cases;
+  }
+
+  // ---- The skill --------------------------------------------------------------------------
+  function decide(pack, c, threshold, signoff) {
+    var trail = [], waiting = {}, review = [], fails = [];
+    var byId = {}; pack.docs.forEach(function (d) { byId[d.id] = d; });
+    c.docs.forEach(function (doc) {
+      var d = byId[doc.id];
+      if (!doc.received) { (waiting[d.owner] = waiting[d.owner] || []).push(d.name); trail.push('RULE  ' + d.name + ': required, not received'); return; }
+      if (doc.typeConf < threshold) { review.push(d.name + ' (is this the right document?)'); trail.push('AI    ' + d.name + ': type confidence ' + doc.typeConf.toFixed(2) + ' below ' + threshold.toFixed(2) + ' -> person checks'); return; }
+      doc.checks.forEach(function (ch) {
+        if (ch.conf < threshold) { review.push(d.name + ': ' + ch.label); trail.push('AI    ' + d.name + ' / ' + ch.label + ': confidence ' + ch.conf.toFixed(2) + ' -> person checks'); }
+        else if (!ch.ai) { fails.push({ doc: d, label: ch.label }); trail.push('RULE  ' + d.name + ' / ' + ch.label + ': failed -> re-request'); }
+        else trail.push('RULE  ' + d.name + ' / ' + ch.label + ': passed');
+      });
+    });
+    fails.forEach(function (f) { (waiting[f.doc.owner] = waiting[f.doc.owner] || []).push(f.doc.name + ' (' + f.label.toLowerCase() + ')'); });
+    var status, next, owner;
+    var owners = Object.keys(waiting);
+    if (review.length) { status = 'Needs a person'; owner = 'Ops reviewer'; next = 'Check ' + review.length + ' item' + (review.length > 1 ? 's' : '') + ' the AI was unsure about'; }
+    else if (owners.length) { status = 'Waiting'; owner = owners.map(function (o) { return pack.owners[o]; }).join(', '); next = 'Chase ' + owners.map(function (o) { return pack.owners[o] + ' for ' + waiting[o].join(', '); }).join('; '); }
+    else if (signoff && c.attrs.amount > pack.signoff) { status = 'Needs a person'; owner = pack.signoffBy; next = 'Sign off before assessment (value above ' + pack.signoffLabel + ')'; review.push('High-value sign-off'); trail.push('RULE  Value above ' + pack.signoffLabel + ' -> named sign-off'); }
+    else { status = 'Ready to assess'; owner = 'Assessor'; next = 'Assess the ' + pack.caseLabel.toLowerCase(); }
+    return { status: status, next: next, owner: owner, waiting: waiting, review: review, trail: trail };
+  }
+
+  function truthReady(c) { return c.docs.every(function (d) { return d.received && d.typeOk !== false && d.checks.every(function (ch) { return ch.truth; }); }); }
+
+  // ---- Evals against the golden dataset -----------------------------------------------------
+  function evaluate(pack, cases, threshold, signoff) {
+    var n = cases.length, ready = 0, unsafe = 0, falseChase = 0, chases = 0, reviewCases = 0, reviewItems = 0, items = 0, auto = 0, truthReadyN = 0, caughtReady = 0;
+    cases.forEach(function (c) {
+      var d = decide(pack, c, threshold, signoff), tr = truthReady(c);
+      if (tr) truthReadyN++;
+      if (d.status === 'Ready to assess') { ready++; if (!tr) unsafe++; else caughtReady++; }
+      if (d.status === 'Needs a person') reviewCases++; else auto++;
+      reviewItems += d.review.length;
+      c.docs.forEach(function (doc) {
+        if (!doc.received) return; items += doc.checks.length + 1;
+        if (doc.typeConf >= threshold) doc.checks.forEach(function (ch) {
+          if (ch.conf >= threshold && !ch.ai) { chases++; if (ch.truth) falseChase++; }
+        });
+      });
+    });
+    return {
+      n: n, ready: ready, unsafe: unsafe, unsafeRate: ready ? unsafe / ready : 0,
+      falseChase: falseChase, chases: chases, falseChaseRate: chases ? falseChase / chases : 0,
+      reviewShare: reviewCases / n, reviewItemShare: items ? reviewItems / items : 0,
+      autoShare: auto / n, readyRecall: truthReadyN ? caughtReady / truthReadyN : 0
+    };
+  }
+
+  // ---- Time to a ready file ----------------------------------------------------------------
+  // Issues = documents missing or genuinely invalid, each with an owner. Owners fix a chased issue with a daily probability.
+  // Today (assumed): a coordinator opens each file every 2 working days, chases one owner at a time, and misses 10% of
+  // invalid documents until the assessor bounces the file. Skill: every issue found on arrival and chased with all owners
+  // at once; items the AI was unsure about cost a day of human review; a confident AI mistake bounces like a manual miss.
+  var RESP = { customer: 0.3, police: 0.15, garage: 0.45, ca: 0.25, branch: 0.6, sales: 0.5, finance: 0.5 };
+  function timeToReady(pack, cases, threshold, mode, seed, signoff) {
+    var r = rng(seed || 99), out = [];
+    var byId = {}; pack.docs.forEach(function (d) { byId[d.id] = d; });
+    cases.forEach(function (c) {
+      var issues = [];
+      c.docs.forEach(function (doc) {
+        var d = byId[doc.id];
+        var bad = !doc.received || doc.typeOk === false || doc.checks.some(function (ch) { return !ch.truth; });
+        if (!bad) return;
+        var hidden;
+        if (mode === 'today') hidden = doc.received && r() < 0.1;
+        else {
+          // skill misses it only if the AI was confidently wrong that the document is fine
+          hidden = doc.received && doc.typeConf >= threshold && doc.checks.every(function (ch) { return ch.truth || (ch.conf >= threshold && ch.ai); });
+          if (hidden && signoff && c.attrs.amount > pack.signoff) hidden = false; // the named sign-off catches it
+        }
+        issues.push({ owner: d.owner, hidden: hidden, fixed: false });
+      });
+      var dec = mode === 'skill' ? decide(pack, c, threshold, signoff) : null;
+      var day = mode === 'skill' ? (dec.review.length ? 1 : 0) : 2; // today: first look at the file on day 2
+      var bounced = false;
+      for (var guard = 0; guard < 120; guard++) {
+        var open = issues.filter(function (i) { return !i.fixed && !i.hidden; });
+        if (!open.length) {
+          var hid = issues.filter(function (i) { return !i.fixed && i.hidden; });
+          if (!hid.length) break;
+          day += 2; hid.forEach(function (i) { i.hidden = false; }); bounced = true; continue; // assessor bounces the file
+        }
+        var active;
+        if (mode === 'today') { var first = open[0].owner; active = open.filter(function (i) { return i.owner === first; }); }
+        else active = open;
+        var step = mode === 'today' ? 2 : 1;
+        var boost = mode === 'skill' ? 1.25 : 1; // daily automatic reminders
+        for (var k = 0; k < step; k++) active.forEach(function (i) { if (!i.fixed && r() < Math.min(0.95, (RESP[i.owner] || 0.4) * boost)) i.fixed = true; });
+        day += step;
+      }
+      out.push({ days: day, bounced: bounced, issues: issues.length });
+    });
+    var days = out.map(function (o) { return o.days; }).sort(function (a, b) { return a - b; });
+    function q(p) { return days[Math.floor((days.length - 1) * p)]; }
+    return { median: q(0.5), p90: q(0.9), mean: days.reduce(function (a, b) { return a + b; }, 0) / days.length,
+      bounced: out.filter(function (o) { return o.bounced; }).length / out.length };
+  }
+
+  return { generate: generate, decide: decide, evaluate: evaluate, truthReady: truthReady, timeToReady: timeToReady };
+})();
+
+
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function pct(x) { return Math.round(x * 100) + '%'; }
+  function kpi(v, label, sub) { return '<div class="kpi"><span class="k" style="margin:0">' + label + '</span><span class="v">' + v + '</span><span class="s">' + sub + '</span></div>'; }
+  function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  var SETS = PACKS.map(function (p, i) { return FC.generate(p, 1000, 11 + i); });
+  var WHEN = {
+    claims: { dl: 'Not theft', estimate: 'Own damage', fir: 'Theft or third party', photos: 'Own damage' },
+    lending: { itr: 'Loan above ₹10 lakh', resolution: 'Private limited company' },
+    dealers: { financials: 'Credit above ₹10 lakh, or distributor' }
+  };
+  function packOptions(sel) { $(sel).innerHTML = PACKS.map(function (p, i) { return '<option value="' + i + '">' + p.client + ' · ' + p.workflow + '</option>'; }).join(''); }
+  packOptions('e-pack'); packOptions('c-pack');
+
+  // Pack tabs
+  var cur = 0;
+  function tabs() {
+    $('packtabs').innerHTML = PACKS.map(function (p, i) { return '<button type="button" aria-pressed="' + (i === cur) + '" data-i="' + i + '">' + p.client + '</button>'; }).join('');
+    var p = PACKS[cur];
+    $('packtable').innerHTML = p.docs.map(function (d) {
+      return '<tr><td><b>' + d.name + '</b></td><td>' + ((WHEN[p.id] || {})[d.id] || 'Always') + '</td><td>' + p.owners[d.owner] + '</td><td>' + d.checks.map(function (c) { return c[1]; }).join('; ') + '</td></tr>';
+    }).join('') + '<tr><td><b>Sign-off</b></td><td>Above ' + p.signoffLabel + '</td><td>' + p.signoffBy + '</td><td>Named person approves before assessment</td></tr>';
+  }
+  $('packtabs').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; cur = +b.dataset.i; tabs(); });
+  tabs();
+
+  // Evals
+  function evals() {
+    var i = +$('e-pack').value, p = PACKS[i], cs = SETS[i], th = +$('e-th').value, so = $('e-so').checked;
+    $('e-th-v').textContent = th.toFixed(2);
+    var e = FC.evaluate(p, cs, th, so), s = FC.timeToReady(p, cs, th, 'skill', 99, so), t = FC.timeToReady(p, cs, th, 'today');
+    $('ekpis').innerHTML =
+      kpi(e.unsafe, 'Wrongly passed', 'per 1,000 files (target 0)') +
+      kpi(pct(e.reviewShare), 'Files to a person', 'AI unsure or sign-off') +
+      kpi(s.median + ' days', 'Median to ready', 'today ' + t.median + ' days; slowest 1 in 10: ' + s.p90 + ' vs ' + t.p90) +
+      kpi((s.bounced * 100).toFixed(1) + '%', 'Bounced by assessor', 'today ' + (t.bounced * 100).toFixed(1) + '%');
+    $('ethr').innerHTML = [0.7, 0.75, 0.8, 0.85, 0.9, 0.95].map(function (x) {
+      var ee = FC.evaluate(p, cs, x, so), ss = FC.timeToReady(p, cs, x, 'skill', 99, so);
+      return '<tr class="' + (Math.abs(x - th) < 1e-9 ? 'sel' : '') + '"><td>' + x.toFixed(2) + '</td><td class="num ' + (ee.unsafe ? 'bad' : 'good') + '">' + ee.unsafe + '</td><td class="num">' + pct(ee.reviewShare) + '</td><td class="num">' + (ee.falseChaseRate * 100).toFixed(1) + '%</td><td class="num">' + ss.median + '</td></tr>';
+    }).join('');
+    var zero = null; [0.7, 0.75, 0.8, 0.85, 0.9, 0.95].some(function (x) { var ee = FC.evaluate(p, cs, x, so); if (ee.unsafe === 0) { zero = { x: x, r: ee.reviewShare }; return true; } return false; });
+    $('e-find').innerHTML = '<b>For the ' + p.client.toLowerCase() + ':</b> ' + (zero
+      ? 'wrongly passed files reach zero from a threshold of ' + zero.x.toFixed(2) + (so ? ' with the sign-off on' : '') + ', with ' + pct(zero.r) + ' of files going to a person. Going higher only adds human work.'
+      : 'no threshold reaches zero wrongly passed files' + (so ? ', even with the sign-off on' : '') + '. This client needs a second line of defence, such as the assessor seeing each AI reading, and every miss becomes a new test case.') +
+      ' Turn the sign-off off to see how much of the safety it provides.';
+  }
+  ['e-pack', 'e-so'].forEach(function (id) { $(id).addEventListener('change', evals); });
+  $('e-th').addEventListener('input', evals);
+  evals();
+
+  // Case viewer
+  var idx = 0;
+  function showCase(step) {
+    var i = +$('c-pack').value, p = PACKS[i], cs = SETS[i], f = $('c-filter').value;
+    for (var k = 0; k < cs.length; k++) {
+      idx = (idx + (step ? 1 : 0)) % cs.length; step = 1;
+      var d = FC.decide(p, cs[idx], 0.85, true);
+      if (f === 'all' || d.status === f) break;
+    }
+    var c = cs[idx];
+    var cls = d.status === 'Ready to assess' ? 'ready' : d.status === 'Waiting' ? 'wait' : 'person';
+    var attrs = Object.keys(c.attrs).map(function (k) { var v = c.attrs[k]; return typeof v === 'number' ? '₹' + v.toLocaleString('en-IN') : v; }).join(' · ');
+    var msg = '';
+    Object.keys(d.waiting).forEach(function (o) {
+      msg += '<div class="msg"><b>To ' + esc(p.owners[o]) + ':</b> For ' + esc(c.id) + ', we still need: ' + esc(d.waiting[o].join(', ')) + '. You can reply to this message with the files. We will remind you daily until it is complete.</div>';
+    });
+    $('casecard').innerHTML = '<div class="case"><div class="case-h"><div><b>' + esc(c.id) + '</b> <span style="color:var(--muted)">· ' + esc(attrs) + '</span></div><span class="status ' + cls + '">' + esc(d.status) + '</span></div>' +
+      '<div class="case-b"><div><span class="k">Owner</span><br>' + esc(d.owner) + '</div><div><span class="k">Next action</span><br>' + esc(d.next) + '</div>' + msg +
+      '<div><span class="k">Audit trail</span><pre>' + esc(d.trail.join('\n')) + '</pre></div></div></div>';
+  }
+  $('c-next').addEventListener('click', function () { showCase(true); });
+  ['c-pack', 'c-filter'].forEach(function (id) { $(id).addEventListener('change', function () { idx = 0; showCase(false); }); });
+  showCase(false);
+})();
+
+</script>
+
+</body></html>
