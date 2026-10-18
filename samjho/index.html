@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Samjho Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f4ef; --panel:#ffffff; --ink:#1d1b18; --muted:#6b665d; --line:#e4dfd5;
+  --accent:#0f5c4d; --accent-ink:#ffffff;
+  --obs:#1f7a4d; --obs-bg:#e5f3ea; --clm:#9a5b00; --clm-bg:#fbefd9; --asm:#5b3fa0; --asm-bg:#ece6f8;
+  --gap:#b3261e; --gap-bg:#fbe5e3; --sens:#8a1c52; --sens-bg:#f9e1ec;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 20px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand b{font:600 24px/1 "Source Serif 4",Georgia,serif;letter-spacing:-.01em}
+.brand span{color:var(--muted);font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--line);background:#fff}
+.pill.active{color:var(--accent);border-color:#b9d8d0;background:#e8f3f0}
+.pill.paused{color:var(--clm);background:var(--clm-bg);border-color:#f0d6a8}
+.pill.review{color:var(--asm);background:var(--asm-bg);border-color:#d7ccef}
+.pill.approved{color:#fff;background:var(--obs);border-color:var(--obs)}
+.pill.cancelled{color:var(--gap);background:var(--gap-bg)}
+.progress{flex:1;min-width:160px;max-width:320px;height:8px;background:#ece8df;border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
+.spacer{flex:1}
+button,a.btn{font:inherit;text-decoration:none;font-size:13px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 12px;cursor:pointer}
+button:hover{border-color:#cfc8ba}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.danger{color:var(--gap)}
+button.small{padding:3px 8px;font-size:12px;border-radius:6px}
+button:disabled{opacity:.45;cursor:not-allowed}
+main{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:16px;padding:16px 20px;max-width:1500px;margin:0 auto}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.card h2{margin:0;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.convo{display:flex;flex-direction:column;height:calc(100vh - 110px);min-height:480px}
+.convo .head{padding:14px 16px;border-bottom:1px solid var(--line)}
+.now{margin-top:8px;font-size:14px}
+.now b{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px}
+.log{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:9px 12px;border-radius:12px;font-size:14px}
+.msg.agent{background:#eef5f3;align-self:flex-start;border-top-left-radius:4px}
+.msg.user{background:#1d1b18;color:#fff;align-self:flex-end;border-top-right-radius:4px}
+.msg small{display:block;font-size:11px;opacity:.65;margin-bottom:2px}
+.sys{align-self:center;font-size:12px;color:var(--muted);background:#f1eee7;padding:3px 10px;border-radius:99px}
+.sys.bad{color:var(--gap);background:var(--gap-bg)}
+.sys.good{color:var(--obs);background:var(--obs-bg)}
+.composer{border-top:1px solid var(--line);padding:12px;display:flex;gap:8px}
+.composer textarea{flex:1;resize:none;height:46px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:14px}
+.mic.on{background:var(--gap);color:#fff;border-color:var(--gap)}
+.brief{padding:16px 18px}
+.brief .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.tabs{display:flex;gap:4px;background:#f1eee7;padding:3px;border-radius:10px}
+.tabs button{border:0;background:transparent}
+.tabs button.on{background:#fff;box-shadow:var(--shadow)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.stat{font-size:12px;padding:4px 10px;border-radius:8px;background:#f6f3ec;color:var(--muted)}
+.stat b{color:var(--ink)}
+.banner{padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:14px;display:none}
+.banner.bad{display:block;background:var(--gap-bg);color:var(--gap)}
+.banner.good{display:block;background:var(--obs-bg);color:var(--obs)}
+.q{border-top:1px solid var(--line);padding:14px 0}
+.q:first-of-type{border-top:0}
+.qh{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.qh .n{width:24px;height:24px;border-radius:50%;background:#efebe2;display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--muted)}
+.qh.asked .n{background:var(--accent);color:#fff}
+.qh .t{font-weight:600}
+.qh .s{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.qh.asked .s{color:var(--accent)}
+.qh .grow{flex:1}
+.item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:9px 10px;border-radius:10px;border:1px solid var(--line);margin:6px 0 6px 34px;background:#fff;animation:pop .35s ease}
+@keyframes pop{from{transform:translateY(4px);opacity:0}to{transform:none;opacity:1}}
+.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.tag.observation{background:var(--obs-bg);color:var(--obs)}
+.tag.claim{background:var(--clm-bg);color:var(--clm)}
+.tag.assumption{background:var(--asm-bg);color:var(--asm)}
+.tag.gap{background:var(--gap-bg);color:var(--gap)}
+.txt{font-size:14px}
+.quote{font:italic 13px/1.4 "Source Serif 4",Georgia,serif;color:var(--muted);margin-top:3px}
+.orig{font-size:12px;color:var(--muted);text-decoration:line-through;margin-top:2px}
+.flags{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
+.flag{font-size:11px;font-weight:600;padding:1px 7px;border-radius:5px;background:#f1eee7;color:var(--muted)}
+.flag.sens{background:var(--sens-bg);color:var(--sens)}
+.flag.ok{background:var(--obs-bg);color:var(--obs)}
+.flag.todo{background:#fff4d6;color:#7a5600}
+.acts{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.edit{display:flex;gap:6px;margin-top:6px}
+.edit input{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;font-size:13px}
+.out h3{font:600 18px/1.3 "Source Serif 4",Georgia,serif;margin:18px 0 6px}
+.out ul{margin:0;padding-left:20px}
+.out li{margin:4px 0}
+.out .src{color:var(--muted);font-size:12px;font-style:italic}
+.empty{color:var(--muted);padding:30px 0;text-align:center}
+.red{background:#1d1b18;color:#1d1b18;border-radius:3px;padding:0 4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><b>Samjho</b><span>merchant problem intake, by voice</span></div>
+  <span id="status" class="pill">loading</span>
+  <div class="progress" title="Questions covered"><i id="bar"></i></div>
+  <span id="prog" class="pill">0/8</span>
+  <div class="spacer"></div>
+  <a class="btn" href="history.html" target="_blank">History log</a>
+  <button id="bNew">New interview</button>
+  <button id="bFinish">Finish early</button>
+  <button id="bCancel" class="danger">Cancel</button>
+  <button id="bApprove" class="primary">Approve brief</button>
+</header>
+<main>
+  <section class="card convo">
+    <div class="head">
+      <h2>Conversation</h2>
+      <div class="now" id="now"></div>
+    </div>
+    <div class="log" id="log"></div>
+    <div class="composer">
+      <textarea id="input" placeholder="Type an answer (text path), or talk on the Samjho call..."></textarea>
+      <button id="mic" class="mic" title="Dictate instead of typing">Dictate</button>
+      <button id="send" class="primary">Send</button>
+    </div>
+  </section>
+  <section class="card brief">
+    <div class="top">
+      <h2>Problem brief</h2>
+      <div class="spacer"></div>
+      <div class="tabs">
+        <button data-tab="review" class="on">1. Owner review</button>
+        <button data-tab="builder">2. Builder brief</button>
+        <button data-tab="share">3. Public (redacted)</button>
+      </div>
+    </div>
+    <div id="banner" class="banner"></div>
+    <div class="stats" id="stats"></div>
+    <div id="view"></div>
+  </section>
+</main>
+<script>
+(function(){
+  var U = new URLSearchParams(location.search).get('u') || 'judges';
+    var state = null, tab = 'review', editing = null, busy = false, lastSig = '';
+  var KIND = {observation:'Observation', claim:'Claim', assumption:'Assumption', gap:'Gap'};
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  var SB = 'https://fbwfxbubrxpbfzwmbhrk.supabase.co/rest/v1/rpc/';
+  var KEY = 'sb_publishable_6lYpdTHtU13mb96w58xhHg_g65qVUTr';
+  var N8N = 'https://adimathur-creates.app.n8n.cloud/webhook/';
+  var MAP = {confirm:'review_item', correct:'review_item', remove:'review_item', share:'review_item', redact:'review_item', approve:'approve_brief', cancel:'cancel_brief', finish:'finish_early'};
+  function rpc(fn, args){
+    return fetch(SB + fn, {method:'POST', headers:{'Content-Type':'application/json', 'apikey':KEY, 'Authorization':'Bearer ' + KEY}, body: JSON.stringify(args || {})})
+      .then(function(r){ return r.json(); });
+  }
+  function plainAnswer(text){
+    return rpc('prepare_turn', {p_user_key: U, p_answer: text}).then(function(ctx){
+      var res = {intent:'answer', items:[{kind:'claim', text:text, quote:text, sensitive:false, question_key: (ctx && ctx.question_key) || 'problem'}],
+        needs_followup:false, followup:'', ack:'Achha, maine note kar liya.', reply:'', token: ctx && ctx.token};
+      return rpc('record_turn', {p_user_key: U, p_answer: text, p_result: res});
+    });
+  }
+  function api(path, body){
+    if (path === 'samjho-brief') return rpc('get_brief', {p_user_key: U});
+    if (path === 'samjho-start') return rpc('start_or_resume', {p_user_key: U});
+    if (path === 'samjho-action') {
+      var fn = MAP[body.action];
+      if (!fn) return Promise.resolve({ok:false, reason:'Unknown action'});
+      var args = fn === 'review_item' ? {p_item_id: Number(body.item_id), p_action: body.action, p_text: body.text == null ? null : body.text} : {p_user_key: U};
+      return rpc(fn, args);
+    }
+    if (path === 'samjho-answer') {
+      var ctl = new AbortController(); var timer = setTimeout(function(){ ctl.abort(); }, 25000);
+      return fetch(N8N + 'samjho-answer', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_key: U, answer: body.answer}), signal: ctl.signal})
+        .then(function(r){ clearTimeout(timer); if (!r.ok) throw new Error('engine'); return r.json(); })
+        .then(function(j){ if (!j || typeof j.say !== 'string') throw new Error('engine'); return j; })
+        .catch(function(){ clearTimeout(timer); return plainAnswer(body.answer); });
+    }
+    return Promise.reject(new Error('unknown path'));
+  }
+  function banner(msg, kind){ var b = $('banner'); b.className = 'banner ' + (kind || ''); b.textContent = msg || ''; if (msg) setTimeout(function(){ if (b.textContent === msg) { b.className = 'banner'; } }, 7000); }
+
+  function load(force){
+    if (editing && !force) return;
+    return api('samjho-brief').then(function(d){
+      var sig = JSON.stringify(d);
+      if (!force && sig === lastSig) return;
+      lastSig = sig; state = d; render();
+    }).catch(function(){ $('status').textContent = 'reconnecting'; });
+  }
+
+  function action(a, extra){
+    var body = Object.assign({u: U, action: a}, extra || {});
+    return api('samjho-action', body).then(function(r){
+      if (r && r.ok === false) banner(r.reason, 'bad');
+      else if (a === 'approve') banner('Approved. Shareable brief is ready. Nothing was sent anywhere.', 'good');
+      else if (a === 'cancel') banner('Cancelled. Nothing was shared.', 'good');
+      return load(true);
+    });
+  }
+
+  function speak(text){
+    try {
+      if (!window.speechSynthesis || !text) return;
+      var u = new SpeechSynthesisUtterance(text); u.lang = 'hi-IN'; u.rate = 1.0;
+      var v = speechSynthesis.getVoices().filter(function(x){ return /hi-IN/i.test(x.lang); })[0]; if (v) u.voice = v;
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+    } catch(e) {}
+  }
+
+  function send(text, viaVoice){
+    text = (text || '').trim(); if (!text || busy) return;
+    busy = true; $('send').disabled = true; $('input').value = '';
+    appendTemp(text);
+    var st = state && state.session ? state.session.status : null;
+    var go = (!st || st === 'cancelled' || st === 'approved') ? api('samjho-start', {user_key: U}).then(function(){ return null; }) : Promise.resolve();
+    go.then(function(){ return api('samjho-answer', {user_key: U, answer: text}); })
+      .then(function(){ return load(true); })
+      .catch(function(){ banner('Network is slow. Your answer was not lost, please send again.', 'bad'); })
+      .then(function(){ busy = false; $('send').disabled = false; });
+  }
+  function appendTemp(text){
+    var d = document.createElement('div'); d.className = 'msg user'; d.innerHTML = '<small>You</small>' + esc(text);
+    $('log').appendChild(d);
+    var t = document.createElement('div'); t.className = 'sys'; t.textContent = 'Samjho is thinking...';
+    $('log').appendChild(t); $('log').scrollTop = 1e9;
+  }
+
+  function render(){
+    var s = state && state.session;
+    var status = s ? s.status : 'none';
+    $('status').className = 'pill ' + status;
+    $('status').textContent = s ? status : 'no interview';
+    var qs = (state && state.questions) || [];
+    var done = qs.filter(function(q){ return q.status === 'answered' || q.status === 'gap'; }).length;
+    $('prog').textContent = done + '/' + (qs.length || 8);
+    $('bar').style.width = (qs.length ? Math.round(100 * done / qs.length) : 0) + '%';
+    var locked = !s || status === 'approved' || status === 'cancelled';
+    $('bApprove').disabled = !s || locked; $('bFinish').disabled = !s || !(status === 'active' || status === 'paused');
+    $('bCancel').disabled = !s || locked;
+    var asked = qs.filter(function(q){ return q.status === 'asked'; })[0];
+    $('now').innerHTML = !s ? '<b>Ready</b>Press New interview, or call the Samjho agent.' :
+      asked && (status === 'active' || status === 'paused') ? '<b>Now asking (' + (asked.q_order) + ' of ' + qs.length + ')' + (status === 'paused' ? ' - paused, will resume here' : '') + '</b>' + esc(asked.ask) :
+      status === 'review' ? '<b>Interview complete</b>Review each line on the right, then approve.' :
+      status === 'approved' ? '<b>Approved</b>Brief locked. Shareable version is ready.' : '<b>' + esc(status) + '</b>';
+    renderLog(); renderStats(); renderView();
+  }
+
+  function renderLog(){
+    var log = (state && state.log) || [], h = [];
+    log.forEach(function(e){
+      if (e.type === 'turn') {
+        h.push('<div class="msg user"><small>Shop owner</small>' + esc(e.answer) + '</div>');
+        if (e.say) h.push('<div class="msg agent"><small>Samjho</small>' + esc(e.say) + '</div>');
+        if (e.detail && e.detail.response && e.detail.response.duplicate) h.push('<div class="sys">duplicate ignored</div>');
+      } else {
+        var m = {started:['Interview started',''], resumed:['Call resumed at the same question','good'], approve_blocked:['Approval blocked by the database','bad'],
+          approved:['Brief approved by the owner','good'], cancelled:['Cancelled - nothing shared','bad'], finished_early:['Finished early - open questions marked as gaps',''],
+          review_confirm:['Line confirmed','good'], review_correct:['Line corrected by the owner','good'], review_remove:['Line removed by the owner',''],
+          review_share:['Sensitive line: owner chose to share',''], review_redact:['Sensitive line: owner chose to redact','good']}[e.type];
+        if (m) h.push('<div class="sys ' + m[1] + '">' + m[0] + '</div>');
+      }
+    });
+    if (!h.length) h.push('<div class="empty">No conversation yet.</div>');
+    var el = $('log'), atBottom = el.scrollTop + el.clientHeight > el.scrollHeight - 60;
+    el.innerHTML = h.join(''); if (atBottom || busy) el.scrollTop = 1e9;
+  }
+
+  function items(){ return (state && state.items) || []; }
+  function renderStats(){
+    var it = items(), c = {observation:0, claim:0, assumption:0, gap:0}, todo = 0, sens = 0;
+    it.forEach(function(i){ c[i.kind]++; if (i.kind !== 'gap' && i.status === 'proposed') todo++; if (i.sensitive && !i.share_decision) sens++; });
+    $('stats').innerHTML = !state || !state.session ? '' :
+      '<span class="stat"><b>' + c.observation + '</b> observations</span><span class="stat"><b>' + c.claim + '</b> claims</span>' +
+      '<span class="stat"><b>' + c.assumption + '</b> assumptions</span><span class="stat"><b>' + c.gap + '</b> gaps</span>' +
+      '<span class="stat"><b>' + todo + '</b> need review</span><span class="stat"><b>' + sens + '</b> sensitive undecided</span>';
+  }
+
+  function itemHtml(i, locked){
+    var acts = '';
+    if (!locked) {
+      if (i.kind !== 'gap' && i.status === 'proposed') acts += '<button class="small" data-a="confirm" data-id="' + i.id + '">Confirm</button>';
+      acts += '<button class="small" data-a="edit" data-id="' + i.id + '">Edit</button>';
+      if (i.kind !== 'gap') acts += '<button class="small danger" data-a="remove" data-id="' + i.id + '">Remove</button>';
+      if (i.sensitive) acts += '<button class="small" data-a="share" data-id="' + i.id + '">Share</button><button class="small" data-a="redact" data-id="' + i.id + '">Redact</button>';
+    }
+    var flags = '';
+    if (i.kind !== 'gap') flags += i.status === 'proposed' ? '<span class="flag todo">needs review</span>' : '<span class="flag ok">' + i.status + '</span>';
+    if (i.sensitive) flags += '<span class="flag sens">sensitive' + (i.share_decision ? ': ' + i.share_decision : ' - decide') + '</span>';
+    var ed = editing === i.id ? '<div class="edit"><input id="edit-' + i.id + '" value="' + esc(i.text) + '"><button class="small primary" data-a="save" data-id="' + i.id + '">Save</button><button class="small" data-a="canceledit">Cancel</button></div>' : '';
+    return '<div class="item"><span class="tag ' + i.kind + '">' + KIND[i.kind] + '</span><div><div class="txt">' + esc(i.text) + '</div>' +
+      (i.quote ? '<div class="quote">&ldquo;' + esc(i.quote) + '&rdquo;</div>' : '') +
+      (i.original_text ? '<div class="orig">' + esc(i.original_text) + '</div>' : '') +
+      '<div class="flags">' + flags + '</div>' + ed + '</div><div class="acts">' + acts + '</div></div>';
+  }
+
+  function renderView(){
+    var v = $('view');
+    if (!state || !state.session) { v.innerHTML = '<div class="empty">No interview yet. Call the agent or press New interview.</div>'; return; }
+    var s = state.session, locked = s.status === 'approved' || s.status === 'cancelled', qs = state.questions || [], it = items();
+    if (tab === 'review') {
+      v.innerHTML = qs.map(function(q){
+        var mine = it.filter(function(i){ return i.question_key === q.key; });
+        var pending = mine.filter(function(i){ return i.kind !== 'gap' && i.status === 'proposed'; }).length;
+        var label = {pending:'Not yet', asked:'Asking now', answered:'Covered', gap:'Gap'}[q.status];
+        return '<div class="q"><div class="qh ' + q.status + '"><span class="n">' + q.q_order + '</span><span class="t">' + esc(q.label) + '</span><span class="s">' + label + '</span><span class="grow"></span>' +
+          (!locked && pending > 1 ? '<button class="small" data-a="confirmq" data-q="' + q.key + '">Confirm section (' + pending + ')</button>' : '') + '</div>' +
+          mine.map(function(i){ return itemHtml(i, locked); }).join('') + '</div>';
+      }).join('');
+      return;
+    }
+    var keep = it.filter(function(i){ return i.status !== 'removed'; });
+    var shareMode = tab === 'share';
+    function line(i){
+      var red = shareMode && i.sensitive && i.share_decision !== 'share';
+      var t = red ? '<span class="red">redacted detail</span> (personal detail removed)' : esc(i.text);
+      var src = !shareMode && i.quote ? ' <span class="src">&ldquo;' + esc(i.quote) + '&rdquo;</span>' : '';
+      var unconfirmed = i.kind !== 'gap' && i.status === 'proposed' ? ' <span class="flag todo">unconfirmed</span>' : '';
+      return '<li>' + t + src + unconfirmed + '</li>';
+    }
+    function group(title, kind, note){
+      var g = keep.filter(function(i){ return i.kind === kind; });
+      return '<h3>' + title + ' (' + g.length + ')</h3>' + (note ? '<div class="src">' + note + '</div>' : '') + (g.length ? '<ul>' + g.map(line).join('') + '</ul>' : '<div class="src">None</div>');
+    }
+    var head = shareMode ? '<div class="banner ' + (s.status === 'approved' ? 'good' : 'bad') + '" style="display:block">' +
+      (s.status === 'approved' ? 'Approved on ' + new Date(s.approved_at).toLocaleString() + '. Safe to share: sensitive details are redacted unless the owner chose to share them.' : 'Not approved yet. This preview cannot be shared until the owner approves.') + '</div>' : '';
+    v.innerHTML = '<div class="out">' + head +
+      group('What we observed', 'observation', 'Things the owner did or saw, with specifics.') +
+      group('Claims to verify', 'claim', 'Stated as fact, but no specific instance given.') +
+      group('Assumptions to test', 'assumption', 'The owner\'s guesses about causes or fixes.') +
+      group('Open gaps', 'gap', 'Not answered. A builder should ask these next.') + '</div>';
+  }
+
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest('button'); if (!b) return;
+    if (b.dataset.tab) { tab = b.dataset.tab; document.querySelectorAll('.tabs button').forEach(function(x){ x.classList.toggle('on', x === b); }); renderView(); return; }
+    var a = b.dataset.a, id = b.dataset.id ? Number(b.dataset.id) : null;
+    if (!a) return;
+    if (a === 'edit') { editing = id; renderView(); var inp = $('edit-' + id); if (inp) inp.focus(); return; }
+    if (a === 'canceledit') { editing = null; renderView(); return; }
+    if (a === 'save') { var val = $('edit-' + id).value; editing = null; action('correct', {item_id: id, text: val}); return; }
+    if (a === 'confirmq') {
+      var ids = items().filter(function(i){ return i.question_key === b.dataset.q && i.kind !== 'gap' && i.status === 'proposed'; }).map(function(i){ return i.id; });
+      ids.reduce(function(p, x){ return p.then(function(){ return api('samjho-action', {u: U, action: 'confirm', item_id: x}); }); }, Promise.resolve()).then(function(){ load(true); });
+      return;
+    }
+    action(a, {item_id: id});
+  });
+  $('bApprove').onclick = function(){ action('approve'); };
+  $('bFinish').onclick = function(){ action('finish'); };
+  $('bCancel').onclick = function(){ action('cancel'); };
+  $('bNew').onclick = function(){
+    var st = state && state.session ? state.session.status : null;
+    var p = (st && st !== 'approved' && st !== 'cancelled') ? api('samjho-action', {u: U, action: 'cancel'}) : Promise.resolve();
+    p.then(function(){ return api('samjho-start', {user_key: U}); }).then(function(){ return load(true); });
+  };
+  $('send').onclick = function(){ send($('input').value, false); };
+  $('input').addEventListener('keydown', function(e){ if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send($('input').value, false); } });
+
+  var Rec = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null;
+  $('mic').onclick = function(){
+    if (!Rec) { banner('Browser voice needs Chrome. Use the Samjho call or type instead.', 'bad'); return; }
+    if (rec) { rec.stop(); return; }
+    rec = new Rec(); rec.lang = 'hi-IN'; rec.interimResults = false; rec.maxAlternatives = 1;
+    $('mic').classList.add('on'); $('mic').textContent = 'Stop';
+    rec.onresult = function(e){ send(e.results[0][0].transcript, true); };
+    rec.onend = function(){ rec = null; $('mic').classList.remove('on'); $('mic').textContent = 'Dictate'; };
+    rec.onerror = function(){ banner('Could not hear clearly. Try again or type.', 'bad'); };
+    rec.start();
+  };
+
+  load(true);
+  setInterval(function(){ if (!busy && !document.hidden) load(false); }, 8000);
+})();
+</script>
+</body>
+</html>
