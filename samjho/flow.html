@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Samjho Workflow</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f4ef;--panel:#fff;--ink:#1d1b18;--muted:#6b665d;--line:#e4dfd5;--accent:#0f5c4d;--accent-bg:#e8f3f0;
+--obs:#1f7a4d;--obs-bg:#e5f3ea;--clm:#9a5b00;--clm-bg:#fbefd9;--asm:#5b3fa0;--asm-bg:#ece6f8;--gap:#b3261e;--gap-bg:#fbe5e3;--sens:#8a1c52;--sens-bg:#f9e1ec}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
+header{padding:14px 20px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+header b{font:600 24px/1 'Source Serif 4',Georgia,serif}header .sub{color:var(--muted);font-size:13px}
+header nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+a.btn,button{font:inherit;font-size:13px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 12px;cursor:pointer;text-decoration:none}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}button:disabled{opacity:.45;cursor:default}
+main{max-width:1400px;margin:0 auto;padding:16px 20px;display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+@media(max-width:1000px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+h2{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.flow{display:grid;gap:10px}
+.lane{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:stretch}
+.node{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;transition:all .35s;position:relative}
+.node .t{font-weight:700;font-size:14px}.node .d{font-size:12px;color:var(--muted);margin-top:2px}
+.node .tool{display:inline-block;margin-top:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:1px 7px;border-radius:5px;background:#f1eee7;color:var(--muted)}
+.node.on{border-color:var(--accent);background:var(--accent-bg);box-shadow:0 0 0 4px rgba(15,92,77,.12);transform:translateY(-2px)}
+.node.done{border-color:#b9d8d0}
+.arrow{font-size:12px;color:var(--muted);text-align:center;letter-spacing:.04em}
+.lanehead{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:6px 0 -2px}
+.controls{display:flex;gap:8px;align-items:center;margin:14px 0 4px;flex-wrap:wrap}
+.step{font-size:13px;color:var(--muted)}
+.narr{margin-top:10px;padding:12px 14px;border-radius:12px;background:#1d1b18;color:#fff;font-size:14px;min-height:64px}
+.narr b{color:#9fe0cf}
+.chat{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow:auto;margin-bottom:12px}
+.msg{max-width:90%;padding:8px 11px;border-radius:12px;font-size:14px;animation:pop .35s}
+.msg small{display:block;font-size:11px;opacity:.65}
+.msg.user{align-self:flex-end;background:#1d1b18;color:#fff}.msg.agent{align-self:flex-start;background:#eef5f3}
+.msg.drop{align-self:flex-end;background:#f1eee7;color:var(--muted);text-decoration:line-through;font-size:12px}
+.sys{align-self:center;font-size:12px;padding:3px 10px;border-radius:99px;background:#f1eee7;color:var(--muted);animation:pop .35s}
+.sys.bad{background:var(--gap-bg);color:var(--gap)}.sys.good{background:var(--obs-bg);color:var(--obs)}
+.item{display:grid;grid-template-columns:auto 1fr;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0;animation:pop .35s}
+.tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em;height:fit-content}
+.tag.observation{background:var(--obs-bg);color:var(--obs)}.tag.claim{background:var(--clm-bg);color:var(--clm)}.tag.assumption{background:var(--asm-bg);color:var(--asm)}.tag.gap{background:var(--gap-bg);color:var(--gap)}
+.q{font:italic 13px/1.4 'Source Serif 4',Georgia,serif;color:var(--muted)}
+.flag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;margin-left:6px}
+.flag.sens{background:var(--sens-bg);color:var(--sens)}.flag.ok{background:var(--obs-bg);color:var(--obs)}
+.red{background:#1d1b18;color:#1d1b18;border-radius:3px;padding:0 4px}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-top:10px}
+.rule{padding:6px 9px;border-radius:8px;background:#f6f3ec;transition:all .3s}.rule.hit{background:var(--obs-bg);color:var(--obs);font-weight:600}
+@keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+</style></head><body>
+<header><b>Samjho</b><span class="sub">how it works, end to end (replay of recorded test runs from today)</span>
+<nav><a class="btn" href="./?u=demo">Live console</a><a class="btn" href="history.html">History log</a></nav></header>
+<main>
+<section class="card">
+<h2>The workflow</h2>
+<div class="flow">
+ <div class="lanehead">1. Conversation (voice)</div>
+ <div class="lane">
+  <div class="node" id="n-owner"><div class="t">Shop owner</div><div class="d">Speaks Hinglish on a call</div><span class="tool">Phone / web call</span></div>
+  <div class="node" id="n-bolna"><div class="t">Ears and voice</div><div class="d">Speech to text, text to speech. Decides nothing.</div><span class="tool">Bolna + Sarvam</span></div>
+  <div class="node" id="n-brain"><div class="t">Voice brain</div><div class="d">Joins partial sentences. Latest version wins.</div><span class="tool">n8n endpoint</span></div>
+  <div class="node" id="n-reply"><div class="t">Next line spoken</div><div class="d">Female voice, one question at a time</div><span class="tool">Sarvam Bulbul</span></div>
+ </div>
+ <div class="arrow">each answer goes through the interview engine</div>
+ <div class="lanehead">2. Interview engine</div>
+ <div class="lane">
+  <div class="node" id="n-prepare"><div class="t">Where are we?</div><div class="d">Loads question, earlier answers. Issues a ticket.</div><span class="tool">Supabase</span></div>
+  <div class="node" id="n-claude"><div class="t">Understand answer</div><div class="d">Splits into statements, tags evidence, exact quote, contradiction check</div><span class="tool">Claude</span></div>
+  <div class="node" id="n-rules"><div class="t">Apply the rules</div><div class="d">Save, skip covered, max 2 follow-ups, never skip</div><span class="tool">Supabase</span></div>
+  <div class="node" id="n-log"><div class="t">Audit log</div><div class="d">Every turn, undo record, review action</div><span class="tool">Supabase</span></div>
+ </div>
+ <div class="arrow">after the interview</div>
+ <div class="lanehead">3. Trust and handoff</div>
+ <div class="lane">
+  <div class="node" id="n-review"><div class="t">Owner review</div><div class="d">Confirm, edit, share or redact each line</div><span class="tool">Console</span></div>
+  <div class="node" id="n-gate"><div class="t">Approval gate</div><div class="d">Blocked until every line is reviewed</div><span class="tool">Database rule</span></div>
+  <div class="node" id="n-builder"><div class="t">Builder brief</div><div class="d">Observed / claims / assumptions / gaps. Public copy redacted.</div><span class="tool">Paytm product team</span></div>
+  <div class="node" id="n-history"><div class="t">History log</div><div class="d">Seen-before problems, fixes already tried</div><span class="tool">All interviews</span></div>
+ </div>
+</div>
+<div class="controls">
+ <button class="primary" id="next">Start demo</button>
+ <button id="auto">Auto play</button>
+ <button id="reset">Restart</button>
+ <span class="step" id="step"></span>
+</div>
+<div class="narr" id="narr">Press <b>Start demo</b>. Each click moves one step and lights up the part of the system doing the work.</div>
+<div class="rules" id="rules">
+ <div class="rule" id="r-quote">No quote, no line</div>
+ <div class="rule" id="r-latest">Latest version wins (partial speech)</div>
+ <div class="rule" id="r-skip">Never re-ask what is already answered</div>
+ <div class="rule" id="r-contra">Contradictions challenged</div>
+ <div class="rule" id="r-sens">Names and numbers flagged</div>
+ <div class="rule" id="r-gate">No approval until reviewed</div>
+</div>
+<div class="note">Replay built from real outputs of today's test calls. The live console runs the same engine.</div>
+</section>
+<section>
+ <div class="card" style="margin-bottom:16px"><h2>Conversation</h2><div class="chat" id="chat"></div></div>
+ <div class="card"><h2>Problem brief (builds live)</h2><div id="brief"><div class="note">Empty until the owner starts talking.</div></div></div>
+</section>
+</main>
+<script>
+(function(){
+var S=[
+ {on:['n-owner','n-bolna'],say:'The owner calls. Bolna listens with Sarvam. Bolna does not decide anything, it only hears and speaks.',
+  chat:[['agent','Namaste! Main Samjho hoon. Lagbhag 5 minute, 8 sawaal. Pehla sawaal: aapke kaam mein kaunsa roz ka kaam ya problem hai?']]},
+ {on:['n-owner','n-bolna','n-brain'],rule:'r-latest',say:'While the owner is still talking, Bolna sends <b>half sentences</b> again and again. The brain gives each a ticket. Only the <b>latest, complete</b> version is processed.',
+  chat:[['drop','मेरी एक्चुअली एक।'],['drop','मेरी एक्चुअली एक। किराने की दुकान है कसवनहल्ली में।'],['user','मेरी किराने की दुकान है कसवनहल्ली में। रोज रात साउंडबॉक्स और कैश का हिसाब नोटबुक में मिलाता हूं, आधा घंटा लगता है। पिछले संडे दो हज़ार का फर्क आया।'],['sys','2 partial versions dropped, 1 answer kept','good']]},
+ {on:['n-prepare'],say:'The engine loads <b>where we are</b>: current question, earlier answers, what is already captured.'},
+ {on:['n-claude'],rule:'r-quote',say:'Claude splits the answer into statements and tags each one. Every line keeps the <b>exact words</b> as proof. Lines are filed under the question they really answer.',
+  items:[['observation','Has a grocery shop in Kasavanahalli','किराने की दुकान है कसवनहल्ली में','1. Problem'],['observation','Every night matches Soundbox and cash in a notebook, takes half an hour','रोज रात साउंडबॉक्स और कैश का हिसाब नोटबुक में मिलाता हूं','3. How often'],['observation','Last Sunday there was a Rs 2,000 mismatch','पिछले संडे दो हज़ार का फर्क आया','2. Last time']]},
+ {on:['n-rules','n-log'],rule:'r-skip',say:'The database applies the rules. Questions 2 and 3 were already answered, so they are <b>skipped, not re-asked</b>. Everything is written to the audit log.'},
+ {on:['n-reply','n-bolna'],say:'Only now does Samjho speak, in a female voice, reflecting one detail back and asking one real follow-up.',
+  chat:[['agent','Achha, roz raat hisaab milate hain, samajh gayi. Kuch baatein aap pehle hi bata chuke hain. Yeh hisaab aap khud milate hain ya staff bhi karta hai?']]},
+ {on:['n-owner','n-brain','n-prepare','n-claude'],rule:'r-contra',say:'The owner now says something different. Claude <b>compares numbers with earlier answers</b> and catches it.',
+  chat:[['user','Har din kam se kam do ghante lag jaate hain hisaab mein.'],['agent','Pehle aapne aadha ghanta bataya tha, abhi do ghante. Kaunsa zyada sahi hai?']],
+  items:[['claim','Every day at least two hours go into the accounts','do ghante lag jaate hain hisaab mein','3. How often']]},
+ {on:['n-owner','n-claude','n-rules'],rule:'r-sens',say:'A guess about the cause is tagged as an <b>assumption</b>, not a fact. A staff name is flagged <b>sensitive</b>.',
+  chat:[['user','Mujhe lagta hai mera staff Raju galat entry karta hai.'],['agent','Achha, aapko lagta hai galat entry se farak aata hai. Jab aakhri baar galat entry hui, kya hua tha?']],
+  items:[['assumption','Owner thinks staff member Raju makes wrong entries','Mujhe lagta hai mera staff Raju galat entry karta hai','1. Problem',1]]},
+ {on:['n-review','n-gate'],rule:'r-gate',say:'Interview done. The owner presses Approve too early. The <b>database blocks it</b>: lines are unreviewed and a sensitive line has no decision.',
+  chat:[['sys','Approval blocked: 5 lines need review, 1 sensitive line needs share or redact','bad']]},
+ {on:['n-review'],say:'The owner confirms each line and chooses <b>Redact</b> for Raju. Nothing is shared without this step.',redact:1,
+  chat:[['sys','Line confirmed x5','good'],['sys','Sensitive line: owner chose to redact','good']]},
+ {on:['n-gate','n-builder'],say:'Approved. The <b>builder</b> (for example Paytm\'s merchant product team) gets the evidence-tagged brief. The <b>public</b> copy hides Raju\'s name.',approve:1,
+  chat:[['sys','Brief approved by the owner','good']]},
+ {on:['n-history'],say:'Every interview goes to the <b>history log</b>. If another shop describes the same notebook problem, it shows as <b>seen before</b>, with the fixes already tried, so nobody suggests them again.',
+  chat:[['sys','Saved to history. Similar to 2 earlier interviews: notebook, soundbox, mismatch','good']]}
+];
+var i=-1,timer=null,items=[],redacted=false,approved=false;
+function $(x){return document.getElementById(x)}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function renderBrief(){
+ if(!items.length){$('brief').innerHTML='<div class="note">Empty until the owner starts talking.</div>';return}
+ $('brief').innerHTML=items.map(function(it){
+  var sens=it[4],text=sens&&redacted&&approved?'<span class="red">redacted</span> (staff name hidden in public copy)':esc(it[1]);
+  return '<div class="item"><span class="tag '+it[0]+'">'+it[0]+'</span><div><div>'+text+(sens?'<span class="flag sens">sensitive'+(redacted?': redact':'')+'</span>':'')+(approved?'<span class="flag ok">confirmed</span>':'')+'</div><div class="q">&ldquo;'+esc(it[2])+'&rdquo; &middot; '+esc(it[3])+'</div></div></div>'}).join('');
+}
+function go(){
+ if(i>=S.length-1){stop();return}
+ i++;var s=S[i];
+ document.querySelectorAll('.node.on').forEach(function(n){n.classList.remove('on');n.classList.add('done')});
+ s.on.forEach(function(id){$(id).classList.add('on')});
+ if(s.rule)$(s.rule).classList.add('hit');
+ $('narr').innerHTML=s.say;
+ (s.chat||[]).forEach(function(c){var d=document.createElement('div');d.className=c[0]==='sys'?'sys '+(c[2]||''):'msg '+c[0];d.innerHTML=c[0]==='sys'?esc(c[1]):'<small>'+(c[0]==='agent'?'Samjho':c[0]==='drop'?'partial (dropped)':'Shop owner')+'</small>'+esc(c[1]);$('chat').appendChild(d)});
+ $('chat').scrollTop=1e9;
+ (s.items||[]).forEach(function(it){items.push(it)});
+ if(s.redact)redacted=true; if(s.approve)approved=true;
+ renderBrief();
+ $('step').textContent='Step '+(i+1)+' of '+S.length;
+ $('next').textContent=i>=S.length-1?'Done':'Next step';$('next').disabled=i>=S.length-1;
+}
+function stop(){clearInterval(timer);timer=null;$('auto').textContent='Auto play'}
+$('next').onclick=function(){stop();go()};
+$('auto').onclick=function(){if(timer){stop();return}if(i>=S.length-1)reset();go();timer=setInterval(go,5200);$('auto').textContent='Pause'};
+function reset(){stop();i=-1;items=[];redacted=false;approved=false;$('chat').innerHTML='';renderBrief();
+ document.querySelectorAll('.node').forEach(function(n){n.classList.remove('on','done')});document.querySelectorAll('.rule').forEach(function(r){r.classList.remove('hit')});
+ $('narr').innerHTML='Press <b>Start demo</b>. Each click moves one step and lights up the part of the system doing the work.';$('step').textContent='';$('next').textContent='Start demo';$('next').disabled=false}
+$('reset').onclick=reset;
+})();
+</script></body></html>
