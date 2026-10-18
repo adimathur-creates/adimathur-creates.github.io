@@ -151,16 +151,38 @@ main{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:16px;padding
 
   var SB = 'https://fbwfxbubrxpbfzwmbhrk.supabase.co/rest/v1/rpc/';
   var KEY = 'sb_publishable_6lYpdTHtU13mb96w58xhHg_g65qVUTr';
-  var N8N = 'https://adimathur-creates.app.n8n.cloud/webhook/';
   var MAP = {confirm:'review_item', correct:'review_item', remove:'review_item', share:'review_item', redact:'review_item', approve:'approve_brief', cancel:'cancel_brief', finish:'finish_early'};
   function rpc(fn, args){
     return fetch(SB + fn, {method:'POST', headers:{'Content-Type':'application/json', 'apikey':KEY, 'Authorization':'Bearer ' + KEY}, body: JSON.stringify(args || {})})
       .then(function(r){ return r.json(); });
   }
+  // Offline rules engine (runs in the browser, no n8n / no paid AI).
+  // Same output shape as the Claude step, so the database rules apply unchanged.
+  var RX_ASM = /(mujhe lagta|lagta hai ki|mera khayal|shayad|maybe|i think|probably|\bhoga\b|\bhogi\b|ho sakta|मुझे लगता|शायद|होगा|होगी)/i;
+  var RX_OBS = /(\d|roz|daily|kal|pichl|last|subah|shaam|raat|minute|ghant|hour|rupa|rs\b|hazaar|hazar|sunday|monday|saturday|हर|रोज|कल|पिछल|मिनट|घंट|रुपय|हज़ार|हजार|रात|सुबह|शाम)/i;
+  var RX_SENS = /(\b\d{10}\b|@\w+|upi id|account number|khata number|address|पता|(staff|helper|bhaiya|naam|ladka|worker)\s+[A-Z][a-z]+)/;
+  var RX_STOP = /^(stop|ruko|baad mein|band karo|pause)\b/i;
+  var RX_OK = /^((haan|ha|ji|ok|okay|theek hai|thik hai|sahi hai|confirm|हाँ|जी|ठीक है)[\s,.!]*)+$/i;
+  var NEEDS_NUM = {frequency:1, impact:1};
+  function tagAnswer(text, ctx){
+    var t = text.trim(), qk = (ctx && ctx.question_key) || 'problem';
+    if (RX_STOP.test(t)) return {intent:'stop', items:[], needs_followup:false, followup:'', ack:'', reply:''};
+    if (RX_OK.test(t)) return {intent:'confirm', items:[], needs_followup:false, followup:'', ack:'Theek hai.', reply:''};
+    var parts = t.split(/(?<=[.?!।])\s+|\s*,\s*(?=\S{3,})/).map(function(s){ return s.trim(); }).filter(function(s){ return s.split(/\s+/).length >= 3; });
+    if (!parts.length) parts = [t];
+    var items = parts.slice(0, 6).map(function(s){
+      var kind = RX_ASM.test(s) ? 'assumption' : (RX_OBS.test(s) ? 'observation' : 'claim');
+      return {kind:kind, text:s, quote:s, sensitive:RX_SENS.test(s), question_key:qk};
+    });
+    var hasNum = /\d|ek|do|teen|char|paanch|aadha|hazaar|सौ|हज़ार|घंट|मिनट/i.test(t);
+    var need = !!NEEDS_NUM[qk] && !hasNum;
+    return {intent:'answer', items:items, needs_followup:need,
+      followup: need ? 'Thoda number mein bataiye, kitni baar ya kitna time ya paisa lagta hai?' : '',
+      ack:'Achha, samajh gayi.', reply:''};
+  }
   function plainAnswer(text){
     return rpc('prepare_turn', {p_user_key: U, p_answer: text}).then(function(ctx){
-      var res = {intent:'answer', items:[{kind:'claim', text:text, quote:text, sensitive:false, question_key: (ctx && ctx.question_key) || 'problem'}],
-        needs_followup:false, followup:'', ack:'Achha, maine note kar liya.', reply:'', token: ctx && ctx.token};
+      var res = tagAnswer(text, ctx); res.token = ctx && ctx.token;
       return rpc('record_turn', {p_user_key: U, p_answer: text, p_result: res});
     });
   }
@@ -174,11 +196,7 @@ main{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:16px;padding
       return rpc(fn, args);
     }
     if (path === 'samjho-answer') {
-      var ctl = new AbortController(); var timer = setTimeout(function(){ ctl.abort(); }, 25000);
-      return fetch(N8N + 'samjho-answer', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_key: U, answer: body.answer}), signal: ctl.signal})
-        .then(function(r){ clearTimeout(timer); if (!r.ok) throw new Error('engine'); return r.json(); })
-        .then(function(j){ if (!j || typeof j.say !== 'string') throw new Error('engine'); return j; })
-        .catch(function(){ clearTimeout(timer); return plainAnswer(body.answer); });
+      return plainAnswer(body.answer);
     }
     return Promise.reject(new Error('unknown path'));
   }
