@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head><body>
+<title>Inside the TAT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 800px column read like a deployment brief; the dispute desk simulator sits inside as a working sheet. */
+:root{
+  --paper:#F4F5F8; --panel:#FFFFFF; --ink:#0F1524; --muted:#576074; --rule:#D8DCE5;
+  --accent:#2F5BEA; --accent-soft:#E3EAFD; --clock:#B5530D; --clock-soft:#FBEBDD;
+  --good:#167A4A; --good-soft:#DCF1E5; --bad:#B42318; --bad-soft:#FBE3E0; --ai:#7A3DD1; --ai-soft:#EFE7FB;
+  --code:#EEF0F4;
+  --f-display:"Hanken Grotesk","Segoe UI",Helvetica,Arial,sans-serif;
+  --f-body:"Hanken Grotesk","Segoe UI",Helvetica,Arial,sans-serif;
+  --f-mono:"DM Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0C111C; --panel:#141B29; --ink:#E5E9F1; --muted:#9CA6B9; --rule:#262F42;
+  --accent:#86A3F7; --accent-soft:#1C2647; --clock:#F0A065; --clock-soft:#3A2614;
+  --good:#5ACC8E; --good-soft:#123123; --bad:#F2867E; --bad-soft:#3A1A17; --ai:#B391F2; --ai-soft:#271C40; --code:#10161F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0C111C; --panel:#141B29; --ink:#E5E9F1; --muted:#9CA6B9; --rule:#262F42;
+  --accent:#86A3F7; --accent-soft:#1C2647; --clock:#F0A065; --clock-soft:#3A2614;
+  --good:#5ACC8E; --good-soft:#123123; --bad:#F2867E; --bad-soft:#3A1A17; --ai:#B391F2; --ai-soft:#271C40; --code:#10161F; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.06;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.7rem,9.5vw,4.6rem);font-weight:800;letter-spacing:-.03em}
+h1 span{color:var(--clock)}
+h2{font-size:clamp(1.5rem,4.8vw,2rem);font-weight:700;letter-spacing:-.02em}
+h3{font-size:1.1rem;font-weight:700}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:16px}
+.eyebrow,.k{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.k{margin-bottom:6px}
+.dek{font-size:1.15rem;max-width:64ch}
+.by{font-size:.92rem;color:var(--muted)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:4px}
+.note strong{color:var(--ink)}
+.secnum{font-family:var(--f-mono);font-size:.74rem;color:var(--accent);letter-spacing:.05em}
+.pstate{border-left:3px solid var(--clock);padding:6px 0 6px 16px;font-size:1.08rem;font-weight:600}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.grid2>div{min-width:0}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:1.75rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.8rem;white-space:nowrap}
+.good{color:var(--good)} .bad{color:var(--bad)}
+.finding{background:var(--accent-soft);border-radius:4px;padding:12px 14px}
+.warn{background:var(--clock-soft);border-radius:4px;padding:12px 14px}
+.pill{display:inline-block;font-family:var(--f-mono);font-size:.68rem;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.rule{background:var(--accent-soft);color:var(--accent)} .pill.ai{background:var(--ai-soft);color:var(--ai)} .pill.person{background:var(--clock-soft);color:var(--clock)}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.84rem;color:var(--muted);min-width:0}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.toggles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.tg{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--rule);border-radius:4px;padding:10px 12px;cursor:pointer;background:var(--paper);min-width:0}
+.tg input{margin-top:5px;accent-color:var(--accent)}
+.tg b{display:block;font-size:.95rem}
+.tg span{font-size:.83rem;color:var(--muted);line-height:1.4;display:block}
+input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.checks{display:flex;flex-direction:column;gap:8px;font-size:.92rem}
+.checks div{display:block;line-height:1.7}
+.checks .chip{margin-right:8px}
+.chip{display:inline-flex;font-family:var(--f-mono);font-size:.7rem;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.chip.ok{background:var(--good-soft);color:var(--good)} .chip.no{background:var(--bad-soft);color:var(--bad)}
+.weeks{display:flex;flex-direction:column;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--panel)}
+.weeks div{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:10px 14px;border-bottom:1px solid var(--rule);font-size:.93rem}
+.weeks div:last-child{border-bottom:0}
+.weeks .w{font-family:var(--f-mono);font-size:.76rem;color:var(--accent);padding-top:2px}
+.src{font-size:.86rem;color:var(--muted)}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--rule);margin:0}
+.busy{font-size:.8rem;color:var(--muted);min-height:1.2em}
+@media (max-width:520px){th,td{padding:7px 8px}table{font-size:.84rem}.weeks div{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">Independent work · Forward-Deployed Engineer / Product Manager, UnifyApps</div>
+  <h1>Inside the <span>TAT</span></h1>
+  <p class="dek">A forward-deployed go-live kit for a payments bank's UPI dispute desk, the kind of customer in UnifyApps' payments-bank story. It covers the rules, a working simulator of the desk, where the AI step sits and how it is guarded, how it maps onto UnifyApps' Data, Automations, Agents and Applications, and the discovery workshop, 7-week plan and demo that take it to production.</p>
+  <p class="by">Aditya Mathur · October 2026 · prepared for the UnifyApps FDE and product team</p>
+  <div class="note"><strong>Read this first.</strong> I do not work at UnifyApps or any bank, and I have no customer data. The regulatory rules are real and sourced below. The desk is synthetic: 36,000 complaints over 30 days, with volumes, staffing, complaint timing and AI error rates as my assumptions, all listed on this page. The decision rules and simulator run live in your browser.</div>
+</header>
+
+<section id="problem">
+  <span class="secnum">1 · THE CUSTOMER PROBLEM</span>
+  <h2>Every failed UPI debit has a clock on it</h2>
+  <p>UnifyApps' payments-bank story describes finance teams running UPI reconciliation and disputes on files and spreadsheets, against NPCI deadlines and nightly cutoffs, at millions of transactions a day. It went from discovery to production in 7 weeks. The rules that clock is set by:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Case</th><th>Deadline (T = transaction date)</th><th>If missed</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>UPI to a person: debited, not credited</td><td>Reversed by T+1</td><td>₹100 a day to the customer</td><td>RBI, 20 Sep 2019</td></tr>
+      <tr><td>UPI to a merchant: debited, merchant not credited</td><td>Auto-reversal by T+5</td><td>₹100 a day to the customer</td><td>RBI, 20 Sep 2019</td></tr>
+      <tr><td>Pending ("deemed") transactions</td><td>Chargeback decided only on the beneficiary bank's credit confirmation (TCC) or return (RET), in the next settlement cycle</td><td>Rejected chargebacks, penalties</td><td>NPCI, from 15 Feb 2025</td></tr>
+    </tbody></table></div>
+  <p class="pstate">How does a payments bank return every rupee it owes on failed UPI transactions inside RBI's deadlines, without growing the dispute team, and without ever auto-closing a fraud complaint?</p>
+</section>
+
+<section id="finding">
+  <span class="secnum">2 · THE FINDING THAT CHANGES THE SCOPE</span>
+  <h2>A faster dispute desk is not enough</h2>
+  <p>The clock starts on the day of the transaction, not the day of the complaint. In the model, a quarter of customers complain two or more days later, so for person-to-person payments the deadline has already passed when the ticket arrives.</p>
+  <div class="sheet">
+    <div class="tablewrap"><table><thead><tr><th>Setup</th><th class="num">On time</th></tr></thead><tbody id="cap"></tbody></table></div>
+    <p class="warn"><b>So the scope is not "automate the dispute desk".</b> It is "reconcile every day, and return owed money before anyone complains", plus a dispute desk for what remains. That is the reconciliation half of the payments-bank story, and it is where the money is.</p>
+  </div>
+</section>
+
+<section id="rules">
+  <span class="secnum">3 · RULES FIRST, AI WHERE IT EARNS ITS PLACE</span>
+  <h2>Who decides what</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Step</th><th>Done by</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Daily sweep: match switch, core banking and NPCI files; find failed-and-not-reversed and returned (RET) transactions</td><td><span class="pill rule">Automation</span></td><td>Pure matching. Must be complete and repeatable</td></tr>
+      <tr><td>Reverse owed money by T+1 and post to the ledger</td><td><span class="pill rule">Automation</span></td><td>The regulation is precise, so the rule is too</td></tr>
+      <tr><td>Fraud tripwire on the complaint (scam words, "did not authorise", OTP shared, linked fraud flags)</td><td><span class="pill rule">Rules</span></td><td>Runs before any AI, so a confident model cannot close a fraud case</td></tr>
+      <tr><td>Read the complaint text and pick the reason</td><td><span class="pill ai">Agent</span></td><td>Free text in English, Hindi and Hinglish. The only step that needs judgement</td></tr>
+      <tr><td>Confidence gate</td><td><span class="pill rule">Rules</span></td><td>Below the threshold, a person reads it</td></tr>
+      <tr><td>Decide the outcome from records: reverse, close with TCC evidence, or raise a chargeback via UDIR</td><td><span class="pill rule">Rules</span></td><td>Records decide, not the model</td></tr>
+      <tr><td>Draft the reply, grounded only in the case record and the circulars</td><td><span class="pill ai">Agent</span></td><td>Tone and language; facts come from the record</td></tr>
+      <tr><td>Fraud, wrong-person payments, unclear cases</td><td><span class="pill person">Person</span></td><td>Work in a queue sorted by deadline, not by arrival</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="sim">
+  <span class="secnum">4 · THE DESK, SIMULATED</span>
+  <h2>Test the build before the customer does</h2>
+  <div class="sheet">
+    <div class="controls">
+      <label for="o-vol">Complaints per day: <b id="o-vol-v">1,200</b><input type="range" id="o-vol" min="600" max="1800" step="150" value="1200"></label>
+      <label for="o-staff">Analysts today: <b id="o-staff-v">60</b><input type="range" id="o-staff" min="30" max="90" step="5" value="60"></label>
+      <label for="o-build">Analysts after the build: <b id="o-build-v">20</b><input type="range" id="o-build" min="5" max="40" step="5" value="20"></label>
+      <label for="o-th">AI confidence threshold: <b id="o-th-v">0.90</b><input type="range" id="o-th" min="0.7" max="0.95" step="0.05" value="0.9"></label>
+    </div>
+    <div class="toggles">
+      <label class="tg" for="o-sweep"><input type="checkbox" id="o-sweep" checked><div><b>Daily reconciliation sweep</b><span>Return owed money by T+1 without waiting for a complaint.</span></div></label>
+      <label class="tg" for="o-trip"><input type="checkbox" id="o-trip" checked><div><b>Fraud tripwire before the AI</b><span>Rules route likely fraud to the fraud team first.</span></div></label>
+    </div>
+    <div class="busy" id="busy" aria-live="polite"></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="checks" id="checks"></div>
+  </div>
+  <p><b>Stress test.</b> I reran the model with another seed, with 30% more and 30% fewer complaints, and with the AI wrong 4% or 12% of the time. On-time returns stayed at 99.6% in every run, and compensation fell from ₹1.9–50 lakh a month to ₹5,500–12,600. Fraud complaints auto-closed stayed at 0–1 in 36,000. With 30% more complaints, today's desk falls to 25% on time and about ₹50 lakh a month in compensation. A festive-season spike breaks the manual desk, not the built one.</p>
+</section>
+
+<section id="build">
+  <span class="secnum">5 · HOW I WOULD BUILD IT ON UNIFYAPPS</span>
+  <h2>Mapped to the platform</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>UnifyApps module</th><th>What it does here</th></tr></thead>
+    <tbody>
+      <tr><td><b>Data</b></td><td>Pipelines from the UPI switch, core banking and NPCI settlement files into one "UPI transaction" object, with quality scans for missing reference numbers and amount mismatches</td></tr>
+      <tr><td><b>Automations</b></td><td>The nightly sweep, the decision rules, reversal and ledger posting, UDIR chargebacks in the next cycle, partner reports over SFTP, and a TAT-breach alert to the desk lead</td></tr>
+      <tr><td><b>Agentic AI</b></td><td>A complaint reader with denied topics and a hallucination threshold; a reply drafter grounded on the case record and RBI and NPCI circulars; datasets and experiments to test both before go-live</td></tr>
+      <tr><td><b>Applications</b></td><td>A dispute console: one screen per case with the records, the rule that fired and the drafted reply. Plus a TAT board that sorts work by deadline</td></tr>
+      <tr><td><b>Governance</b></td><td>Audit log of every rule and agent decision, access inherited from the bank's roles, PII masking on complaint text</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="discovery">
+  <span class="secnum">6 · DISCOVERY WORKSHOP</span>
+  <h2>90 minutes with finance, operations and compliance</h2>
+  <div class="grid2">
+    <div><div class="k">Questions I would ask</div><ol class="plain">
+      <li>Walk me through one failed UPI debit, from switch to ledger. Who touches it?</li>
+      <li>Where do the switch, core banking and NPCI files land, and when?</li>
+      <li>How many complaints a day, and how many arrive after the deadline?</li>
+      <li>Which reason codes do you use, and how often is the first one wrong?</li>
+      <li>What did you pay in TAT compensation last quarter?</li>
+      <li>How do you raise chargebacks today, and since February 2025 how often are they rejected?</li>
+      <li>How is a fraud complaint spotted today, and by whom?</li>
+      <li>What would compliance need to see before a rule acts without a person?</li>
+    </ol></div>
+    <div><div class="k">What I would ask them to send</div><ul class="plain">
+      <li>One day of switch, core banking and NPCI files</li>
+      <li>200 recent complaints with the final outcome, to use as the test set</li>
+      <li>The current reason-code list and SOPs</li>
+      <li>Last quarter's compensation and breach report</li>
+    </ul>
+    <div class="k" style="margin-top:14px">Workshop output</div><p>A one-page process map, the rule table on this page in their words, the first use case agreed, and the success measures signed by finance and compliance.</p></div>
+  </div>
+</section>
+
+<section id="plan">
+  <span class="secnum">7 · SEVEN WEEKS TO PRODUCTION</span>
+  <h2>The same timeline as the payments-bank story</h2>
+  <div class="weeks">
+    <div><span class="w">Week 1</span><span>Discovery workshop. Access to file drops. Process map and rule table signed off.</span></div>
+    <div><span class="w">Week 2</span><span>Data pipelines live in a test environment. One day of files reconciled and checked by hand against the bank's own result.</span></div>
+    <div><span class="w">Week 3</span><span>Sweep and decision rules built. Run on 30 historical days; every difference with the bank's actual outcome explained.</span></div>
+    <div><span class="w">Week 4</span><span>Complaint reader and reply drafter built. Tested on the 200-case set; threshold agreed with compliance. Fraud tripwire tested on every past fraud case.</span></div>
+    <div><span class="w">Week 5</span><span>Console and TAT board. Analysts work real cases in the console with automation in suggest-only mode.</span></div>
+    <div><span class="w">Week 6</span><span>Shadow run: the build decides, people act. Daily review of every disagreement.</span></div>
+    <div><span class="w">Week 7</span><span>Go-live for person-to-person disputes first, merchant disputes a week later. Hypercare: daily on-time rate, compensation, overrides and fraud referrals.</span></div>
+  </div>
+  <div class="grid2">
+    <div><div class="k">Go-live checklist</div><ul class="plain"><li>30 historical days reconciled with zero unexplained differences</li><li>Zero fraud cases auto-closed on the test set</li><li>Rollback switch to suggest-only mode, tested</li><li>Audit log reviewed by compliance</li></ul></div>
+    <div><div class="k">Success measures</div><ul class="plain"><li>Owed money returned within RBI's deadline: above 99%</li><li>Monthly TAT compensation: down by more than 90%</li><li>Analyst hours on disputes: down by more than half</li><li>Fraud complaints auto-closed: zero</li></ul></div>
+  </div>
+</section>
+
+<section id="demo">
+  <span class="secnum">8 · THE 5-MINUTE DEMO</span>
+  <h2>For the CFO and head of operations</h2>
+  <ol class="plain">
+    <li><b>Start with their number.</b> "Last quarter you paid this much in TAT compensation. Here is the breakdown by reason."</li>
+    <li><b>Show the clock.</b> One complaint that arrived after its deadline. "No dispute desk could have saved this one."</li>
+    <li><b>Run the sweep live</b> on yesterday's files. Owed transactions found and reversed before any complaint.</li>
+    <li><b>Show a fraud complaint</b> stopped by the tripwire, never touched by the AI.</li>
+    <li><b>Open the audit log.</b> "Every decision, the rule that made it, and who can override it."</li>
+  </ol>
+</section>
+
+<section id="limits">
+  <span class="secnum">9 · LIMITS</span>
+  <h2>What this kit does not prove</h2>
+  <ul class="plain">
+    <li>Volumes, complaint timing, handling times and AI error rates are assumptions. The real numbers come from the workshop.</li>
+    <li>The sweep assumes files arrive daily and match on reference numbers. Many banks have gaps, and that is week 2's real work.</li>
+    <li>Fraud screening here is a simple tripwire. A bank's own fraud signals should feed it.</li>
+  </ul>
+</section>
+
+<hr>
+<section id="sources" class="src">
+  <span class="secnum">SOURCES</span>
+  <ul class="plain">
+    <li><a href="https://www.unifyapps.com/resources/customer-story/Large-Payments-Bank" target="_blank" rel="noopener">UnifyApps: Large Payments Bank story</a> (UPI reconciliation and disputes, NPCI TATs, 7 weeks to production)</li>
+    <li><a href="https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=11693" target="_blank" rel="noopener">RBI: harmonisation of TAT and customer compensation for failed transactions</a> (20 Sep 2019)</li>
+    <li><a href="https://www.angelone.in/news/npci-introduces-new-chargeback-rule-for-upi-transactions" target="_blank" rel="noopener">NPCI chargeback rule from 15 Feb 2025</a> (decided on TCC or RET)</li>
+    <li><a href="https://www.unifyapps.com/unify-ai" target="_blank" rel="noopener">UnifyApps Agentic AI</a> (agents, guardrails, datasets and experiments) and <a href="https://www.unifyapps.com/docs" target="_blank" rel="noopener">documentation</a></li>
+  </ul>
+  <p>Model: 36,000 synthetic complaints over 30 days, seeded so results repeat. Nine automated checks and six stress-test runs.</p>
+</section>
+
+</div>
+
+<script>
+// UPI dispute desk engine. Pure functions, no DOM. Synthetic data only.
+// Rules follow RBI's harmonised TAT circular (20 Sep 2019) and NPCI's Feb 2025 chargeback rule;
+// the desk, volumes and staffing are assumptions.
+var UD = (function () {
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function pick(r, items) { var u = r(), a = 0; for (var i = 0; i < items.length; i++) { a += items[i][1]; if (u < a) return items[i][0]; } return items[items.length - 1][0]; }
+
+  // What the customer actually means (truth), and what the system records show.
+  var REASONS = [
+    ['debited_not_credited_p2p', 0.38], // sent money to a person, it did not arrive
+    ['merchant_not_received', 0.30],    // paid a merchant, merchant says not received
+    ['duplicate_debit', 0.08],
+    ['fraud_unauthorised', 0.07],       // must never go down the auto path
+    ['wrong_beneficiary', 0.07],        // customer error; not a failed transaction
+    ['other_query', 0.10]
+  ];
+  var LABEL = {
+    debited_not_credited_p2p: 'Debited, person not credited', merchant_not_received: 'Merchant not credited',
+    duplicate_debit: 'Duplicate debit', fraud_unauthorised: 'Fraud or unauthorised', wrong_beneficiary: 'Paid wrong person', other_query: 'Other query'
+  };
+  var TAT = { debited_not_credited_p2p: 1, merchant_not_received: 5, duplicate_debit: 5 }; // days after T (RBI circular)
+
+  function generate(opts) {
+    opts = opts || {};
+    var r = rng(opts.seed || 20261021), days = opts.days || 30, perDay = opts.perDay || 1200, out = [];
+    var aiErr = opts.aiErr == null ? 0.07 : opts.aiErr;
+    for (var d = 0; d < days; d++) {
+      for (var i = 0; i < perDay; i++) {
+        var reason = pick(r, REASONS);
+        var lag = pick(r, [[0, 0.45], [1, 0.3], [2, 0.12], [3, 0.07], [5, 0.06]]); // days between transaction and complaint
+        var c = { id: 'D' + (d * perDay + i + 1), day: d, T: d - lag, reason: reason, draws: [r(), r(), r(), r(), r(), r()] };
+        // System facts (from switch, core banking and NPCI files)
+        if (reason === 'debited_not_credited_p2p' || reason === 'merchant_not_received') {
+          c.npci = pick(r, [['FAILURE', 0.35], ['DEEMED', 0.40], ['SUCCESS', 0.25]]); // deemed = timed out, outcome unknown
+          c.reversed = c.npci === 'FAILURE' ? r() < 0.55 : false;                       // auto-reversal may already have happened
+          c.benef = c.npci === 'DEEMED' ? pick(r, [['TCC', 0.55], ['RET', 0.35], ['NONE', 0.10]]) : (c.npci === 'SUCCESS' ? 'TCC' : 'NA');
+        } else if (reason === 'duplicate_debit') { c.npci = 'SUCCESS'; c.dupConfirmed = r() < 0.7; c.reversed = false; c.benef = 'TCC'; }
+        else { c.npci = 'SUCCESS'; c.reversed = false; c.benef = 'TCC'; }
+        // AI reading of the customer's complaint text: predicted reason + confidence
+        var wrong = r() < aiErr;
+        if (wrong) {
+          var others = REASONS.map(function (x) { return x[0]; }).filter(function (x) { return x !== reason; });
+          c.aiReason = others[Math.floor(r() * others.length)];
+          c.aiConf = 0.4 + r() * 0.55;
+        } else { c.aiReason = reason; c.aiConf = 1 - 0.25 * Math.pow(r(), 4); }
+        out.push(c);
+      }
+    }
+    return out;
+  }
+
+  // Deterministic decision once the reason is known. Returns an action and whether a person is needed.
+  function rule(c, reason) {
+    if (reason === 'fraud_unauthorised') return { action: 'Route to fraud team, block auto-actions', human: true, path: 'fraud' };
+    if (reason === 'wrong_beneficiary') return { action: 'Explain process; raise good-faith recovery request', human: true, path: 'service' };
+    if (reason === 'other_query') return { action: 'Answer from knowledge base', human: true, path: 'service' };
+    if (reason === 'duplicate_debit') return c.dupConfirmed
+      ? { action: 'Duplicate confirmed in records: reverse second debit', human: false, path: 'auto', reverse: true }
+      : { action: 'No duplicate in records: analyst reviews statement', human: true, path: 'review' };
+    // failed or pending transactions
+    if (c.npci === 'FAILURE') return c.reversed
+      ? { action: 'Already reversed: send customer the reversal reference', human: false, path: 'auto' }
+      : { action: 'Failed at NPCI, not reversed: reverse now', human: false, path: 'auto', reverse: true };
+    if (c.npci === 'SUCCESS') return { action: 'Credit confirmed (TCC): close with evidence', human: false, path: 'auto' };
+    // DEEMED: decided only on the beneficiary bank's TCC or RET (NPCI, Feb 2025)
+    if (c.benef === 'RET') return { action: 'Beneficiary returned it (RET): reverse to customer', human: false, path: 'auto', reverse: true };
+    if (c.benef === 'TCC') return { action: 'Beneficiary confirmed credit (TCC): close with evidence', human: false, path: 'auto' };
+    return { action: 'No TCC or RET yet: raise chargeback in next settlement cycle via UDIR', human: true, path: 'chargeback' };
+  }
+
+  // Simulate the desk day by day.
+  // Today (assumed): every complaint goes to analysts, worked first-in-first-out; each needs data pulled from three systems.
+  // With the build: the AI reads the complaint; above the confidence threshold the rules act at once; the rest, and every
+  // human path, join a queue sorted by TAT deadline. Fraud is never auto-actioned even if the AI is confident.
+  function owed(c) { return (c.npci === 'FAILURE' && !c.reversed) || c.benef === 'RET' || c.benef === 'NONE' || (c.reason === 'duplicate_debit' && c.dupConfirmed); }
+
+  // Simulate the desk day by day.
+  // Today (assumed): every complaint goes to analysts, first in first out, with data pulled by hand from three systems.
+  // Build: (1) optional daily reconciliation sweep reverses owed money by T+1 without waiting for a complaint;
+  // (2) a deterministic fraud tripwire sends likely fraud to the fraud team before any AI step;
+  // (3) the AI reads the complaint; above the threshold the rules act at once; everything else joins a queue sorted by deadline.
+  function simulate(cases, o) {
+    o = o || {};
+    var analysts = o.analysts || 60, minsManual = 22, minsAssisted = 9, mins = 7 * 60;
+    var mode = o.mode || 'today', th = o.threshold == null ? 0.85 : o.threshold;
+    var res = { n: 0, owedN: 0, onTime: 0, comp: 0, auto: 0, wrongAuto: 0, fraudN: 0, fraudAutoClosed: 0, hours: 0, backlogEnd: 0, closeDays: [], swept: 0 };
+    var queue = [], days = cases.length ? cases[cases.length - 1].day + 1 : 0, ci = 0;
+    function finish(c, day) {
+      res.n++;
+      if (c.reason === 'fraud_unauthorised') res.fraudN++;
+      if (owed(c)) {
+        res.owedN++;
+        var due = c.T + (TAT[c.reason] != null ? TAT[c.reason] : 5);
+        var paidBack = c.sweptDay != null ? Math.min(c.sweptDay, day) : day;
+        var late = Math.max(0, paidBack - due);
+        if (late === 0) res.onTime++;
+        res.comp += 100 * late;
+      }
+      res.closeDays.push(Math.max(0, day - c.day));
+    }
+    for (var day = 0; day < days + 30; day++) {
+      while (ci < cases.length && cases[ci].day === day) {
+        var c = cases[ci++];
+        c.sweptDay = null;
+        if (mode === 'build') {
+          if (o.sweep && owed(c) && c.reason !== 'duplicate_debit' && c.draws[2] < 0.97) { c.sweptDay = Math.min(c.day, c.T + 1); res.swept++; }
+          if (o.sweep && owed(c) && c.reason === 'duplicate_debit' && c.draws[2] < 0.7) { c.sweptDay = Math.min(c.day, c.T + 1); res.swept++; }
+          var tripped = o.tripwire && c.reason === 'fraud_unauthorised' && c.draws[3] < 0.85; // keyword and rule screen
+          var trusted = !tripped && c.aiConf >= th && c.aiReason !== 'fraud_unauthorised';
+          if (trusted) {
+            var dec = rule(c, c.aiReason);
+            if (!dec.human) {
+              res.auto++;
+              if (c.aiReason !== c.reason) { res.wrongAuto++; if (c.reason === 'fraud_unauthorised') res.fraudAutoClosed++; }
+              finish(c, day + (c.benef === 'NONE' ? 1 : 0));
+              continue;
+            }
+          }
+          c.prio = TAT[c.reason] != null && owed(c) && c.sweptDay == null ? c.T + TAT[c.reason] : day + 3;
+          c.mins = minsAssisted;
+        } else { c.prio = c.day; c.mins = minsManual; }
+        queue.push(c);
+      }
+      if (mode === 'build') queue.sort(function (a, b) { return a.prio - b.prio; });
+      var budget = analysts * mins;
+      while (queue.length && budget >= queue[0].mins) {
+        var q = queue.shift(); budget -= q.mins; res.hours += q.mins / 60;
+        finish(q, day + (q.benef === 'NONE' ? 1 : 0));
+      }
+      if (day === days - 1) res.backlogEnd = queue.length;
+    }
+    queue.forEach(function (q) { finish(q, days + 30); });
+    res.onTimeRate = res.owedN ? res.onTime / res.owedN : 0;
+    res.autoShare = res.n ? res.auto / res.n : 0;
+    var dt = res.closeDays.slice().sort(function (a, b) { return a - b; });
+    res.medianDays = dt[Math.floor((dt.length - 1) / 2)]; res.p90Days = dt[Math.floor((dt.length - 1) * 0.9)];
+    return res;
+  }
+
+  return { REASONS: REASONS, LABEL: LABEL, TAT: TAT, generate: generate, rule: rule, simulate: simulate, owed: owed };
+})();
+
+
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function pct(x) { return (x * 100).toFixed(1) + '%'; }
+  function rs(x) { x = Math.round(x); if (x >= 100000) return '₹' + (x / 100000).toFixed(1) + ' lakh'; return '₹' + x.toLocaleString('en-IN'); }
+  function kpi(v, label, sub) { return '<div class="kpi"><span class="k" style="margin:0">' + label + '</span><span class="v">' + v + '</span><span class="s">' + sub + '</span></div>'; }
+  var cache = {}, dataCache = {};
+  function data(perDay) { if (!dataCache[perDay]) dataCache[perDay] = UD.generate({ perDay: perDay }); return dataCache[perDay]; }
+  function run(perDay, o) { var k = perDay + JSON.stringify(o); if (!cache[k]) cache[k] = UD.simulate(data(perDay), o); return cache[k]; }
+
+  // Ceiling table
+  var cap = [
+    ['Today, 60 analysts', run(1200, { analysts: 60 })],
+    ['Today, 90 analysts', run(1200, { analysts: 90 })],
+    ['Today, unlimited analysts', run(1200, { analysts: 500 })],
+    ['Automated dispute desk, no sweep', run(1200, { mode: 'build', analysts: 20, tripwire: true, threshold: 0.9 })],
+    ['Automated desk + daily sweep', run(1200, { mode: 'build', analysts: 20, tripwire: true, threshold: 0.9, sweep: true })]
+  ];
+  $('cap').innerHTML = cap.map(function (r) { return '<tr><td>' + r[0] + '</td><td class="num">' + pct(r[1].onTimeRate) + '</td></tr>'; }).join('');
+
+  function labels() {
+    $('o-vol-v').textContent = (+$('o-vol').value).toLocaleString('en-IN');
+    $('o-staff-v').textContent = $('o-staff').value; $('o-build-v').textContent = $('o-build').value;
+    $('o-th-v').textContent = (+$('o-th').value).toFixed(2);
+  }
+  function sim() {
+    labels();
+    var v = +$('o-vol').value;
+    var T = run(v, { analysts: +$('o-staff').value });
+    var B = run(v, { mode: 'build', analysts: +$('o-build').value, threshold: +$('o-th').value, sweep: $('o-sweep').checked, tripwire: $('o-trip').checked });
+    $('kpis').innerHTML =
+      kpi(pct(B.onTimeRate), 'Owed money returned on time', 'today ' + pct(T.onTimeRate)) +
+      kpi(rs(B.comp), 'Compensation in 30 days', 'today ' + rs(T.comp)) +
+      kpi(Math.round(B.hours).toLocaleString('en-IN'), 'Analyst hours', 'today ' + Math.round(T.hours).toLocaleString('en-IN')) +
+      kpi(pct(B.autoShare), 'Closed by the build', 'no person needed');
+    $('checks').innerHTML =
+      '<div><span class="chip ' + (B.fraudAutoClosed === 0 ? 'ok' : 'no') + '">' + (B.fraudAutoClosed === 0 ? 'SAFE' : 'UNSAFE') + '</span> Fraud complaints auto-closed: <b>' + B.fraudAutoClosed + '</b> of ' + B.fraudN.toLocaleString('en-IN') + '</div>' +
+      '<div><span class="chip ' + (B.wrongAuto / B.n < 0.002 ? 'ok' : 'no') + '">AI ERRORS</span> Complaints auto-handled under the wrong reason: ' + B.wrongAuto + ' (' + (B.wrongAuto / B.n * 100).toFixed(2) + '%). The records still decide the outcome.</div>' +
+      '<div><span class="chip ' + (B.backlogEnd === 0 ? 'ok' : 'no') + '">BACKLOG</span> Cases waiting at day 30: ' + B.backlogEnd.toLocaleString('en-IN') + ' with the build, ' + T.backlogEnd.toLocaleString('en-IN') + ' today</div>';
+  }
+  var timer = null;
+  function schedule() { $('busy').textContent = 'Replaying 30 days of complaints…'; clearTimeout(timer); timer = setTimeout(function () { sim(); $('busy').textContent = ''; }, 30); }
+  ['o-vol', 'o-staff', 'o-build', 'o-th'].forEach(function (id) { $(id).addEventListener('input', labels); $(id).addEventListener('change', schedule); });
+  ['o-sweep', 'o-trip'].forEach(function (id) { $(id).addEventListener('change', schedule); });
+  sim();
+})();
+
+</script>
+
+</body></html>
