@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head><body>
+<title>Rebase the Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* One 800px column read like a deployment memo; the re-baseline runs inside as a working sheet. */
+:root{
+  --paper:#F6F4EE; --panel:#FFFFFF; --ink:#16181D; --muted:#5E6470; --rule:#DDD8CC;
+  --accent:#0E6B57; --accent-soft:#DDEFE8; --warn:#A04B0B; --warn-soft:#FAEADB;
+  --good:#167A4A; --good-soft:#DCF1E5; --bad:#B42318; --bad-soft:#FBE3E0; --ai:#6B3FC9; --ai-soft:#EEE7FB;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"Inter Tight","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#101214; --panel:#181B1F; --ink:#E8E6E1; --muted:#A3A7AF; --rule:#2B2F35;
+  --accent:#5FC7A8; --accent-soft:#14302A; --warn:#F2A766; --warn-soft:#3A2715;
+  --good:#5ACC8E; --good-soft:#123123; --bad:#F2867E; --bad-soft:#3A1A17; --ai:#B391F2; --ai-soft:#271C40; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#101214; --panel:#181B1F; --ink:#E8E6E1; --muted:#A3A7AF; --rule:#2B2F35;
+  --accent:#5FC7A8; --accent-soft:#14302A; --warn:#F2A766; --warn-soft:#3A2715;
+  --good:#5ACC8E; --good-soft:#123123; --bad:#F2867E; --bad-soft:#3A1A17; --ai:#B391F2; --ai-soft:#271C40; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;padding-inline:16px;padding-block:28px 64px;margin:0}
+.wrap{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.08;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.6rem,9vw,4.4rem);font-weight:800;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+h2{font-size:clamp(1.45rem,4.6vw,1.95rem);font-weight:600;letter-spacing:-.01em}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:16px}
+.eyebrow,.k{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dek{font-size:1.13rem;max-width:64ch}
+.by{font-size:.92rem;color:var(--muted)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:4px}
+.note strong{color:var(--ink)}
+.secnum{font-family:var(--f-mono);font-size:.74rem;color:var(--accent);letter-spacing:.05em}
+.pstate{border-left:3px solid var(--accent);padding:6px 0 6px 16px;font-size:1.08rem;font-weight:600}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.grid2>div{min-width:0}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:1.75rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.8rem;white-space:nowrap}
+.mono{font-family:var(--f-mono);font-size:.76rem;word-break:break-word}
+.good{color:var(--good)} .bad{color:var(--bad)}
+.finding{background:var(--accent-soft);border-radius:4px;padding:12px 14px}
+.warn{background:var(--warn-soft);border-radius:4px;padding:12px 14px}
+.pill{display:inline-block;font-family:var(--f-mono);font-size:.66rem;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.rule{background:var(--accent-soft);color:var(--accent)} .pill.ai{background:var(--ai-soft);color:var(--ai)} .pill.person{background:var(--warn-soft);color:var(--warn)}
+.pill.ok{background:var(--good-soft);color:var(--good)} .pill.no{background:var(--bad-soft);color:var(--bad)}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.84rem;color:var(--muted);min-width:0}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select{font:inherit;font-size:.9rem;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:4px;padding:6px 8px;max-width:100%}
+.toggles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.tg{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--rule);border-radius:4px;padding:10px 12px;cursor:pointer;background:var(--paper);min-width:0}
+.tg input{margin-top:5px;accent-color:var(--accent)}
+.tg b{display:block;font-size:.95rem}
+.tg span{font-size:.83rem;color:var(--muted);line-height:1.4;display:block}
+input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.checks{display:flex;flex-direction:column;gap:8px;font-size:.92rem}
+.checks div{line-height:1.7}
+.checks .pill{margin-right:8px}
+.weeks{display:flex;flex-direction:column;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--panel)}
+.weeks div{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:10px 14px;border-bottom:1px solid var(--rule);font-size:.93rem}
+.weeks div:last-child{border-bottom:0}
+.weeks .w{font-family:var(--f-mono);font-size:.76rem;color:var(--accent);padding-top:2px}
+.rowcards{display:flex;flex-direction:column;gap:10px}
+.rc{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.rc .top{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;font-family:var(--f-mono);font-size:.76rem;color:var(--muted)}
+.rc .top b{color:var(--ink);font-weight:500}
+.rc .d{font-size:.95rem}
+.rc .why{color:var(--muted);font-size:.84rem}
+.src{font-size:.86rem;color:var(--muted)}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--rule);margin:0}
+.busy{font-size:.8rem;color:var(--muted);min-height:1.2em}
+@media (max-width:520px){th,td{padding:7px 8px}table{font-size:.84rem}.weeks div{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">Independent work · Forward Deployed Engineer, OnFinance AI</div>
+  <h1>Rebase the <span>Register</span></h1>
+  <p class="dek">RBI repealed about 5,600 circulars and folded about 3,800 more into 244 Master Directions. Every new ComplianceOS client still arrives with a compliance tracker that cites the old ones. This is the forward-deployed step that turns that tracker into a clean obligation register on day zero, without silently dropping a single live obligation.</p>
+  <p class="by">Aditya Mathur · October 2026 · prepared for the OnFinance AI team</p>
+  <div class="note"><strong>Read this first.</strong> I do not work at OnFinance AI and have no client data. RBI's consolidation numbers are real and sourced below. The clause library and the client tracker are synthetic: 455 obligations across 12 themes, 1,876 legacy circulars and a 1,321-row tracker. The noise rates (missing references, typos, stale citations, duplicates) are my assumptions, listed on this page. The matching runs live in your browser.</div>
+</header>
+
+<section id="problem">
+  <span class="secnum">1 · THE CLIENT PROBLEM</span>
+  <h2>The rulebook changed under every tracker in India</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>What RBI did (Oct–Nov 2025)</th><th class="num">Count</th></tr></thead>
+    <tbody>
+      <tr><td>Legacy circulars and guidelines reviewed</td><td class="num">9,445</td></tr>
+      <tr><td>Repealed as obsolete</td><td class="num">~5,600</td></tr>
+      <tr><td>Subsumed into consolidated Master Directions</td><td class="num">~3,800</td></tr>
+      <tr><td>Master Directions, across 11 types of regulated entity</td><td class="num">244</td></tr>
+    </tbody></table></div>
+  <p>ComplianceOS already knows which legacy circular went into which Master Direction clause. A client's own tracker does not. It is years of rows typed by different teams: references in five formats, some missing, some mistyped, some citing an older circular on the same subject that RBI has now repealed. Before the client can go live, every row must end up in one of four places:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Outcome</th><th>Meaning</th><th>Cost of getting it wrong</th></tr></thead>
+    <tbody>
+      <tr><td><b>Re-point</b></td><td>The obligation lives on in a Master Direction clause</td><td>Wrong clause: wrong owner, wrong evidence</td></tr>
+      <tr><td><b>Carry</b></td><td>The circular continues as a standalone instruction</td><td>Same as above</td></tr>
+      <tr><td><b>Retire</b></td><td>Repealed as obsolete; record why</td><td class="bad"><b>If the obligation is actually live, it disappears from the register. Nobody notices until an inspection.</b></td></tr>
+      <tr><td><b>Merge</b></td><td>Two rows now point at the same clause</td><td>Duplicate work and conflicting answers</td></tr>
+    </tbody></table></div>
+  <p class="pstate">How does an FDE re-baseline a new client's tracker in days instead of weeks, with zero live obligations silently retired, and show the client what their old tracker never covered?</p>
+</section>
+
+<section id="compare">
+  <span class="secnum">2 · THREE WAYS TO DO IT</span>
+  <h2>Fast and wrong, slow and wrong, or neither</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Approach</th><th class="num">Analyst hours</th><th class="num">Rows right</th><th class="num">Live obligations lost</th></tr></thead>
+    <tbody id="cmp"></tbody></table></div>
+  <p class="by">Hand-research error assumed at 3% of rows. Ladder accuracy assumes analysts get review rows right; the day-7 spot-check is how that is proven at a real client. Across five stress runs the ladder's automatic decisions were 99.8–100% right.</p>
+  <p class="warn"><b>Why "let the AI map it" fails.</b> A text matcher alone has no way to know a row is live when its wording is thin, and no way to know a row is dead when it reads like a live subject. It retires live obligations and keeps dead ones. The same model is safe when rules go first and it only handles what the rules cannot.</p>
+</section>
+
+<section id="ladder">
+  <span class="secnum">3 · RULES FIRST, TEXT SECOND, PEOPLE LAST</span>
+  <h2>The decision ladder</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Step</th><th>Done by</th><th>Rule</th></tr></thead>
+    <tbody>
+      <tr><td>1. Normalise the reference</td><td><span class="pill rule">Rules</span></td><td>"rbi 2016-17 / 45", "Circ. 45 (2016-17)" and "RBI-2016-17-45" all become one key</td></tr>
+      <tr><td>2. Look it up in the consolidation map</td><td><span class="pill rule">Rules</span></td><td>Subsumed, standalone or repealed, straight from the mapping ComplianceOS already holds</td></tr>
+      <tr><td>3. Check the text agrees</td><td><span class="pill ai">Text match</span></td><td>Re-point only if the row's wording matches the target clause. A reference that disagrees with its own text goes to a person</td></tr>
+      <tr><td>4. Two keys to retire</td><td><span class="pill rule">Rules</span> + <span class="pill ai">Text</span></td><td>Retire only if the reference is repealed <b>and</b> the text matches that repealed circular clearly better than any live clause. This catches stale citations</td></tr>
+      <tr><td>5. Typo repair</td><td><span class="pill rule">Rules</span> + <span class="pill ai">Text</span></td><td>A one-digit-off reference is repaired only if exactly one neighbour's text clearly matches</td></tr>
+      <tr><td>6. No reference</td><td><span class="pill ai">Text match</span></td><td>May re-point above a confidence threshold with a clear margin. <b>Text alone never retires</b></td></tr>
+      <tr><td>7. Everything else</td><td><span class="pill person">Analyst</span></td><td>Reviewed with the suggested clause and the reason shown. About 3 minutes a row instead of 9</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="sim">
+  <span class="secnum">4 · RUN THE RE-BASELINE</span>
+  <h2>Change the levers, watch what breaks</h2>
+  <div class="sheet">
+    <div class="controls">
+      <label for="o-th">Text-match threshold for rows with no reference: <b id="o-th-v">0.55</b><input type="range" id="o-th" min="0.35" max="0.75" step="0.05" value="0.55"></label>
+      <label for="o-mess">How messy the client's tracker is: <b id="o-mess-v">1.0×</b><input type="range" id="o-mess" min="0.6" max="1.6" step="0.2" value="1"></label>
+      <label for="o-seed">Client tracker<select id="o-seed"><option value="20261022">Client A (1,321 rows)</option><option value="5">Client B</option><option value="11">Client C</option></select></label>
+    </div>
+    <div class="toggles">
+      <label class="tg" for="o-two"><input type="checkbox" id="o-two" checked><div><b>Two keys to retire</b><span>Reference repealed and text matches the repealed circular.</span></div></label>
+      <label class="tg" for="o-fuzzy"><input type="checkbox" id="o-fuzzy" checked><div><b>Typo repair</b><span>Fix one-digit-off references when the text clearly agrees.</span></div></label>
+    </div>
+    <div class="busy" id="busy" aria-live="polite"></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="checks" id="checks"></div>
+  </div>
+  <p><b>Stress test.</b> I reran the ladder on three different client trackers, one 50% messier and one 40% cleaner. It lost 0–1 live obligations in every run, against 33–77 for the text matcher alone and 3–7 for a careful analyst working by hand. Review hours ranged from 7 to 19, against about 200 by hand. Without the two-key rule, 9–35 live obligations were retired, almost all of them stale citations.</p>
+</section>
+
+<section id="rows">
+  <span class="secnum">5 · LOOK AT THE ROWS</span>
+  <h2>Every decision carries its reason</h2>
+  <label class="k" for="o-filter" style="display:flex;flex-direction:column;gap:6px;text-transform:none;letter-spacing:0;font-family:var(--f-body);font-size:.88rem">Show
+    <select id="o-filter">
+      <option value="stale">Stale citations the two-key rule caught</option>
+      <option value="review">The analyst review queue</option>
+      <option value="retire">Rows retired automatically</option>
+      <option value="typo">Typos repaired</option>
+      <option value="textbad">Rows the text matcher alone gets wrong</option>
+    </select></label>
+  <div class="rowcards" id="rowt"></div>
+</section>
+
+<section id="gaps">
+  <span class="secnum">6 · THE FINDING THE CLIENT WILL CARE ABOUT MOST</span>
+  <h2>What the old tracker never covered</h2>
+  <p>Once every row is mapped, the register can be compared against every clause that applies to the client. Anything with no row is a gap. Many are clauses written fresh into the consolidated text, with no legacy circular behind them, so no old tracker could have had them.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Department</th><th class="num">Applicable</th><th class="num">Not on tracker</th><th class="num">New in consolidation</th></tr></thead>
+    <tbody id="gapt"></tbody></table></div>
+  <p class="finding" id="gapline"></p>
+</section>
+
+<section id="plan">
+  <span class="secnum">7 · HOW I WOULD RUN IT AT A CLIENT</span>
+  <h2>Ten working days, inside onboarding</h2>
+  <div class="weeks">
+    <div><span class="w">Day 1</span><span>Kick-off with the Chief Compliance Officer. Get the tracker export, the policy library, the list of owners and the last inspection's findings.</span></div>
+    <div><span class="w">Day 2</span><span>Profile the tracker: row count, reference formats, missing references, owners who have left. Agree the four outcomes and the review rules in writing.</span></div>
+    <div><span class="w">Day 3</span><span>Run the ladder. Send the analyst review queue, each row with its suggested clause and reason.</span></div>
+    <div><span class="w">Days 4–6</span><span>Compliance reviews the queue; I sit with them. Every override is logged and reused to tune the thresholds for this client.</span></div>
+    <div><span class="w">Day 7</span><span>Spot-check: the CCO's team picks 50 auto-decided rows at random and checks them. Acceptance: zero live obligations retired.</span></div>
+    <div><span class="w">Day 8</span><span>Gap report by department, with owners, signed off by the CCO. Owners reassigned for rows whose owner has left.</span></div>
+    <div><span class="w">Days 9–10</span><span>Load the clean register into ComplianceOS. Every retired row keeps its reason in the audit log. Hand over to steady state.</span></div>
+  </div>
+  <div class="grid2">
+    <div><div class="k">Questions for the CCO on day 1</div><ol class="plain">
+      <li>Which tracker is the real one, and who else keeps their own?</li>
+      <li>How do teams cite a circular today: number, date or subject?</li>
+      <li>Which obligations came up in the last inspection?</li>
+      <li>Who can sign off retiring an obligation?</li>
+      <li>Which departments have changed owners in the last year?</li>
+    </ol></div>
+    <div><div class="k">Acceptance criteria</div><ul class="plain">
+      <li>Every row has an outcome and a written reason</li>
+      <li>Zero live obligations retired on the 50-row spot-check</li>
+      <li>Gap report signed by the CCO</li>
+      <li>Every obligation has a current owner</li>
+    </ul></div>
+  </div>
+</section>
+
+<section id="demo">
+  <span class="secnum">8 · THE 5-MINUTE DEMO TO A CCO</span>
+  <h2>Their tracker, not ours</h2>
+  <ol class="plain">
+    <li><b>Upload their tracker live.</b> "1,321 rows. Here is how many cite circulars RBI has repealed."</li>
+    <li><b>Show one stale citation.</b> The reference says repealed, the obligation is live, and the ladder stopped it. "This is the row that becomes an inspection finding."</li>
+    <li><b>Show the review queue.</b> A few hundred rows, each with a suggestion. "Your team reviews these, not all 1,321."</li>
+    <li><b>Open the gap report.</b> "These obligations apply to you and were never on your tracker."</li>
+    <li><b>Open the audit log</b> for one retired row: the reference, the rule and the reason.</li>
+  </ol>
+</section>
+
+<section id="product">
+  <span class="secnum">9 · WHAT I WOULD HAND BACK TO PRODUCT</span>
+  <h2>Do it once by hand, then make it a feature</h2>
+  <ul class="plain">
+    <li><b>A register importer in ComplianceOS</b>: upload a tracker, get the four outcomes, the review queue and the gap report. Every client onboarding starts here.</li>
+    <li><b>"Live obligations lost" as a release gate</b> for any change to matching, tested on a golden set of past client trackers.</li>
+    <li><b>Per-client thresholds learned from overrides</b> during review, so the second migration at a client is faster than the first.</li>
+    <li><b>The same ladder for policies.</b> A bank's policy documents cite repealed circulars too. Same lookup, same two-key rule.</li>
+  </ul>
+</section>
+
+<section id="limits">
+  <span class="secnum">10 · LIMITS</span>
+  <h2>What this does not prove</h2>
+  <ul class="plain">
+    <li>The library and tracker are synthetic. Real clause wording is longer and messier, which favours a stronger text model than the TF-IDF stand-in used here.</li>
+    <li>Noise rates are assumptions: 13% missing references, 5% typos, 6% stale citations, 7% duplicates. The day-2 profiling replaces them with the client's real rates.</li>
+    <li>I assume analysts decide review rows correctly. In practice the spot-check is what proves it.</li>
+    <li>Applicability is simplified: every clause applies to the client. Real entity-type and layer filters come from ComplianceOS.</li>
+  </ul>
+</section>
+
+<hr>
+<section id="sources" class="src">
+  <span class="secnum">SOURCES</span>
+  <ul class="plain">
+    <li><a href="https://onfinanceainewsletter.beehiiv.com/p/rbi-consolidates-decades-of-regulation-into-244-master-directions" target="_blank" rel="noopener">OnFinance AI: RBI consolidates decades of regulation into 244 Master Directions</a> (9,445 reviewed, ~5,600 repealed, ~3,800 subsumed)</li>
+    <li><a href="https://www.businesstoday.in/amp/latest/economy/story/rbi-consolidates-9000-circulars-into-244-master-directions-for-enhanced-ease-of-doing-business-details-here-504215-2025-11-28" target="_blank" rel="noopener">Business Today: RBI consolidates 9,000 circulars into 244 Master Directions</a> (28 Nov 2025, 11 entity types)</li>
+    <li><a href="https://onfinanceainewsletter.beehiiv.com/p/how-onfinance-ai-streamlines-the-life-of-a-circular" target="_blank" rel="noopener">OnFinance AI: the life of a circular</a> and <a href="https://onfinanceainewsletter.beehiiv.com/p/how-complianceos-saves-day-one-of-the-inspection" target="_blank" rel="noopener">day one of the inspection</a></li>
+    <li><a href="https://onfinance.ai/" target="_blank" rel="noopener">OnFinance AI: ComplianceOS</a></li>
+  </ul>
+  <p>Model: seeded synthetic data, so results repeat. Ten automated checks and five stress runs.</p>
+</section>
+
+</div>
+
+<script>
+// Re-baselining a client's legacy compliance register after RBI's 2025 consolidation.
+// Pure functions, no DOM. Synthetic library and tracker; the structure follows RBI's Nov 2025 exercise
+// (legacy circulars either repealed as obsolete, subsumed into a Master Direction, or kept standalone).
+var RB = (function () {
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0; var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function pickN(r, arr, n) { var a = arr.slice(), out = []; while (out.length < n && a.length) out.push(a.splice(Math.floor(r() * a.length), 1)[0]); return out; }
+
+  // Twelve themes, roughly the Master Directions an NBFC in the Middle Layer works against. Words are the vocabulary
+  // an obligation in that theme is written in; clauses inside a theme share words on purpose, so matching is hard.
+  var THEMES = [
+    ['KYC', 'Compliance', ['customer due diligence', 'beneficial owner', 'periodic updation', 'video kyc', 'politically exposed', 'ckycr upload', 'risk categorisation', 'officially valid document', 'aadhaar authentication', 'enhanced due diligence', 'non-face-to-face', 'name screening', 'unique customer id', 'record retention', 'wire transfer details']],
+    ['Fair Practices', 'Operations', ['sanction letter', 'vernacular language', 'key fact statement', 'penal charges', 'foreclosure charges', 'repossession notice', 'recovery agents', 'cooling-off period', 'annualised rate', 'loan agreement copy', 'release of documents', 'grievance officer', 'board-approved policy', 'interest reset', 'collateral return']],
+    ['Scale Based Regulation', 'Finance', ['upper layer', 'middle layer', 'leverage ceiling', 'capital adequacy', 'tier 1 capital', 'concentration norms', 'board composition', 'chief compliance officer', 'independent director', 'core banking', 'listing requirement', 'ipo within three years', 'exposure limits', 'risk weights', 'sensitive sector']],
+    ['IT Governance', 'Technology', ['information security policy', 'it strategy committee', 'cyber crisis plan', 'vulnerability assessment', 'penetration testing', 'access controls', 'business continuity', 'disaster recovery drill', 'log retention', 'patch management', 'data backup', 'incident reporting', 'third-party it risk', 'cloud adoption', 'change management']],
+    ['Outsourcing', 'Operations', ['material outsourcing', 'service provider due diligence', 'outsourcing agreement', 'right to audit', 'sub-contracting', 'concentration risk', 'exit strategy', 'customer confidentiality', 'grievance redressal', 'outsourcing register', 'annual review', 'offshore outsourcing', 'business continuity of vendor', 'group entity outsourcing', 'termination clause']],
+    ['Fraud Risk Management', 'Risk', ['fraud classification', 'red-flagged account', 'early warning signals', 'natural justice', 'show cause notice', 'fraud reporting', 'fraud monitoring return', 'staff accountability', 'forensic audit', 'law enforcement', 'board committee on frauds', 'quarterly review', 'closure of fraud', 'wilful defaulter', 'data analytics unit']],
+    ['Digital Lending', 'Product', ['lending service provider', 'digital lending app', 'direct disbursal', 'fee to lsp', 'key fact statement', 'cooling-off period', 'data collection consent', 'first loss default guarantee', 'credit limit increase', 'grievance officer', 'app reporting portal', 'storage in india', 'recovery agents', 'automatic increase', 'borrower bank account']],
+    ['Interest Rate Policy', 'Finance', ['interest rate model', 'risk premium', 'gradation of risk', 'rate disclosure on website', 'annualised rate', 'floating rate reset', 'equated instalment', 'tenor extension', 'board-approved policy', 'switch to fixed', 'cost of funds', 'spread computation', 'penal charges', 'usurious rates', 'notice of change']],
+    ['Credit Information Reporting', 'Risk', ['credit information companies', 'monthly submission', 'fortnightly reporting', 'data quality index', 'rejected records', 'correction within 21 days', 'compensation for delay', 'customer intimation', 'nodal officer', 'default intimation', 'membership of cics', 'account closure update', 'dispute resolution', 'uniform format', 'credit report access']],
+    ['Liquidity Risk', 'Treasury', ['liquidity coverage ratio', 'high quality liquid assets', 'structural liquidity statement', 'contingency funding plan', 'stress testing', 'asset liability committee', 'maturity buckets', 'interest rate sensitivity', 'funding concentration', 'intraday liquidity', 'liquidity risk tolerance', 'short-term funding', 'early warning indicators', 'cash flow mismatch', 'board review']],
+    ['Prudential Norms', 'Finance', ['income recognition', 'asset classification', 'npa upgradation', 'provisioning', 'special mention account', 'day-end process', 'standard asset provision', 'restructuring', 'expected credit loss', 'write-off policy', 'security valuation', 'gold loan ltv', 'loan to value', 'overdue reckoning', 'statutory auditor']],
+    ['Customer Service', 'Operations', ['internal ombudsman', 'complaint escalation', 'turnaround time', 'complaint analysis', 'customer service committee', 'citizen charter', 'display of information', 'nominee settlement', 'deceased claims', 'senior citizen facilities', 'complaint register', 'root cause analysis', 'grievance officer', 'escalation matrix', 'disclosure in annual report']]
+  ];
+  var OBSOLETE = ['physical form submission', 'hard copy return', 'fax confirmation', 'branch-level register', 'demand draft', 'paper-based filing', 'half-yearly hard copy', 'manual ledger', 'courier of returns', 'pre-2010 format', 'telex', 'one-time exercise', 'transition provision', 'superseded format', 'expired relaxation'];
+  var SYN = { 'customer due diligence': 'cdd checks', 'periodic updation': 're-kyc', 'key fact statement': 'kfs', 'penal charges': 'penal interest', 'recovery agents': 'collection agents', 'capital adequacy': 'crar', 'vulnerability assessment': 'va scan', 'penetration testing': 'pen test', 'business continuity': 'bcp', 'material outsourcing': 'critical vendor', 'fraud reporting': 'frms filing', 'early warning signals': 'ews', 'lending service provider': 'lsp partner', 'liquidity coverage ratio': 'lcr', 'high quality liquid assets': 'hqla', 'asset classification': 'npa tagging', 'expected credit loss': 'ecl', 'internal ombudsman': 'io', 'turnaround time': 'tat', 'credit information companies': 'bureau', 'grievance officer': 'go', 'loan to value': 'ltv' };
+  var FILLER = ['ensure', 'quarterly', 'as per policy', 'track', 'compliance', 'update', 'check', 'pending', 'review', 'board note', 'rbi', 'nbfc', 'circular'];
+
+  function words(r, pool, n) { return pickN(r, pool, n); }
+  function refFor(year, num) { return 'RBI/' + year + '/' + num; }
+
+  // ---------- library: clauses, legacy circulars, standalone instructions ----------
+  function library(opts) {
+    opts = opts || {}; var r = rng(opts.libSeed || 1128);
+    var clauses = [], circulars = [];
+    var years = ['2008-09', '2010-11', '2012-13', '2014-15', '2015-16', '2016-17', '2017-18', '2018-19', '2019-20', '2020-21', '2021-22', '2022-23', '2023-24', '2024-25'];
+    var used = {};
+    function newRef() { var y, n, k; do { y = years[Math.floor(r() * years.length)]; n = 10 + Math.floor(r() * 290); k = y + '/' + n; } while (used[k]); used[k] = 1; return { year: y, num: n, ref: refFor(y, n) }; }
+    THEMES.forEach(function (th, ti) {
+      var nC = 28 + Math.floor(r() * 14);
+      for (var c = 0; c < nC; c++) {
+        var cl = { id: 'MD' + String(ti + 1).padStart(2, '0') + '.' + String(c + 1).padStart(2, '0'), theme: th[0], dept: th[1], md: ti, words: words(r, th[2], 3), standalone: false, sources: [] };
+        cl.isNew = r() < 0.15; // obligations introduced in the consolidated text with no legacy circular behind them
+        clauses.push(cl);
+        if (!cl.isNew) {
+          var k = r() < 0.6 ? 1 : (r() < 0.7 ? 2 : 3);
+          for (var j = 0; j < k; j++) { var ref = newRef(); var ci = { ref: ref.ref, year: ref.year, num: ref.num, status: 'SUBSUMED', clause: cl.id, theme: th[0], words: cl.words }; circulars.push(ci); cl.sources.push(ci.ref); }
+        }
+      }
+    });
+    // Standalone circulars that continue in force outside the Master Directions
+    for (var s = 0; s < 28; s++) {
+      var th = THEMES[Math.floor(r() * THEMES.length)], ref2 = newRef();
+      var cl2 = { id: 'SA.' + String(s + 1).padStart(2, '0'), theme: th[0], dept: th[1], md: -1, words: words(r, th[2], 3), standalone: true, isNew: false, sources: [ref2.ref] };
+      clauses.push(cl2);
+      circulars.push({ ref: ref2.ref, year: ref2.year, num: ref2.num, status: 'STANDALONE', clause: cl2.id, theme: th[0], words: cl2.words });
+    }
+    // Repealed as obsolete: written about the same themes, so text alone can make them look live
+    for (var o = 0; o < 1300; o++) {
+      var th3 = THEMES[Math.floor(r() * THEMES.length)], ref3 = newRef();
+      circulars.push({ ref: ref3.ref, year: ref3.year, num: ref3.num, status: 'REPEALED', clause: null, theme: th3[0], words: words(r, th3[2], 1).concat(words(r, OBSOLETE, 2)) });
+    }
+    var byRef = {}, byClause = {}, repealedByTheme = {};
+    circulars.forEach(function (c) { if (c.status === 'REPEALED') (repealedByTheme[c.theme] = repealedByTheme[c.theme] || []).push(c); });
+    circulars.forEach(function (c) { byRef[normRef(c.ref)] = c; });
+    clauses.forEach(function (c) { byClause[c.id] = c; });
+    var lib = { clauses: clauses, circulars: circulars, byRef: byRef, byClause: byClause, repealedByTheme: repealedByTheme };
+    buildIndex(lib);
+    return lib;
+  }
+
+  // ---------- the client's legacy tracker ----------
+  function tracker(lib, opts) {
+    opts = opts || {}; var r = rng(opts.seed || 20261022);
+    var mess = opts.mess == null ? 1 : opts.mess;
+    var cover = { SUBSUMED: 0.84, STANDALONE: 0.8, REPEALED: 0.6 };
+    var rows = [], owners = ['Compliance', 'Operations', 'Risk', 'Technology', 'Finance', 'Treasury', 'Product'];
+    lib.circulars.forEach(function (c) {
+      if (r() >= cover[c.status]) return;
+      rows.push(makeRow(r, c, mess, owners, lib));
+    });
+    // duplicates: the same obligation entered again by another team, worded differently
+    var n0 = rows.length;
+    for (var i = 0; i < n0; i++) if (r() < 0.07 * mess) { var src = rows[i]; var d = makeRow(r, lib.byRef[normRef(src.truthRef)], mess, owners, lib); d.dupOf = src.id; rows.push(d); }
+    // shuffle into tracker order
+    for (var k = rows.length - 1; k > 0; k--) { var j = Math.floor(r() * (k + 1)); var t = rows[k]; rows[k] = rows[j]; rows[j] = t; }
+    rows.forEach(function (row, idx) { row.id = 'R' + String(idx + 1).padStart(4, '0'); });
+    rows.forEach(function (row) { row.tokens = tokens(row.desc); });
+    return rows;
+  }
+  function makeRow(r, c, mess, owners, lib) {
+    // reference as typed into the tracker
+    var u = r(), ref, refKind;
+    if (c.status !== 'REPEALED' && r() < 0.06 * mess) {
+      // stale citation: the row still cites an older circular on the same subject, which RBI has now repealed
+      var olds = lib.repealedByTheme[c.theme]; var oc = olds[Math.floor(r() * olds.length)]; ref = oc.ref; refKind = 'stale';
+    }
+    else if (u < 0.13 * mess) { ref = ''; refKind = 'missing'; }
+    else if (u < 0.13 * mess + 0.05 * mess) { ref = refFor(c.year, typoNum(r, c.num)); refKind = 'typo'; }
+    else if (u < 0.13 * mess + 0.05 * mess + 0.3) { ref = fmtVariant(r, c); refKind = 'format'; }
+    else { ref = c.ref; refKind = 'exact'; }
+    // description: degraded copy of the circular's words
+    var w = [];
+    c.words.forEach(function (x) { var v = r(); if (v < 0.2 * mess) return; if (v < 0.2 * mess + 0.2 && SYN[x]) w.push(SYN[x]); else w.push(x); });
+    if (!w.length) w.push(c.words[0]);
+    if (r() < 0.5) w.push(FILLER[Math.floor(r() * FILLER.length)]);
+    var desc = sentence(r, w);
+    return { truthRef: c.ref, truthStatus: c.status, truthClause: c.clause, ref: ref, refKind: refKind, desc: desc,
+      owner: r() < 0.16 ? 'Left the company' : owners[Math.floor(r() * owners.length)] };
+  }
+  function typoNum(r, n) { var s = String(n).split(''); var i = Math.floor(r() * s.length); var d; do { d = String(Math.floor(r() * 10)); } while (d === s[i] || (i === 0 && d === '0')); s[i] = d; return s.join(''); }
+  function fmtVariant(r, c) { var v = Math.floor(r() * 4); return v === 0 ? 'rbi ' + c.year + ' / ' + c.num : v === 1 ? 'RBI/' + c.year.replace('-', '–') + '/' + c.num : v === 2 ? 'Circ. ' + c.num + ' (' + c.year + ')' : 'RBI-' + c.year + '-' + c.num; }
+  function sentence(r, w) {
+    var t = ['Ensure %s', 'Track %s', 'Review %s', 'Maintain %s', '%s: check and file'][Math.floor(r() * 5)];
+    var s = w.join(', '); s = t.replace('%s', s); return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  // ---------- matching ----------
+  function normRef(s) {
+    if (!s) return '';
+    var m = String(s).replace(/[–—]/g, '-').match(/(\d{4})\s*-\s*(\d{2})\D+?(\d{1,4})/) || String(s).replace(/[–—]/g, '-').match(/(\d{1,4})\D+(\d{4})-(\d{2})/);
+    if (!m) return '';
+    if (m[0].indexOf('(') >= 0 || /^\d{1,4}\D+\d{4}/.test(m[0])) return m[2] + '-' + m[3] + '/' + (+m[1]);
+    return m[1] + '-' + m[2] + '/' + (+m[3]);
+  }
+  function tokens(text) {
+    var t = String(text).toLowerCase().replace(/[^a-z0-9\- ]/g, ' ');
+    var out = {}; t.split(/\s+/).forEach(function (w) { if (w.length > 2 && STOP.indexOf(w) < 0) out[w] = (out[w] || 0) + 1; }); return out;
+  }
+  var STOP = ['ensure', 'track', 'review', 'maintain', 'check', 'and', 'file', 'the', 'for', 'quarterly', 'as', 'per', 'policy', 'compliance', 'update', 'pending', 'board', 'note', 'rbi', 'nbfc', 'circular', 'of', 'to', 'in', 'on'];
+  function clauseText(cl) { var t = cl.words.join(' '); cl.words.forEach(function (w) { if (SYN[w]) t += ' ' + SYN[w]; }); return t + ' ' + cl.theme; }
+  function buildIndex(lib) {
+    // one vocabulary over live clauses and every legacy circular, so obsolete wording carries weight too
+    var df = {}, docs = lib.clauses.map(function (cl) { return tokens(clauseText(cl)); });
+    var cdocs = lib.circulars.map(function (c) { var t = c.words.join(' '); c.words.forEach(function (w) { if (SYN[w]) t += ' ' + SYN[w]; }); return tokens(t); });
+    docs.concat(cdocs).forEach(function (tk) { Object.keys(tk).forEach(function (w) { df[w] = (df[w] || 0) + 1; }); });
+    var N = docs.length + cdocs.length; lib.idf = {}; Object.keys(df).forEach(function (w) { lib.idf[w] = Math.log((N + 1) / (df[w] + 1)) + 1; });
+    lib.vecs = docs.map(function (d) { return vec(d, lib.idf); });
+    lib.circVec = {}; lib.circulars.forEach(function (c, i) { lib.circVec[c.ref] = vec(cdocs[i], lib.idf); });
+  }
+  function simToCirc(lib, row, c) { return cos(vec(row.tokens, lib.idf), lib.circVec[c.ref]); }
+  function vec(tk, idf) { var v = {}, n = 0; Object.keys(tk).forEach(function (w) { if (!idf[w]) return; v[w] = tk[w] * idf[w]; n += v[w] * v[w]; }); n = Math.sqrt(n) || 1; Object.keys(v).forEach(function (w) { v[w] /= n; }); return v; }
+  function cos(a, b) { var s = 0; for (var w in a) if (b[w]) s += a[w] * b[w]; return s; }
+  // Text similarity: the stand-in for the embedding / LLM step. Returns the ranked live clauses for a row.
+  function rank(lib, row) {
+    var v = vec(row.tokens, lib.idf), sc = lib.vecs.map(function (cv, i) { return [i, cos(v, cv)]; });
+    sc.sort(function (a, b) { return b[1] - a[1]; });
+    return sc.slice(0, 3).map(function (x) { return { clause: lib.clauses[x[0]].id, score: x[1] }; });
+  }
+  function simTo(lib, row, clauseId) { var i = lib.clauses.indexOf(lib.byClause[clauseId]); return cos(vec(row.tokens, lib.idf), lib.vecs[i]); }
+
+  // Decide one row. Returns {action: REPOINT|CARRY|RETIRE|REVIEW, clause, why, key}
+  function decide(lib, row, o) {
+    o = o || {}; var th = o.threshold == null ? 0.55 : o.threshold, agree = o.agree == null ? 0.4 : o.agree;
+    var top = rank(lib, row), best = top[0], margin = best.score - top[1].score;
+    if (o.mode === 'textonly') { // naive semantic matcher: best match or retire
+      return best.score >= th ? { action: 'REPOINT', clause: best.clause, why: 'Best text match ' + best.score.toFixed(2), key: 'text' }
+        : { action: 'RETIRE', clause: null, why: 'No live clause matched well, treated as repealed', key: 'text' };
+    }
+    var k = normRef(row.ref), c = k && lib.byRef[k], viaFuzzy = false;
+    if (!c && k && o.fuzzy !== false) { // one-digit typo: take the neighbouring reference whose own text clearly matches the row
+      var cands = neighbours(lib, k).map(function (x) { return [x, simToCirc(lib, row, x)]; }).sort(function (a, b) { return b[1] - a[1]; });
+      if (cands.length && cands[0][1] >= agree + 0.15 && (cands.length === 1 || cands[0][1] - cands[1][1] >= 0.2)) { c = cands[0][0]; viaFuzzy = true; }
+    }
+    if (c) {
+      if (c.status === 'REPEALED') {
+        // two keys to retire: the reference says repealed AND the text does not look like a live obligation
+        // two keys to retire: the reference says repealed AND the text matches that repealed circular better than any live clause
+        var sR = simToCirc(lib, row, c);
+        if (o.twoKey !== false && !(sR >= agree && (best.score < agree || sR - best.score >= 0.2))) return { action: 'REVIEW', clause: best.clause, why: 'Reference ' + c.ref + ' is repealed, but the text reads like live clause ' + best.clause + ' (' + best.score.toFixed(2) + ' vs ' + sR.toFixed(2) + ' for the repealed circular)', key: 'conflict' };
+        return { action: 'RETIRE', clause: null, why: c.ref + ' repealed as obsolete; text matches it (' + sR.toFixed(2) + ') and no live clause (best ' + best.score.toFixed(2) + ')', key: 'ref' };
+      }
+      var s = simTo(lib, row, c.clause);
+      if (s >= agree) return { action: c.status === 'STANDALONE' ? 'CARRY' : 'REPOINT', clause: c.clause, why: (viaFuzzy ? 'Typo-corrected reference ' : 'Reference ') + c.ref + (c.status === 'STANDALONE' ? ' continues standalone' : ' subsumed into ' + c.clause) + '; text agrees (' + s.toFixed(2) + ')', key: viaFuzzy ? 'fuzzy' : 'ref' };
+      return { action: 'REVIEW', clause: c.clause, why: 'Reference points to ' + c.clause + ' but text disagrees (' + s.toFixed(2) + '); best text match ' + best.clause, key: 'conflict' };
+    }
+    // no usable reference: text alone may re-point, never retire
+    if (best.score >= th && margin >= (o.margin == null ? 0.08 : o.margin)) {
+      var bc = lib.byClause[best.clause];
+      return { action: bc.standalone ? 'CARRY' : 'REPOINT', clause: best.clause, why: 'No usable reference; text match ' + best.score.toFixed(2) + ', clear of next by ' + margin.toFixed(2), key: 'text' };
+    }
+    return { action: 'REVIEW', clause: best.clause, why: k ? 'Reference ' + row.ref + ' not found; best text match ' + best.score.toFixed(2) : 'No reference; text match too weak or too close to call (' + best.score.toFixed(2) + ')', key: 'none' };
+  }
+  function neighbours(lib, k) {
+    var p = k.split('/'), y = p[0], n = p[1], out = [];
+    for (var i = 0; i < n.length; i++) for (var d = 0; d <= 9; d++) { var s = n.slice(0, i) + d + n.slice(i + 1); if (s === n || s[0] === '0') continue; var c = lib.byRef[y + '/' + (+s)]; if (c) out.push(c); }
+    return out;
+  }
+
+  // ---------- run the re-baseline ----------
+  // mode: 'manual' (analyst researches every row), 'textonly' (semantic matcher alone), 'ladder' (rules first, text second, people last)
+  function run(lib, rows, o) {
+    o = o || {}; var mode = o.mode || 'ladder';
+    var minsManual = o.minsManual || 9, minsReview = o.minsReview || 3, manualErr = o.manualErr == null ? 0.03 : o.manualErr;
+    var r = rng(o.seed || 7), res = { n: rows.length, auto: 0, review: 0, hours: 0, decisions: [] };
+    rows.forEach(function (row) {
+      var d;
+      if (mode === 'manual') {
+        res.hours += minsManual / 60;
+        d = truthDecision(row);
+        if (r() < manualErr) d = wrongDecision(lib, row, r, d);
+        d.how = 'person';
+      } else {
+        d = decide(lib, row, Object.assign({}, o, { mode: mode }));
+        if (d.action === 'REVIEW') { res.review++; res.hours += minsReview / 60; var fixed = truthDecision(row); fixed.why = 'Analyst confirmed: ' + d.why; fixed.how = 'review'; fixed.suggested = d.clause; d = fixed; }
+        else { res.auto++; d.how = 'auto'; }
+      }
+      d.row = row; res.decisions.push(d);
+    });
+    return score(lib, rows, res);
+  }
+  function truthDecision(row) { return row.truthStatus === 'REPEALED' ? { action: 'RETIRE', clause: null } : { action: row.truthStatus === 'STANDALONE' ? 'CARRY' : 'REPOINT', clause: row.truthClause }; }
+  function wrongDecision(lib, row, r, d) {
+    if (d.action === 'RETIRE') { var cl = lib.clauses[Math.floor(r() * lib.clauses.length)]; return { action: 'REPOINT', clause: cl.id }; }
+    if (r() < 0.4) return { action: 'RETIRE', clause: null };
+    var same = lib.clauses.filter(function (c) { return c.theme === lib.byClause[d.clause].theme && c.id !== d.clause; });
+    return { action: 'REPOINT', clause: same[Math.floor(r() * same.length)].id };
+  }
+  function score(lib, rows, res) {
+    var truthCovered = {}, finalCovered = {}, wrongMap = 0, liveRetired = 0, deadKept = 0, autoWrong = 0;
+    res.decisions.forEach(function (d) {
+      var row = d.row, t = truthDecision(row);
+      if (t.clause) truthCovered[t.clause] = 1;
+      if (d.clause && d.action !== 'RETIRE') finalCovered[d.clause] = 1;
+      var correct = d.action === t.action ? (d.clause === t.clause || d.action === 'RETIRE') : false;
+      d.correct = correct;
+      if (!correct) {
+        if (t.action !== 'RETIRE' && d.action === 'RETIRE') liveRetired++;
+        else if (t.action === 'RETIRE') deadKept++;
+        else wrongMap++;
+        if (d.how === 'auto') autoWrong++;
+      }
+    });
+    var lost = Object.keys(truthCovered).filter(function (k) { return !finalCovered[k]; });
+    var applicable = lib.clauses.map(function (c) { return c.id; });
+    res.truthGaps = applicable.filter(function (k) { return !truthCovered[k]; });
+    res.reportedGaps = applicable.filter(function (k) { return !finalCovered[k]; });
+    res.newClauseGaps = res.truthGaps.filter(function (k) { return lib.byClause[k].isNew; }).length;
+    res.lost = lost.length; res.lostIds = lost; res.liveRetired = liveRetired; res.deadKept = deadKept; res.wrongMap = wrongMap; res.autoWrong = autoWrong;
+    res.errors = liveRetired + deadKept + wrongMap; res.accuracy = 1 - res.errors / res.n;
+    res.autoShare = res.auto / res.n;
+    res.obligationsAfter = Object.keys(finalCovered).length;
+    res.retired = res.decisions.filter(function (d) { return d.action === 'RETIRE'; }).length;
+    res.merged = res.decisions.filter(function (d) { return d.action !== 'RETIRE'; }).length - res.obligationsAfter;
+    res.ownerless = rows.filter(function (x) { return x.owner === 'Left the company'; }).length;
+    res.applicable = applicable.length;
+    return res;
+  }
+  return { THEMES: THEMES, library: library, tracker: tracker, decide: decide, run: run, normRef: normRef, rank: rank };
+})();
+
+
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function pct(x) { return (x * 100).toFixed(1) + '%'; }
+  function n(x) { return Math.round(x).toLocaleString('en-IN'); }
+  function kpi(v, label, sub) { return '<div class="kpi"><span class="k">' + label + '</span><span class="v">' + v + '</span><span class="s">' + sub + '</span></div>'; }
+  var L = RB.library(), trackers = {}, cache = {};
+  function tr(seed, mess) { var k = seed + ':' + mess; if (!trackers[k]) trackers[k] = RB.tracker(L, { seed: seed, mess: mess }); return trackers[k]; }
+  function run(seed, mess, o) { var k = seed + ':' + mess + JSON.stringify(o); if (!cache[k]) cache[k] = RB.run(L, tr(seed, mess), o); return cache[k]; }
+
+  var rows0 = tr(20261022, 1), M = run(20261022, 1, { mode: 'manual' }), T = run(20261022, 1, { mode: 'textonly' }), D = run(20261022, 1, {});
+  $('cmp').innerHTML = [
+    ['Analyst researches every row by hand', M], ['Text matcher maps everything ("let the AI do it")', T], ['Decision ladder + analyst review queue', D]
+  ].map(function (r) { var x = r[1]; return '<tr><td>' + r[0] + '</td><td class="num">' + n(x.hours) + '</td><td class="num">' + pct(x.accuracy) + '</td><td class="num ' + (x.lost ? 'bad' : 'good') + '">' + x.lost + '</td></tr>'; }).join('');
+
+  // gaps by department (default client, ladder after review)
+  var depts = {};
+  L.clauses.forEach(function (c) { var d = depts[c.dept] = depts[c.dept] || { a: 0, g: 0, nw: 0 }; d.a++; });
+  D.truthGaps.forEach(function (id) { var c = L.clauses.filter(function (x) { return x.id === id; })[0]; depts[c.dept].g++; if (c.isNew) depts[c.dept].nw++; });
+  $('gapt').innerHTML = Object.keys(depts).sort(function (a, b) { return depts[b].g - depts[a].g; }).map(function (k) { var d = depts[k]; return '<tr><td>' + k + '</td><td class="num">' + d.a + '</td><td class="num">' + d.g + '</td><td class="num">' + d.nw + '</td></tr>'; }).join('');
+  $('gapline').innerHTML = '<b>' + D.truthGaps.length + ' of ' + D.applicable + ' applicable obligations (' + pct(D.truthGaps.length / D.applicable) + ') are on no row of the old tracker</b>; ' + D.newClauseGaps + ' of them are new in the consolidated text. Before the next inspection, this list is worth more to the CCO than the migration itself.';
+
+  function labels() { $('o-th-v').textContent = (+$('o-th').value).toFixed(2); $('o-mess-v').textContent = (+$('o-mess').value).toFixed(1) + '×'; }
+  function sim() {
+    labels();
+    var seed = +$('o-seed').value, mess = +$('o-mess').value;
+    var o = { threshold: +$('o-th').value, twoKey: $('o-two').checked, fuzzy: $('o-fuzzy').checked };
+    var B = run(seed, mess, o), Mn = run(seed, mess, { mode: 'manual' }), Tx = run(seed, mess, { mode: 'textonly' });
+    $('kpis').innerHTML =
+      kpi(pct(B.autoShare), 'Decided automatically', n(B.n) + ' rows in the tracker') +
+      kpi(n(B.review), 'Rows for analyst review', 'with a suggestion and reason') +
+      kpi(n(B.hours) + ' h', 'Analyst hours', 'by hand: ' + n(Mn.hours) + ' h') +
+      kpi(n(B.obligationsAfter), 'Obligations after merge', n(B.retired) + ' retired · ' + n(B.merged) + ' merged');
+    $('checks').innerHTML =
+      '<div><span class="pill ' + (B.lost === 0 ? 'ok' : 'no') + '">' + (B.lost === 0 ? 'SAFE' : 'UNSAFE') + '</span>Live obligations silently lost: <b>' + B.lost + '</b> (text matcher alone: ' + Tx.lost + ', by hand: ' + Mn.lost + ')</div>' +
+      '<div><span class="pill ' + (B.liveRetired === 0 ? 'ok' : 'no') + '">RETIRE</span>Live rows retired by mistake: ' + B.liveRetired + (o.twoKey ? '' : ' <b>— the two-key rule is off</b>') + '</div>' +
+      '<div><span class="pill ' + (B.autoWrong / B.n < 0.005 ? 'ok' : 'no') + '">AUTO ERRORS</span>Automatic decisions that were wrong: ' + B.autoWrong + ' (' + (B.autoWrong / B.n * 100).toFixed(2) + '% of rows)</div>' +
+      '<div><span class="pill person">OWNERS</span>Rows whose owner has left the company: ' + n(B.ownerless) + '</div>';
+    explore();
+  }
+  function explore() {
+    var seed = +$('o-seed').value, mess = +$('o-mess').value, f = $('o-filter').value;
+    var o = { threshold: +$('o-th').value, twoKey: $('o-two').checked, fuzzy: $('o-fuzzy').checked };
+    var B = run(seed, mess, o), Tx = run(seed, mess, { mode: 'textonly' }), list;
+    if (f === 'stale') list = B.decisions.filter(function (d) { return d.row.refKind === 'stale'; });
+    else if (f === 'review') list = B.decisions.filter(function (d) { return d.how === 'review'; });
+    else if (f === 'retire') list = B.decisions.filter(function (d) { return d.how === 'auto' && d.action === 'RETIRE'; });
+    else if (f === 'typo') list = B.decisions.filter(function (d) { return d.row.refKind === 'typo' && d.how === 'auto'; });
+    else list = Tx.decisions.filter(function (d) { return !d.correct; });
+    var html = list.slice(0, 8).map(function (d) {
+      var r = d.row, truth = r.truthStatus === 'REPEALED' ? 'repealed' : r.truthClause;
+      var dec = d.action === 'RETIRE' ? 'Retire' : (d.action === 'CARRY' ? 'Carry → ' : 'Re-point → ') + (d.clause || '');
+      var tag = d.how === 'auto' ? '<span class="pill rule">auto</span>' : d.how === 'review' ? '<span class="pill person">review</span>' : '<span class="pill ai">text only</span>';
+      return '<div class="rc"><div class="top"><b>' + r.id + '</b><span>ref: ' + esc(r.ref || '(blank)') + '</span><span>owner: ' + esc(r.owner) + '</span></div>' +
+        '<div class="d">“' + esc(r.desc) + '”</div>' +
+        '<div>' + tag + ' <b>' + esc(dec) + '</b> <span class="' + (d.correct ? 'good' : 'bad') + '">' + (d.correct ? '✓ correct' : '✗ truth: ' + esc(truth)) + '</span></div>' +
+        '<div class="why">' + esc(d.why || '') + '</div></div>';
+    }).join('');
+    $('rowt').innerHTML = html || '<div class="rc">No rows of this kind with these settings.</div>';
+  }
+  var timer = null;
+  function schedule() { $('busy').textContent = 'Re-running the tracker…'; clearTimeout(timer); timer = setTimeout(function () { sim(); $('busy').textContent = ''; }, 30); }
+  ['o-th', 'o-mess'].forEach(function (id) { $(id).addEventListener('input', labels); $(id).addEventListener('change', schedule); });
+  ['o-two', 'o-fuzzy', 'o-seed'].forEach(function (id) { $(id).addEventListener('change', schedule); });
+  $('o-filter').addEventListener('change', explore);
+  sim();
+})();
+
+</script>
+
+</body></html>
