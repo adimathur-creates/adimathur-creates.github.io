@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head><body>
+<title>Under Seven Days</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 820px column read like an analyst's first-week readout; a live dashboard and a SQL console sit inside. */
+:root{
+  --paper:#F7F6F2; --panel:#FFFFFF; --ink:#16171A; --muted:#5F636B; --rule:#E1DFD8; --axis:#C3C2B7;
+  --bar:#2a78d6; --bar2:#eb6834; --accent:#16613F; --accent-soft:#E2F0E7; --warn-soft:#FBEEE2; --bad:#B42318; --good:#006300;
+  --code:#F0EFEA;
+  --f-display:"Bricolage Grotesque","Segoe UI",Helvetica,Arial,sans-serif; --f-body:"Public Sans","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111213; --panel:#191A1C; --ink:#ECEBE6; --muted:#A3A49E; --rule:#2C2C2A; --axis:#383835;
+  --bar:#3987e5; --bar2:#d95926; --accent:#6CCB97; --accent-soft:#163024; --warn-soft:#33241A; --bad:#F2867E; --good:#0ca30c; --code:#151617; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111213; --panel:#191A1C; --ink:#ECEBE6; --muted:#A3A49E; --rule:#2C2C2A; --axis:#383835;
+  --bar:#3987e5; --bar2:#d95926; --accent:#6CCB97; --accent-soft:#163024; --warn-soft:#33241A; --bad:#F2867E; --good:#0ca30c; --code:#151617; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;margin:0;padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2{font-family:var(--f-display);line-height:1.06;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.6rem,9vw,4.4rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.4rem,4.4vw,1.9rem);font-weight:600;letter-spacing:-.01em}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow,.k,.sec{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec{color:var(--accent)}
+.dek{font-size:1.13rem;max-width:66ch}
+.by{font-size:.9rem;color:var(--muted)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:4px}
+.note strong{color:var(--ink)}
+.exec{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--accent);border-radius:4px;padding:16px 18px}
+.exec ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:8px}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:18px 16px;display:flex;flex-direction:column;gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:1.8rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.8rem;white-space:nowrap}
+.bad{color:var(--bad)} .good{color:var(--good)}
+.finding{background:var(--accent-soft);border-radius:4px;padding:12px 14px}
+.warn{background:var(--warn-soft);border-radius:4px;padding:12px 14px}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.filters label{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted)}
+select,button{font:inherit;font-size:.9rem}
+select{background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:4px;padding:6px 8px;max-width:100%}
+button{background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:999px;padding:5px 12px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--paper);font-weight:600}
+button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bars{display:flex;flex-direction:column;gap:8px}
+.brow{display:grid;grid-template-columns:minmax(120px,210px) 1fr 70px;gap:10px;align-items:center;font-size:.86rem;position:relative}
+.brow .track{height:16px;position:relative}
+.brow .fill{position:absolute;left:0;top:0;bottom:0;background:var(--bar);border-radius:0 4px 4px 0}
+.brow .whisk{position:absolute;top:7px;height:2px;background:var(--axis)}
+.brow .val{font-family:var(--f-mono);font-size:.78rem;text-align:right;white-space:nowrap}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-2px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{margin:0;font-family:var(--f-display);font-size:1.1rem;font-weight:600}
+.card p{font-size:.92rem}
+textarea{width:100%;min-height:200px;font-family:var(--f-mono);font-size:.78rem;line-height:1.5;background:var(--code);color:var(--ink);border:1px solid var(--rule);border-radius:4px;padding:10px 12px;resize:vertical}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.qout{font-size:.82rem}
+.qstat{font-size:.8rem;color:var(--muted);min-height:1.2em}
+.mono{font-family:var(--f-mono);font-size:.76rem}
+.weeks{display:flex;flex-direction:column;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--panel)}
+.weeks div{display:grid;grid-template-columns:86px 1fr;gap:12px;padding:10px 14px;border-bottom:1px solid var(--rule);font-size:.93rem}
+.weeks div:last-child{border-bottom:0}
+.weeks .w{font-family:var(--f-mono);font-size:.76rem;color:var(--accent);padding-top:2px}
+a{color:var(--accent)}
+.src{font-size:.86rem;color:var(--muted)}
+hr{border:0;border-top:1px solid var(--rule);margin:0}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--paper);font-size:.78rem;padding:5px 8px;border-radius:4px;opacity:0;z-index:5;max-width:240px}
+@media (max-width:520px){th,td{padding:7px 8px}table{font-size:.84rem}.brow{grid-template-columns:1fr 60px}.brow .lab{grid-column:1 / -1}.weeks div{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">Independent work · Product Analyst application, Rupeeflo</div>
+  <h1>Under Seven Days</h1>
+  <p class="dek">Rupeeflo promises an NRI demat account live in under 7 days, across four systems it doesn't fully own: the app, the notary call, the DHL pickup and Zerodha. This is the analysis I would do in my first weeks: what to measure, where the data disagrees with itself, where applications really stall, and whether WhatsApp, email and push nudges recover anyone.</p>
+  <p class="by">Aditya Mathur · October 2026 · prepared for Rupeeflo's product team</p>
+  <div class="note"><strong>Read this first.</strong> I have no Rupeeflo data. The journey (6 documents, about a day of checks, a 15-minute video notary, DHL pickup, about 5 days at Zerodha) and the rework causes come from Rupeeflo's public product page. The 9,000 applications, rates and timings are synthetic and my assumptions. Everything on this page, including the SQL console, runs on that synthetic data in your browser.</div>
+</header>
+
+<section id="summary">
+  <span class="sec">What I found</span>
+  <div class="exec"><ol id="execList"></ol></div>
+</section>
+
+<section id="journey">
+  <span class="sec">1 · The journey and who owns each step</span>
+  <h2>Four systems, one promise</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Step</th><th>Owned by</th><th>How we would know it happened</th></tr></thead>
+    <tbody>
+      <tr><td>Sign up, choose NRE or NRO route</td><td>Rupeeflo app</td><td>Product event</td></tr>
+      <tr><td>Upload 6 documents; checks in about a working day</td><td>App + Rupeeflo ops</td><td>Product event + ops database</td></tr>
+      <tr><td>15-minute video notary</td><td>Notary partner</td><td>Partner webhook → product event</td></tr>
+      <tr><td>Signed forms picked up</td><td>DHL</td><td>Tracking update, often late</td></tr>
+      <tr><td>Account opened, about 5 days</td><td>Zerodha</td><td>Broker status file or API</td></tr>
+    </tbody></table></div>
+  <p>Half the journey happens outside the app. Any metric built only on product events will be wrong exactly where the hand-offs are.</p>
+</section>
+
+<section id="metrics">
+  <span class="sec">2 · What to measure</span>
+  <h2>One number to steer by, and what moves it</h2>
+  <div class="cards">
+    <div class="card"><span class="k">North star</span><h3>% of applications live within 7 days of documents</h3><p>Matches the promise customers see. Measured from the ops database, not product events.</p></div>
+    <div class="card"><span class="k">Inputs</span><h3>Stage conversion, stage time, rework rate</h3><p>Rework split by reason: route, document type, missed notary call, signature mismatch. Each has a different owner.</p></div>
+    <div class="card"><span class="k">Guardrails</span><h3>Wrong nudges, support tickets, cost per live account</h3><p>A nudge sent to someone who already finished a step costs trust. Counted, not ignored.</p></div>
+  </div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Event</th><th>Fired by</th><th>Key properties</th><th>Risk</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">route_chosen</td><td>App</td><td>route, income_source, has_pis_letter</td><td>No PIS question today means the wrong route is found a day later</td></tr>
+      <tr><td class="mono">docs_submitted / docs_rejected</td><td>App / ops</td><td>doc_type, reason_code, reviewer</td><td>Free-text reasons cannot be counted</td></tr>
+      <tr><td class="mono">notary_booked / notary_completed / notary_no_show</td><td>Notary partner webhook</td><td>slot_ist, slot_local_hour, country</td><td><b>Webhooks get lost</b></td></tr>
+      <tr><td class="mono">courier_picked_up</td><td>DHL tracking</td><td>awb, scan_time</td><td>Tracking scans arrive a day or more late</td></tr>
+      <tr><td class="mono">broker_rejected / account_live</td><td>Zerodha status</td><td>reason_code, client_id</td><td>Polled, not pushed</td></tr>
+      <tr><td class="mono">nudge_sent</td><td>CRM</td><td>stage, channel, send_timing, arm (nudge or holdout)</td><td>Without a holdout, impact cannot be measured</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="recon">
+  <span class="sec">3 · Finding: the data disagrees with itself</span>
+  <h2 id="reconTitle"></h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Stage</th><th class="num">Ops database</th><th class="num">Product events</th><th class="num">Missing</th></tr></thead>
+    <tbody id="reconT"></tbody></table></div>
+  <p class="warn" id="reconLine"></p>
+</section>
+
+<section id="dash">
+  <span class="sec">4 · The dashboard</span>
+  <h2>Where applications slow down, by country and route</h2>
+  <div class="sheet">
+    <div class="filters">
+      <label for="f-country">Country<select id="f-country"><option value="">All countries</option></select></label>
+      <label for="f-route">Route<select id="f-route"><option value="">NRE and NRO</option><option value="NRE">NRE (PIS)</option><option value="NRO">NRO</option></select></label>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div><div class="k" style="margin-bottom:8px">Days spent in each step (median, line to 90th percentile)</div>
+      <div class="legend"><span><i style="background:var(--bar)"></i>Median days</span><span><i style="background:var(--axis);height:2px;width:14px;vertical-align:3px"></i>To 90th percentile</span></div>
+      <div class="bars" id="stageBars" style="margin-top:10px"></div></div>
+    <div><div class="k" style="margin-bottom:8px">What sends applications back (count)</div><div class="bars" id="reasonBars"></div></div>
+  </div>
+</section>
+
+<section id="americas">
+  <span class="sec">5 · Finding: the Americas get notary slots at night</span>
+  <h2 id="amTitle"></h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Country</th><th class="num">Applications</th><th class="num">Live</th><th class="num">Median days, documents to live</th><th class="num">Live within 7 days</th></tr></thead>
+    <tbody id="countryT"></tbody></table></div>
+  <p class="finding" id="amLine"></p>
+</section>
+
+<section id="nudges">
+  <span class="sec">6 · Finding: open rates say every nudge works</span>
+  <h2>Only the holdout tells you which ones do</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Stalled at</th><th class="num">Open rate</th><th class="num">Recovered, nudged</th><th class="num">Recovered, holdout</th><th class="num">Lift (95% range)</th></tr></thead>
+    <tbody id="liftT"></tbody></table></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Send timing, Americas only</th><th class="num">Nudged</th><th class="num">Holdout</th><th class="num">Lift (95% range)</th></tr></thead>
+    <tbody id="timingT"></tbody></table></div>
+  <p class="finding" id="nudgeLine"></p>
+</section>
+
+<section id="sql">
+  <span class="sec">7 · Check my work</span>
+  <h2>The same tables, in real SQL</h2>
+  <p>SQLite running in your browser on the synthetic data: <span class="mono">applications</span>, <span class="mono">events</span>, <span class="mono">backend_status</span>, <span class="mono">messages</span>, <span class="mono">stalls</span>. Edit any query and run it.</p>
+  <div class="sheet">
+    <div class="presets" id="presets"></div>
+    <label for="sqlBox" class="k">Query</label>
+    <textarea id="sqlBox" spellcheck="false"></textarea>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="primary" id="runSql">Run query</button><span class="qstat" id="qstat" aria-live="polite">Loading SQLite…</span></div>
+    <div class="tablewrap qout"><table id="qout"></table></div>
+  </div>
+</section>
+
+<section id="ship">
+  <span class="sec">8 · What I would take to the PM</span>
+  <h2>Four changes, ranked by applications saved</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Change</th><th>Why</th><th>How we would know</th></tr></thead>
+    <tbody id="shipT"></tbody></table></div>
+</section>
+
+<section id="plan">
+  <span class="sec">9 · First 30 days</span>
+  <div class="weeks">
+    <div><span class="w">Week 1</span><span>Map every event to its source system. Build the ops-database funnel and compare it with Mixpanel or Amplitude, stage by stage.</span></div>
+    <div><span class="w">Week 2</span><span>Reason codes for every rejection. Rework dashboard by country, route and reason, shared with ops daily.</span></div>
+    <div><span class="w">Week 3</span><span>Holdout on every CRM journey. Switch nudge triggers from product events to ops status. Suppress courier and broker-stage nudges.</span></div>
+    <div><span class="w">Week 4</span><span>First readout: what moved the 7-day rate, what did not, and the next two experiments.</span></div>
+  </div>
+</section>
+
+<section id="limits">
+  <span class="sec">Limits</span>
+  <ul class="plain">
+    <li>All volumes, rates, timings and nudge effects are assumptions. The structure of the analysis is the point; the real numbers come from Rupeeflo's data.</li>
+    <li>The notary hours (10:00–19:00 IST) are my assumption, not a published fact.</li>
+    <li>Several results vary between reruns. I show ranges where a single run would mislead.</li>
+  </ul>
+</section>
+
+<hr>
+<section id="sources" class="src">
+  <span class="sec">Sources</span>
+  <ul class="plain">
+    <li><a href="https://www.rupeeflo.com/products/nri-demat-account" target="_blank" rel="noopener">Rupeeflo: NRI demat account</a> (steps, documents, NRE vs NRO, where users get stuck)</li>
+    <li><a href="https://www.rupeeflo.com/jobs/product-analyst" target="_blank" rel="noopener">Rupeeflo: Product Analyst role</a></li>
+    <li><a href="https://www.businesstoday.in/nri/story/from-nre-accounts-to-fpi-and-gift-city-rupeeflo-expands-digital-infrastructure-for-overseas-investors-554883-2026-09-11" target="_blank" rel="noopener">Business Today: Rupeeflo expands infrastructure for overseas investors</a> (nuvanta launch)</li>
+    <li><a href="https://www.nuvantaos.com/" target="_blank" rel="noopener">Nuvanta by Rupeeflo</a></li>
+  </ul>
+  <p>Model: 9,000 seeded synthetic applications. Nine automated checks, including that the SQL and the charts agree, and five reruns.</p>
+</section>
+
+</div>
+<div class="tip" id="tip"></div>
+<script src="sql-wasm.js"></script>
+<script>
+// Synthetic NRI demat onboarding data for one quarter. Journey steps follow Rupeeflo's public product page:
+// documents (6) -> verification (~1 working day) -> video notary (15 min) -> DHL pickup -> Zerodha (about 5 days) -> account live.
+// Volumes, rates and timings are assumptions, written down in ASSUMPTIONS and shown on the page.
+var RF = (function () {
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0; var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function pick(r, items) { var u = r(), a = 0; for (var i = 0; i < items.length; i++) { a += items[i][1]; if (u < a) return items[i][0]; } return items[items.length - 1][0]; }
+  function between(r, a, b) { return a + r() * (b - a); }
+
+  // country, share of applications, UTC offset (hours), share preferring WhatsApp
+  var COUNTRIES = [
+    ['UAE', 0.30, 4, 0.85], ['USA', 0.18, -5, 0.35], ['UK', 0.14, 0, 0.55], ['Saudi Arabia', 0.10, 3, 0.85],
+    ['Singapore', 0.08, 8, 0.70], ['Canada', 0.08, -5, 0.35], ['Australia', 0.06, 10, 0.50], ['Qatar', 0.06, 3, 0.85]
+  ];
+  var STAGES = ['signed_up', 'route_chosen', 'docs_submitted', 'docs_verified', 'notary_done', 'courier_picked', 'account_live'];
+  var STAGE_LABEL = { signed_up: 'Signed up', route_chosen: 'Chose NRE or NRO route', docs_submitted: 'Submitted 6 documents', docs_verified: 'Documents verified', notary_done: 'Notarised on video call', courier_picked: 'Courier picked up', account_live: 'Account live at Zerodha' };
+  var DOC_REASONS = [['Address proof older than 3 months', 0.30], ['Bank statement not from an NRE/NRO account', 0.22], ['Passport copy unclear or cropped', 0.18], ['Visa or residence permit missing', 0.16], ['PIS letter missing for NRE route', 0.14]];
+  var ASSUMPTIONS = {
+    applications: 9000, days: 90,
+    dropBeforeRoute: 0.10, dropBeforeDocs: 0.18, wrongRoute: 0.08, docReject: 0.18,
+    notaryHoursIST: [10, 19], noShowBase: 0.06, noShowOddHour: 0.25,
+    courierMiss: 0.07, brokerReject: 0.06, notaryWebhookLoss: 0.09, courierWebhookLag: 0.25,
+    holdout: 0.2, stallHours: 48
+  };
+
+  function generate(opts) {
+    opts = opts || {}; var A = Object.assign({}, ASSUMPTIONS, opts);
+    var r = rng(opts.seed || 2026);
+    var apps = [], events = [], backend = [], msgs = [], stallRows = [];
+    var eid = 0, mid = 0;
+    function ev(app, name, day, props) { events.push({ event_id: ++eid, app_id: app.app_id, event: name, day: +day.toFixed(3), props: props || '' }); }
+    for (var i = 0; i < A.applications; i++) {
+      var c = pick(r, COUNTRIES.map(function (x) { return [x, x[1]]; }));
+      var app = { app_id: 'A' + String(i + 1).padStart(5, '0'), country: c[0], utc: c[2], channel: r() < c[3] ? 'whatsapp' : (r() < 0.6 ? 'email' : 'push'),
+        route: r() < 0.55 ? 'NRE' : 'NRO', created: +(r() * A.days).toFixed(3) };
+      app.nudgeArm = r() < A.holdout ? 'holdout' : 'nudge';
+      app.sendTiming = r() < 0.5 ? 'ist_batch' : 'local_morning'; // which send-time variant this user's nudges use
+      apps.push(app);
+      var t = app.created, stage = 'signed_up', truth = { signed_up: t }, rework = 0, stalls = [];
+      ev(app, 'signed_up', t, 'country=' + app.country);
+      // A stalled user may receive a nudge. Its effect depends on whether the stall is the user's to fix and on the send hour.
+      function nudge(st, stallStart, fixable, baseRecover) {
+        var out = nudgeInner(st, stallStart, fixable, baseRecover);
+        stallRows.push({ app_id: app.app_id, stage: st, nudge_arm: app.nudgeArm, send_timing: app.sendTiming, channel: app.channel, recovered: out ? 1 : 0 });
+        return out;
+      }
+      function nudgeInner(st, stallStart, fixable, baseRecover) {
+        var stallAt = stallStart + A.stallHours / 24;
+        var sendIstHour = 10, localHour;
+        if (app.sendTiming === 'ist_batch') localHour = (sendIstHour - 5.5 + app.utc + 24) % 24;
+        else localHour = 10;
+        var awake = localHour >= 8 && localHour <= 21;
+        var opened = false, clicked = false;
+        if (app.nudgeArm === 'nudge') {
+          var openP = app.channel === 'whatsapp' ? 0.72 : app.channel === 'push' ? 0.38 : 0.31;
+          if (!awake) openP *= 0.55;
+          opened = r() < openP; clicked = opened && r() < 0.45;
+          msgs.push({ msg_id: ++mid, app_id: app.app_id, stage: st, channel: app.channel, send_timing: app.sendTiming, local_hour: Math.round(localHour), sent_day: +stallAt.toFixed(3), opened: opened ? 1 : 0, clicked: clicked ? 1 : 0 });
+        }
+        var lift = 0;
+        if (app.nudgeArm === 'nudge' && fixable) lift = (app.channel === 'whatsapp' ? 0.20 : app.channel === 'push' ? 0.10 : 0.08) * (awake ? 1 : 0.35);
+        return r() < baseRecover + lift;
+      }
+      // 1. Route choice
+      if (r() < A.dropBeforeRoute) { finish(); continue; }
+      t += between(r, 0.01, 0.4); truth.route_chosen = t; stage = 'route_chosen'; ev(app, 'route_chosen', t, 'route=' + app.route);
+      // 2. Documents
+      var docDelay = between(r, 0.2, 3.5);
+      if (r() < A.dropBeforeDocs) {
+        stalls.push('docs_submitted');
+        if (!nudge('docs_submitted', t, true, 0.25)) { finish(); continue; }
+        docDelay += between(r, 2, 5);
+      }
+      t += docDelay; truth.docs_submitted = t; stage = 'docs_submitted'; ev(app, 'docs_submitted', t, 'docs=6');
+      // 3. Verification (about one working day); wrong route or bad document sends it back
+      var verifyAt = t + between(r, 0.4, 1.2);
+      var wrongRoute = app.route === 'NRE' && r() < A.wrongRoute / 0.55;
+      var rejected = wrongRoute || r() < A.docReject;
+      if (rejected) {
+        var reason = wrongRoute ? 'PIS letter missing for NRE route' : pick(r, DOC_REASONS);
+        ev(app, 'docs_rejected', verifyAt, 'reason=' + reason); app.docReason = reason; rework++;
+        stalls.push('docs_verified');
+        if (!nudge('docs_verified', verifyAt, true, 0.62)) { finish(); continue; }
+        t = verifyAt + between(r, 1, 6) + (wrongRoute ? between(r, 3, 9) : 0);
+        verifyAt = 0; // fixing; a wrong route means getting a PIS letter or switching route
+        ev(app, 'docs_resubmitted', t, ''); verifyAt = t + between(r, 0.4, 1.2);
+      }
+      t = verifyAt; truth.docs_verified = t; stage = 'docs_verified'; ev(app, 'docs_verified', t, '');
+      // 4. Notary: slots run 10:00-19:00 IST; for the Americas that is late night or early morning local time
+      var istStart = A.notaryHoursIST[0], istEnd = A.notaryHoursIST[1];
+      var localStart = (istStart - 5.5 + app.utc + 24) % 24, localEnd = (istEnd - 5.5 + app.utc + 24) % 24;
+      // hours of the notary window that fall between 08:00 and 21:00 local time
+      var awakeHours = 0; for (var h = istStart; h < istEnd; h += 0.5) { var lh = (h - 5.5 + app.utc + 48) % 24; if (lh >= 8 && lh < 21) awakeHours += 0.5; }
+      var oddHour = awakeHours < 3;
+      var bookDelay = between(r, 0.2, 1.5) + (oddHour ? between(r, 1, 3) : 0);
+      var noShow = r() < (oddHour ? A.noShowOddHour : A.noShowBase);
+      t += bookDelay; ev(app, 'notary_booked', t, 'odd_hour=' + (oddHour ? 1 : 0));
+      if (noShow) {
+        ev(app, 'notary_no_show', t + 0.2, ''); rework++; stalls.push('notary_done');
+        if (!nudge('notary_done', t + 0.2, true, 0.68)) { finish(); continue; }
+        t += between(r, 1.5, 5);
+      }
+      t += 0.2; truth.notary_done = t; stage = 'notary_done';
+      if (r() >= A.notaryWebhookLoss) ev(app, 'notary_completed', t, ''); // vendor webhook sometimes never arrives
+      else app.lostNotaryEvent = true;
+      // 5. Courier pickup (DHL): not the user's to fix when it slips
+      var pickup = between(r, 0.4, 1.2);
+      if (r() < A.courierMiss) { pickup += between(r, 2, 5); stalls.push('courier_picked'); nudge('courier_picked', t + 1, false, 0); }
+      t += pickup; truth.courier_picked = t; stage = 'courier_picked';
+      ev(app, 'courier_picked_up', t + (r() < A.courierWebhookLag ? between(r, 1, 3) : 0), ''); // tracking update often lands late
+      // 6. Zerodha: about 5 days in transit and review; signature mismatch sends it back
+      var broker = between(r, 3, 5);
+      if (r() < A.brokerReject) { ev(app, 'broker_rejected', t + broker, 'reason=Signature mismatch'); rework++; broker += between(r, 6, 12); }
+      t += broker; truth.account_live = t; stage = 'account_live'; ev(app, 'account_live', t, '');
+      finish();
+      function finish() {
+        app.stage = stage; app.truth = truth; app.rework = rework; app.stalls = stalls.join('|');
+        app.daysToLive = truth.account_live != null ? truth.account_live - app.created : null;
+        STAGES.forEach(function (s) { if (truth[s] != null) backend.push({ app_id: app.app_id, stage: s, day: +truth[s].toFixed(3) }); });
+      }
+    }
+    return { apps: apps, events: events, backend: backend, msgs: msgs, stalls: stallRows, A: A };
+  }
+  return { generate: generate, STAGES: STAGES, STAGE_LABEL: STAGE_LABEL, COUNTRIES: COUNTRIES, ASSUMPTIONS: ASSUMPTIONS, rng: rng };
+})();
+
+
+</script>
+<script>
+// Analysis on the synthetic data: funnel from backend truth vs product events, stall reasons, stage times,
+// and the nudge experiment (nudged vs holdout), split by stage, channel and send timing.
+var RA = (function () {
+  var EVENT_FOR = { signed_up: 'signed_up', route_chosen: 'route_chosen', docs_submitted: 'docs_submitted', docs_verified: 'docs_verified', notary_done: 'notary_completed', courier_picked: 'courier_picked_up', account_live: 'account_live' };
+  function filterApps(D, f) { f = f || {}; return D.apps.filter(function (a) { return (!f.country || a.country === f.country) && (!f.route || a.route === f.route); }); }
+  function funnel(D, f) {
+    var apps = filterApps(D, f), ids = {}; apps.forEach(function (a) { ids[a.app_id] = 1; });
+    var ev = {}; D.events.forEach(function (e) { if (ids[e.app_id]) (ev[e.event] = ev[e.event] || {})[e.app_id] = 1; });
+    return RF.STAGES.map(function (s) {
+      var truth = apps.filter(function (a) { return a.truth[s] != null; }).length;
+      var events = Object.keys(ev[EVENT_FOR[s]] || {}).length;
+      return { stage: s, label: RF.STAGE_LABEL[s], truth: truth, events: events, n: apps.length };
+    });
+  }
+  function median(xs) { if (!xs.length) return null; var s = xs.slice().sort(function (a, b) { return a - b; }); var m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+  function pctl(xs, p) { if (!xs.length) return null; var s = xs.slice().sort(function (a, b) { return a - b; }); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; }
+  function stageTimes(D, f) {
+    var apps = filterApps(D, f);
+    return RF.STAGES.slice(1).map(function (s, i) {
+      var prev = RF.STAGES[i], xs = apps.filter(function (a) { return a.truth[s] != null && a.truth[prev] != null; }).map(function (a) { return a.truth[s] - a.truth[prev]; });
+      return { stage: s, label: RF.STAGE_LABEL[s], median: median(xs), p90: pctl(xs, 0.9), n: xs.length };
+    });
+  }
+  function headline(D, f) {
+    var apps = filterApps(D, f), live = apps.filter(function (a) { return a.daysToLive != null; });
+    var docsDone = apps.filter(function (a) { return a.truth.docs_submitted != null; });
+    var fromDocs = live.map(function (a) { return a.truth.account_live - a.truth.docs_submitted; });
+    var in7 = fromDocs.filter(function (d) { return d <= 7; }).length;
+    var clean = live.filter(function (a) { return a.rework === 0; }), cleanIn7 = clean.filter(function (a) { return a.truth.account_live - a.truth.docs_submitted <= 7; }).length;
+    var dirty = live.filter(function (a) { return a.rework > 0; }), dirtyIn7 = dirty.filter(function (a) { return a.truth.account_live - a.truth.docs_submitted <= 7; }).length;
+    var reworked = docsDone.filter(function (a) { return a.rework > 0; }).length;
+    var liveDocs = live.length;
+    return { n: apps.length, live: live.length, docsDone: docsDone.length, liveRate: apps.length ? live.length / apps.length : 0,
+      in7OfLive: live.length ? in7 / live.length : 0, medianDays: median(live.map(function (a) { return a.daysToLive; })),
+      p90Days: pctl(live.map(function (a) { return a.daysToLive; }), 0.9), medianFromDocs: median(fromDocs), p90FromDocs: pctl(fromDocs, 0.9),
+      cleanIn7: clean.length ? cleanIn7 / clean.length : 0, dirtyIn7: dirty.length ? dirtyIn7 / dirty.length : 0, cleanN: clean.length, dirtyN: dirty.length, reworkRate: docsDone.length ? reworked / docsDone.length : 0,
+      liveOfDocs: docsDone.length ? liveDocs / docsDone.length : 0 };
+  }
+  function reasons(D, f) {
+    var ids = {}; filterApps(D, f).forEach(function (a) { ids[a.app_id] = 1; });
+    var m = {};
+    D.events.forEach(function (e) {
+      if (!ids[e.app_id]) return;
+      if (e.event === 'docs_rejected') { var k = e.props.replace('reason=', ''); m[k] = (m[k] || 0) + 1; }
+      if (e.event === 'notary_no_show') m['Missed notary call'] = (m['Missed notary call'] || 0) + 1;
+      if (e.event === 'broker_rejected') m['Signature mismatch at Zerodha'] = (m['Signature mismatch at Zerodha'] || 0) + 1;
+    });
+    return Object.keys(m).map(function (k) { return { reason: k, n: m[k] }; }).sort(function (a, b) { return b.n - a.n; });
+  }
+  // Notary no-show by whether the slot window falls at an odd local hour
+  function noShowByHour(D) {
+    var booked = {}, noshow = {};
+    D.events.forEach(function (e) { if (e.event === 'notary_booked') booked[e.app_id] = e.props === 'odd_hour=1'; if (e.event === 'notary_no_show') noshow[e.app_id] = 1; });
+    var g = { odd: { b: 0, n: 0 }, normal: { b: 0, n: 0 } };
+    Object.keys(booked).forEach(function (id) { var k = booked[id] ? 'odd' : 'normal'; g[k].b++; if (noshow[id]) g[k].n++; });
+    return { odd: g.odd.n / (g.odd.b || 1), normal: g.normal.n / (g.normal.b || 1), oddN: g.odd.b, normalN: g.normal.b };
+  }
+  // Reconciliation: backend says notarised, product events never heard about it
+  function recon(D) {
+    var noEvent = D.apps.filter(function (a) { return a.lostNotaryEvent; });
+    var notarised = D.apps.filter(function (a) { return a.truth.notary_done != null; }).length;
+    // users whose notary was done but whose event was lost look stalled at "notary" to an event-based nudge rule
+    // with an event-based "stalled 48h at notary" rule, these users get a 'book your notary' nudge they do not need
+    var courierEv = {}; D.events.forEach(function (e) { if (e.event === 'courier_picked_up') courierEv[e.app_id] = e.day; });
+    var misnudge = noEvent.filter(function (a) { var c = courierEv[a.app_id]; return c == null || c - a.truth.notary_done > 2; }).length;
+    return { notarised: notarised, missing: noEvent.length, share: noEvent.length / (notarised || 1), misnudge: misnudge };
+  }
+  // Experiment: among users who stalled at a stage, recovery (reached the next stage) for nudge vs holdout arms
+  function experiment(D, by) {
+    var groups = {};
+    D.apps.forEach(function (a) {
+      if (!a.stalls) return;
+      a.stalls.split('|').forEach(function (st) {
+        var key = by === 'stage' ? st : by === 'channel' ? st + '|' + a.channel : by === 'timing' ? a.sendTiming + '|' + (a.utc < 0 ? 'Americas' : 'Rest') : st;
+        var g = groups[key] = groups[key] || { key: key, stage: st, nudge: { n: 0, rec: 0 }, holdout: { n: 0, rec: 0 } };
+        var arm = g[a.nudgeArm]; arm.n++; if (a.truth[st] != null) arm.rec++;
+      });
+    });
+    return Object.keys(groups).map(function (k) {
+      var g = groups[k], pn = g.nudge.rec / (g.nudge.n || 1), ph = g.holdout.rec / (g.holdout.n || 1);
+      var se = Math.sqrt(pn * (1 - pn) / (g.nudge.n || 1) + ph * (1 - ph) / (g.holdout.n || 1));
+      return { key: k, stage: g.stage, nNudge: g.nudge.n, nHold: g.holdout.n, pNudge: pn, pHold: ph, lift: pn - ph, lo: pn - ph - 1.96 * se, hi: pn - ph + 1.96 * se };
+    });
+  }
+  function openRates(D) {
+    var m = {};
+    D.msgs.forEach(function (x) { var g = m[x.stage] = m[x.stage] || { n: 0, o: 0, c: 0 }; g.n++; g.o += x.opened; g.c += x.clicked; });
+    return m;
+  }
+  return { funnel: funnel, stageTimes: stageTimes, headline: headline, reasons: reasons, noShowByHour: noShowByHour, recon: recon, experiment: experiment, openRates: openRates, filterApps: filterApps };
+})();
+
+
+</script>
+<script>
+// Loads the synthetic data into SQLite (sql.js) and holds the preset queries shown on the page.
+var RQ = (function () {
+  var SCHEMA = [
+    'CREATE TABLE applications (app_id TEXT PRIMARY KEY, country TEXT, route TEXT, channel TEXT, nudge_arm TEXT, send_timing TEXT, created_day REAL, final_stage TEXT, rework INTEGER);',
+    'CREATE TABLE events (event_id INTEGER, app_id TEXT, event TEXT, day REAL, props TEXT);',
+    'CREATE TABLE backend_status (app_id TEXT, stage TEXT, day REAL);',
+    'CREATE TABLE messages (msg_id INTEGER, app_id TEXT, stage TEXT, channel TEXT, send_timing TEXT, local_hour INTEGER, sent_day REAL, opened INTEGER, clicked INTEGER);',
+    'CREATE TABLE stalls (app_id TEXT, stage TEXT, nudge_arm TEXT, send_timing TEXT, channel TEXT, recovered INTEGER);'
+  ];
+  function load(SQL, D) {
+    var db = new SQL.Database();
+    SCHEMA.forEach(function (q) { db.run(q); });
+    db.run('BEGIN');
+    var s = db.prepare('INSERT INTO applications VALUES (?,?,?,?,?,?,?,?,?)');
+    D.apps.forEach(function (a) { s.run([a.app_id, a.country, a.route, a.channel, a.nudgeArm, a.sendTiming, a.created, a.stage, a.rework]); }); s.free();
+    s = db.prepare('INSERT INTO events VALUES (?,?,?,?,?)');
+    D.events.forEach(function (e) { s.run([e.event_id, e.app_id, e.event, e.day, e.props]); }); s.free();
+    s = db.prepare('INSERT INTO backend_status VALUES (?,?,?)');
+    D.backend.forEach(function (b) { s.run([b.app_id, b.stage, b.day]); }); s.free();
+    s = db.prepare('INSERT INTO messages VALUES (?,?,?,?,?,?,?,?,?)');
+    D.msgs.forEach(function (m) { s.run([m.msg_id, m.app_id, m.stage, m.channel, m.send_timing, m.local_hour, m.sent_day, m.opened, m.clicked]); }); s.free();
+    s = db.prepare('INSERT INTO stalls VALUES (?,?,?,?,?,?)');
+    D.stalls.forEach(function (x) { s.run([x.app_id, x.stage, x.nudge_arm, x.send_timing, x.channel, x.recovered]); }); s.free();
+    db.run('COMMIT');
+    return db;
+  }
+  var PRESETS = [
+    { id: 'funnel', title: 'Funnel: backend truth vs product events', sql:
+"-- How many applications reached each stage, by the ops database and by product events\nSELECT b.stage,\n       COUNT(DISTINCT b.app_id) AS backend_apps,\n       COUNT(DISTINCT e.app_id) AS event_apps,\n       COUNT(DISTINCT b.app_id) - COUNT(DISTINCT e.app_id) AS missing_in_events\nFROM backend_status b\nLEFT JOIN events e\n  ON e.app_id = b.app_id\n AND e.event = CASE b.stage WHEN 'notary_done' THEN 'notary_completed'\n                            WHEN 'courier_picked' THEN 'courier_picked_up'\n                            ELSE b.stage END\nGROUP BY b.stage\nORDER BY backend_apps DESC;" },
+    { id: 'lost', title: 'Notarised, but the app never heard', sql:
+"-- Notary done in the backend with no notary_completed event, by country\nSELECT a.country,\n       COUNT(*) AS notarised_without_event\nFROM backend_status b\nJOIN applications a ON a.app_id = b.app_id\nLEFT JOIN events e ON e.app_id = b.app_id AND e.event = 'notary_completed'\nWHERE b.stage = 'notary_done' AND e.app_id IS NULL\nGROUP BY a.country\nORDER BY notarised_without_event DESC;" },
+    { id: 'days', title: 'Days from documents to live, by country', sql:
+"-- Median-ish view: average and share within the 7-day promise, from documents submitted to account live\nWITH t AS (\n  SELECT a.country, a.rework,\n         MAX(CASE WHEN b.stage = 'account_live' THEN b.day END) -\n         MAX(CASE WHEN b.stage = 'docs_submitted' THEN b.day END) AS days\n  FROM backend_status b JOIN applications a ON a.app_id = b.app_id\n  GROUP BY a.app_id\n)\nSELECT country,\n       COUNT(days) AS live,\n       ROUND(AVG(days), 1) AS avg_days,\n       ROUND(100.0 * SUM(days <= 7) / COUNT(days), 1) AS pct_within_7_days,\n       ROUND(100.0 * SUM(rework > 0 AND days IS NOT NULL) / COUNT(days), 1) AS pct_with_rework\nFROM t\nGROUP BY country\nORDER BY avg_days DESC;" },
+    { id: 'reasons', title: 'What sends applications back', sql:
+"-- Rework reasons, split by route\nSELECT CASE WHEN e.event = 'notary_no_show' THEN 'Missed notary call'\n            WHEN e.event = 'broker_rejected' THEN 'Signature mismatch at Zerodha'\n            ELSE REPLACE(e.props, 'reason=', '') END AS reason,\n       SUM(a.route = 'NRE') AS nre,\n       SUM(a.route = 'NRO') AS nro,\n       COUNT(*) AS total\nFROM events e JOIN applications a ON a.app_id = e.app_id\nWHERE e.event IN ('docs_rejected', 'notary_no_show', 'broker_rejected')\nGROUP BY reason\nORDER BY total DESC;" },
+    { id: 'lift', title: 'Nudge lift vs holdout, by stage', sql:
+"-- Share of stalled applications that moved on, nudged vs holdout\nSELECT stage,\n       SUM(nudge_arm = 'nudge') AS nudged,\n       SUM(nudge_arm = 'holdout') AS holdout,\n       ROUND(100.0 * SUM(recovered * (nudge_arm = 'nudge')) / SUM(nudge_arm = 'nudge'), 1) AS pct_recovered_nudged,\n       ROUND(100.0 * SUM(recovered * (nudge_arm = 'holdout')) / SUM(nudge_arm = 'holdout'), 1) AS pct_recovered_holdout,\n       ROUND(100.0 * SUM(recovered * (nudge_arm = 'nudge')) / SUM(nudge_arm = 'nudge')\n           - 100.0 * SUM(recovered * (nudge_arm = 'holdout')) / SUM(nudge_arm = 'holdout'), 1) AS lift_pts\nFROM stalls\nGROUP BY stage\nORDER BY lift_pts DESC;" },
+    { id: 'opens', title: 'Open rate vs real lift', sql:
+"-- Open rates look healthy at every stage; compare with lift_pts from the previous query\nSELECT stage,\n       COUNT(*) AS messages,\n       ROUND(100.0 * AVG(opened), 1) AS open_pct,\n       ROUND(100.0 * AVG(clicked), 1) AS click_pct\nFROM messages\nGROUP BY stage\nORDER BY open_pct DESC;" }
+  ];
+  function rows(db, sql) { var r = db.exec(sql); return r.length ? r[0] : { columns: [], values: [] }; }
+  return { load: load, PRESETS: PRESETS, rows: rows };
+})();
+
+
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function n(x) { return Math.round(x).toLocaleString('en-IN'); }
+  function pct(x, d) { return (x * 100).toFixed(d == null ? 0 : d) + '%'; }
+  function pts(x) { return (x >= 0 ? '+' : '') + (x * 100).toFixed(1); }
+  var D = RF.generate();
+  var H = RA.headline(D), REC = RA.recon(D), NS = RA.noShowByHour(D), OPEN = RA.openRates(D);
+  var EXP = RA.experiment(D, 'stage'), TIM = RA.experiment(D, 'timing');
+  var reasons = RA.reasons(D);
+  var am = RA.filterApps(D).filter(function (a) { return a.utc < 0; });
+  var amLive = am.filter(function (a) { return a.daysToLive != null; });
+  var STAGE_NAME = { docs_submitted: 'Uploading documents', docs_verified: 'Fixing rejected documents', notary_done: 'Rebooking a missed notary call', courier_picked: 'Courier pickup slipped' };
+
+  // Executive summary
+  var rest = RA.headline(D); var amH = (function () { var x = RF.COUNTRIES.filter(function (c) { return c[2] < 0; }).map(function (c) { return RA.headline(D, { country: c[0] }); }); var live = x.reduce(function (s, h) { return s + h.live; }, 0); return { med: x[0].medianFromDocs, in7: x.reduce(function (s, h) { return s + h.in7OfLive * h.live; }, 0) / live }; })();
+  var courierLift = EXP.filter(function (x) { return x.stage === 'courier_picked'; })[0];
+  $('execList').innerHTML = [
+    '<b>Only ' + pct(H.in7OfLive) + ' of live accounts beat the 7-day promise.</b> About half of clean applications make it (' + pct(H.cleanIn7) + '); after any rework, almost none do (' + pct(H.dirtyIn7) + '). Rework hits ' + pct(H.reworkRate) + ' of applications that upload documents, so reducing rework is the lever, not speeding up the happy path.',
+    '<b>The app’s own funnel is wrong at the notary step.</b> ' + pct(REC.share, 1) + ' of completed notarisations never reach product events, so the funnel shows a drop that is not there and ' + n(REC.misnudge) + ' users a quarter get told to book a notary call they already finished.',
+    '<b>The Americas get notary slots at night.</b> No-shows run at ' + pct(NS.odd) + ' against ' + pct(NS.normal) + ' elsewhere, and almost no one in the US or Canada goes live within 7 days.',
+    '<b>Open rates say every nudge works; the holdout disagrees.</b> Courier-stage nudges are opened ' + pct(OPEN.courier_picked.o / OPEN.courier_picked.n) + ' of the time and recover no one extra, because a late pickup is not the customer’s to fix.'
+  ].map(function (x) { return '<li>' + x + '</li>'; }).join('');
+
+  // Reconciliation
+  var F = RA.funnel(D);
+  $('reconTitle').textContent = pct(REC.share, 1) + ' of notarisations never reach the app’s event data';
+  $('reconT').innerHTML = F.map(function (f) { var miss = f.truth - f.events; return '<tr><td>' + f.label + '</td><td class="num">' + n(f.truth) + '</td><td class="num">' + n(f.events) + '</td><td class="num ' + (miss ? 'bad' : '') + '">' + (miss ? n(miss) : '–') + '</td></tr>'; }).join('');
+  $('reconLine').innerHTML = '<b>Why it matters:</b> a funnel built on events alone shows a fake ' + pct(REC.share, 1) + ' drop at the notary step, and an event-triggered "you haven’t booked your notary" nudge reaches <b>' + n(REC.misnudge) + ' people who already did</b>. Fix: drive the funnel and the CRM triggers from the ops database, and alert when the partner webhook count falls below the ops count for a day.';
+
+  // Dashboard
+  RF.COUNTRIES.forEach(function (c) { var o = document.createElement('option'); o.value = c[0]; o.textContent = c[0]; $('f-country').appendChild(o); });
+  var tip = $('tip');
+  function bind(el, html) { el.addEventListener('mousemove', function (e) { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = Math.min(e.clientX + 12, window.innerWidth - 250) + 'px'; tip.style.top = (e.clientY + 12) + 'px'; }); el.addEventListener('mouseleave', function () { tip.style.opacity = 0; }); }
+  function dash() {
+    var f = { country: $('f-country').value, route: $('f-route').value };
+    var h = RA.headline(D, f);
+    $('kpis').innerHTML =
+      '<div class="kpi"><span class="k">Live within 7 days of documents</span><span class="v">' + pct(h.in7OfLive) + '</span><span class="s">of ' + n(h.live) + ' live accounts</span></div>' +
+      '<div class="kpi"><span class="k">Median days, documents to live</span><span class="v">' + (h.medianFromDocs || 0).toFixed(1) + '</span><span class="s">90th percentile ' + (h.p90FromDocs || 0).toFixed(1) + '</span></div>' +
+      '<div class="kpi"><span class="k">Rework rate</span><span class="v">' + pct(h.reworkRate) + '</span><span class="s">sent back at least once</span></div>' +
+      '<div class="kpi"><span class="k">Sign-up to live</span><span class="v">' + pct(h.liveRate) + '</span><span class="s">' + n(h.n) + ' applications</span></div>';
+    var st = RA.stageTimes(D, f), max = Math.max.apply(null, st.map(function (s) { return s.p90 || 0; })) || 1;
+    $('stageBars').innerHTML = st.map(function (s) {
+      return '<div class="brow" data-tip="' + esc('<b>' + s.label + '</b><br>Median ' + (s.median || 0).toFixed(2) + ' days · 90th pct ' + (s.p90 || 0).toFixed(2) + ' days · ' + n(s.n) + ' applications') + '"><span class="lab">' + s.label + '</span><span class="track"><span class="whisk" style="left:' + ((s.median || 0) / max * 100) + '%;width:' + (((s.p90 || 0) - (s.median || 0)) / max * 100) + '%"></span><span class="fill" style="width:' + Math.max(0.6, (s.median || 0) / max * 100) + '%"></span></span><span class="val">' + (s.median || 0).toFixed(1) + ' d</span></div>';
+    }).join('');
+    var rs = RA.reasons(D, f), rmax = rs.length ? rs[0].n : 1;
+    $('reasonBars').innerHTML = rs.map(function (r) {
+      return '<div class="brow" data-tip="' + esc('<b>' + r.reason + '</b><br>' + n(r.n) + ' applications sent back') + '"><span class="lab">' + r.reason + '</span><span class="track"><span class="fill" style="width:' + Math.max(0.6, r.n / rmax * 100) + '%"></span></span><span class="val">' + n(r.n) + '</span></div>';
+    }).join('');
+    document.querySelectorAll('#dash .brow').forEach(function (el) { bind(el, el.getAttribute('data-tip')); });
+  }
+  $('f-country').addEventListener('change', dash); $('f-route').addEventListener('change', dash); dash();
+
+  // Americas
+  var rows = RF.COUNTRIES.map(function (c) { var h = RA.headline(D, { country: c[0] }); return [c[0], h]; }).sort(function (a, b) { return b[1].medianFromDocs - a[1].medianFromDocs; });
+  $('countryT').innerHTML = rows.map(function (r) { var h = r[1]; return '<tr><td>' + r[0] + '</td><td class="num">' + n(h.n) + '</td><td class="num">' + pct(h.liveRate) + '</td><td class="num">' + h.medianFromDocs.toFixed(1) + '</td><td class="num ' + (h.in7OfLive < 0.1 ? 'bad' : '') + '">' + pct(h.in7OfLive) + '</td></tr>'; }).join('');
+  $('amTitle').textContent = 'US and Canada take about ' + (amH.med - rest.medianFromDocs).toFixed(1) + ' days longer, and the notary call is why';
+  $('amLine').innerHTML = 'If notary slots run 10:00–19:00 IST, that is about 23:30–08:30 on the US east coast. In this model, applicants with fewer than 3 waking hours in the slot window miss <b>' + pct(NS.odd) + '</b> of calls against <b>' + pct(NS.normal) + '</b> elsewhere, and take longer just to book. <b>Test:</b> a US-hours notary partner or evening IST slots for Americas applicants, with the 7-day rate for the US and Canada as the success measure.';
+
+  // Nudges
+  $('liftT').innerHTML = EXP.sort(function (a, b) { return b.lift - a.lift; }).map(function (x) {
+    var o = OPEN[x.stage]; var openP = o ? o.o / o.n : 0;
+    var sig = x.lo > 0;
+    return '<tr><td>' + (STAGE_NAME[x.stage] || x.stage) + '</td><td class="num">' + pct(openP) + '</td><td class="num">' + pct(x.pNudge, 1) + '</td><td class="num">' + pct(x.pHold, 1) + '</td><td class="num ' + (sig ? 'good' : '') + '">' + pts(x.lift) + ' pts (' + pts(x.lo) + ' to ' + pts(x.hi) + ')</td></tr>';
+  }).join('');
+  var amT = TIM.filter(function (x) { return /Americas/.test(x.key); }).sort(function (a, b) { return a.key < b.key ? -1 : 1; });
+  $('timingT').innerHTML = amT.map(function (x) {
+    var label = /ist_batch/.test(x.key) ? 'One batch at 10:00 IST (night in the Americas)' : '10:00 in the customer’s own time zone';
+    return '<tr><td>' + label + '</td><td class="num">' + n(x.nNudge) + '</td><td class="num">' + n(x.nHold) + '</td><td class="num">' + pts(x.lift) + ' pts (' + pts(x.lo) + ' to ' + pts(x.hi) + ')</td></tr>';
+  }).join('');
+  $('nudgeLine').innerHTML = '<b>Read it this way:</b> document nudges reliably help, notary-rebooking nudges helped in most reruns but not reliably (+1 to +16 points), and courier and Zerodha nudges do nothing, because the customer cannot act. Stop the courier and broker nudges and fix those with ops. For the Americas, a batch sent at 10:00 IST lands at night and did roughly nothing in five reruns (−5 to +6 points), while sending at 10:00 local time gave +9 to +17. Single-run numbers above are noisy; the decision rests on the range.';
+
+  // Ship table
+  var amNoShow = D.events.filter(function (e) { return e.event === 'notary_no_show'; }).filter(function (e) { return /^A/.test(e.app_id) && D.apps[+e.app_id.slice(1) - 1].utc < 0; }).length;
+  var pis = (reasons.filter(function (r) { return /PIS/.test(r.reason); })[0] || { n: 0 }).n;
+  var sigm = (reasons.filter(function (r) { return /Signature/.test(r.reason); })[0] || { n: 0 }).n;
+  $('shipT').innerHTML = [
+    ['Ask about income source and PIS letter before the route is chosen; block the NRE route without a PIS letter', n(pis) + ' applications a quarter sent back for a missing PIS letter, each adding days', 'PIS-related rejections; 7-day rate on the NRE route'],
+    ['US-hours notary slots for the Americas', n(amNoShow) + ' missed notary calls a quarter in the US and Canada', 'No-show rate and 7-day rate, US and Canada'],
+    ['Signature check against the PAN or passport before the courier is booked', n(sigm) + ' applications sent back by Zerodha, the most expensive rework (another courier, another week)', 'Broker rejection rate'],
+    ['Trigger nudges from ops status, send at 10:00 local time, keep a 20% holdout, stop courier and broker nudges', n(REC.misnudge) + ' wrong nudges a quarter; zero lift at the courier step', 'Lift vs holdout per journey; wrong-nudge count']
+  ].map(function (r) { return '<tr><td><b>' + r[0] + '</b></td><td>' + r[1] + '</td><td>' + r[2] + '</td></tr>'; }).join('');
+
+  // SQL console
+  var db = null;
+  RQ.PRESETS.forEach(function (p, i) { var b = document.createElement('button'); b.textContent = p.title; b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false'); b.addEventListener('click', function () { document.querySelectorAll('#presets button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); $('sqlBox').value = p.sql; run(); }); $('presets').appendChild(b); });
+  $('sqlBox').value = RQ.PRESETS[0].sql;
+  function run() {
+    if (!db) return;
+    var t0 = performance.now();
+    try {
+      var r = RQ.rows(db, $('sqlBox').value);
+      var head = '<thead><tr>' + r.columns.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead>';
+      var body = '<tbody>' + r.values.slice(0, 200).map(function (row) { return '<tr>' + row.map(function (v) { return '<td' + (typeof v === 'number' ? ' class="num"' : '') + '>' + esc(v == null ? 'NULL' : (typeof v === 'number' && !Number.isInteger(v) ? v.toFixed(2) : v)) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody>';
+      $('qout').innerHTML = head + body;
+      $('qstat').textContent = r.values.length + ' rows · ' + Math.round(performance.now() - t0) + ' ms' + (r.values.length > 200 ? ' · showing first 200' : '');
+    } catch (e) { $('qout').innerHTML = ''; $('qstat').textContent = 'Error: ' + e.message; }
+  }
+  $('runSql').addEventListener('click', run);
+  if (typeof initSqlJs === 'function') {
+    initSqlJs({ locateFile: function (f) { return f; } }).then(function (SQL) { db = RQ.load(SQL, D); $('qstat').textContent = 'Ready: ' + n(D.apps.length) + ' applications, ' + n(D.events.length) + ' events loaded.'; run(); })
+      .catch(function (e) { $('qstat').textContent = 'SQLite could not load here: ' + e.message; });
+  } else { $('qstat').textContent = 'SQLite could not load in this browser.'; }
+})();
+
+</script>
+
+</body></html>
