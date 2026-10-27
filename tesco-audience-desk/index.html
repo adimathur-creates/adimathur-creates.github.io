@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audience Desk · Aditya Mathur</title>
+<meta name="description" content="A working intake desk for customer segment requests: reuse before you build, check governance before you ship, and write the story the squad can pick up. Built for Tesco's Data & AI customer data products team. Synthetic data.">
+<style>
+:root{--bg:#fbfaf8;--surface:#fff;--ink:#17191d;--muted:#5d6370;--line:#e6e4df;--accent:#1d5d4b;--accent-soft:#e6f1ed;--tag:#f1efea;
+--ok:#1f7a4d;--ok-soft:#e5f3ea;--warn:#9a5b00;--warn-soft:#fbf0dc;--bad:#a8322d;--bad-soft:#f8e4e2;--q:#3b5aa8;--q-soft:#e6ecf8;--bar:#cfe3db}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101215;--surface:#171a1f;--ink:#e9ebee;--muted:#9ba2ae;--line:#272b33;--accent:#6fcfb0;--accent-soft:#132a23;--tag:#1f232a;
+--ok:#6fcf98;--ok-soft:#14281d;--warn:#e7b25a;--warn-soft:#2c2414;--bad:#ef8a83;--bad-soft:#2d1817;--q:#93adf0;--q-soft:#18203a;--bar:#1f3b31}}
+:root[data-theme="dark"]{--bg:#101215;--surface:#171a1f;--ink:#e9ebee;--muted:#9ba2ae;--line:#272b33;--accent:#6fcfb0;--accent-soft:#132a23;--tag:#1f232a;
+--ok:#6fcf98;--ok-soft:#14281d;--warn:#e7b25a;--warn-soft:#2c2414;--bad:#ef8a83;--bad-soft:#2d1817;--q:#93adf0;--q-soft:#18203a;--bar:#1f3b31}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:3px}
+.wrap{max-width:900px;margin:0 auto;padding:48px 16px 72px}
+.kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:clamp(32px,5.4vw,46px);line-height:1.08;margin:0 0 14px;letter-spacing:-.02em}
+.lede{font-size:19px;color:var(--muted);max-width:700px;margin:0 0 14px}
+.by{font-size:14px;color:var(--muted)}
+h2{font-size:24px;letter-spacing:-.01em;margin:56px 0 6px;line-height:1.25}
+h2 .n{color:var(--accent);font-variant-numeric:tabular-nums;margin-right:8px}
+h3{font-size:16px;margin:22px 0 6px}
+.sub{color:var(--muted);margin:0 0 18px;max-width:720px}
+.first{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:14px 16px;margin:26px 0 8px;font-size:15px}
+.first strong{display:block;margin-bottom:4px}
+.first ul{margin:6px 0 0;padding-left:18px}.first li{margin:3px 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0 4px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:13.5px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:15px}
+.card .src{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.fail{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}
+.fail div{border-left:2px solid var(--accent);padding:2px 0 2px 12px;font-size:15px}
+.fail strong{display:block}
+.desk{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:6px}
+label.l{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+textarea{width:100%;min-height:84px;resize:vertical;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px}
+.chip{font:inherit;font-size:13.5px;background:var(--tag);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer;text-align:left}
+.chip:hover{border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.go{font:inherit;font-weight:600;background:var(--accent);color:var(--bg);border:0;border-radius:10px;padding:9px 18px;cursor:pointer}
+.team{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 8px}
+.muted{color:var(--muted);font-size:13.5px}
+.verdict{border-radius:12px;padding:14px 16px;margin:16px 0 4px}
+.verdict .code{font-size:12px;letter-spacing:.08em;font-weight:700}
+.verdict .t{font-size:21px;font-weight:650;line-height:1.25;margin:2px 0 4px}
+.verdict p{margin:4px 0 0;font-size:15px}
+.v-REUSE{background:var(--ok-soft);color:var(--ink)}.v-REUSE .code{color:var(--ok)}
+.v-EXTEND,.v-BUILD{background:var(--q-soft)}.v-EXTEND .code,.v-BUILD .code{color:var(--q)}
+.v-BLOCKED{background:var(--bad-soft)}.v-BLOCKED .code{color:var(--bad)}
+.v-NEEDS_INFO{background:var(--warn-soft)}.v-NEEDS_INFO .code{color:var(--warn)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+.panel h3{margin:14px 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.under{display:flex;flex-wrap:wrap;gap:6px}
+.under span{font-size:13.5px;background:var(--accent-soft);border-radius:8px;padding:3px 9px}
+.qs{margin:8px 0 0;padding-left:18px;font-size:14px;color:var(--q)}
+.funnel .f{margin:7px 0}
+.funnel .lab{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.funnel .lab b{font-variant-numeric:tabular-nums}
+.funnel .track{height:8px;background:var(--tag);border-radius:4px;overflow:hidden;margin-top:3px}
+.funnel .fill{height:100%;background:var(--accent);border-radius:4px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12.5px;letter-spacing:.03em;border-bottom:1px solid var(--line);padding:7px 8px 7px 0}
+td{border-bottom:1px solid var(--line);padding:8px 8px 8px 0;vertical-align:top}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tw{overflow-x:auto}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.05em;border-radius:6px;padding:2px 7px;white-space:nowrap}
+.s-pass{background:var(--ok-soft);color:var(--ok)}.s-warn,.s-review{background:var(--warn-soft);color:var(--warn)}
+.s-fail,.s-block{background:var(--bad-soft);color:var(--bad)}.s-question{background:var(--q-soft);color:var(--q)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 0;border-bottom:1px solid var(--line)}
+.tab{font:inherit;font-size:14px;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:8px 10px;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+pre{white-space:pre-wrap;word-break:break-word;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0 0;max-height:420px;overflow:auto}
+.arch{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.arch svg{width:100%;height:auto;display:block}
+.arch text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+.three div{border-top:2px solid var(--accent);padding-top:8px;font-size:15px}
+.three strong{display:block;margin-bottom:2px}
+.three ul{padding-left:18px;margin:6px 0 0}.three li{margin:3px 0}
+.note{font-size:13.5px;color:var(--muted);margin-top:10px}
+ol.plain,ul.plain{padding-left:20px}ol.plain li,ul.plain li{margin:6px 0}
+footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 18px}
+@media (max-width:760px){.stats{grid-template-columns:1fr 1fr}.cards,.three,.grid2,.fail{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Independent work · APM, Data &amp; AI (customer data products) · Tesco Bengaluru</p>
+<h1>Audience Desk</h1>
+<p class="lede">One front door for segment requests. It reuses what the catalogue already has, runs the governance checks before anything ships, and turns what's left into a story the squad can pick up.</p>
+<p class="by">Aditya Mathur · October 2026 · <a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/tesco-audience-desk">Code</a></p>
+
+<div class="first">
+  <strong>Read this first</strong>
+  <ul>
+    <li>I don't work at Tesco and used no internal data. The segment catalogue, filters and the 40,000 households below are <b>synthetic</b>, generated in your browser from a fixed seed.</li>
+    <li>Sizes are scaled to 24 million Clubcard households only so they read naturally. They are not estimates of Tesco's real audiences.</li>
+    <li>The problem comes from Tesco's own public job ads (section 1). The thresholds (minimum sizes, the 25% contact-pressure line, the sensitive-category list) are my proposals, written to be replaced by Tesco's real policy.</li>
+    <li>Everything on this page is deterministic rules, not a model. The same request always gets the same answer, and every answer says why.</li>
+  </ul>
+</div>
+
+<div class="stats" id="stats" aria-live="polite"></div>
+<p class="note" id="statsnote"></p>
+
+<h2><span class="n">1</span>The problem, in Tesco's own words</h2>
+<p class="sub">Three public Tesco job ads describe the same product from different seats. Read together, they say segments and filters are a shared product with many requesters, and that quality, governance and adoption are the hard parts.</p>
+<div class="cards">
+  <div class="card"><div class="src">This role (APM, Bengaluru)</div>Support the management of behavioural segments and audience filters, keep them to data quality and governance standards, turn business requests into user stories and acceptance criteria, and grow adoption.</div>
+  <div class="card"><div class="src">Head of Audience Performance (UK)</div>Set an "audience truth" standard so every segment, filter and trigger is measurable and compliant; build "air-traffic control" so customers aren't over-contacted; run a Planning Pod that prioritises audience requests.</div>
+  <div class="card"><div class="src">Product Manager, Data &amp; AI (Bengaluru)</div>Hands-on segmentation and rule-based audience creation; find pain points in how teams consume customer data; make products work for Insights, Marketing, Personalisation and Analytics.</div>
+</div>
+<p class="note">Demand is rising: Tesco says it is investing in AI personalisation for its 24 million Clubcard households, opened an innovation lab with Adobe in April 2026, and began rolling out its AI meal planner in September. More personalisation means more audience requests reaching the same catalogue.</p>
+
+<h3>Where I'd expect it to break (my hypothesis, to test in the first month)</h3>
+<div class="fail">
+  <div><strong>Near-duplicate segments</strong>A requester can't tell that "Lapsed bakery (8w)" already exists, so "Bread lapsers 6w" gets built. Definitions drift and two teams report different numbers for the same customers.</div>
+  <div><strong>Governance found late</strong>Consent, minimum size and sensitive categories get checked at activation, after the squad has already built the segment.</div>
+  <div><strong>Vague tickets</strong>A one-line Slack ask becomes a story with no definition and no acceptance criteria, and comes back for rework.</div>
+  <div><strong>Adoption looks low</strong>If reuse isn't visible, the catalogue's best segments look unused while copies multiply. Nobody can say which segments to retire.</div>
+</div>
+
+<h2><span class="n">2</span>Try the desk</h2>
+<p class="sub">Type a request the way a marketer would in Slack, or pick one. The desk reads it, finds who you mean in the synthetic households, compares that with every catalogue segment, runs six checks, and decides.</p>
+<div class="desk">
+  <label class="l" for="req">Audience request</label>
+  <textarea id="req" spellcheck="false"></textarea>
+  <div class="chips" id="chips"></div>
+  <div class="row">
+    <button class="go" id="go">Run the desk</button>
+    <label class="muted" for="team">Requesting team</label>
+    <select class="team" id="team"><option>CRM Marketing</option><option>Customer Insights</option><option>Tesco Media</option><option>Commercial – Fresh</option><option>Clubcard Rewards</option></select>
+    <span class="muted" id="timing"></span>
+  </div>
+  <div id="out"></div>
+</div>
+
+<h2><span class="n">3</span>Catalogue health</h2>
+<p class="sub">The same overlap maths, run across the catalogue itself. This is the weekly report I'd want as the APM: what to merge, what to retire, what's stale. The catalogue was built with planted problems, and the check finds them.</p>
+<div id="health"></div>
+
+<h2><span class="n">4</span>How it runs</h2>
+<p class="sub">The page above is the engine. The <a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/tesco-audience-desk/agent">agent</a> runs the same engine file and uses Composio to listen and reply in Slack, file the Jira story and log every request to a sheet.</p>
+<div class="arch" role="img" aria-label="Architecture: a Slack post in #audience-requests reaches the desk through a Composio trigger. The desk reads, matches, checks and decides, using the segment catalogue. Composio then replies in the Slack thread, creates a Jira story when work is needed, and appends a row to the request log.">
+<svg viewBox="0 0 860 300" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+  <g font-size="13" fill="var(--ink)">
+    <rect x="10" y="110" width="150" height="70" rx="10" fill="var(--tag)" stroke="var(--line)"/>
+    <text x="85" y="139" text-anchor="middle" font-weight="600">Slack</text>
+    <text x="85" y="158" text-anchor="middle" fill="var(--muted)" font-size="12">#audience-requests</text>
+    <line x1="160" y1="145" x2="222" y2="145" stroke="var(--muted)" marker-end="url(#ah)"/>
+    <text x="191" y="135" text-anchor="middle" fill="var(--muted)" font-size="11">trigger</text>
+    <rect x="226" y="30" width="330" height="230" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/>
+    <text x="391" y="56" text-anchor="middle" font-weight="650">Desk engine (engine.js)</text>
+    <g font-size="12.5">
+      <rect x="246" y="74" width="140" height="40" rx="8" fill="var(--surface)" stroke="var(--line)"/><text x="316" y="99" text-anchor="middle">1 Read the request</text>
+      <rect x="396" y="74" width="140" height="40" rx="8" fill="var(--surface)" stroke="var(--line)"/><text x="466" y="99" text-anchor="middle">2 Find the households</text>
+      <rect x="246" y="126" width="140" height="40" rx="8" fill="var(--surface)" stroke="var(--line)"/><text x="316" y="151" text-anchor="middle">3 Match the catalogue</text>
+      <rect x="396" y="126" width="140" height="40" rx="8" fill="var(--surface)" stroke="var(--line)"/><text x="466" y="151" text-anchor="middle">4 Six governance checks</text>
+      <rect x="246" y="178" width="290" height="40" rx="8" fill="var(--surface)" stroke="var(--line)"/><text x="391" y="203" text-anchor="middle">5 Decide: reuse · extend · build · blocked · ask</text>
+    </g>
+    <text x="391" y="244" text-anchor="middle" fill="var(--muted)" font-size="11.5">Recommends and files only. A person still activates every audience.</text>
+    <line x1="556" y1="145" x2="618" y2="145" stroke="var(--muted)" marker-end="url(#ah)"/>
+    <text x="587" y="135" text-anchor="middle" fill="var(--muted)" font-size="11">Composio</text>
+    <g>
+      <rect x="622" y="40" width="228" height="56" rx="10" fill="var(--tag)" stroke="var(--line)"/><text x="736" y="64" text-anchor="middle" font-weight="600">Slack thread reply</text><text x="736" y="82" text-anchor="middle" fill="var(--muted)" font-size="11.5">SLACK_SEND_MESSAGE · every request</text>
+      <rect x="622" y="117" width="228" height="56" rx="10" fill="var(--tag)" stroke="var(--line)"/><text x="736" y="141" text-anchor="middle" font-weight="600">Jira story</text><text x="736" y="159" text-anchor="middle" fill="var(--muted)" font-size="11.5">JIRA_CREATE_ISSUE · extend or build only</text>
+      <rect x="622" y="194" width="228" height="56" rx="10" fill="var(--tag)" stroke="var(--line)"/><text x="736" y="218" text-anchor="middle" font-weight="600">Request log</text><text x="736" y="236" text-anchor="middle" fill="var(--muted)" font-size="11.5">GOOGLESHEETS_…_VALUES_APPEND</text>
+    </g>
+  </g>
+</svg>
+</div>
+<div class="three">
+  <div><strong>Why Composio</strong>The desk needs three tools a requester already lives in. Composio handles sign-in and permissions for all three through one SDK, so the desk is one engine file and a few lines of glue instead of three integrations.</div>
+  <div><strong>Built to fail safely</strong><code>npm run verify</code> checks every tool name and argument against Composio's live schema and pins versions before anything goes live. The default mode is a dry run that prints the calls and touches nothing.</div>
+  <div><strong>Tested</strong>8 request cases plus 5 rule checks run on every change. One test caught a real bug: "email about the new gluten-free bakery range" was adding Bakery to the audience. Words describing the campaign are now kept out of the targeting.</div>
+</div>
+<p class="note">What I could not do: run it against a live Slack, Jira and Sheets workspace, because I don't have Composio connections for them. The tool names and argument names are my reading of Composio's toolkits; the verify script exists precisely so that a wrong guess fails loudly on day one rather than silently.</p>
+
+<h2><span class="n">5</span>How I'd measure it</h2>
+<div class="tw"><table>
+  <thead><tr><th>Metric</th><th>Definition</th><th>Why it matters</th></tr></thead>
+  <tbody>
+    <tr><td><b>Reuse rate</b> (main metric)</td><td>Requests served from the existing catalogue (reuse, or reuse with filters) ÷ all requests</td><td>Every reuse is a build the squad didn't do and a definition that didn't fork.</td></tr>
+    <tr><td>Time to audience</td><td>Request posted → audience usable, median and 90th percentile</td><td>What the requester feels. Reuse should be same day.</td></tr>
+    <tr><td>Late governance failures</td><td>Audiences that failed consent, size or sensitivity at activation, after build</td><td>Should fall to near zero once checks run at intake.</td></tr>
+    <tr><td>Duplicates created</td><td>New segments with 90%+ household overlap with an existing one, per month</td><td>The sprawl the desk exists to stop.</td></tr>
+    <tr><td>Story rework</td><td>Desk-filed stories sent back for unclear requirements</td><td>Tests whether the generated acceptance criteria are actually usable.</td></tr>
+    <tr><td><i>Guardrail:</i> wrong calls</td><td>Requests where the requester or squad overrode the desk's decision</td><td>If this rises, the matching rules are wrong. Review every override in the pilot.</td></tr>
+  </tbody>
+</table></div>
+
+<h2><span class="n">6</span>My first 90 days, if this were my product area</h2>
+<div class="three">
+  <div><strong>Weeks 1–4 · Learn</strong><ul><li>Sit with the PM's request queue and read last quarter's requests.</li><li>Interview 8–10 requesters across Marketing, Insights, Tesco Media and Rewards.</li><li>Label every past request as reuse, extend or build. If reuse is under 20%, my hypothesis is wrong and the desk isn't the priority.</li></ul></div>
+  <div><strong>Weeks 5–8 · Pilot</strong><ul><li>Run the desk read-only in one team's channel. It recommends; people still triage.</li><li>Measure how often it agrees with the human call.</li><li>Merge the duplicates the health report finds, with owners' agreement.</li></ul></div>
+  <div><strong>Weeks 9–12 · Ship</strong><ul><li>Turn on Jira filing for extend and build.</li><li>Make time windows a setting on the most-copied segment families.</li><li>Put reuse rate and late failures on the team's monthly product review.</li></ul></div>
+</div>
+
+<h2><span class="n">7</span>What would prove me wrong</h2>
+<ul class="plain">
+  <li><b>Requests may already come through a structured form</b> in the audience tool, not free text. Then the parsing step is unnecessary and the value is only in matching and checks, which belong inside that form.</li>
+  <li><b>Overlap on a sample isn't overlap on 24 million households.</b> On real data, matching should run on the live segment tables, and small segments need exact counts, not samples.</li>
+  <li><b>Tesco's privacy rules will differ from mine.</b> The sensitive list and size floors are placeholders for the real policy, owned by privacy and legal, not by the product team.</li>
+  <li><b>A model could read requests better than my rules.</b> I'd only add one with the rules kept as the final check, so a model can suggest but never decide.</li>
+</ul>
+
+<footer>
+  <span>Aditya Mathur · Bengaluru</span>
+  <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a>
+  <a href="https://www.linkedin.com/in/adityaamathur">LinkedIn</a>
+  <a href="https://adimathur-creates.github.io/">More work</a>
+</footer>
+</div>
+
+<script type="module">
+import * as E from "./engine.js";
+
+const $ = (s) => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => { const n = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === "class") n.className = v; else if (k === "style") n.style.cssText = v; else n.setAttribute(k, v); } for (const k of kids) if (k != null) n.append(k); return n; };
+const pct = (x) => Math.round(x * 100) + "%";
+
+const EXAMPLES = [
+  ["Lapsed bakery, email", "Lapsed bakery shoppers who haven't bought bread in 8 weeks, for an email win-back. Exclude anyone we've contacted twice this week."],
+  ["Plant-based launch, push", "High value online shoppers who bought plant-based in the last 12 weeks, app push for a new range launch"],
+  ["Pet lapsers, 6 weeks", "Customers who haven't bought pet food for 6 weeks, email reminder about the new pet range"],
+  ["New parents on Meta", "New parents buying baby products in the last 4 weeks for a Meta campaign"],
+  ["Wine buyers, SMS", "Wine buyers in the last 12 weeks for an SMS offer on Christmas fizz"],
+  ["World foods + frozen", "Clubcard Plus members who buy world foods and frozen"],
+  ["Gluten-free launch", "Free-from shoppers in the last 12 weeks, email about the new gluten-free bakery range"],
+];
+
+const t0 = performance.now();
+const pop = E.generatePopulation();
+const genMs = Math.round(performance.now() - t0);
+
+for (const [label, text] of EXAMPLES) {
+  const b = el("button", { class: "chip", type: "button" }, label);
+  b.onclick = () => { $("#req").value = text; run(); };
+  $("#chips").append(b);
+}
+$("#req").value = EXAMPLES[0][1];
+$("#go").onclick = run;
+$("#req").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) run(); });
+
+function run() {
+  const text = $("#req").value.trim();
+  if (!text) return;
+  const t = performance.now();
+  const r = E.runDesk(pop, text, { team: $("#team").value });
+  $("#timing").textContent = `Answered in ${Math.max(1, Math.round(performance.now() - t))} ms on ${E.SAMPLE_SIZE.toLocaleString()} synthetic households`;
+  render(r);
+}
+
+function render(r) {
+  const out = $("#out"); out.replaceChildren();
+  const d = r.decision;
+  const v = el("div", { class: `verdict v-${d.code}` },
+    el("div", { class: "code" }, d.code.replace("_", " ")),
+    el("div", { class: "t" }, d.title),
+    el("p", {}, d.why));
+  if (d.note) v.append(el("p", {}, d.note));
+  if (d.review) v.append(el("p", {}, el("b", {}, "Needs sign-off: "), d.review));
+  out.append(v);
+
+  const left = el("div", { class: "panel" }), right = el("div", { class: "panel" });
+  left.append(el("h3", {}, "What the desk understood"));
+  const u = el("div", { class: "under" }); for (const x of r.understood) u.append(el("span", {}, x)); left.append(u);
+  if (r.questions.length) { const q = el("ul", { class: "qs" }); for (const x of r.questions) q.append(el("li", {}, x)); left.append(q); }
+
+  if (r.funnel.length) {
+    left.append(el("h3", {}, "From wanted to reachable"));
+    const f = el("div", { class: "funnel" }); const top = r.funnel[0].sample || 1;
+    for (const s of r.funnel) f.append(el("div", { class: "f" },
+      el("div", { class: "lab" }, el("span", {}, s.label), el("b", {}, "~" + E.fmt(s.est))),
+      el("div", { class: "track" }, el("div", { class: "fill", style: `width:${Math.max(1, (s.sample / top) * 100)}%` }))));
+    left.append(f);
+    if (r.mde) left.append(el("p", { class: "muted" }, `Sample: ${r.final.sample.toLocaleString()} of ${E.SAMPLE_SIZE.toLocaleString()} households. Sizes scaled to 24m for orientation only.`));
+  }
+
+  if (r.checks.length) {
+    right.append(el("h3", {}, "Governance checks"));
+    const tb = el("tbody");
+    for (const c of r.checks) tb.append(el("tr", {}, el("td", {}, el("span", { class: `pill s-${c.status}` }, c.status.toUpperCase())), el("td", {}, el("b", {}, c.name), el("br"), el("span", { class: "muted" }, c.detail))));
+    right.append(el("div", { class: "tw" }, el("table", {}, tb)));
+  }
+  out.append(el("div", { class: "grid2" }, left, right));
+
+  if (r.matches.length) {
+    out.append(el("h3", { style: "margin:18px 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)" }, "Closest catalogue segments"));
+    const tb = el("tbody");
+    for (const m of r.matches.slice(0, 4)) tb.append(el("tr", {},
+      el("td", {}, el("b", {}, m.seg.id), " ", m.seg.name, el("br"), el("span", { class: "muted" }, `${m.seg.owner} · used ${m.seg.uses90}× in 90 days`)),
+      el("td", { class: "num" }, pct(m.jaccard)),
+      el("td", { class: "num" }, pct(m.coverage)),
+      el("td", {}, m.diff.length ? el("span", { class: "muted" }, m.diff.join("; ")) : "Same definition")));
+    out.append(el("div", { class: "tw" }, el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Segment"), el("th", {}, "Overlap"), el("th", {}, "Covers your ask"), el("th", {}, "Difference"))), tb)));
+    out.append(el("p", { class: "note" }, "Overlap is measured on households, not on names: the share of people in either audience who are in both. It is computed after applying the same reusable filters you asked for."));
+  }
+
+  // outputs
+  const o = r.outputs;
+  const views = [["Slack reply", o.slack]];
+  if (o.jira) views.push(["Jira story", `${o.jira.summary}\n\n${o.jira.description}`]);
+  views.push(["Request log row", o.logRow.join("  |  ")]);
+  const calls = [];
+  if (o.jira) calls.push({ tool: "JIRA_CREATE_ISSUE", arguments: { project_key: "CDP", summary: o.jira.summary, issue_type: "Story", labels: o.jira.labels, description: "(the story text in the Jira tab)" } });
+  calls.push({ tool: "SLACK_SEND_MESSAGE", arguments: { channel: "#audience-requests", thread_ts: "<the request's ts>", text: "(the reply in the Slack tab)" } });
+  calls.push({ tool: "GOOGLESHEETS_SPREADSHEETS_VALUES_APPEND", arguments: { range: "requests!A:G", valueInputOption: "USER_ENTERED", values: [o.logRow] } });
+  views.push(["Composio calls", JSON.stringify(calls, null, 2)]);
+  const tabs = el("div", { class: "tabs", role: "tablist" }); const pre = el("pre", { role: "tabpanel" });
+  views.forEach(([name, body], i) => {
+    const b = el("button", { class: "tab", role: "tab", type: "button", "aria-selected": i === 0 ? "true" : "false" }, name);
+    b.onclick = () => { tabs.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", "false")); b.setAttribute("aria-selected", "true"); pre.textContent = body; };
+    tabs.append(b);
+  });
+  pre.textContent = views[0][1];
+  out.append(tabs, pre);
+}
+
+// stats + catalogue health
+const h = E.catalogueHealth(pop);
+const results = EXAMPLES.map(([, t]) => E.runDesk(pop, t, { now: 0 }));
+const by = (c) => results.filter((r) => r.decision.code === c).length;
+const stats = [
+  [`${by("REUSE")} of ${results.length}`, "example requests answered from the existing catalogue, no build"],
+  [String(h.pairs.length), "segment pairs that overlap 60%+ (merge candidates)"],
+  [String(h.unused.length), "segments unused in 90 days (retire candidates)"],
+  [String(results.filter((r) => r.checks.some((c) => ["block", "review", "fail"].includes(c.status))).length), "requests stopped or sent for sign-off at intake, not at launch"],
+];
+$("#stats").replaceChildren(...stats.map(([b, s]) => el("div", { class: "stat" }, el("b", {}, b), el("span", {}, s))));
+$("#statsnote").textContent = `Live counts from this page's own run on synthetic data (${genMs} ms to generate ${E.SAMPLE_SIZE.toLocaleString()} households). They describe the illustrative catalogue, not Tesco's.`;
+
+const hb = $("#health");
+const t1 = el("tbody");
+for (const p of h.pairs) t1.append(el("tr", {},
+  el("td", {}, el("b", {}, p.a.id), " ", p.a.name, el("br"), el("span", { class: "muted" }, `${p.a.owner} · used ${p.a.uses90}×`)),
+  el("td", {}, el("b", {}, p.b.id), " ", p.b.name, el("br"), el("span", { class: "muted" }, `${p.b.owner} · used ${p.b.uses90}×`)),
+  el("td", { class: "num" }, pct(p.jaccard)),
+  el("td", {}, p.jaccard >= 0.98 ? `Same households under two names. Keep ${p.a.uses90 >= p.b.uses90 ? p.a.id : p.b.id}, redirect the other.` : "Same category, different window. Merge into one segment with the window as a setting.")));
+hb.append(el("h3", {}, "Merge candidates"), el("div", { class: "tw" }, el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Segment"), el("th", {}, "Overlaps with"), el("th", {}, "Overlap"), el("th", {}, "Proposed action"))), t1)));
+const t2 = el("tbody");
+const flagged = E.CATALOGUE.filter((s) => s.uses90 === 0 || s.refreshed > 7);
+for (const s of flagged) t2.append(el("tr", {},
+  el("td", {}, el("b", {}, s.id), " ", s.name, el("br"), el("span", { class: "muted" }, s.owner)),
+  el("td", { class: "num" }, `${s.uses90}×`),
+  el("td", { class: "num" }, `${s.refreshed} days ago`),
+  el("td", {}, s.uses90 === 0 ? "Ask the owner; retire after 30 days if no reply." : "Refresh is late. Block activation until it runs.")));
+hb.append(el("h3", {}, "Unused or stale"), el("div", { class: "tw" }, el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Segment"), el("th", {}, "Used (90 days)"), el("th", {}, "Last refresh"), el("th", {}, "Proposed action"))), t2)));
+hb.append(el("p", { class: "note" }, "Usage counts and refresh dates are illustrative values written into the synthetic catalogue. Overlaps are computed live on the synthetic households."));
+
+run();
+</script>
+</body>
+</html>

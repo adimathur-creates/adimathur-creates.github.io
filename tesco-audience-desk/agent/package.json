@@ -1,0 +1,16 @@
+{
+  "name": "audience-desk-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Segment request intake for customer data products. Composio connects it to Slack, Jira and Google Sheets.",
+  "scripts": {
+    "test": "node test.mjs",
+    "verify": "node verify.mjs",
+    "desk": "node desk.mjs",
+    "listen": "node listen.mjs"
+  },
+  "dependencies": {
+    "@composio/core": "^0.27.0"
+  }
+}
