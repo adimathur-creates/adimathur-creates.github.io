@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head><body>
+<title>Before the Ticket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an 840px research note. Every claim sits next to the table that supports it; the forest plot is the centrepiece. */
+:root{
+  --paper:#F7F7F4; --panel:#FFFFFF; --ink:#15171C; --muted:#5C6270; --rule:#DFE1E5; --axis:#C3C2B7;
+  --mark:#2a78d6; --target:#B42318; --accent:#0F5E73; --accent-soft:#E1F0F3; --warn-soft:#FBEEDD; --bad:#B42318; --bad-soft:#FBE3E0; --good:#006300; --good-soft:#DFF2E4;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"IBM Plex Sans","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#101215; --panel:#171A1F; --ink:#E7E8EA; --muted:#A0A6B1; --rule:#2A2E36; --axis:#3A3E46;
+  --mark:#3987e5; --target:#F2867E; --accent:#6CC3D6; --accent-soft:#132A30; --warn-soft:#33261A; --bad:#F2867E; --bad-soft:#3A1A17; --good:#0ca30c; --good-soft:#12301B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#101215; --panel:#171A1F; --ink:#E7E8EA; --muted:#A0A6B1; --rule:#2A2E36; --axis:#3A3E46;
+  --mark:#3987e5; --target:#F2867E; --accent:#6CC3D6; --accent-soft:#132A30; --warn-soft:#33261A; --bad:#F2867E; --bad-soft:#3A1A17; --good:#0ca30c; --good-soft:#12301B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;margin:0;padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:840px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2{font-family:var(--f-display);line-height:1.08;text-wrap:balance;margin:0;font-weight:700}
+h1{font-size:clamp(2.6rem,9vw,4.4rem);letter-spacing:-.02em}
+h2{font-size:clamp(1.4rem,4.4vw,1.9rem);font-weight:500}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow,.k,.sec{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec{color:var(--accent)}
+.dek{font-size:1.12rem;max-width:66ch}
+.by{font-size:.9rem;color:var(--muted)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:4px}
+.note strong{color:var(--ink)}
+.exec{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--accent);border-radius:4px;padding:16px 18px}
+.exec ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:8px}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:18px 16px;display:flex;flex-direction:column;gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:middle}
+#ageT td:first-child,#subT td:first-child{white-space:nowrap}
+th{font-family:var(--f-mono);font-size:.64rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tr.dimhead td{background:var(--paper);font-family:var(--f-mono);font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding-top:9px}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.78rem;white-space:nowrap}
+.forest{position:relative;height:18px;min-width:150px}
+.forest .ci{position:absolute;top:8px;height:2px;background:var(--mark)}
+.forest .pt{position:absolute;top:4px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--mark);border:2px solid var(--panel)}
+.forest .tg{position:absolute;top:0;bottom:0;width:0;border-left:1.5px dashed var(--target)}
+.chip{display:inline-block;font-family:var(--f-mono);font-size:.64rem;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.chip.bad{background:var(--bad-soft);color:var(--bad)} .chip.warn{background:var(--warn-soft);color:var(--muted)} .chip.good{background:var(--good-soft);color:var(--good)} .chip.info{background:var(--accent-soft);color:var(--accent)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;vertical-align:middle;margin-right:6px}
+.finding{background:var(--accent-soft);border-radius:4px;padding:12px 14px}
+.warnbox{background:var(--warn-soft);border-radius:4px;padding:12px 14px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.84rem;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select{font:inherit;font-size:.9rem;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:4px;padding:6px 8px}
+input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{margin:0;font-family:var(--f-display);font-size:1.1rem;font-weight:700}
+.card p,.card li{font-size:.92rem}
+a{color:var(--accent)}
+.src{font-size:.86rem;color:var(--muted)}
+hr{border:0;border-top:1px solid var(--rule);margin:0}
+@media (max-width:560px){th,td{padding:6px 7px}table{font-size:.8rem}.forest{min-width:110px}}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">Independent work · Associate Product Manager (research), Qure.ai</div>
+  <h1>Before the Ticket</h1>
+  <p class="dek">How I would investigate a chest X-ray nodule model's failures before asking R&amp;D for anything: which gaps are real, which come from the reference standard, which come from a new site, and what each one should turn into.</p>
+  <p class="by">Aditya Mathur · October 2026 · written for Vatsal Khetan</p>
+  <div class="note"><strong>Read this first.</strong> Everything here is synthetic and illustrative. There is no Qure.ai model, data or clinical result on this page, and I have no clinical experience. I simulated 12,600 chest X-rays across four sites, a three-reader reference standard and a CT-confirmed subset, with failure modes built in on purpose, so the method can be shown end to end. The numbers show how the analysis works; they are not measurements of any real product. Assumptions: <span id="assump"></span></div>
+</header>
+
+<section id="summary">
+  <span class="sec">What the analysis finds</span>
+  <div class="exec"><ol id="execList"></ol></div>
+</section>
+
+<section id="setup">
+  <span class="sec">1 · The setup</span>
+  <h2>Four sites, three readers, one operating point</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Site</th><th class="num">Images</th><th class="num">Nodule prevalence</th><th>What is different</th></tr></thead>
+    <tbody id="siteT"></tbody></table></div>
+  <ul class="plain">
+    <li><b>Reference standard:</b> majority of three readers, as in many validation sets. A CT-confirmed subset (<span id="ctN"></span> images) is enriched for cases where model and readers disagree, as an adjudication would be.</li>
+    <li><b>Operating point:</b> the highest threshold that reaches 90% sensitivity on development data (sites S1–S3, months 1–6). Threshold <span id="thv" class="num"></span>.</li>
+    <li><b>Rule for calling a gap real:</b> the 95% interval sits below 90%, there is a plausible mechanism, and it repeats in both halves of the year. With 25 subgroups, about one will cross the line by chance.</li>
+  </ul>
+</section>
+
+<section id="overall">
+  <span class="sec">2 · Headline numbers, and what moves them</span>
+  <h2>One threshold means different things at different sites</h2>
+  <div class="sheet">
+    <div class="controls">
+      <label for="th">Threshold: <b id="thLabel"></b><input type="range" id="th" min="0.1" max="0.8" step="0.005"></label>
+      <label for="siteSel">Site<select id="siteSel"><option value="">All sites</option></select></label>
+    </div>
+    <div class="kpis" id="kpis"></div>
+  </div>
+  <p class="by">AUROC is threshold-free and stays high while sensitivity at the chosen point drops at a new site. A good AUROC on the validation set says little about a site with different images.</p>
+</section>
+
+<section id="subgroups">
+  <span class="sec">3 · Subgroups</span>
+  <h2>Every subgroup, with its uncertainty</h2>
+  <div class="legend"><span><i style="width:10px;height:10px;border-radius:50%;background:var(--mark)"></i>Sensitivity vs readers</span><span><i style="width:16px;height:2px;background:var(--mark)"></i>95% interval</span><span><i style="height:12px;border-left:1.5px dashed var(--target)"></i>90% target</span></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Subgroup</th><th class="num">Positives</th><th class="num">Sens.</th><th style="min-width:150px">60% to 100%</th><th>Repeats in both halves?</th><th>Call</th></tr></thead>
+    <tbody id="subT"></tbody></table></div>
+  <p class="by">"Positives" are reader-called nodules. A subgroup needs about 139 positives to pin 90% sensitivity to within ±5 points; most do not have that yet, which is itself a data request.</p>
+</section>
+
+<section id="failures">
+  <span class="sec">4 · Why it misses, why it flags</span>
+  <h2 id="fpTitle"></h2>
+  <div class="cards">
+    <div class="card"><span class="k">Missed (false negatives)</span><div class="tablewrap"><table><tbody id="fnT"></tbody></table></div></div>
+    <div class="card"><span class="k">Flagged with no reader call (false positives)</span><div class="tablewrap"><table><tbody id="fpT"></tbody></table></div></div>
+  </div>
+  <p class="finding" id="fpLine"></p>
+</section>
+
+<section id="reference">
+  <span class="sec">5 · The reference standard is part of the result</span>
+  <h2 id="refTitle"></h2>
+  <div class="kpis" id="refK"></div>
+  <p class="warnbox" id="refLine"></p>
+</section>
+
+<section id="trap">
+  <span class="sec">6 · A gap that is not the model's</span>
+  <h2>Under-40s look worse. Check the labels before filing a ticket.</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Age</th><th class="num">Sensitivity vs readers</th><th class="num">Reader positives with no nodule</th><th class="num">Sensitivity vs true labels</th></tr></thead>
+    <tbody id="ageT"></tbody></table></div>
+  <p class="finding" id="ageLine"></p>
+</section>
+
+<section id="drift">
+  <span class="sec">7 · A new site, before any labels arrive</span>
+  <h2>The score distribution moves in month one</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Month</th><th class="num">S3 drift (PSI)</th><th class="num">S3 flag rate</th><th class="num">S4 drift (PSI)</th><th class="num">S4 flag rate</th><th class="num">S4 sensitivity, once labelled</th></tr></thead>
+    <tbody id="driftT"></tbody></table></div>
+  <p class="finding" id="driftLine"></p>
+</section>
+
+<section id="asks">
+  <span class="sec">8 · What goes to R&amp;D, and what does not</span>
+  <h2>Five findings, four different owners</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Finding</th><th>Owner</th><th>Ask</th><th>Done when</th></tr></thead>
+    <tbody id="askT"></tbody></table></div>
+</section>
+
+<section id="study">
+  <span class="sec">9 · The validation study I would propose next</span>
+  <div class="cards">
+    <div class="card"><h3>Reference standard</h3><p>Three readers plus adjudication, with CT confirmation for every model-reader disagreement. Small and retrocardiac nodules are where the readers are weakest, so that is where confirmation pays most.</p></div>
+    <div class="card"><h3>Pre-specified subgroups</h3><p>Size, location, view, vendor, site, image quality, age and sex, written down before unblinding. Sample size per subgroup set by the interval we need, about 139 positives for ±5 points at 90%.</p></div>
+    <div class="card"><h3>Enrichment</h3><p>At 5% prevalence, 139 positives means about 2,800 images per subgroup. Enriching for the weak subgroups (retrocardiac, under 6 mm, portable AP) from archives costs far less.</p></div>
+  </div>
+</section>
+
+<section id="me">
+  <span class="sec">Why I built this</span>
+  <p>You described the role as closer to a research PM. My earlier eval work was for an LLM, not a medical model: a 31-case evaluation framework for a support assistant, with hard safety gates and a judge that is trusted only after it agrees with human labels. Its scorecard was illustrative too, not a production result. What carries over is the habit this page shows: decide what would prove a failure is real before asking anyone to fix it. At Stripe the most useful thing I did was find a data pipeline that was failing silently, which is the same instinct applied to data.</p>
+</section>
+
+<section id="limits">
+  <span class="sec">Limits</span>
+  <ul class="plain">
+    <li>Synthetic data with failure modes put there on purpose. A real analysis starts from Qure.ai's data and its own reference standard.</li>
+    <li>The simulator knows the true label for every image, which a real team never does. I use it only to show why the CT subset and adjudication matter.</li>
+    <li>Drift is measured with a population stability index on model scores. It shows that something changed, not why; the why needs image review.</li>
+    <li>I am not a clinician. Clinical impact, care pathways and regulatory claims would come from the clinical and regulatory teams.</li>
+  </ul>
+</section>
+
+<hr>
+<section class="src">
+  <span class="sec">Method</span>
+  <p>AUROC by rank sums; Wilson 95% intervals; population stability index on 11 score bins against sites S1–S3, months 1–6; positives needed = 1.96² × 0.9 × 0.1 / 0.05². Thirteen automated checks confirm each finding across five independent synthetic runs.</p>
+</section>
+
+</div>
+<script>
+// Failure analysis for a chest X-ray lung-nodule detector, on a synthetic study.
+// The simulator knows the hidden truth; the analysis only uses what a real team would have:
+// a 3-reader reference label, a CT-confirmed subset, image metadata and the model score.
+var QF = (function () {
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0; var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function gauss(r) { var u = 0, v = 0; while (!u) u = r(); while (!v) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function pick(r, items) { var u = r(), a = 0; for (var i = 0; i < items.length; i++) { a += items[i][1]; if (u < a) return items[i][0]; } return items[items.length - 1][0]; }
+  function sig(x) { return 1 / (1 + Math.exp(-x)); }
+
+  var SITES = {
+    S1: { label: 'Tertiary hospital, India', n: 3600, prev: 0.06, ap: 0.10, vendor: 'Vendor A', scar: 0.06, start: 1 },
+    S2: { label: 'TB screening van, India', n: 3600, prev: 0.04, ap: 0.0, vendor: 'Vendor A', scar: 0.28, start: 1, portable: true },
+    S3: { label: 'Community hospital, US', n: 3000, prev: 0.05, ap: 0.35, vendor: 'Vendor B', scar: 0.02, start: 1 },
+    S4: { label: 'New site, vendor C (from month 7)', n: 2400, prev: 0.05, ap: 0.20, vendor: 'Vendor C', scar: 0.05, start: 7 }
+  };
+  var ASSUMPTIONS = 'Sizes: 35% under 6 mm, 40% 6-10 mm, 25% over 10 mm. Locations: 55% peripheral, 15% apex, 15% hilar, 15% retrocardiac. 20% subsolid. Readers miss small nodules more often. Vendor C images shift model scores down.';
+
+  function generate(opts) {
+    opts = opts || {}; var r = rng(opts.seed || 1021), rows = [], id = 0;
+    Object.keys(SITES).forEach(function (sk) {
+      var S = SITES[sk];
+      for (var i = 0; i < S.n; i++) {
+        var x = { id: ++id, site: sk, vendor: S.vendor, month: S.start + Math.floor(r() * (13 - S.start)) };
+        x.view = r() < S.ap ? 'AP portable' : (S.portable ? 'PA portable' : 'PA');
+        x.age = pick(r, [['under 40', 0.3], ['40-60', 0.4], ['over 60', 0.3]]);
+        x.sex = r() < 0.5 ? 'F' : 'M';
+        x.scar = r() < S.scar; x.device = x.view === 'AP portable' ? r() < 0.5 : r() < 0.04;
+        x.quality = x.view === 'AP portable' ? pick(r, [['good', 0.35], ['fair', 0.45], ['poor', 0.2]]) : pick(r, [['good', 0.75], ['fair', 0.2], ['poor', 0.05]]);
+        var prev = S.prev * (x.age === 'over 60' ? 1.6 : x.age === 'under 40' ? 0.5 : 1);
+        x.truth = r() < prev;
+        var z;
+        if (x.truth) {
+          var mm = pick(r, [[4 + r() * 2, 0.35], [6 + r() * 4, 0.40], [10 + r() * 20, 0.25]]);
+          x.size = mm < 6 ? 'under 6 mm' : mm <= 10 ? '6-10 mm' : 'over 10 mm';
+          x.loc = pick(r, [['peripheral', 0.55], ['apex', 0.15], ['hilar', 0.15], ['retrocardiac', 0.15]]);
+          x.subsolid = r() < 0.2;
+          z = 0.9 + 0.17 * mm - (x.loc === 'retrocardiac' ? 1.5 : x.loc === 'hilar' ? 0.8 : x.loc === 'apex' ? 0.5 : 0) - (x.subsolid ? 0.9 : 0);
+        } else {
+          x.size = x.loc = '';
+          x.mimic = x.scar && r() < 0.45 ? 'Old TB scarring' : x.device && r() < 0.3 ? 'Lines, leads or tubes' : r() < 0.05 ? 'Nipple shadow' : r() < 0.05 ? 'Rib or vessel overlap' : '';
+          z = -3.0 + (x.mimic ? 1.9 + (x.mimic === 'Old TB scarring' ? 0.4 : 0) : 0);
+        }
+        z -= x.quality === 'poor' ? 0.9 : x.quality === 'fair' ? 0.35 : 0;
+        if (x.vendor === 'Vendor C') z = z * 0.8 - 1.2; // different image processing compresses the scores
+        x.score = sig(z + gauss(r) * 0.9);
+        // reference standard: three readers, majority vote. Small, retrocardiac and subsolid nodules are missed more.
+        var pDetect = x.truth ? (x.size === 'under 6 mm' ? 0.55 : x.size === '6-10 mm' ? 0.85 : 0.97) * (x.loc === 'retrocardiac' ? 0.8 : 1) * (x.subsolid ? 0.85 : 1) : 0;
+        var pFalse = x.truth ? 0 : (x.mimic ? 0.07 : 0.004);
+        var votes = 0; for (var k = 0; k < 3; k++) if (r() < (x.truth ? pDetect : pFalse)) votes++;
+        x.ref = votes >= 2;
+        x.ct = r() < 0.12 || (x.ref !== (x.score > 0.5) && r() < 0.35); // CT-confirmed subset, enriched for disagreements as a real adjudication would be
+        x.mimicReviewed = x.mimic; // what a radiologist review of a false positive would record
+        rows.push(x);
+      }
+    });
+    return rows;
+  }
+
+  // ---------- metrics ----------
+  function wilson(k, n) { if (!n) return [0, 0]; var z = 1.96, p = k / n, d = 1 + z * z / n, c = p + z * z / (2 * n), m = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)); return [(c - m) / d, (c + m) / d]; }
+  function auroc(rows, label) {
+    var pos = rows.filter(function (x) { return label(x); }).map(function (x) { return x.score; }), neg = rows.filter(function (x) { return !label(x); }).map(function (x) { return x.score; });
+    if (!pos.length || !neg.length) return null;
+    var all = pos.map(function (s) { return [s, 1]; }).concat(neg.map(function (s) { return [s, 0]; })).sort(function (a, b) { return a[0] - b[0]; });
+    var rankSum = 0; for (var i = 0; i < all.length; i++) if (all[i][1]) rankSum += i + 1;
+    return (rankSum - pos.length * (pos.length + 1) / 2) / (pos.length * neg.length);
+  }
+  function at(rows, th, label) {
+    label = label || function (x) { return x.ref; };
+    var tp = 0, fn = 0, fp = 0, tn = 0;
+    rows.forEach(function (x) { var p = x.score >= th, y = label(x); if (y && p) tp++; else if (y) fn++; else if (p) fp++; else tn++; });
+    return { tp: tp, fn: fn, fp: fp, tn: tn, n: rows.length, sens: tp / (tp + fn || 1), spec: tn / (tn + fp || 1), ppv: tp / (tp + fp || 1), sensCI: wilson(tp, tp + fn), specCI: wilson(tn, tn + fp), flagsPer1000: 1000 * (tp + fp) / (rows.length || 1) };
+  }
+  // operating threshold: highest threshold that reaches the target sensitivity on development data (sites S1-S3, months 1-6)
+  function chooseThreshold(rows, target) {
+    var dev = rows.filter(function (x) { return x.site !== 'S4' && x.month <= 6; });
+    for (var th = 0.95; th >= 0.02; th -= 0.005) { if (at(dev, th).sens >= target) return +th.toFixed(3); }
+    return 0.02;
+  }
+  function subgroups(rows, th, target) {
+    var dims = [['Nodule size', 'size'], ['Location', 'loc'], ['View', 'view'], ['Site', 'site'], ['Vendor', 'vendor'], ['Image quality', 'quality'], ['Age', 'age'], ['Sex', 'sex']];
+    var out = [];
+    dims.forEach(function (d) {
+      var vals = {}; rows.forEach(function (x) { if (x[d[1]] !== '' && x[d[1]] != null) vals[x[d[1]]] = 1; });
+      Object.keys(vals).sort().forEach(function (v) {
+        var g = rows.filter(function (x) { return x[d[1]] === v; });
+        var m = at(g, th), need = Math.ceil(1.96 * 1.96 * target * (1 - target) / (0.05 * 0.05));
+        out.push({ dim: d[0], key: d[1], val: v, label: d[1] === 'site' ? v + ' · ' + SITES[v].label : v, pos: m.tp + m.fn, sens: m.sens, ci: m.sensCI, spec: m.spec,
+          below: m.sensCI[1] < target, watch: m.sens < target - 0.05 && m.sensCI[1] >= target, underpowered: m.tp + m.fn < need, need: need });
+      });
+    });
+    return out;
+  }
+  // a gap only counts if it repeats in both halves of the year; with 25 subgroups, about one will cross the line by chance
+  function replicate(rows, th, sg, target) {
+    var h1 = rows.filter(function (x) { return x.month <= 6 && x[sg.key] === sg.val; }), h2 = rows.filter(function (x) { return x.month > 6 && x[sg.key] === sg.val; });
+    var a = at(h1, th), b = at(h2, th), n1 = a.tp + a.fn, n2 = b.tp + b.fn;
+    var ok1 = n1 >= 15 ? a.sens < target - 0.03 : null, ok2 = n2 >= 15 ? b.sens < target - 0.03 : null;
+    return { h1: n1 ? a.sens : null, n1: n1, h2: n2 ? b.sens : null, n2: n2, replicates: ok1 === true && ok2 === true, oneHalfOnly: (ok1 === null) !== (ok2 === null) && (ok1 || ok2) };
+  }
+  function fpCauses(rows, th) {
+    var fps = rows.filter(function (x) { return !x.ref && x.score >= th; }), m = {};
+    fps.forEach(function (x) { var k = x.truth ? 'Real nodule the readers missed' : (x.mimicReviewed || 'No visible cause'); m[k] = (m[k] || 0) + 1; });
+    return { n: fps.length, causes: Object.keys(m).map(function (k) { return { cause: k, n: m[k] }; }).sort(function (a, b) { return b.n - a.n; }) };
+  }
+  function fnPatterns(rows, th) {
+    var fns = rows.filter(function (x) { return x.ref && x.score < th; }), m = {};
+    fns.forEach(function (x) { var k = x.truth ? x.size + ' · ' + x.loc + (x.view === 'AP portable' ? ' · AP portable' : '') + (x.subsolid ? ' · subsolid' : '') : 'Readers called a nodule on ' + (x.mimic ? x.mimic.toLowerCase() : 'a normal film'); m[k] = (m[k] || 0) + 1; });
+    return { n: fns.length, patterns: Object.keys(m).map(function (k) { return { pattern: k, n: m[k] }; }).sort(function (a, b) { return b.n - a.n; }).slice(0, 8) };
+  }
+  // what the CT-confirmed subset says about the 3-reader reference
+  function refAudit(rows, th) {
+    var ct = rows.filter(function (x) { return x.ct; });
+    var readerVsCT = { refPos: ct.filter(function (x) { return x.ref; }).length, ctPos: ct.filter(function (x) { return x.truth; }).length,
+      missedByReaders: ct.filter(function (x) { return x.truth && !x.ref; }).length, falseByReaders: ct.filter(function (x) { return !x.truth && x.ref; }).length };
+    var fpCT = ct.filter(function (x) { return !x.ref && x.score >= th; }), fpReal = fpCT.filter(function (x) { return x.truth; }).length;
+    var vsRef = at(ct, th), vsCT = at(ct, th, function (x) { return x.truth; });
+    var small = rows.filter(function (x) { return x.size === 'under 6 mm'; });
+    return { n: ct.length, readerVsCT: readerVsCT, fpOnCT: fpCT.length, fpReal: fpReal, sensRef: vsRef.sens, sensCT: vsCT.sens, specRef: vsRef.spec, specCT: vsCT.spec,
+      smallReaderRecall: small.filter(function (x) { return x.ref; }).length / (small.length || 1) };
+  }
+  // label-free drift: population stability index of the score distribution, month by month, against S1-S3 months 1-6
+  function psi(base, cur) {
+    var edges = [0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0001], s = 0;
+    for (var i = 0; i < edges.length - 1; i++) {
+      var b = base.filter(function (v) { return v >= edges[i] && v < edges[i + 1]; }).length / base.length || 1e-4;
+      var c = cur.filter(function (v) { return v >= edges[i] && v < edges[i + 1]; }).length / cur.length || 1e-4;
+      s += (c - b) * Math.log(c / b);
+    }
+    return s;
+  }
+  function drift(rows, th) {
+    var base = rows.filter(function (x) { return x.site !== 'S4' && x.month <= 6; }).map(function (x) { return x.score; });
+    var out = [];
+    for (var m = 1; m <= 12; m++) {
+      ['S3', 'S4'].forEach(function (sk) {
+        var g = rows.filter(function (x) { return x.site === sk && x.month === m; }); if (!g.length) return;
+        var a = at(g, th);
+        out.push({ site: sk, month: m, n: g.length, psi: psi(base, g.map(function (x) { return x.score; })), flagRate: (a.tp + a.fp) / g.length, sens: a.tp + a.fn ? a.sens : null, pos: a.tp + a.fn });
+      });
+    }
+    return out;
+  }
+  function siteThreshold(rows, site, target) {
+    var g = rows.filter(function (x) { return x.site === site; });
+    for (var th = 0.95; th >= 0.01; th -= 0.005) { if (at(g, th).sens >= target) return +th.toFixed(3); }
+    return 0.01;
+  }
+  return { SITES: SITES, ASSUMPTIONS: ASSUMPTIONS, generate: generate, replicate: replicate, at: at, auroc: auroc, wilson: wilson, chooseThreshold: chooseThreshold, subgroups: subgroups, fpCauses: fpCauses, fnPatterns: fnPatterns, refAudit: refAudit, drift: drift, psi: psi, siteThreshold: siteThreshold };
+})();
+
+
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function pct(x, d) { return x == null ? '–' : (x * 100).toFixed(d == null ? 0 : d) + '%'; }
+  function n(x) { return Math.round(x).toLocaleString('en-IN'); }
+  var R = QF.generate(), TH = QF.chooseThreshold(R, 0.9), TARGET = 0.9;
+  $('assump').textContent = QF.ASSUMPTIONS;
+  $('thv').textContent = TH.toFixed(3);
+  $('ctN').textContent = n(R.filter(function (x) { return x.ct; }).length);
+
+  // Sites
+  $('siteT').innerHTML = Object.keys(QF.SITES).map(function (k) {
+    var S = QF.SITES[k], g = R.filter(function (x) { return x.site === k; });
+    var what = k === 'S1' ? 'Mostly PA, good quality' : k === 'S2' ? 'Portable PA, high rate of old TB scarring' : k === 'S3' ? '35% portable AP inpatients, vendor B' : 'Joins in month 7 with vendor C image processing';
+    return '<tr><td><b>' + k + '</b> · ' + S.label + '</td><td class="num">' + n(g.length) + '</td><td class="num">' + pct(g.filter(function (x) { return x.ref; }).length / g.length, 1) + '</td><td>' + what + '</td></tr>';
+  }).join('');
+
+  // Explorer
+  Object.keys(QF.SITES).forEach(function (k) { var o = document.createElement('option'); o.value = k; o.textContent = k + ' · ' + QF.SITES[k].label; $('siteSel').appendChild(o); });
+  $('th').value = TH;
+  function explore() {
+    var th = +$('th').value, site = $('siteSel').value; $('thLabel').textContent = th.toFixed(3) + (Math.abs(th - TH) < 0.003 ? ' (chosen)' : '');
+    var g = site ? R.filter(function (x) { return x.site === site; }) : R, m = QF.at(g, th), au = QF.auroc(g, function (x) { return x.ref; });
+    $('kpis').innerHTML =
+      '<div class="kpi"><span class="k">Sensitivity</span><span class="v">' + pct(m.sens) + '</span><span class="s">95% CI ' + pct(m.sensCI[0]) + '–' + pct(m.sensCI[1]) + '</span></div>' +
+      '<div class="kpi"><span class="k">Specificity</span><span class="v">' + pct(m.spec, 1) + '</span><span class="s">' + n(m.fp) + ' false positives</span></div>' +
+      '<div class="kpi"><span class="k">PPV</span><span class="v">' + pct(m.ppv) + '</span><span class="s">share of flags with a reader-called nodule</span></div>' +
+      '<div class="kpi"><span class="k">Flags per 1,000 films</span><span class="v">' + Math.round(m.flagsPer1000) + '</span><span class="s">radiologist workload</span></div>' +
+      '<div class="kpi"><span class="k">AUROC</span><span class="v">' + (au ? au.toFixed(3) : '–') + '</span><span class="s">threshold-free</span></div>';
+  }
+  $('th').addEventListener('input', explore); $('siteSel').addEventListener('change', explore); explore();
+
+  // Subgroups forest
+  var SG = QF.subgroups(R, TH, TARGET), lo = 0.6, hi = 1.0, X = function (v) { return Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100)); };
+  var lastDim = '', rows = '';
+  SG.forEach(function (s) {
+    if (s.dim !== lastDim) { rows += '<tr class="dimhead"><td colspan="6">' + s.dim + '</td></tr>'; lastDim = s.dim; }
+    var rep = QF.replicate(R, TH, s, TARGET);
+    var call, repTxt;
+    repTxt = rep.n1 && rep.n2 ? pct(rep.h1) + ' then ' + pct(rep.h2) : (rep.n2 ? 'second half only: ' + pct(rep.h2) : 'first half only: ' + pct(rep.h1));
+    if (s.key === 'age' && s.val === 'under 40' && (s.below || s.watch)) call = '<span class="chip info">Check labels first</span>';
+    else if (s.below && rep.replicates) call = '<span class="chip bad">Real gap</span>';
+    else if (s.below && rep.oneHalfOnly) call = '<span class="chip bad">New site gap</span>';
+    else if (s.below || s.watch) call = '<span class="chip warn">Watch</span>';
+    else call = '<span class="chip good">On target</span>';
+    rows += '<tr><td>' + s.label + '</td><td class="num">' + s.pos + (s.underpowered ? '*' : '') + '</td><td class="num">' + pct(s.sens) + '</td><td><div class="forest" title="' + pct(s.sens) + ' (95% CI ' + pct(s.ci[0]) + '–' + pct(s.ci[1]) + ')"><span class="tg" style="left:' + X(TARGET) + '%"></span><span class="ci" style="left:' + X(s.ci[0]) + '%;width:' + (X(s.ci[1]) - X(s.ci[0])) + '%"></span><span class="pt" style="left:' + X(s.sens) + '%"></span></div></td><td class="num">' + repTxt + '</td><td>' + call + '</td></tr>';
+  });
+  $('subT').innerHTML = rows;
+
+  // Failure patterns
+  var FN = QF.fnPatterns(R, TH), FP = QF.fpCauses(R, TH);
+  $('fnT').innerHTML = FN.patterns.slice(0, 7).map(function (p) { return '<tr><td>' + p.pattern + '</td><td class="num">' + p.n + '</td></tr>'; }).join('') + '<tr><td><b>All misses</b></td><td class="num"><b>' + FN.n + '</b></td></tr>';
+  $('fpT').innerHTML = FP.causes.map(function (c) { return '<tr><td>' + (/readers missed/.test(c.cause) ? '<b>' + c.cause + '</b>' : c.cause) + '</td><td class="num">' + c.n + '</td></tr>'; }).join('') + '<tr><td><b>All false positives</b></td><td class="num"><b>' + FP.n + '</b></td></tr>';
+  var real = FP.causes.filter(function (c) { return /readers missed/.test(c.cause); })[0] || { n: 0 };
+  var scar = FP.causes.filter(function (c) { return c.cause === 'Old TB scarring'; })[0] || { n: 0 };
+  var s2 = QF.at(R.filter(function (x) { return x.site === 'S2'; }), TH);
+  $('fpTitle').textContent = pct(real.n / FP.n) + ' of the model’s "false positives" are real nodules';
+  $('fpLine').innerHTML = '<b>Two different problems hide in the false positives.</b> ' + n(real.n) + ' of ' + n(FP.n) + ' are nodules the readers missed, which the model is being penalised for finding. Of the rest, old TB scarring is the biggest cause (' + n(scar.n) + '), concentrated at the screening van, where ' + Math.round(s2.flagsPer1000) + ' films in 1,000 get flagged and only ' + pct(s2.ppv) + ' of flags have a reader-called nodule. That one is a model ask: hard-negative examples of scarring.';
+
+  // Reference audit
+  var A = QF.refAudit(R, TH);
+  $('refTitle').textContent = 'The readers find only ' + pct(A.smallReaderRecall) + ' of nodules under 6 mm';
+  $('refK').innerHTML =
+    '<div class="kpi"><span class="k">CT-confirmed subset</span><span class="v">' + n(A.n) + '</span><span class="s">enriched for disagreements</span></div>' +
+    '<div class="kpi"><span class="k">Nodules readers missed</span><span class="v">' + A.readerVsCT.missedByReaders + '</span><span class="s">of ' + A.readerVsCT.ctPos + ' on CT</span></div>' +
+    '<div class="kpi"><span class="k">Reader calls with no nodule</span><span class="v">' + A.readerVsCT.falseByReaders + '</span><span class="s">on CT</span></div>' +
+    '<div class="kpi"><span class="k">Model "FPs" sent to CT</span><span class="v">' + A.fpOnCT + '</span><span class="s">' + A.fpReal + ' had a real nodule (' + pct(A.fpReal / (A.fpOnCT || 1)) + ')</span></div>';
+  $('refLine').innerHTML = '<b>So what:</b> measured against readers alone, the model is penalised twice for small nodules: once when it finds one the readers missed (counted as a false positive) and once because those nodules never enter the sensitivity calculation at all. Any small-nodule performance claim needs CT or adjudicated ground truth, and the validation study should budget for it.';
+
+  // Age trap
+  var ages = ['under 40', '40-60', 'over 60'];
+  $('ageT').innerHTML = ages.map(function (a) {
+    var g = R.filter(function (x) { return x.age === a; }), ref = QF.at(g, TH), tru = QF.at(g, TH, function (x) { return x.truth; });
+    var rp = g.filter(function (x) { return x.ref; }).length, fr = g.filter(function (x) { return x.ref && !x.truth; }).length;
+    return '<tr><td>' + a + '</td><td class="num">' + pct(ref.sens) + '</td><td class="num">' + pct(fr / (rp || 1)) + '</td><td class="num">' + pct(tru.sens) + '</td></tr>';
+  }).join('');
+  var u40 = R.filter(function (x) { return x.age === 'under 40'; }), fnU = u40.filter(function (x) { return x.ref && x.score < TH; }), fnUfalse = fnU.filter(function (x) { return !x.truth; }).length;
+  $('ageLine').innerHTML = 'Nodules are rarer in younger patients, so the readers’ occasional false calls make up a bigger share of the "positives" there, and the model gets marked down for not flagging things that are not nodules. In this run, ' + fnUfalse + ' of the ' + fnU.length + ' under-40 "misses" have no nodule. <b>The cheap check comes first:</b> send those ' + fnU.length + ' cases for adjudication, which takes an afternoon, before asking R&amp;D for a model change that would take a quarter. (The true-label column exists only because this is a simulation.)';
+
+  // Drift
+  var DR = QF.drift(R, TH);
+  var tr = '';
+  for (var m = 1; m <= 12; m++) {
+    var a = DR.filter(function (d) { return d.site === 'S3' && d.month === m; })[0], b = DR.filter(function (d) { return d.site === 'S4' && d.month === m; })[0];
+    var chip = function (v) { return v == null ? '–' : '<span class="chip ' + (v > 0.2 ? 'bad' : v > 0.1 ? 'warn' : 'good') + '">' + v.toFixed(2) + '</span>'; };
+    tr += '<tr><td>' + m + '</td><td class="num">' + chip(a && a.psi) + '</td><td class="num">' + (a ? pct(a.flagRate, 1) : '–') + '</td><td class="num">' + chip(b && b.psi) + '</td><td class="num">' + (b ? pct(b.flagRate, 1) : '–') + '</td><td class="num">' + (b && b.sens != null ? pct(b.sens) + ' (n=' + b.pos + ')' : '–') + '</td></tr>';
+  }
+  $('driftT').innerHTML = tr;
+  var s4 = R.filter(function (x) { return x.site === 'S4'; }), g4 = QF.at(s4, TH), st = QF.siteThreshold(R, 'S4', TARGET), l4 = QF.at(s4, st);
+  var m7 = DR.filter(function (d) { return d.site === 'S4' && d.month === 7; })[0];
+  $('driftLine').innerHTML = 'Vendor C’s scores shift in its first month (PSI ' + m7.psi.toFixed(2) + '; above 0.2 means act), and the flag rate drops, well before enough labelled cases exist to measure sensitivity. Once labels arrive, sensitivity at the global threshold is <b>' + pct(g4.sens) + '</b>. A site threshold of ' + st.toFixed(3) + ' restores it to ' + pct(l4.sens) + ' at ' + pct(l4.spec, 1) + ' specificity, raising flags from ' + Math.round(g4.flagsPer1000) + ' to ' + Math.round(l4.flagsPer1000) + ' per 1,000. That is a stopgap for go-live; the fix is vendor C images in training or input normalisation.';
+
+  // Asks
+  var retro = SG.filter(function (s) { return s.val === 'retrocardiac'; })[0], small = SG.filter(function (s) { return s.val === 'under 6 mm'; })[0], poor = SG.filter(function (s) { return s.key === 'quality' && s.val === 'poor'; })[0];
+  $('askT').innerHTML = [
+    ['Retrocardiac nodules: ' + pct(retro.sens) + ' sensitivity (95% CI ' + pct(retro.ci[0]) + '–' + pct(retro.ci[1]) + '); under 6 mm: ' + pct(small.sens) + '. Both repeat in both halves', 'R&amp;D', 'Model improvement: more retrocardiac and small positives in training, with CT-confirmed labels', 'Lower 95% bound at or above 85% on a held-out set with at least 139 positives each'],
+    ['Poor-quality films: ' + pct(poor.sens) + ' sensitivity', 'Clinical workflow', 'Quality gate: tell the reader when a film is too poor for the model to rule out a nodule, rather than a silent negative', 'Every poor-quality film carries a quality warning; sensitivity reported on gated films only'],
+    ['Vendor C site: ' + pct(g4.sens) + ' at the global threshold, drift visible in month one', 'Deployment, then R&amp;D', 'Site threshold now; vendor C images or normalisation in the next model', 'Site sensitivity at or above 90% with its own threshold retired'],
+    ['Old TB scarring drives false positives at the screening site', 'R&amp;D with clinical', 'Hard-negative mining on scarring; agree acceptable flag rate with the programme', 'Screening-site PPV up with no loss in sensitivity'],
+    ['Under-40 gap and small-nodule numbers depend on reader labels', 'Clinical / data team, not R&amp;D', 'Adjudicate the under-40 misses; CT confirmation for disagreements in the next study', 'Gap re-measured on adjudicated labels before any model ticket']
+  ].map(function (r) { return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + r[3] + '</td></tr>'; }).join('');
+
+  // Executive summary
+  $('execList').innerHTML = [
+    '<b>Three gaps are real and repeat in both halves of the year:</b> retrocardiac nodules (' + pct(retro.sens) + '), nodules under 6 mm (' + pct(small.sens) + ') and poor-quality films (' + pct(poor.sens) + '), against a 90% target. The new vendor C site falls to ' + pct(g4.sens) + '. They need three different owners.',
+    '<b>' + pct(real.n / FP.n) + ' of the model’s "false positives" are nodules the readers missed.</b> The reference standard finds only ' + pct(A.smallReaderRecall) + ' of nodules under 6 mm, so small-nodule claims need CT-confirmed labels.',
+    '<b>The under-40 gap is not the model’s.</b> It comes from reader false calls where nodules are rare, and it disappears against true labels. Checking the labels takes an afternoon; a model change takes a quarter.',
+    '<b>A new site can be caught before labels arrive.</b> Vendor C’s score distribution moves in its first month (PSI ' + m7.psi.toFixed(2) + '), while sensitivity can only be measured weeks later.'
+  ].map(function (x) { return '<li>' + x + '</li>'; }).join('');
+})();
+
+</script>
+
+</body></html>
