@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Within the Rules · Aditya Mathur</title>
+<meta name="description" content="A 0-to-1 bet for Sarvam: check every collections voice call against RBI's recovery rules, before dialling and after hanging up, and name who must fix each failure. Working auditor on 19 labelled Hinglish and Hindi calls. Synthetic data.">
+<style>
+:root{--bg:#fbfaf8;--surface:#fff;--ink:#17191d;--muted:#5d6370;--line:#e6e4df;--accent:#1d5d4b;--accent-soft:#e6f1ed;--tag:#f1efea;
+--ok:#1f7a4d;--ok-soft:#e5f3ea;--warn:#9a5b00;--warn-soft:#fbf0dc;--bad:#a8322d;--bad-soft:#f8e4e2;--q:#3b5aa8;--q-soft:#e6ecf8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101215;--surface:#171a1f;--ink:#e9ebee;--muted:#9ba2ae;--line:#272b33;--accent:#6fcfb0;--accent-soft:#132a23;--tag:#1f232a;
+--ok:#6fcf98;--ok-soft:#14281d;--warn:#e7b25a;--warn-soft:#2c2414;--bad:#ef8a83;--bad-soft:#2d1817;--q:#93adf0;--q-soft:#18203a}}
+:root[data-theme="dark"]{--bg:#101215;--surface:#171a1f;--ink:#e9ebee;--muted:#9ba2ae;--line:#272b33;--accent:#6fcfb0;--accent-soft:#132a23;--tag:#1f232a;
+--ok:#6fcf98;--ok-soft:#14281d;--warn:#e7b25a;--warn-soft:#2c2414;--bad:#ef8a83;--bad-soft:#2d1817;--q:#93adf0;--q-soft:#18203a}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Noto Sans Devanagari",sans-serif}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:3px}
+.wrap{max-width:900px;margin:0 auto;padding:48px 16px 72px}
+.kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:clamp(32px,5.4vw,46px);line-height:1.08;margin:0 0 14px;letter-spacing:-.02em}
+.lede{font-size:19px;color:var(--muted);max-width:720px;margin:0 0 14px}
+.by{font-size:14px;color:var(--muted)}
+h2{font-size:24px;letter-spacing:-.01em;margin:56px 0 6px;line-height:1.25}
+h2 .n{color:var(--accent);margin-right:8px}
+h3{font-size:16px;margin:22px 0 6px}
+.sub{color:var(--muted);margin:0 0 18px;max-width:740px}
+.first{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:14px 16px;margin:26px 0 8px;font-size:15px}
+.first strong{display:block;margin-bottom:4px}.first ul{margin:6px 0 0;padding-left:18px}.first li{margin:3px 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0 4px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{font-size:13.5px;color:var(--muted)}
+.bet{display:grid;grid-template-columns:150px 1fr;border-top:1px solid var(--line)}
+.bet>div{padding:12px 12px 12px 0;border-bottom:1px solid var(--line);font-size:15px}
+.bet .k{font-weight:650;color:var(--muted);font-size:13px;letter-spacing:.04em;text-transform:uppercase;padding-top:14px}
+.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin:6px 0 14px}
+.pk{font:inherit;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;font-size:13.5px;color:var(--ink);display:flex;gap:8px;align-items:flex-start}
+.pk:hover{border-color:var(--accent)}.pk[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.pk .id{font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.dot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:6px}
+.d-CLEAN{background:var(--ok)}.d-VIOLATION{background:var(--bad)}.d-LISTEN{background:var(--warn)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px;color:var(--muted);margin-bottom:10px}
+.verdict{border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:650}
+.v-CLEAN{background:var(--ok-soft);color:var(--ok)}.v-VIOLATION{background:var(--bad-soft);color:var(--bad)}.v-LISTEN{background:var(--warn-soft);color:var(--warn)}
+.turn{display:grid;grid-template-columns:78px 1fr;gap:10px;padding:8px 10px;border-radius:8px;font-size:15px}
+.turn .who{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding-top:2px}
+.turn .who small{display:block;text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums}
+.turn.flag{background:var(--bad-soft)}.turn.maybe{background:var(--warn-soft)}
+.turn .tag{display:inline-block;font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 7px;margin-left:6px;background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+.low{color:var(--warn);font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12.5px;border-bottom:1px solid var(--line);padding:7px 8px 7px 0}
+td{border-bottom:1px solid var(--line);padding:8px 8px 8px 0;vertical-align:top}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tw{overflow-x:auto}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;border-radius:6px;padding:2px 7px;white-space:nowrap}
+.w-pre{background:var(--q-soft);color:var(--q)}.w-agent{background:var(--bad-soft);color:var(--bad)}.w-missed{background:var(--bad-soft);color:var(--bad)}.w-maybe{background:var(--warn-soft);color:var(--warn)}
+.ok{color:var(--ok);font-weight:650}.no{color:var(--bad);font-weight:650}
+textarea,input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+textarea{width:100%;min-height:150px;font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+textarea:focus,input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.go{font:inherit;font-weight:600;background:var(--accent);color:var(--bg);border:0;border-radius:10px;padding:9px 18px;cursor:pointer}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+.row label{font-size:13.5px;color:var(--muted)}
+.owners{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.owner{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:15px}
+.owner .pill{margin-bottom:6px}
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.calc .in label{display:flex;justify-content:space-between;font-size:14px;margin-top:10px}
+.calc .in input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.calc .out div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:8px 0;font-size:15px}
+.calc .out b{font-variant-numeric:tabular-nums}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+.three div{border-top:2px solid var(--accent);padding-top:8px;font-size:15px}
+.three strong{display:block;margin-bottom:2px}.three ul{padding-left:18px;margin:6px 0 0}.three li{margin:3px 0}
+.note{font-size:13.5px;color:var(--muted);margin-top:10px}
+ul.plain{padding-left:20px}ul.plain li{margin:6px 0}
+footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 18px}
+@media (max-width:760px){.stats{grid-template-columns:1fr 1fr}.bet{grid-template-columns:1fr}.bet .k{padding-bottom:0;border-bottom:0}.owners,.calc,.three{grid-template-columns:1fr}.turn{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Independent work · Strategy &amp; Operations Associate, Founder's Office · Sarvam</p>
+<h1>Within the Rules</h1>
+<p class="lede">A 0-to-1 bet for Sarvam: check every collections call a voice agent makes against India's recovery rules, before dialling and after hanging up, and name who has to fix each failure.</p>
+<p class="by">Aditya Mathur · October 2026 · <a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/sarvam-within-the-rules">Code</a></p>
+
+<div class="first">
+  <strong>Read this first</strong>
+  <ul>
+    <li>I don't work at Sarvam and used no internal data. The 19 calls are transcripts I wrote by hand for a made-up lender, "Sahyog Finance". They are not real borrowers or real Sarvam calls.</li>
+    <li>The RBI rules come from press reports of the RBI (Commercial Banks – Responsible Business Conduct) Amendment Directions, 2026, reported as effective 1 October 2026. Check the final text before relying on any rule here. Rules marked "Lender policy" are my proposals.</li>
+    <li>The auditor reads transcripts, not audio, and calls no Sarvam API. The confidence numbers stand in for what a speech model reports per turn.</li>
+    <li>All checks are written rules. The same transcript always gets the same answer, and every finding quotes the words that triggered it.</li>
+  </ul>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<h2><span class="n">1</span>The bet on one screen</h2>
+<div class="bet">
+  <div class="k">Problem</div><div>Lenders now run collections on voice agents at very large scale. Mahindra Finance's agents on Sarvam have passed 1 crore calls in 12 languages, from reminders before the due date to write-off. RBI's 2026 recovery directions say calls only between 8 am and 7 pm, no contact during a bereavement or a wedding, no excessive calls, no intimidation, and every call recorded and kept. A lender's compliance head has to show every call followed them. Human quality checks listen to a small sample.</div>
+  <div class="k">Why now</div><div>The directions were reported as taking effect on 1 October 2026. Every collections customer is answering the same question from its board and auditors this quarter: how do you know the bot behaved?</div>
+  <div class="k">Why Sarvam</div><div>Sarvam owns the whole call: the dialler rules, the agent, and the speech model's confidence on every turn. That lets it tell <b>"the agent said something wrong"</b> apart from <b>"the model misheard the customer"</b>. A third-party QA tool sees only the transcript and can't. Arya already sells audit trails and compliance review, so the report has a home.</div>
+  <div class="k">What it is</div><div>A gate before dialling (hours, flags, attempt caps), an audit after every call (10 rules, each finding quoting its evidence), and an owner for every failure, so it goes to the team that can fix it.</div>
+  <div class="k">The test</div><div>Two weeks, shadow mode, on recorded calls from one existing collections customer. No change to live calls. Compare the auditor with the customer's own QA team on the same calls.</div>
+  <div class="k">Go or kill</div><div><b>Go</b> if it finds at least 90% of the violations their QA finds, flags no more than 5% of calls for review, and finds at least one kind of violation their sampling missed. <b>Kill</b> if it flags more than 10% of calls, which is too noisy to review, or if the customer's compliance team won't accept its report as evidence. A kill still ends with a written lesson, not a slow fade.</div>
+  <div class="k">Handoff</div><div>If it passes: the pre-dial gate becomes default in Voice Agents, and the audit report becomes part of Arya for regulated lenders. I'd hand both over with the test results, the rule set and a list of open questions.</div>
+</div>
+
+<h2><span class="n">2</span>Try the auditor</h2>
+<p class="sub">Pick a call. Red turns broke a rule. Amber turns are where the speech model wasn't sure and a person needs to listen. Every finding says who has to fix it.</p>
+<div class="picker" id="picker"></div>
+<div class="panel" id="callview"></div>
+
+<h3>Paste your own transcript</h3>
+<p class="note" style="margin-top:0">One turn per line. Start agent lines with <code>A:</code> and customer lines with <code>C:</code>. Optionally end a customer line with a confidence like <code>[0.45]</code>.</p>
+<textarea id="paste" spellcheck="false">A: Namaste, main Sahyog Finance ki AI assistant Meera bol rahi hoon. Yeh call record ki ja rahi hai. Kya main Anil ji se baat kar rahi hoon?
+C: Haan. Lekin maine kal hi branch mein jama kar diya tha.
+A: Aapka ₹3,200 abhi bhi overdue hai. Aaj payment nahi hua to legal action hoga.</textarea>
+<div class="row">
+  <label for="ptime">Call time</label><input id="ptime" type="time" value="12:00">
+  <label for="pstage">Account stage</label><select id="pstage"><option value="pre_due">Pre-due</option><option value="dpd_30" selected>30 days overdue</option><option value="dpd_90">90 days overdue</option><option value="legal">Legal stage</option></select>
+  <label for="patt">Attempts today</label><input id="patt" type="number" min="0" max="20" value="0" style="width:70px">
+  <button class="go" id="prun">Audit it</button>
+</div>
+<div class="panel" id="pasteview" hidden></div>
+
+<h2><span class="n">3</span>How good is it, honestly</h2>
+<p class="sub">I labelled each call the way a careful reviewer would, then ran the auditor. These are my own test calls, so this checks that the rules do what they say. It is not a benchmark of real-world accuracy.</p>
+<div class="tw"><table id="evaltable"></table></div>
+<p class="note" id="evalnote"></p>
+<div class="owners" style="margin-top:14px">
+  <div class="owner"><b>Miss: C17</b><br>"Imagine if your relatives found out." That is shaming, but it uses none of the words on the list. Word lists will always miss new phrasings. The fix is a model that reviews every call the rules pass, with its findings going to a person, never straight to the report.</div>
+  <div class="owner"><b>False alarm: C19</b><br>"I filed a police complaint because my phone was stolen." The word "complaint" read as a payment dispute. Context matters, so a model is needed here too. The rule stays strict because a missed dispute is worse than one extra review.</div>
+</div>
+
+<h2><span class="n">4</span>Describing model errors precisely</h2>
+<p class="sub">"The bot was rude" can't be fixed. Each failure needs one owner. The auditor sorts every finding into one of four kinds, because each one goes to a different team with a different fix.</p>
+<div class="owners" id="owners"></div>
+<h3>The case that matters most: C09</h3>
+<p>The customer said something the speech model wrote as "papa <b>gujar</b> gaye kal", at 43% confidence. It could mean his father went somewhere, or it could be <b>"guzar gaye"</b>: his father died. The agent assumed travel and asked for ₹5,600.</p>
+<p>A word list would pass this call, and an auditor that only reads text would say it was clean. Because this auditor reads the confidence too, it flags the turn for a person to listen. The product fix is earlier in the call: when a turn in a collections call is low-confidence, the agent should ask before carrying on. "Maaf kijiye, kya aapne kaha ki aapke papa…?" costs four seconds and protects a grieving customer.</p>
+
+<h2><span class="n">5</span>What sampling misses at scale</h2>
+<p class="sub">Move the assumptions. These are illustrative inputs, not Sarvam or lender data.</p>
+<div class="calc">
+  <div class="in" id="calcin"></div>
+  <div class="out" id="calcout"></div>
+</div>
+<p class="note">Review time assumes a person spends the same minutes on each sampled or flagged call. The auditor's recall should come from the two-week test, not from my 19 calls.</p>
+
+<h2><span class="n">6</span>How I'd run it from the CEO's office</h2>
+<div class="three">
+  <div><strong>Days 1–3 · Frame</strong><ul><li>Pick one collections customer with a compliance head who wants this.</li><li>Agree the rule list with their legal team, in writing.</li><li>Get 50,000 recorded calls they already QA'd, with their labels.</li></ul></div>
+  <div><strong>Days 4–10 · Test</strong><ul><li>Run the auditor in shadow mode on all of them.</li><li>Review every disagreement with their QA lead.</li><li>Log every miss and false alarm by owner, as in section 4.</li></ul></div>
+  <div><strong>Days 11–14 · Decide</strong><ul><li>Two-page memo to the CEO: go or kill against the criteria in section 1.</li><li>If go: hand to the Voice Agents and Arya teams with the rules, results and open questions.</li><li>If kill: write down why, and what would have to change.</li></ul></div>
+</div>
+
+<h2><span class="n">7</span>What would prove me wrong</h2>
+<ul class="plain">
+  <li><b>Sarvam may already do this.</b> Mahindra Finance's case study says every call is analysed by custom AI pipelines. If those already check RBI rules, the bet is selling it to other lenders, not building it.</li>
+  <li><b>Lenders may want their own QA vendor, not the platform grading itself.</b> Then the product is an open, signed audit log that any vendor can check, not a verdict.</li>
+  <li><b>The final RBI text may differ from press reports.</b> The rules are data in one file and can be changed in an afternoon. Owning that list belongs with legal, not product.</li>
+  <li><b>My rules are tested on 19 calls I wrote.</b> Real Hinglish is messier. The test plan exists to find that out in two weeks instead of a quarter.</li>
+</ul>
+
+<footer>
+  <span>Aditya Mathur · Bengaluru</span>
+  <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a>
+  <a href="https://www.linkedin.com/in/adityaamathur">LinkedIn</a>
+  <a href="https://adimathur-creates.github.io/">More work</a>
+</footer>
+</div>
+
+<script type="module">
+import * as E from "./engine.js";
+import { CALLS } from "./calls.js";
+const $ = (s) => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => { const n = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === "class") n.className = v; else n.setAttribute(k, v); } for (const k of kids) if (k != null) n.append(k); return n; };
+const WCLS = { "Pre-dial": "w-pre", "Agent said it": "w-agent", "Missed signal": "w-missed", "Possibly misheard": "w-maybe" };
+const VTXT = { CLEAN: "Clean: no rule broken", VIOLATION: "Violation found", LISTEN: "Needs a person to listen" };
+const STAGE = { pre_due: "Pre-due", dpd_30: "30 days overdue", dpd_90: "90 days overdue", legal: "Legal stage" };
+
+const ev = E.evaluate(CALLS);
+const results = new Map(ev.rows.map((r) => [r.call.id, r.result]));
+
+// stats
+const viol = ev.rows.filter((r) => r.call.labels.length).length;
+$("#stats").replaceChildren(...[
+  [`${ev.tp} of ${ev.tp + ev.fn}`, "labelled violations found on 19 test calls"],
+  [String(ev.fp), "false alarm (shown in section 3)"],
+  [`${ev.listenOk} of ${ev.listenTotal}`, "possible mishearings sent to a person"],
+  ["4", "kinds of failure, each with its own owner"],
+].map(([b, s]) => el("div", { class: "stat" }, el("b", {}, b), el("span", {}, s))));
+
+// picker
+for (const c of CALLS) {
+  const r = results.get(c.id);
+  const b = el("button", { class: "pk", type: "button", "aria-pressed": "false" }, el("span", { class: `dot d-${r.verdict}` }), el("span", {}, el("span", { class: "id" }, c.id + " "), c.title));
+  b.onclick = () => { document.querySelectorAll(".pk").forEach((x) => x.setAttribute("aria-pressed", "false")); b.setAttribute("aria-pressed", "true"); show($("#callview"), c, r); };
+  $("#picker").append(b);
+}
+
+function show(box, c, r) {
+  box.hidden = false;
+  box.replaceChildren();
+  box.append(el("div", { class: "meta" }, el("span", {}, c.title || "Pasted transcript"), el("span", {}, `Placed ${c.startTime}`), el("span", {}, STAGE[c.stage]), el("span", {}, `Attempt ${c.attemptsToday + 1} today`)));
+  box.append(el("div", { class: `verdict v-${r.verdict}` }, VTXT[r.verdict]));
+  const byTurn = new Map(); for (const f of r.findings) if (f.turn != null) { if (!byTurn.has(f.turn)) byTurn.set(f.turn, []); byTurn.get(f.turn).push(f); }
+  c.turns.forEach((t, i) => {
+    const fs = byTurn.get(i) || [];
+    const cls = fs.some((f) => f.who !== "Possibly misheard") ? "flag" : fs.length ? "maybe" : "";
+    const who = el("div", { class: "who" }, t.s === "agent" ? "Agent" : "Customer");
+    if (t.s === "customer") who.append(el("small", { class: t.conf < E.LOW_CONF ? "low" : "" }, `${Math.round(t.conf * 100)}% sure`));
+    const body = el("div", {}, t.t); for (const f of fs) body.append(el("span", { class: "tag" }, f.rule));
+    box.append(el("div", { class: `turn ${cls}` }, who, body));
+  });
+  if (r.findings.length) {
+    const tb = el("tbody");
+    for (const f of r.findings) tb.append(el("tr", {},
+      el("td", {}, el("b", {}, f.rule), " ", E.RULES[f.rule].name, el("br"), el("span", { class: "note" }, E.RULES[f.rule].source)),
+      el("td", {}, el("span", { class: `pill ${WCLS[f.who]}` }, f.who)),
+      el("td", {}, f.evidence)));
+    box.append(el("h3", {}, "Findings"), el("div", { class: "tw" }, el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Rule"), el("th", {}, "Who fixes it"), el("th", {}, "Evidence"))), tb)));
+  }
+}
+document.querySelectorAll(".pk")[2].click();
+
+// paste
+$("#prun").onclick = () => {
+  const turns = E.parseTranscript($("#paste").value);
+  if (!turns.length) return;
+  const c = { id: "P", lender: "Sahyog Finance", stage: $("#pstage").value, startTime: $("#ptime").value || "12:00", attemptsToday: +$("#patt").value || 0, flags: {}, turns };
+  show($("#pasteview"), c, E.audit(c));
+};
+
+// eval table
+const thead = el("thead", {}, el("tr", {}, el("th", {}, "Call"), el("th", {}, "Reviewer marked"), el("th", {}, "Auditor found"), el("th", {}, "Result")));
+const tb = el("tbody");
+for (const r of ev.rows) {
+  const ok = !r.missed.length && !r.extra.length;
+  const res = r.result.verdict === "LISTEN" ? el("span", { class: "ok" }, "Sent to a person") : ok ? el("span", { class: "ok" }, "Match") : el("span", { class: "no" }, r.missed.length ? `Missed ${r.missed.join(", ")}` : `False alarm ${r.extra.join(", ")}`);
+  tb.append(el("tr", {}, el("td", {}, el("b", {}, r.call.id), " ", r.call.title), el("td", { class: "num" }, r.call.labels.join(", ") || "—"), el("td", { class: "num" }, r.result.rulesHit.join(", ") || "—"), el("td", {}, res)));
+}
+$("#evaltable").replaceChildren(thead, tb);
+$("#evalnote").textContent = `Found ${ev.tp} of ${ev.tp + ev.fn} labelled violations, with ${ev.fp} false alarm. Precision ${Math.round(ev.precision * 100)}%, recall ${Math.round(ev.recall * 100)}% on this set, and both misses are hard cases I wrote on purpose.`;
+
+// owners
+$("#owners").replaceChildren(...Object.entries(E.OWNERS).map(([k, v]) => {
+  const ex = ev.rows.flatMap((r) => r.result.findings.filter((f) => f.who === k).map(() => r.call.id));
+  return el("div", { class: "owner" }, el("span", { class: `pill ${WCLS[k]}` }, k), el("div", {}, v + "."), el("div", { class: "note" }, ex.length ? `In the test calls: ${[...new Set(ex)].join(", ")}` : ""));
+}));
+
+// calculator
+const inputs = [
+  ["callsPerMonth", "Calls per month", 100000, 5000000, 100000, 1000000, (v) => (v / 100000).toFixed(0) + " lakh"],
+  ["violationRate", "Calls that break a rule", 0.001, 0.03, 0.001, 0.005, (v) => (v * 100).toFixed(1) + "%"],
+  ["sampleRate", "Calls a person samples today", 0.005, 0.1, 0.005, 0.02, (v) => (v * 100).toFixed(1) + "%"],
+  ["recall", "Violations the auditor finds", 0.5, 1, 0.01, 0.9, (v) => Math.round(v * 100) + "%"],
+  ["flagRate", "Calls the auditor flags for review", 0.005, 0.15, 0.005, 0.03, (v) => (v * 100).toFixed(1) + "%"],
+  ["minutesPerReview", "Minutes to review one call", 1, 10, 1, 4, (v) => v + " min"],
+];
+const state = {};
+for (const [k, label, min, max, step, val, f] of inputs) {
+  state[k] = val;
+  const out = el("b", {}, f(val));
+  const r = el("input", { type: "range", min, max, step, value: val, "aria-label": label });
+  r.oninput = () => { state[k] = +r.value; out.textContent = f(+r.value); calc(); };
+  $("#calcin").append(el("label", {}, el("span", {}, label), out), r);
+}
+const n = (x) => x >= 1e5 ? (x / 1e5).toFixed(1) + " lakh" : Math.round(x).toLocaleString("en-IN");
+function calc() {
+  const s = E.scaleModel(state);
+  $("#calcout").replaceChildren(...[
+    ["Calls that break a rule", n(s.violations)],
+    ["Found by sampling today", n(s.foundBySampling)],
+    ["Found by the auditor", n(s.foundByAuditor)],
+    ["Review hours, sampling", n(s.reviewHoursSampling)],
+    ["Review hours, auditor's flags", n(s.reviewHoursAuditor)],
+  ].map(([a, b]) => el("div", {}, el("span", {}, a), el("b", {}, b))));
+}
+calc();
+</script>
+</body>
+</html>
