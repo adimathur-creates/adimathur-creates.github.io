@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Before the Square-off · Aditya Mathur</title>
+<meta name="description" content="A product case for Groww's margin trading (MTF): show every user how far they are from a margin call, warn them in time, and test whether fewer forced sales keeps them trading longer. Working margin engine, simulation and experiment plan. Synthetic data.">
+<style>
+:root{--bg:#fbfaf8;--surface:#fff;--ink:#17191d;--muted:#5d6370;--line:#e6e4df;--accent:#1d5d4b;--accent-soft:#e6f1ed;--tag:#f1efea;
+--ok:#1f7a4d;--ok-soft:#e5f3ea;--warn:#9a5b00;--warn-soft:#fbf0dc;--bad:#a8322d;--bad-soft:#f8e4e2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101215;--surface:#171a1f;--ink:#e9ebee;--muted:#9ba2ae;--line:#272b33;--accent:#6fcfb0;--accent-soft:#132a23;--tag:#1f232a;
+--ok:#6fcf98;--ok-soft:#14281d;--warn:#e7b25a;--warn-soft:#2c2414;--bad:#ef8a83;--bad-soft:#2d1817}}
+:root[data-theme="dark"]{--bg:#101215;--surface:#171a1f;--ink:#e9ebee;--muted:#9ba2ae;--line:#272b33;--accent:#6fcfb0;--accent-soft:#132a23;--tag:#1f232a;
+--ok:#6fcf98;--ok-soft:#14281d;--warn:#e7b25a;--warn-soft:#2c2414;--bad:#ef8a83;--bad-soft:#2d1817}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:3px}
+.wrap{max-width:900px;margin:0 auto;padding:48px 16px 72px}
+.kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:clamp(32px,5.4vw,46px);line-height:1.08;margin:0 0 14px;letter-spacing:-.02em}
+.lede{font-size:19px;color:var(--muted);max-width:720px;margin:0 0 14px}
+.by{font-size:14px;color:var(--muted)}
+h2{font-size:24px;letter-spacing:-.01em;margin:56px 0 6px;line-height:1.25}
+h2 .n{color:var(--accent);margin-right:8px}
+h3{font-size:16px;margin:22px 0 6px}
+.sub{color:var(--muted);margin:0 0 18px;max-width:740px}
+.first{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:14px 16px;margin:26px 0 8px;font-size:15px}
+.first strong{display:block;margin-bottom:4px}.first ul{margin:6px 0 0;padding-left:18px}.first li{margin:3px 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0 4px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{font-size:13.5px;color:var(--muted)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:15px}
+.fact b{display:block;font-size:20px;font-variant-numeric:tabular-nums}.fact .src{font-size:12.5px;color:var(--muted);margin-top:4px}
+.quote{border-left:3px solid var(--accent);padding:4px 0 4px 14px;margin:16px 0;font-size:16px}
+.quote span{display:block;font-size:13.5px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12.5px;border-bottom:1px solid var(--line);padding:7px 8px 7px 0}
+td{border-bottom:1px solid var(--line);padding:9px 8px 9px 0;vertical-align:top}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.pick td{background:var(--accent-soft)}
+.tw{overflow-x:auto}
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.in label{display:flex;justify-content:space-between;font-size:14px;margin-top:10px}
+.in label b{font-variant-numeric:tabular-nums}
+.in input[type=range]{width:100%;accent-color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;max-width:380px}
+.card .lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.card .big{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.meter{height:10px;border-radius:5px;background:var(--tag);position:relative;margin:10px 0 4px;overflow:hidden}
+.meter i{position:absolute;top:0;bottom:0;left:0;border-radius:5px}
+.meter .line{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
+.kv{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding:8px 0;font-size:14.5px}
+.kv b{font-variant-numeric:tabular-nums;text-align:right}
+.st{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px}
+.s-HEALTHY{background:var(--ok-soft);color:var(--ok)}.s-THIN{background:var(--warn-soft);color:var(--warn)}.s-MARGIN_CALL,.s-SQUARE_OFF{background:var(--bad-soft);color:var(--bad)}
+.fix{background:var(--warn-soft);border-radius:10px;padding:10px 12px;font-size:14.5px;margin-top:8px}
+.concept{font-size:12.5px;color:var(--muted);margin-top:8px}
+.modes{display:grid;gap:10px}
+.mode{display:grid;grid-template-columns:30px 1fr 1fr;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14.5px}
+.mode .i{font-weight:700;color:var(--accent);font-size:18px}
+.mode .h{font-weight:650;display:block;margin-bottom:2px}
+.mode .rule{font-size:12.5px;color:var(--muted)}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+.three div{border-top:2px solid var(--accent);padding-top:8px;font-size:15px}
+.three strong{display:block;margin-bottom:2px}.three ul{padding-left:18px;margin:6px 0 0}.three li{margin:3px 0}
+.outs{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.outs .o div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:8px 0;font-size:15px}
+.outs .o b{font-variant-numeric:tabular-nums}
+pre{white-space:pre;overflow-x:auto;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+.note{font-size:13.5px;color:var(--muted);margin-top:10px}
+ul.plain{padding-left:20px}ul.plain li{margin:6px 0}
+footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 18px}
+@media (max-width:760px){.stats{grid-template-columns:1fr 1fr}.facts,.calc,.three,.outs{grid-template-columns:1fr}.mode{grid-template-columns:24px 1fr}.mode>div:last-child{grid-column:2}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Independent work · Associate Product Manager · Groww</p>
+<h1>Before the Square-off</h1>
+<p class="lede">Margin trading is Groww's fastest-growing business, and most new users can't see how close they are to a forced sale. Show every position its distance to a margin call, warn in time, and test whether fewer forced sales keep people trading longer.</p>
+<p class="by">Aditya Mathur · October 2026 · <a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/groww-before-the-square-off">Code</a> · Also for Groww: <a href="https://adimathur-creates.github.io/groww-wheres-my-money/">Where's My Money</a></p>
+
+<div class="first">
+  <strong>Read this first</strong>
+  <ul>
+    <li>I don't work at Groww and used no internal data. The margin rules come from Groww's public MTF terms and risk policy. The business numbers come from Groww's results as reported in the press.</li>
+    <li>The rules leave one thing undefined: how the "collateral to loan" ratio is calculated. I used the standard reading, equity divided by required margin, and the page says so wherever it matters.</li>
+    <li>Every position and price in sections 5 and 6 is synthetic. Customer behaviour in section 6 is a set of assumptions you can change, not a finding.</li>
+    <li>The phone card below is my concept, not Groww's app.</li>
+  </ul>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<h2><span class="n">1</span>Why this, why now</h2>
+<div class="facts">
+  <div class="fact"><b>₹3,775 Cr</b>MTF book in Q1 FY27, up 264% in a year<div class="src">Inc42, Aug 2026</div></div>
+  <div class="fact"><b>10.1%</b>of total income from MTF in Q2 FY27, up from 8% the quarter before<div class="src">Inc42, Oct 2026</div></div>
+  <div class="fact"><b>1.3 lakh</b>MTF users in Q4 FY26, up from 40,000 a year earlier<div class="src">MediaNama, May 2026</div></div>
+</div>
+<p>Most of Groww's MTF users are new to leverage: the number roughly tripled in a year. The terms they accept say four things most of them have never had to deal with:</p>
+<ul class="plain">
+  <li>A margin call comes when cover falls to 85%, and an app notification counts as the call.</li>
+  <li>The shortfall must be paid by the end of the next trading day. Otherwise Groww sells, by T+4.</li>
+  <li>If 80% of the margin is wiped out, every open position is sold <b>at once, without notice</b>.</li>
+  <li>Shares bought on margin must be pledged on the day of purchase. If the pledge isn't approved by the cut-off, the shares are sold the next day.</li>
+</ul>
+<div class="quote">"MTF is one area where the business growth is scaring me."<span>Nithin Kamath, Zerodha, quoted by Inc42. Groww tightened its own MTF and intraday limits after the March-quarter volatility.</span></div>
+<p>A forced sale is bad for everyone. The customer sells at the worst moment and often blames the app, Groww answers the complaint, and any shortfall sits on Groww's own lending book. <b>My bet: a customer who understands their margin before a call stays in MTF longer than one who learns about it from a forced sale.</b> That is the claim worth testing, because it is where helping customers and growing MTF income point the same way.</p>
+
+<h2><span class="n">2</span>The maths a new user never sees</h2>
+<p class="sub">Move the sliders. The card is how I'd show one position: one number for how close it is to a call, and the exact fix when it gets close.</p>
+<div class="calc">
+  <div class="in" id="calcin"></div>
+  <div>
+    <div class="card" id="card" aria-live="polite"></div>
+    <p class="concept">Concept card for this case study. Not Groww's design.</p>
+  </div>
+</div>
+<h3>The same numbers for every haircut</h3>
+<div class="tw"><table id="hctable"></table></div>
+<p class="note">Haircut is the share of a position the user must pay for, set per stock by exchange risk rules (VaR + ELM) and Groww. 25% is 4x leverage. "Days to a call at a flat price" assumes interest is left unpaid and added to the loan, which the terms allow.</p>
+
+<h2><span class="n">3</span>Five ways an MTF user gets sold out</h2>
+<p class="sub">Each one comes from a specific line in the public terms. Each has a different fix, and one can't be warned about at all.</p>
+<div class="modes">
+  <div class="mode"><span class="i">1</span><div><span class="h">Pledge not done on the day</span>Bought on margin, never finished the pledge. <span class="rule">Risk policy: not approved by the cut-off on T → sold on T+1.</span></div><div><b>Fix:</b> make the pledge part of the buy, with a countdown on the confirmation screen and a reminder two hours before the cut-off. This is a flow problem, not a market problem, so it should go close to zero.</div></div>
+  <div class="mode"><span class="i">2</span><div><span class="h">A normal day's fall</span>At 4x, a 4.8% fall is a margin call. Mid caps move that much in an ordinary week.<span class="rule">Call at cover ≤ 85%; top up by T+1.</span></div><div><b>Fix:</b> show the call price on the order screen, and alert at 2.5% away (section 5) with the exact rupees or shares that fix it.</div></div>
+  <div class="mode"><span class="i">3</span><div><span class="h">The haircut goes up</span>The exchange or Groww raises a stock's haircut. A 25% → 35% change triggers a call with no price move.<span class="rule">Clause 7: the broker can revise margin rates at any time.</span></div><div><b>Fix:</b> when a haircut changes, tell each affected holder what it means for their position, before the next session.</div></div>
+  <div class="mode"><span class="i">4</span><div><span class="h">Interest drift</span>At 4x with interest unpaid, a stock that never moves still reaches a call in about four months.<span class="rule">Clause 12a: interest accrues daily, and unpaid interest can join the loan.</span></div><div><b>Fix:</b> show interest paid so far and the break-even price on every position, and suggest paying interest before it eats the margin.</div></div>
+  <div class="mode"><span class="i">5</span><div><span class="h">A gap down</span>A 20% fall at 4x triggers an instant square-off. Overnight news can do that before any alert can help.<span class="rule">Risk policy: 80% erosion → all positions sold, no notice.</span></div><div><b>Fix:</b> none after the fact. The only lever is at the order: don't default the slider to maximum leverage, and show what a 20% gap would do.</div></div>
+</div>
+
+<h2><span class="n">4</span>What I'd build</h2>
+<div class="three">
+  <div><strong>At the order</strong><ul><li>Call price and square-off price, before the buy button.</li><li>Leverage slider that opens at a suggested level, not the maximum.</li><li>The pledge step built into the buy, with its deadline.</li></ul></div>
+  <div><strong>On the position</strong><ul><li>A cover meter with the 85% line marked.</li><li>Distance to a call in % and rupees.</li><li>Interest so far and today's break-even price.</li></ul></div>
+  <div><strong>When it gets close</strong><ul><li>Alert at 2.5% from a call, once per episode, not every day.</li><li>The exact fix: "add ₹3,675" or "sell 16 shares".</li><li>A list for the risk team of positions likely to get a call tomorrow, so they can staff support for it.</li></ul></div>
+</div>
+
+<h2><span class="n">5</span>Where to draw the alert line</h2>
+<p class="sub">Alert too early and people learn to ignore it. Alert too late and there's no time to act. I ran 4,000 synthetic positions over a 60-day market path with one shock day and measured both sides.</p>
+<div class="tw"><table id="alerttable"></table></div>
+<p class="note" id="simnote"></p>
+<h3>What the simulation says beyond the alert line</h3>
+<ul class="plain" id="simfind"></ul>
+
+<h2><span class="n">6</span>What it could be worth</h2>
+<p class="sub">These are assumptions, not data. The point is to see which ones matter. The test in section 7 replaces them with real numbers.</p>
+<div class="outs">
+  <div class="in" id="outin"></div>
+  <div class="o" id="outout"></div>
+</div>
+
+<h2><span class="n">7</span>How I'd test it</h2>
+<div class="three">
+  <div><strong>Design</strong><ul><li>Randomise <b>new</b> MTF users 50/50 for 8 weeks; existing users keep the current app.</li><li>Treatment gets all three surfaces from section 4.</li><li>Pre-register the metrics below before launch.</li></ul></div>
+  <div><strong>Primary metric</strong><ul><li>Forced sales per 1,000 MTF users: unmet calls, instant square-offs and pledge sales.</li><li>Secondary: share of calls met; complaints that mention a square-off.</li></ul></div>
+  <div><strong>Guardrails</strong><ul><li>MTF book per user and interest income per user. Some drop is expected; agree the limit with the business first.</li><li><b>60-day MTF retention:</b> the number that decides whether this pays for itself.</li></ul></div>
+</div>
+<h3>The primary metric in SQL</h3>
+<pre>-- forced sales per 1,000 MTF users, by experiment arm
+with users as (
+  select a.user_id, a.arm
+  from experiment_assignment a
+  where a.experiment = 'mtf_margin_health'
+    and a.assigned_at between :start and :end
+),
+forced as (
+  select p.user_id, count(*) as n
+  from mtf_positions p
+  join users u using (user_id)
+  where p.close_reason in ('margin_call_liquidation', 'mtm_square_off', 'pledge_not_approved')
+    and p.closed_at < :end
+  group by p.user_id
+)
+select u.arm,
+       count(*)                                  as users,
+       coalesce(sum(f.n), 0)                     as forced_sales,
+       1000.0 * coalesce(sum(f.n), 0) / count(*) as per_1000_users
+from users u
+left join forced f using (user_id)
+group by u.arm;</pre>
+<p class="note">Table and column names are mine. In week one I'd map them to Groww's real tables and check that "close reason" is actually recorded. If it isn't, logging it is the first ticket.</p>
+
+<h2><span class="n">8</span>Requirements</h2>
+<div class="tw"><table>
+  <thead><tr><th>ID</th><th>Requirement</th><th>Done when</th></tr></thead>
+  <tbody>
+    <tr><td class="num">P0-1</td><td>Margin health on every MTF position</td><td>Cover, distance to call (% and ₹), break-even and interest so far match the risk engine's numbers to the rupee. They refresh at least every 5 minutes during market hours.</td></tr>
+    <tr><td class="num">P0-2</td><td>Pledge inside the buy flow</td><td>Every MTF buy shows the pledge deadline and has a one-tap pledge step. Pledge-failure sales are tracked per 1,000 MTF buys.</td></tr>
+    <tr><td class="num">P0-3</td><td>Early alert with the exact fix</td><td>Fires once per episode when the gap to a call is 2.5% or less. It shows the cash needed or shares to sell to get back to 100% cover. It never fires on a position already in a call.</td></tr>
+    <tr><td class="num">P0-4</td><td>Rules as data</td><td>The 85% call line, 80% erosion, T+1 and T+4 timings and the interest rate live in config with an effective date. A policy change ships without an app release.</td></tr>
+    <tr><td class="num">P1-1</td><td>Haircut change notice</td><td>When a stock's haircut changes, every holder gets the new call price before the next session opens.</td></tr>
+    <tr><td class="num">P1-2</td><td>Order-time leverage default</td><td>The slider opens at a suggested level tested in its own experiment. A 20% gap scenario is shown at max leverage.</td></tr>
+    <tr><td class="num">P1-3</td><td>Risk team view</td><td>A daily list of positions within 2.5% of a call, by stock and size, ready before market open.</td></tr>
+  </tbody>
+</table></div>
+
+<h2><span class="n">9</span>What would prove me wrong</h2>
+<ul class="plain">
+  <li><b>Groww may already show most of this.</b> I only have the public terms and help articles, not the live app. If the call price is already on every position, the gap is in alerts and the order screen, not the card.</li>
+  <li><b>Fewer calls may mean less MTF income.</b> If warned users trim positions and don't come back, the guardrail catches it, and the honest result is a trade-off for the business to decide, not a win to claim.</li>
+  <li><b>The bet assumes forced sales cause churn.</b> If users who get sold out return at the same rate as everyone else, the retention case falls apart. The test answers this directly.</li>
+  <li><b>My cover formula may not be Groww's.</b> The public policy doesn't define the ratio. If the internal formula differs, the thresholds move, but the product doesn't change.</li>
+  <li><b>The interest rate isn't consistent in public:</b> the MTF page advertises 14.95% a year, and the terms PDF lists 15.75% under ₹25 lakh. I used 14.95%. The engine takes either.</li>
+</ul>
+
+<footer>
+  <span>Aditya Mathur · Bengaluru</span>
+  <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a>
+  <a href="https://www.linkedin.com/in/adityaamathur">LinkedIn</a>
+  <a href="https://adimathur-creates.github.io/">More work</a>
+</footer>
+</div>
+
+<script type="module">
+import * as E from "./engine.js";
+const $ = (s) => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => { const n = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === "class") n.className = v; else if (k === "style") n.style.cssText = v; else n.setAttribute(k, v); } for (const k of kids) if (k != null) n.append(k); return n; };
+const inr = (x) => x >= 1e7 ? "₹" + (x / 1e7).toFixed(1) + " Cr" : x >= 1e5 ? "₹" + (x / 1e5).toFixed(1) + " lakh" : "₹" + Math.round(x).toLocaleString("en-IN");
+const pct = (x, d = 1) => (x * 100).toFixed(d) + "%";
+const STATUS = { HEALTHY: "Healthy", THIN: "Below 100%: not a call yet", MARGIN_CALL: "Margin call", SQUARE_OFF: "Instant square-off" };
+
+function sliders(box, defs, state, onchange) {
+  for (const [k, label, min, max, step, val, f] of defs) {
+    state[k] = val;
+    const out = el("b", {}, f(val));
+    const r = el("input", { type: "range", min, max, step, value: val, "aria-label": label });
+    r.oninput = () => { state[k] = +r.value; out.textContent = f(+r.value); onchange(); };
+    box.append(el("label", {}, el("span", {}, label), out), r);
+  }
+}
+
+// ---- section 2 calculator ----
+const S = {};
+sliders($("#calcin"), [
+  ["price", "Buy price", 100, 3000, 10, 1000, inr],
+  ["qty", "Shares", 5, 500, 5, 100, (v) => v],
+  ["haircut", "Stock's haircut (sets max leverage)", 0.25, 0.6, 0.05, 0.25, (v) => `${pct(v, 0)} · ${(1 / v).toFixed(1)}x max`],
+  ["own", "Your own money in it", 0.25, 0.9, 0.05, 0.25, (v) => pct(v, 0)],
+  ["move", "Price move since buying", -0.25, 0.15, 0.005, -0.03, (v) => (v > 0 ? "+" : "") + pct(v)],
+  ["days", "Days held (interest unpaid)", 0, 180, 1, 20, (v) => v + " days"],
+], S, drawCard);
+function drawCard() {
+  const own = Math.max(S.own, S.haircut);
+  const p = E.openPosition({ qty: S.qty, price: S.price, haircut: S.haircut, marginShare: own });
+  E.accrue(p, S.days);
+  const now = S.price * (1 + S.move);
+  const h = E.health(p, now);
+  const fill = Math.max(0, Math.min(1.3, h.cover)) / 1.3;
+  const color = h.status === "HEALTHY" ? "var(--ok)" : h.status === "THIN" ? "var(--warn)" : "var(--bad)";
+  const meter = el("div", { class: "meter" }, el("i", { style: `width:${fill * 100}%;background:${color}` }), el("span", { class: "line", style: `left:${(0.85 / 1.3) * 100}%` }), el("span", { class: "line", style: `left:${(1 / 1.3) * 100}%;opacity:.35` }));
+  const kids = [
+    el("div", { class: "lbl" }, "Margin cover"),
+    el("div", { class: "big" }, pct(h.cover, 0), " ", el("span", { class: `st s-${h.status}` }, STATUS[h.status])),
+    meter, el("div", { class: "note", style: "margin:0" }, "Line marks the 85% call level"),
+    el("div", { class: "kv" }, el("span", {}, h.status === "MARGIN_CALL" || h.status === "SQUARE_OFF" ? "Call price (already crossed)" : "Price that triggers a call"), el("b", {}, `${inr(h.callPrice)} · ${h.dropToCall > 0 ? pct(h.dropToCall) + " away" : "crossed"}`)),
+    el("div", { class: "kv" }, el("span", {}, "Instant square-off below"), el("b", {}, inr(h.squarePrice))),
+    el("div", { class: "kv" }, el("span", {}, "Interest so far"), el("b", {}, `${inr(p.interest)} · ${inr(h.dailyInterest)}/day`)),
+    el("div", { class: "kv" }, el("span", {}, "Break-even price"), el("b", {}, inr(h.breakEven))),
+  ];
+  if (h.status === "SQUARE_OFF") kids.push(el("div", { class: "fix" }, el("b", {}, "Too late to warn. "), "All open positions would be sold at once. Only the leverage chosen at the order could have prevented this."));
+  else if (h.status === "MARGIN_CALL") kids.push(el("div", { class: "fix" }, el("b", {}, "Margin call. "), `Fix by end of next trading day: add ${inr(h.addCash)}, or sell ${h.sellQty} of ${p.qty} shares.`));
+  else if (h.dropToCall <= 0.025) kids.push(el("div", { class: "fix" }, el("b", {}, "Close to a call. "), `${pct(h.dropToCall)} more fall triggers it. To get back to 100% now: add ${inr(h.addCash)} or sell ${h.sellQty} shares.`));
+  $("#card").replaceChildren(...kids);
+}
+drawCard();
+
+// haircut table
+const hcBody = el("tbody");
+for (const h of [0.25, 0.3, 0.4, 0.5]) hcBody.append(el("tr", {},
+  el("td", { class: "num" }, `${pct(h, 0)} (${(1 / h).toFixed(1)}x)`),
+  el("td", { class: "num" }, pct(E.dropToCallAtEntry(h))),
+  el("td", { class: "num" }, pct(E.dropToSquareAtEntry(h), 0)),
+  el("td", { class: "num" }, pct(E.monthlyCarry(h), 2)),
+  el("td", { class: "num" }, E.daysToCallIfFlat(h) + " days")));
+$("#hctable").replaceChildren(el("thead", {}, el("tr", {}, el("th", {}, "Haircut (max leverage)"), el("th", {}, "Fall that triggers a call"), el("th", {}, "Fall that triggers instant square-off"), el("th", {}, "Stock must rise per month to cover interest"), el("th", {}, "Days to a call at a flat price"))), hcBody);
+
+// ---- section 5 simulation ----
+const lines = [0.01, 0.015, 0.02, 0.025, 0.03, 0.04];
+const runs = lines.map((a) => E.simulate({ alertAt: a }));
+const base = runs[3];
+const aBody = el("tbody");
+runs.forEach((r, i) => aBody.append(el("tr", { class: lines[i] === 0.025 ? "pick" : "" },
+  el("td", { class: "num" }, pct(lines[i]) + (lines[i] === 0.025 ? " · my pick" : "")),
+  el("td", { class: "num" }, pct(r.lead, 0)),
+  el("td", { class: "num" }, r.medianLead + (r.medianLead === 1 ? " day" : " days")),
+  el("td", { class: "num" }, r.alertsPer100PerWeek.toFixed(1)))));
+$("#alerttable").replaceChildren(el("thead", {}, el("tr", {}, el("th", {}, "Alert when a call is this close"), el("th", {}, "Calls warned at least a day ahead"), el("th", {}, "Median warning"), el("th", {}, "Alerts per 100 positions a week"))), aBody);
+$("#simnote").textContent = `${base.n.toLocaleString("en-IN")} synthetic positions in four volatility buckets, held for about 15 trading days on average, half opened at maximum leverage. ${pct(base.callRate, 0)} of them got a margin call. Each wider step warns a few more people per extra alert than the one before it, and the gain shrinks fastest past 3%. I'd start at 2.5% and let the test tune it.`;
+const seeds = [1, 2, 3, 4, 5].map((s) => E.simulate({ seed: s }).callRate);
+const lev = base.lev;
+$("#simfind").replaceChildren(
+  el("li", {}, el("b", {}, "Leverage choice matters more than anything else. "), `${pct(lev.max.calls / lev.max.n, 0)} of positions opened at maximum leverage got a call, against ${pct(lev.lower.calls / lev.lower.n, 0)} of those with more of the user's own money in. That is why the order screen is in scope, not just alerts.`),
+  el("li", {}, el("b", {}, "Calls arrive in bursts. "), `${pct(base.shockDayCalls / base.calls, 0)} of all calls in the run landed on the one shock day. Support and the risk team need the "likely calls tomorrow" list for exactly those days.`),
+  el("li", {}, el("b", {}, "The call rate swings with the market. "), `Across five different market paths, ${pct(Math.min(...seeds), 0)} to ${pct(Math.max(...seeds), 0)} of positions got a call. Any real test has to compare arms over the same weeks, which randomising users does.`),
+);
+
+// stats strip
+$("#stats").replaceChildren(...[
+  [pct(E.dropToCallAtEntry(0.25)), "fall that triggers a margin call at 4x leverage"],
+  [pct(E.dropToSquareAtEntry(0.25), 0), "fall that sells everything at once, without notice"],
+  [E.daysToCallIfFlat(0.25) + " days", "until unpaid interest alone causes a call, at a flat price"],
+  [`${pct(lev.max.calls / lev.max.n, 0)} vs ${pct(lev.lower.calls / lev.lower.n, 0)}`, "positions getting a call: max leverage vs lower (synthetic)"],
+].map(([b, s]) => el("div", { class: "stat" }, el("b", {}, b), el("span", {}, s))));
+
+// ---- section 6 outcomes ----
+const O = {};
+sliders($("#outin"), [
+  ["newPositionsPerMonth", "New MTF positions a month", 50000, 1000000, 50000, 300000, (v) => (v / 100000).toFixed(1) + " lakh"],
+  ["pMeet", "Calls that users meet today", 0.2, 0.9, 0.05, 0.5, (v) => pct(v, 0)],
+  ["pAct", "Warned users who act before the call", 0, 0.6, 0.05, 0.25, (v) => pct(v, 0)],
+  ["pPledgeMissBase", "Buys with a missed pledge today", 0, 0.08, 0.005, 0.03, (v) => pct(v)],
+  ["pPledgeMissNew", "…with the pledge built into the buy", 0, 0.08, 0.005, 0.01, (v) => pct(v)],
+  ["slippage", "Loss from a forced sale vs a chosen one", 0, 0.05, 0.0025, 0.01, (v) => pct(v, 2)],
+  ["avgExposure", "Average position", 20000, 300000, 10000, 80000, inr],
+], O, drawOut);
+function drawOut() {
+  const r = E.outcomes(base, O);
+  const n = (x) => Math.round(x).toLocaleString("en-IN");
+  $("#outout").replaceChildren(...[
+    ["Margin calls a month, today", n(r.callsBase)],
+    ["Margin calls a month, with alerts", n(r.callsNew)],
+    ["Forced sales a month, today", n(r.sellsBase)],
+    ["Forced sales a month, with all three", n(r.sellsNew)],
+    ["Customer money lost to forced sales, today", inr(r.lossBase)],
+    ["…with all three", inr(r.lossNew)],
+  ].map(([a, b]) => el("div", {}, el("span", {}, a), el("b", {}, b))));
+}
+drawOut();
+</script>
+</body>
+</html>
