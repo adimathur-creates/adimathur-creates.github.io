@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aditya Mathur · Work for Volopay</title>
+<meta name="description" content="Selected work for Volopay's product builder role: problems found, tools built and shipped.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* A two-minute read for a hiring manager: the role's three verbs, then proof for each. */
+:root{
+  --paper:#F6F5F1; --panel:#FFFFFF; --ink:#15171B; --muted:#5C6068; --rule:#E0DED6; --soft:#EFEDE7;
+  --acc:#2a78d6; --acc2:#eb6834; --good:#1F7A4D;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"Public Sans","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023; --acc:#3987e5; --acc2:#d95926; --good:#6CCB97; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023; --acc:#3987e5; --acc2:#d95926; --good:#6CCB97; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;margin:0;padding-inline:16px;padding-block:32px 72px}
+.wrap{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:52px}
+h1,h2{font-family:var(--f-display);line-height:1.08;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.4rem,8vw,4rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.4rem,4.2vw,1.9rem);font-weight:600}
+h3{margin:0;font-size:1.12rem;line-height:1.3}
+p{margin:0}
+a{color:var(--acc)}
+section{display:flex;flex-direction:column;gap:16px}
+.eyebrow,.k,.sec{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec{color:var(--acc)}
+.dek{font-size:1.14rem;max-width:66ch}
+.by{font-size:.92rem;color:var(--muted)}
+.contact{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.92rem}
+.verbs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.verbs div{background:var(--panel);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.verbs b{font-family:var(--f-display);font-size:1.15rem}
+.verbs span{font-size:.88rem;color:var(--muted)}
+.feature{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--acc);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;justify-content:space-between}
+.tag{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.rows{display:grid;grid-template-columns:118px 1fr;gap:6px 14px;font-size:.93rem}
+.rows dt{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.rows dd{margin:0}
+.result{font-weight:600}
+.link{font-weight:600;text-decoration:none}
+.link:hover{text-decoration:underline}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.stat{font-family:var(--f-display);font-size:1.9rem;font-weight:600;line-height:1}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:6px}
+.note strong{color:var(--ink)}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:7px}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--soft)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--panel)}
+footer{border-top:1px solid var(--rule);padding-top:18px;font-size:.86rem;color:var(--muted);display:flex;flex-direction:column;gap:8px}
+@media (max-width:720px){.verbs,.grid2{grid-template-columns:1fr}.rows{grid-template-columns:1fr;gap:2px}.rows dd{margin-bottom:8px}}
+@media print{body{padding:0;font-size:12.5px}.wrap{gap:26px;max-width:none}.feature,.card,section{break-inside:avoid}a{color:#1f4fa3}}
+</style>
+</head><body>
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:14px">
+  <p class="eyebrow">Portfolio for Volopay · Product builder, founders’ team</p>
+  <h1>Understand problems. Build solutions. Take ideas live.</h1>
+  <p class="dek">I’m Aditya Mathur, a product manager who builds. I owned a B2B payments product through settlement and reconciliation at EnKash, built internal tools at Stripe, and I build working software with Claude Code. Below is the work that maps closest to this role, in the order I’d want you to read it.</p>
+  <div class="contact"><a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a><span>+91 95354 25442</span><a href="https://www.linkedin.com/in/adityaamathur">linkedin.com/in/adityaamathur</a><a href="https://adimathur-creates.github.io/">Full portfolio (20+ builds)</a><span>Bengaluru · immediate joiner</span></div>
+</header>
+
+<section>
+  <div class="verbs">
+    <div><b>Understand problems</b><span>Read the rules, the data and the user’s workflow until the real leak is obvious, and say what I don’t know.</span></div>
+    <div><b>Build solutions</b><span>Working tools in the browser, with tests, built with Claude Code and checked by me line by line where it matters.</span></div>
+    <div><b>Take ideas live</b><span>Shipped fixes to production at EnKash; every build here is deployed on GitHub Pages with a v1 scope and a kill test.</span></div>
+  </div>
+  <p class="note"><strong>How to read this.</strong> Section 3 is real work at EnKash and Stripe. Sections 1 and 2 are independent work: working tools I built for specific companies from public information, with synthetic data where real data would be private. Each page says so.</p>
+</section>
+
+<section>
+  <p class="sec">1 · Built for Volopay</p>
+  <div class="feature">
+    <div class="meta"><h3>Before 30 November: a GST input-credit check for Volopay India customers</h3><a class="link" href="https://adimathur-creates.github.io/volopay-before-30-november/">Open the live tool →</a></div>
+    <dl class="rows">
+      <dt>Problem</dt><dd>Indian companies lose GST credit on spend that already runs through Volopay: our GSTIN never reaches the invoice, the vendor never reports it, or the claim misses the deadline. For FY 2025-26 that deadline is 30 November 2026 (CGST Act s.16(4)).</dd>
+      <dt>Decision</dt><dd>v1 is a CSV tool customer success runs for five India customers before 30 November. GSP integration, auto-chasing and point-of-spend GSTIN capture wait until v1 shows real money coming back.</dd>
+      <dt>Built</dt><dd>A spend export and the GSTR-2B go in. It matches invoices in three passes (invoice number, value and date, then invoice number across GSTINs to catch a vendor-master typo), sorts credit by next action, writes vendor chase emails and an IMS action for every supplier invoice. JavaScript, runs in the browser, 20 automated tests.</dd>
+      <dt>Result</dt><dd class="result">On a fictional ₹2.57 Cr spend year: ₹7.5 L still recoverable with 28 days left, two vendors holding ₹4.7 L; 3,563 of 3,563 filed invoices matched correctly across 20 synthetic years.</dd>
+    </dl>
+  </div>
+</section>
+
+<section>
+  <p class="sec">2 · Internal tools and automations for finance and payments teams</p>
+  <div class="card">
+    <div class="meta"><h3>Settlement Leak Finder</h3><span class="tag">Reconciliation · built for Osfin</span></div>
+    <dl class="rows">
+      <dt>Problem</dt><dd>Orders, the gateway’s settlement report and the bank statement never agree on IDs, timing or amounts, so one-key matching buries real losses under false alarms.</dd>
+      <dt>Built</dt><dd>Reconciles the three files in one pass, shows which rule closed each match, audits every fee against the contract, and turns what is left into a claim pack for the gateway.</dd>
+      <dt>Result</dt><dd class="result">UTR-only matching raises 9 alarms and 8 are false; 91% of the claimable money sat in one missing settlement, not in fees.</dd>
+    </dl>
+    <a class="link" href="https://adimathur-creates.github.io/osfin-settlement-leak-finder/">Open →</a>
+  </div>
+  <div class="card">
+    <div class="meta"><h3>Nexus Check</h3><span class="tag">Tax compliance · internal tool · built for Commenda</span></div>
+    <dl class="rows">
+      <dt>Problem</dt><dd>A free US sales-tax analysis for prospects means hand-cleaning a messy Stripe export each time; a wrong “you’re fine” costs the customer and the company’s credibility.</dd>
+      <dt>Built</dt><dd>A raw Stripe export in, a verdict for every state out, with the date each threshold was crossed, tax not collected, and a short list of verdicts the data is too messy to trust.</dd>
+      <dt>Result</dt><dd class="result">A quick pivot table gets 11 of 47 verdicts wrong on the same data; 13 rule self-checks run on every load.</dd>
+    </dl>
+    <a class="link" href="https://adimathur-creates.github.io/commenda-nexus-check/">Open →</a>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="meta"><h3>Supply Desk</h3><span class="tag">APIs · integrations · Composio</span></div>
+      <p>Reads any OpenAPI spec and writes the integration brief: auth and sensitive scopes, money-moving and destructive operations, webhooks, pagination, QA plan. Run on 32 real public API specs.</p>
+      <p class="result">7 ready for automated intake, 18 need an approval path, 6 need research by hand, 1 needs descriptions written first.</p>
+      <a class="link" href="https://adimathur-creates.github.io/composio-supply-desk/">Open →</a>
+    </div>
+    <div class="card">
+      <div class="meta"><h3>One Skill, Three Clients</h3><span class="tag">Reusable automation · Parallel Loop</span></div>
+      <p>A document-chasing workflow built once, rules first with a narrow AI step, a confidence gate and evals, then run unchanged for an insurer, a lender and a consumer brand.</p>
+      <p class="result">133-line shared engine, about 22 lines per client; median days to a ready file 6–8 down to 3 (simulated).</p>
+      <a class="link" href="https://adimathur-creates.github.io/parallelloop-one-skill/">Open →</a>
+    </div>
+  </div>
+  <div class="card">
+    <div class="meta"><h3>Riya: a Hindi–English fraud-verification voice agent</h3><span class="tag">Automation · GrowthX × Ringg AI buildathon</span></div>
+    <p>Calls a customer about a flagged transaction and records the outcome. Post-call automation through Make webhooks writes a case record to Google Sheets and posts a Slack alert. When outbound calls failed on Twilio’s free plan, I traced it to the plan’s limits and moved the agent to Bolna. No production users; it was built for the buildathon.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec">3 · Taking things live at work</p>
+  <div class="grid2">
+    <div class="card">
+      <div class="meta"><h3>EnKash</h3><span class="tag">Associate PM, Acquiring · Jul–Sep 2026</span></div>
+      <ul class="plain">
+        <li>Owned a B2B payments product end to end: onboarding, payment APIs, webhooks, checkout, payment links, refunds, settlement and reconciliation.</li>
+        <li>Shipped a long-lived UPI QR checkout for an enterprise merchant whose QR expired every 5 minutes.</li>
+        <li>Replaced WhatsApp-led merchant issue handling with one tracked support portal; redesigned the developer docs.</li>
+        <li>Owned the checkout offer engine and payment-links dashboard; built clickable prototypes myself.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="meta"><h3>Stripe</h3><span class="tag">Operations Analyst, AML · May 2025–Apr 2026</span></div>
+      <ul class="plain">
+        <li>Built an internal AI/LLM knowledge hub from 0 to 1, adopted by 100+ users.</li>
+        <li>Found and rebuilt a silently failing SQL data pipeline; specified detection logic with Engineering.</li>
+        <li>Daily SQL KPI dashboards whose bottlenecks supported a 20% throughput uplift.</li>
+        <li>3x caseload at 0% error rate in fraud and AML investigations.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec">4 · How I use AI coding tools, and check them</p>
+  <p>I build with Claude Code, and I treat its output as a first draft that has to pass tests and my own review. Three bugs found in review, before shipping:</p>
+  <ul class="plain">
+    <li><strong>Supply Desk</strong> counted Plaid’s POST read endpoints as money-moving and read YouTube “subscriptions” as webhooks. I added a rule for read-only POSTs and tightened webhook detection, then re-ran all 32 specs.</li>
+    <li><strong>Before 30 November</strong> first left a vendor-master GSTIN typo as “invalid GSTIN”, though the invoices were sitting in GSTR-2B under the right number. A third matching pass, on invoice number and value across GSTINs, now finds them; a test checks it.</li>
+    <li><strong>Every build</strong> validates against something I can check independently: the GSTIN check character against the GST portal’s published sample; matches against known answers; totals that must reconcile to the rupee.</li>
+  </ul>
+</section>
+
+<section>
+  <p class="sec">5 · What I would pick up first at Volopay</p>
+  <div class="tablewrap"><table>
+    <tr><th>Problem</th><th>Evidence</th><th>First version</th></tr>
+    <tr><td>GST credit lost on India spend</td><td>s.16(2)(aa) and s.16(4); public Volopay India pages don’t describe a GST-credit check</td><td>The tool above, run by customer success for five customers before 30 Nov</td></tr>
+    <tr><td>One transfer at a time</td><td>Reviewers ask for bulk transfers</td><td>CSV upload with validation, a preview of every payee, and maker-checker on the batch</td></tr>
+    <tr><td>Manual fields on every expense</td><td>Reviewers flag GL codes and receipts filled by hand</td><td>Suggest the GL code from merchant history; measure how often finance accepts it</td></tr>
+  </table></div>
+  <p class="by">These are hypotheses from public reviews and Volopay’s help pages, to test in my first customer conversations, not conclusions.</p>
+</section>
+
+<footer>
+  <p>Aditya Mathur · B.A. Economics (Hons), Christ University · Best Paper of 250+ for the Bank Performance Index research paper · <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a></p>
+  <p>Independent work: I don’t work for, and have no data from, Volopay, Osfin, Commenda, Composio or Parallel Loop. Synthetic data is labelled on each page.</p>
+</footer>
+</div>
+</body></html>
