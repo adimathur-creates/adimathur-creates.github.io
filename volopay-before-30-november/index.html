@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A working GST input-credit check for Volopay India customers, built on synthetic data.">
+</head><body>
+<title>Before 30 November</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* One 860px column: a founder memo with a working tool in the middle. */
+:root{
+  --paper:#F6F5F1; --panel:#FFFFFF; --ink:#15171B; --muted:#5C6068; --rule:#E0DED6; --soft:#EFEDE7;
+  --rec:#2a78d6; --lost:#eb6834; --neutral:#9A9C95; --good:#1F7A4D; --good-soft:#E3F1E8; --warn-soft:#FBEEE2; --chase-soft:#E5EEFA;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"Public Sans","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023;
+  --rec:#3987e5; --lost:#d95926; --neutral:#6E706B; --good:#6CCB97; --good-soft:#15291F; --warn-soft:#33241A; --chase-soft:#17243A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023;
+  --rec:#3987e5; --lost:#d95926; --neutral:#6E706B; --good:#6CCB97; --good-soft:#15291F; --warn-soft:#33241A; --chase-soft:#17243A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;margin:0;padding-inline:16px;padding-block:28px 72px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2{font-family:var(--f-display);line-height:1.06;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.6rem,9vw,4.6rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.45rem,4.4vw,2rem);font-weight:600}
+h3{font-size:1.02rem;margin:0}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow,.k,.sec{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec{color:var(--rec)}
+.dek{font-size:1.14rem;max-width:68ch}
+.by{font-size:.9rem;color:var(--muted)}
+a{color:var(--rec)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:6px}
+.note strong{color:var(--ink)}
+.exec{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--rec);border-radius:6px;padding:18px 20px}
+.exec ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:9px}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.clock{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.clock b{font-family:var(--f-display);font-size:3rem;line-height:1;color:var(--lost)}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+input[type=text],input[type=date]{font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);color:var(--ink);min-width:0}
+button,.btn{font:inherit;font-size:.86rem;font-weight:600;padding:8px 12px;border-radius:4px;border:1px solid var(--rule);background:var(--soft);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+button.primary{background:var(--rec);border-color:var(--rec);color:#fff}
+button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.file{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+.file input{font-size:.8rem;max-width:100%}
+.status{font-size:.86rem;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi .v{font-family:var(--f-display);font-size:1.75rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:4px 12px;align-items:center;font-size:.88rem}
+.bar .lab{display:flex;justify-content:space-between;gap:10px}
+.bar .lab span:last-child{color:var(--muted);white-space:nowrap}
+.bar .track{grid-column:1/2;height:10px;background:var(--soft);border-radius:2px;overflow:hidden}
+.bar .fill{height:100%;border-radius:2px}
+.bar .val{grid-column:2;grid-row:1/3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+#panel table{min-width:680px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--soft);white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.t-good{background:var(--good-soft);color:var(--good)}
+.t-warn{background:var(--warn-soft);color:var(--lost)}
+.t-chase{background:var(--chase-soft);color:var(--rec)}
+.t-lost{background:var(--warn-soft);color:var(--lost)}
+.t-neutral{background:var(--soft);color:var(--muted)}
+.mono{font-family:var(--f-mono);font-size:.8rem}
+details.msg{border:1px solid var(--rule);border-radius:6px;background:var(--paper)}
+details.msg summary{cursor:pointer;padding:10px 12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+details.msg summary span:last-child{color:var(--muted);font-size:.86rem}
+details.msg pre{margin:0;padding:12px;white-space:pre-wrap;font-family:var(--f-mono);font-size:.78rem;border-top:1px solid var(--rule)}
+details.msg .acts{padding:0 12px 12px;display:flex;gap:8px}
+.list{display:flex;flex-direction:column;gap:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.card h3{font-size:.98rem}
+.card p,.card li{font-size:.92rem;color:var(--muted)}
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px}
+.steps li::before{content:counter(s);font-family:var(--f-mono);font-size:.8rem;width:26px;height:26px;border-radius:50%;background:var(--soft);display:grid;place-items:center}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.84rem}
+.flow span{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:6px 9px}
+.flow em{font-style:normal;color:var(--muted)}
+footer{font-size:.84rem;color:var(--muted);display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--rule);padding-top:18px}
+@media (max-width:700px){.two{grid-template-columns:1fr}.clock b{font-size:2.4rem}}
+</style>
+
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:16px">
+  <p class="eyebrow">For Volopay · founder-led product bet · India · synthetic data</p>
+  <h1>Before 30 November</h1>
+  <p class="dek">Volopay already moves the money for Indian companies’ cards, bills and claims. Whether that spend comes back as GST credit depends on two things decided at the moment of purchase, and one deadline. For FY 2025-26 that deadline is four weeks away. I built the check that finds the money, and the case for building it into the product.</p>
+  <p class="by">Aditya Mathur · <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a> · built with Claude Code; every number on this page is computed by the tool below</p>
+</header>
+
+<section>
+  <div class="clock"><b id="daysLeft">28</b><span>days until <strong>30 November 2026</strong>, the last day to claim GST input credit on FY 2025-26 invoices (CGST Act s.16(4))</span></div>
+  <div class="exec">
+    <p class="k" style="margin-bottom:10px">The short version</p>
+    <ol id="exec"></ol>
+  </div>
+</section>
+
+<section id="tool">
+  <p class="sec">1 · The working check</p>
+  <h2>Upload a spend export and a GSTR-2B, get the money back</h2>
+  <p>It loads with a fictional Bengaluru company: a full year of card, bill-pay and reimbursement spend, plus the GSTR-2B its suppliers’ returns produced. Swap in your own two CSVs and it runs the same way, in the browser. Nothing is uploaded anywhere.</p>
+  <div class="sheet">
+    <div class="controls">
+      <button class="primary" id="loadSample">Load sample company</button>
+      <label class="file">Spend export (CSV)<input type="file" id="fLedger" accept=".csv,text/csv"></label>
+      <label class="file">GSTR-2B, B2B sheet (CSV)<input type="file" id="fB2b" accept=".csv,text/csv"></label>
+      <label>Company GSTIN<input type="text" id="gstin" size="17"></label>
+      <label>As of<input type="date" id="asof"></label>
+      <button id="run">Re-run</button>
+    </div>
+    <p class="status" id="status"></p>
+    <div class="kpis" id="kpis"></div>
+    <div>
+      <p class="k" style="margin-bottom:10px">Input credit on the year’s spend, by what has to happen next</p>
+      <div class="bars" id="bars"></div>
+      <div class="legend" style="margin-top:10px"><span><i style="background:var(--good)"></i>Claim now</span><span><i style="background:var(--rec)"></i>Recoverable before the cut-off</span><span><i style="background:var(--lost)"></i>Lost or at risk</span><span><i style="background:var(--neutral)"></i>No credit by law, or self-assessed</span></div>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div id="panel"></div>
+    <div class="controls"><button id="dlRows">Download all rows (CSV)</button><button id="dlChase">Download chase list (CSV)</button><button id="dlIms">Download IMS actions (CSV)</button><a class="btn" id="tplL" download="spend_export_template.csv">Spend template</a><a class="btn" id="tplB" download="gstr2b_b2b_template.csv">GSTR-2B template</a></div>
+  </div>
+  <p class="note"><strong>What this is not.</strong> It does not file returns, act in the GST portal or give tax advice. Every action is a recommendation for the finance team or their CA to confirm. Matching was 100% correct on 3,563 filed invoices across 20 synthetic years, but I wrote that noise myself; real exports will be messier, which is why ambiguous matches go to a person instead of being guessed.</p>
+</section>
+
+<section>
+  <p class="sec">2 · Why this problem</p>
+  <h2>GST credit is cash, and it has three ways to leak</h2>
+  <p>A company can offset the GST it paid on business purchases against the GST it owes. On most spend that is 18% of the bill. The law attaches conditions, and each one is a place the money falls out:</p>
+  <div class="two">
+    <div class="card"><h3>1 · The invoice must carry our GSTIN</h3><p>A card charge or a claim paid without the company GSTIN on the invoice is a B2C sale. No credit. This is decided at the moment of purchase, when the employee checks out, which is exactly where Volopay sits.</p></div>
+    <div class="card"><h3>2 · The supplier must report it</h3><p>Credit is allowed only if the invoice appears in the buyer’s auto-drafted GSTR-2B (s.16(2)(aa)), which is built from suppliers’ GSTR-1 filings. A late or careless vendor means no credit, even though we paid them.</p></div>
+    <div class="card"><h3>3 · It must be claimed in time</h3><p>FY 2025-26 credit cannot be taken after 30 November 2026 (s.16(4)). For a monthly filer, the vendor’s October GSTR-1 (due 11 November) feeds the last GSTR-3B that can still carry it. After that the credit is gone.</p></div>
+    <div class="card"><h3>And the reverse risk</h3><p>Some credit must not be claimed: food, cabs, club memberships and gifts are blocked by s.17(5). Since late 2024, buyers also accept, reject or hold each supplier invoice in the Invoice Management System (IMS) before it reaches GSTR-2B. Claiming the wrong thing costs interest and penalties.</p></div>
+  </div>
+  <p><strong>Why Volopay, specifically.</strong> Volopay already has the parts: cards and UPI virtual cards, bill pay with maker-checker approvals, reimbursements, a native Tally integration, and an AI receipt scan that reads and matches receipts to transactions. Its India customers include Rapido, Porter, Urban Company and Pocket FM. The receipts it already reads contain the supplier GSTIN, our GSTIN and the invoice number, which are the three keys this check needs. From the public pages I could read, none of Volopay’s India pages describe a GST-credit check. If one exists internally, this page is a second opinion on how to scope it.</p>
+</section>
+
+<section>
+  <p class="sec">3 · What the sample company shows</p>
+  <h2 id="findTitle">Most of the recoverable money sits with two vendors</h2>
+  <ul class="plain" id="findings"></ul>
+</section>
+
+<section>
+  <p class="sec">4 · Product decisions</p>
+  <h2>What goes in the first version, and what waits</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Decision</th><th>First version (2 weeks)</th><th>Later, if v1 earns it</th></tr>
+    <tr><td>Who runs it</td><td>Volopay customer success, for India customers, before 30 Nov. A person reads every result.</td><td>Self-serve inside Volopay’s accounting module</td></tr>
+    <tr><td>Getting GSTR-2B</td><td>Customer downloads the portal Excel; we read the B2B sheet</td><td>Pull 2B and post IMS actions through a GST Suvidha Provider’s API (needs a GSP partner)</td></tr>
+    <tr><td>Matching</td><td>GSTIN + invoice number, then GSTIN + value + date, then invoice number across GSTINs; anything with two candidates goes to a person</td><td>Learn per-vendor invoice-number formats from accepted matches</td></tr>
+    <tr><td>Chasing vendors</td><td>Ready-to-send email per vendor, sorted by money and deadline</td><td>Auto-send by email or WhatsApp, track replies, re-check next 2B</td></tr>
+    <tr><td>Fixing the leak</td><td>List of merchants billing us without our GSTIN, with the one-time fix</td><td>At the point of spend: a task when a card is issued for a merchant (“add GSTIN to billing profile”), and a receipt-scan check that blocks submission when our GSTIN is missing above a threshold</td></tr>
+    <tr><td>Not doing</td><td colspan="2">Filing GSTR-3B; auto-accepting in IMS; telling customers what they are legally entitled to. Volopay should flag and route, and the customer’s CA decides.</td></tr>
+  </table></div>
+  <p><strong>Why the CSV version first.</strong> It tests the only thing that matters, whether customers recover real money, in days and without a GSP contract, an engineering sprint or a compliance review of automated actions. If five customers recover meaningful credit, the API version and the point-of-spend nudge are easy to justify. If they do not, we have spent two weeks, not a quarter.</p>
+</section>
+
+<section>
+  <p class="sec">5 · How it works</p>
+  <h2>Five passes, each one explainable to a CA</h2>
+  <ol class="steps">
+    <li><div><strong>Read and clean.</strong> Map columns by name (it recognises the portal’s “GSTIN of supplier”, “Invoice Value(₹)” headers and skips the title rows above them), parse Indian number formats and three date styles, and validate every GSTIN with its check character.</div></li>
+    <li><div><strong>Match.</strong> Pass 1: same supplier GSTIN and invoice number after removing separators and leading zeros (“BSM/0042/25-26” = “BSM-42-25-26”). Pass 2: same GSTIN, value within 1% or ₹10, date within 5 days, exactly one candidate. Pass 3: same invoice number and value under any GSTIN, which catches a wrong GSTIN in the vendor master. No 2B row is used twice.</div></li>
+    <li><div><strong>Classify.</strong> Blocked categories (s.17(5)) and non-GST spend first, then imports of services (reverse charge), then matched rows (claimable, value differs, not available for place of supply), then unmatched rows (no GSTIN, invalid GSTIN, vendor has not reported).</div></li>
+    <li><div><strong>Price.</strong> Matched rows use the tax in GSTR-2B. Unmatched rows estimate tax from the rate on the row (default 18%) and are labelled as estimates.</div></li>
+    <li><div><strong>Act.</strong> A chase list per vendor (most money first, nearest deadline first), a fix list per merchant, and an IMS action for every 2B row: accept, keep pending, or find the owner.</div></li>
+  </ol>
+  <div class="flow"><span>Volopay export (cards, bills, claims)</span><em>+</em><span>GSTR-2B B2B sheet</span><em>→</em><span>engine.js, in the browser</span><em>→</em><span>chase list · merchant fixes · IMS actions · CSVs</span></div>
+  <p class="by">20 automated tests cover GSTIN validation against the GST portal’s sample, matching accuracy against known answers, the s.17(5) guardrail, the 30 November cut-off, messy input and the vendor message. In production, the export would come from Volopay’s ledger, and 2B and IMS through a GSP.</p>
+</section>
+
+<section>
+  <p class="sec">6 · Rollout and how we know it worked</p>
+  <div class="two">
+    <div class="card"><h3>Weeks 1–4 (before 30 Nov)</h3><ul class="plain"><li>Customer success runs it for 5 India customers with the most bill-pay volume</li><li>Each gets the chase list and merchant fixes in a 30-minute call</li><li>Re-run on the next GSTR-2B to count what came back</li></ul></div>
+    <div class="card"><h3>What decides the next step</h3><ul class="plain"><li><strong>Primary:</strong> ₹ of credit that appears in 2B after the chase, per customer</li><li><strong>Speed:</strong> minutes from files to chase list</li><li><strong>Leak closed:</strong> share of card spend carrying our GSTIN, 60 days later</li><li><strong>Guardrail:</strong> zero blocked credits marked claimable</li></ul></div>
+  </div>
+  <p><strong>Kill or continue.</strong> If, across five customers, recovered credit does not clearly exceed what the check costs in CSM time, stop and keep only the merchant-fix list as an onboarding checklist. If it does, build the point-of-spend GSTIN capture first, because it prevents the loss instead of chasing it.</p>
+</section>
+
+<section>
+  <p class="sec">7 · What I would ask the first five customers</p>
+  <ol class="plain">
+    <li>Who reconciles GSTR-2B today, how long does it take, and does it include card and reimbursement spend or only vendor bills?</li>
+    <li>When an employee pays on a card, how do you get the GST invoice in the company name? How often does it not happen?</li>
+    <li>What did you do with IMS last month: accept everything, or check each invoice?</li>
+    <li>Which vendors do you chase every quarter, and how?</li>
+    <li>If Volopay told you the ₹ you are about to lose and wrote the vendor emails, who in your team would act on it?</li>
+  </ol>
+</section>
+
+<section>
+  <p class="sec">8 · Edge cases handled, and the ones that are not</p>
+  <div class="two">
+    <div class="card"><h3>Handled</h3><ul class="plain"><li>Invoice numbers with different separators or leading zeros</li><li>Supplier dates a day off; values off by rounding</li><li>Wrong GSTIN in the vendor master</li><li>Two possible 2B rows: sent to a person, not guessed</li><li>Out-of-state hotels marked not available in 2B</li><li>Foreign SaaS: reverse charge, so no 2B row is expected</li><li>2B invoices with no matching spend: held as pending, never auto-accepted</li></ul></div>
+    <div class="card"><h3>Not yet</h3><ul class="plain"><li>Credit notes and amendments (B2BA, CDNR sheets)</li><li>Multiple company GSTINs (one per state)</li><li>Split payments and one invoice paid by two cards</li><li>The 180-day payment rule (low risk here: card and bill pay settle the vendor at once)</li><li>Partial business use (s.17(1)/(2) apportionment)</li></ul></div>
+  </div>
+</section>
+
+<footer>
+  <p><strong>Sources.</strong> Conditions and limits: CGST Act s.16(2)(aa), s.16(4) and s.17(5), as summarised in <a href="https://calcguru.in/input-tax-credit-blocked-17-5-180-day-rule/">CalcGuru (July 2026)</a>. IMS and GSTR-2B: <a href="https://tallysolutions.com/gst/ims-impact-on-gstr-2b-gstr-3b/">Tally Solutions</a> and the <a href="https://tutorial.gst.gov.in/userguide/returns/Manual_gstr2b.htm">GST portal’s GSTR-2B manual</a>. Volopay features: <a href="https://volopay.com/in">Volopay India</a>, <a href="https://help.volopay.co/en/articles/8755942-volopay-features-overview">features overview</a>, <a href="https://help.volopay.co/en/articles/9223226-attach-receipts-via-ocr">receipt OCR</a>. GSTIN check character: tested against the portal’s sample GSTIN 27AAPFU0939F1ZV.</p>
+  <p><strong>Honesty notes.</strong> The company, vendors and GSTINs are invented; GSTINs pass the check-character test but belong to no one. The October-return timing assumes a monthly filer. I have no access to Volopay’s data, customers or roadmap. Not tax advice. Not affiliated with Volopay.</p>
+</footer>
+</div>
+
+<script>
+// VD: synthetic FY 2025-26 spend export and GSTR-2B for a fictional Bengaluru company. Every name and GSTIN is invented.
+var VD = (function () {
+  function rng(seed) { var s = seed >>> 0; return function () { s += 0x6D2B79F5; var t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  var CP = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  function check(g14) { var f = 1, s = 0; for (var i = 0; i < 14; i++) { var d = f * CP.indexOf(g14[i]); f = f === 2 ? 1 : 2; s += Math.floor(d / 36) + (d % 36); } return CP[(36 - (s % 36)) % 36]; }
+  function gstin(state, pan) { var b = state + pan + '1Z'; return b + check(b); }
+
+  var COMPANY = { name: 'Kestrel Labs Private Limited (fictional)', gstin: gstin('29', 'AAKCK4821M'), state: '29' };
+
+  // kind: bill = vendor invoice paid by bill pay; card = corporate card; reimb = employee claim.
+  // capture: probability our GSTIN is on the invoice; file: probability the supplier reports it in GSTR-1; late: probability it lands a month late.
+  var M = [
+    { n: 'Orbit Cloud Hosting Pvt Ltd', st: '29', pan: 'AABCO7712K', kind: 'bill', cat: 'Cloud hosting', rate: 18, freq: 'm', amt: [210000, 260000], capture: 1, file: 0.98, late: 0.1, inv: 'OCH/{fy}/{n4}' },
+    { n: 'Pinecrest Workspaces LLP', st: '29', pan: 'AAPFP5521Q', kind: 'bill', cat: 'Office rent', rate: 18, freq: 'm', amt: [320000, 320000], capture: 1, file: 0.97, late: 0.05, inv: 'PW-{n3}' },
+    { n: 'Brightsignal Media Pvt Ltd', st: '27', pan: 'AAGCB3390F', kind: 'bill', cat: 'Advertising agency', rate: 18, freq: 'm', amt: [380000, 610000], capture: 1, file: 0.55, late: 0.3, inv: 'BSM/{n4}/{fyShort}' },
+    { n: 'Kavya Staffing Services', st: '29', pan: 'AAKFK1209L', kind: 'bill', cat: 'Contract staffing', rate: 18, freq: 'm', amt: [160000, 195000], capture: 1, file: 0.8, late: 0.2, inv: 'KSS{n4}', mismatch: 0.25 },
+    { n: 'Ledgerline Legal LLP', st: '29', pan: 'AAMFL6604C', kind: 'bill', cat: 'Legal fees', rate: 18, freq: 'q', amt: [120000, 180000], capture: 1, file: 0.9, late: 0.2, inv: 'LL/{fy}/{n3}' },
+    { n: 'Swiftprint Packaging', st: '33', pan: 'AAQFS2287D', kind: 'bill', cat: 'Printing & packaging', rate: 18, freq: 'r', count: 7, amt: [40000, 140000], capture: 1, file: 0.9, late: 0.1, inv: 'SP-{n4}', badMaster: true },
+    { n: 'Northgate IT Hardware', st: '07', pan: 'AAHCN4471B', kind: 'bill', cat: 'Computer equipment', rate: 18, freq: 'q', amt: [600000, 920000], capture: 1, file: 0.95, late: 0.1, inv: 'NG/{fyShort}/{n4}' },
+    { n: 'Hearth Catering Co', st: '29', pan: 'AAJFH8830E', kind: 'bill', cat: 'Food & catering', rate: 5, freq: 'm', amt: [70000, 110000], capture: 1, file: 0.95, late: 0.1, inv: 'HC{n3}' },
+    { n: 'Formwise Software India', st: '29', pan: 'AABCF3318G', kind: 'card', cat: 'Software subscription', rate: 18, freq: 'm', amt: [38000, 38000], capture: 1, file: 0.99, late: 0, inv: 'FW-IN-{n6}' },
+    { n: 'Pulsemail India', st: '27', pan: 'AAFCP9025H', kind: 'card', cat: 'Software subscription', rate: 18, freq: 'm', amt: [22420, 22420], capture: 0, file: 0.99, late: 0, inv: 'PM{n6}' },
+    { n: 'Quickhire Jobs', st: '09', pan: 'AADCQ1176J', kind: 'card', cat: 'Recruitment ads', rate: 18, freq: 'm', amt: [45000, 60000], capture: 'fromMonth7', file: 0.97, late: 0.05, inv: 'QH/{n6}' },
+    { n: 'Adlane Ads India', st: '29', pan: 'AAECA5560K', kind: 'card', cat: 'Online advertising', rate: 18, freq: 'm', amt: [120000, 205000], capture: 1, file: 0.99, late: 0, inv: 'ADL-{fy}-{n5}' },
+    { n: 'Tripkart Travel', st: '07', pan: 'AACCT2209M', kind: 'card', cat: 'Travel - flights', rate: 5, freq: 'n', count: 46, amt: [5200, 19800], capture: 0.45, file: 0.98, late: 0.05, inv: 'TK{n7}' },
+    { n: 'Hotel Ember Pune', st: '27', pan: 'AAAFH4402N', kind: 'card', cat: 'Travel - hotel', rate: 18, freq: 'n', count: 9, amt: [9500, 26000], capture: 0.9, file: 0.95, late: 0.05, inv: 'HEP/{n4}', pos: true },
+    { n: 'Hotel Lumen Bengaluru', st: '29', pan: 'AABFH7731P', kind: 'card', cat: 'Travel - hotel', rate: 18, freq: 'n', count: 6, amt: [11000, 24000], capture: 0.9, file: 0.95, late: 0.05, inv: 'HLB{n4}' },
+    { n: 'CabGo Mobility', st: '29', pan: 'AAGCC6618R', kind: 'card', cat: 'Rent-a-cab', rate: 5, freq: 'n', count: 60, amt: [380, 1900], capture: 0.6, file: 0.99, late: 0, inv: 'CG{n8}' },
+    { n: 'Brewline Cafe', st: '29', pan: 'AAKFB0921S', kind: 'card', cat: 'Food - team meals', rate: 5, freq: 'n', count: 30, amt: [1800, 9500], capture: 0.3, file: 0.9, late: 0, inv: 'BC{n5}' },
+    { n: 'Fuelstop', st: '29', pan: 'AAACF1100T', kind: 'card', cat: 'Fuel', rate: 0, freq: 'n', count: 24, amt: [2500, 6000], capture: 0, file: 0, late: 0, inv: '' },
+    { n: 'Stackwise Inc (US)', st: null, kind: 'card', cat: 'Software subscription', rate: 18, freq: 'm', amt: [54000, 58000], foreign: 'USD', inv: 'SW-{n6}' },
+    { n: 'Figline Inc (US)', st: null, kind: 'card', cat: 'Software subscription', rate: 18, freq: 'm', amt: [17500, 18500], foreign: 'USD', inv: 'FG{n6}' },
+    { n: 'Office supplies (various)', st: '29', pan: 'AADFO3341U', kind: 'reimb', cat: 'Office supplies', rate: 18, freq: 'n', count: 40, amt: [600, 7800], capture: 0.15, file: 0.9, late: 0.1, inv: 'R{n5}' },
+    { n: 'Client dinners (various)', st: '29', pan: 'AAEFC2290V', kind: 'reimb', cat: 'Food - client meals', rate: 5, freq: 'n', count: 18, amt: [2400, 14000], capture: 0.2, file: 0.9, late: 0, inv: 'CD{n5}' }
+  ];
+  var EMP = ['Ananya R', 'Vikram S', 'Meera K', 'Rohan D', 'Ishita P', 'Karthik N', 'Farah A', 'Dev M'];
+
+  function pad(n, w) { return String(n).padStart(w, '0'); }
+  function d2(dt) { return dt.toISOString().slice(0, 10); }
+  function ddmmyyyy(dt) { return pad(dt.getUTCDate(), 2) + '-' + pad(dt.getUTCMonth() + 1, 2) + '-' + dt.getUTCFullYear(); }
+
+  function generate(seed) {
+    var r = rng(seed || 2611);
+    function between(a, b) { return Math.round(a + (b - a) * r()); }
+    function pick(a) { return a[Math.floor(r() * a.length)]; }
+    var ledger = [], b2b = [], truth = {}, seq = 0;
+    M.forEach(function (m, mi) {
+      m.gstin = m.st ? gstin(m.st, m.pan) : '';
+      var dates = [];
+      if (m.freq === 'm') for (var k = 0; k < 12; k++) dates.push(new Date(Date.UTC(2025, 3 + k, between(1, 8))));
+      else if (m.freq === 'q') for (var q = 0; q < 4; q++) dates.push(new Date(Date.UTC(2025, 3 + q * 3 + 1, between(5, 25))));
+      else for (var c = 0; c < m.count; c++) dates.push(new Date(Date.UTC(2025, 3, 1) + Math.floor(r() * 364) * 864e5));
+      dates.sort(function (a, b) { return a - b; });
+      dates.forEach(function (dt, k) {
+        seq++;
+        var gross = between(m.amt[0], m.amt[1]);
+        var monthIdx = (dt.getUTCFullYear() - 2025) * 12 + dt.getUTCMonth() - 3;
+        var captured = m.capture === 'fromMonth7' ? monthIdx >= 7 : r() < m.capture;
+        var fy = '2025-26', fyShort = '25-26';
+        var invNo = m.inv.replace('{fy}', fy).replace('{fyShort}', fyShort).replace('{n3}', pad(k + 11 + mi, 3)).replace('{n4}', pad(k + 101 + mi * 7, 4)).replace('{n5}', pad(seq * 37 % 99999, 5)).replace('{n6}', pad(seq * 7919 % 999999, 6)).replace('{n7}', pad(seq * 104729 % 9999999, 7)).replace('{n8}', pad(seq * 15485863 % 99999999, 8));
+        var masterGstin = m.badMaster ? m.gstin.slice(0, 14) + (m.gstin[14] === 'A' ? 'B' : 'A') : m.gstin;
+        var row = { txn_id: 'TXN' + pad(seq, 5), date: d2(dt), merchant: m.n, vendor_gstin: (m.foreign || !captured || m.rate === 0) ? '' : masterGstin,
+          invoice_no: m.inv ? invNo : '', amount_inr: gross, category: m.cat, source: m.kind === 'bill' ? 'Bill pay' : m.kind === 'card' ? 'Card' : 'Reimbursement',
+          currency: m.foreign || 'INR', employee: m.kind === 'bill' ? 'Finance' : pick(EMP), gst_rate: m.rate };
+        // Bill-pay rows that carry the wrong GSTIN in the vendor master still have the vendor's real GSTIN on the invoice (and in GSTR-2B).
+        ledger.push(row);
+        if (m.foreign || m.rate === 0 || !captured) return;
+        if (r() > m.file) return;
+        var late = r() < m.late;
+        var per = new Date(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth() + (late ? 1 : 0), 1));
+        var value = gross;
+        if (m.mismatch && r() < m.mismatch) value = Math.round(gross * (1 + (r() < 0.5 ? -1 : 1) * (0.04 + r() * 0.08)));
+        else if (r() < 0.15) value = gross + (r() < 0.5 ? -1 : 1); // paise/rupee rounding
+        var taxable = Math.round(value / (1 + m.rate / 100) * 100) / 100, tax = Math.round((value - taxable) * 100) / 100;
+        var inter = m.st !== COMPANY.state;
+        var inv2b = invNo;
+        if (r() < 0.25) inv2b = invNo.replace(/\//g, '-').replace(/-0+(\d)/g, '-$1');
+        var dt2b = r() < 0.1 ? new Date(dt.getTime() + 864e5) : dt;
+        var b = { 'GSTIN of supplier': m.gstin, 'Trade/Legal name': m.n.toUpperCase(), 'Invoice number': inv2b, 'Invoice type': 'Regular', 'Invoice Date': ddmmyyyy(dt2b), 'Invoice Value(₹)': value,
+          'Place of supply': m.pos ? 'Maharashtra' : 'Karnataka', 'Supply Attract Reverse Charge': 'No', 'Taxable Value (₹)': taxable,
+          'Integrated Tax(₹)': inter && !m.pos ? tax : 0, 'Central Tax(₹)': inter && !m.pos ? 0 : Math.round(tax / 2 * 100) / 100, 'State/UT Tax(₹)': inter && !m.pos ? 0 : Math.round(tax / 2 * 100) / 100, 'Cess(₹)': 0,
+          'GSTR-1/IFF/GSTR-5 Period': pad(per.getUTCMonth() + 1, 2) + per.getUTCFullYear(), 'GSTR-1/IFF/GSTR-5 Filing Date': ddmmyyyy(new Date(Date.UTC(per.getUTCFullYear(), per.getUTCMonth() + 1, 11))),
+          'ITC Availability': m.pos ? 'No' : 'Yes', 'Reason': m.pos ? 'POS and supplier state are same but recipient state is different' : '' };
+        truth[row.txn_id] = b2b.length;
+        b2b.push(b);
+      });
+    });
+    // Purchases on our GSTIN that never went through the spend platform: paid by bank transfer, or not ours at all.
+    var extra = [
+      { n: 'Greenleaf Office Furniture', st: '29', pan: 'AAGFG4419W', v: [186000, 92400, 58800], inv: 'GOF/25/' },
+      { n: 'Sundial Traders', st: '24', pan: 'ABCFS7703X', v: [412000], inv: 'ST-' }
+    ];
+    extra.forEach(function (e) {
+      var g = gstin(e.st, e.pan);
+      e.v.forEach(function (v, i) {
+        var dt = new Date(Date.UTC(2025, 5 + i * 3, 12 + i)), taxable = Math.round(v / 1.18 * 100) / 100, tax = Math.round((v - taxable) * 100) / 100, inter = e.st !== COMPANY.state;
+        b2b.push({ 'GSTIN of supplier': g, 'Trade/Legal name': e.n.toUpperCase(), 'Invoice number': e.inv + (210 + i), 'Invoice type': 'Regular', 'Invoice Date': ddmmyyyy(dt), 'Invoice Value(₹)': v,
+          'Place of supply': 'Karnataka', 'Supply Attract Reverse Charge': 'No', 'Taxable Value (₹)': taxable, 'Integrated Tax(₹)': inter ? tax : 0, 'Central Tax(₹)': inter ? 0 : tax / 2, 'State/UT Tax(₹)': inter ? 0 : tax / 2, 'Cess(₹)': 0,
+          'GSTR-1/IFF/GSTR-5 Period': pad(dt.getUTCMonth() + 1, 2) + dt.getUTCFullYear(), 'GSTR-1/IFF/GSTR-5 Filing Date': ddmmyyyy(new Date(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth() + 1, 11))), 'ITC Availability': 'Yes', 'Reason': '' });
+      });
+    });
+    ledger.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    return { company: COMPANY, ledger: ledger, b2b: b2b, truth: truth, merchants: M };
+  }
+
+  function toCSV(rows) {
+    var cols = Object.keys(rows[0]);
+    var esc = function (v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    return [cols.map(esc).join(',')].concat(rows.map(function (r) { return cols.map(function (c) { return esc(r[c]); }).join(','); })).join('\n');
+  }
+  return { generate: generate, toCSV: toCSV, COMPANY: COMPANY };
+})();
+
+
+// VG: GST input-credit reconciler for spend-platform exports vs GSTR-2B.
+// Pure functions, no DOM. Runs in the browser and in Node tests.
+var VG = (function () {
+  var CP = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  var STATES = { '01': 'Jammu & Kashmir', '02': 'Himachal Pradesh', '03': 'Punjab', '04': 'Chandigarh', '05': 'Uttarakhand', '06': 'Haryana', '07': 'Delhi', '08': 'Rajasthan', '09': 'Uttar Pradesh', '10': 'Bihar', '19': 'West Bengal', '20': 'Jharkhand', '21': 'Odisha', '22': 'Chhattisgarh', '23': 'Madhya Pradesh', '24': 'Gujarat', '27': 'Maharashtra', '29': 'Karnataka', '30': 'Goa', '32': 'Kerala', '33': 'Tamil Nadu', '36': 'Telangana', '37': 'Andhra Pradesh' };
+
+  // GSTIN check character: weights alternate 1,2 from the left; digits above 35 fold (quotient + remainder).
+  function checkChar(g14) {
+    var f = 1, s = 0;
+    for (var i = 0; i < 14; i++) {
+      var d = f * CP.indexOf(g14[i]);
+      f = f === 2 ? 1 : 2;
+      s += Math.floor(d / 36) + (d % 36);
+    }
+    return CP[(36 - (s % 36)) % 36];
+  }
+  function cleanGSTIN(g) { return String(g || '').toUpperCase().replace(/[^0-9A-Z]/g, ''); }
+  function gstinIssue(g) {
+    g = cleanGSTIN(g);
+    if (!g) return 'missing';
+    if (g.length !== 15) return 'length';
+    if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z]Z[0-9A-Z]$/.test(g)) return 'format';
+    if (!STATES[g.slice(0, 2)] && +g.slice(0, 2) > 38) return 'state';
+    if (checkChar(g.slice(0, 14)) !== g[14]) return 'checksum';
+    return null;
+  }
+  function validGSTIN(g) { return gstinIssue(g) === null; }
+
+  // Invoice numbers: case, separators and leading zeros differ between a vendor's PDF and its GSTR-1.
+  function normInv(s) {
+    return String(s || '').toUpperCase().replace(/[^0-9A-Z]/g, '').replace(/^0+(?=\d)/, '').replace(/(^|[A-Z])0+(?=\d)/g, '$1');
+  }
+  function parseDate(s) {
+    if (!s) return null;
+    s = String(s).trim();
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);
+    if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+    var MON = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
+    m = s.toUpperCase().match(/^(\d{1,2})[- ]([A-Z]{3})[- ](\d{4})$/);
+    if (m && MON[m[2]] !== undefined) return new Date(Date.UTC(+m[3], MON[m[2]], +m[1]));
+    return null;
+  }
+  function iso(d) { return d ? d.toISOString().slice(0, 10) : ''; }
+  function days(a, b) { return Math.round((b - a) / 864e5); }
+  function num(x) { if (x === null || x === undefined || x === '') return 0; var n = parseFloat(String(x).replace(/[₹,\s]/g, '')); return isNaN(n) ? 0 : n; }
+  function r2(x) { return Math.round(x * 100) / 100; }
+
+  // Financial year of a date (Indian FY Apr–Mar) and the Section 16(4) cut-off: 30 Nov after FY end.
+  function fyOf(d) { var y = d.getUTCFullYear(); return d.getUTCMonth() >= 3 ? y : y - 1; }
+  function fyLabel(y) { return y + '-' + String((y + 1) % 100).padStart(2, '0'); }
+  function cutoff(fyStart) { return new Date(Date.UTC(fyStart + 1, 10, 30)); }
+
+  // Section 17(5) categories most common in card and reimbursement spend. Keyword match on the GL category.
+  var BLOCKED = [
+    { key: 'food', rx: /food|meal|restaurant|cafe|catering|snack|team lunch|dinner/i, label: 'Food & beverages / catering, s.17(5)(b)' },
+    { key: 'cab', rx: /rent.?a.?cab|cab|taxi|car rental/i, label: 'Rent-a-cab, s.17(5)(b)' },
+    { key: 'club', rx: /club|gym|fitness|membership/i, label: 'Club / fitness membership, s.17(5)(b)' },
+    { key: 'health', rx: /health insurance|life insurance|medical|wellness/i, label: 'Health / life insurance or health services, s.17(5)(b)' },
+    { key: 'gift', rx: /gift|hamper|diwali/i, label: 'Gifts, s.17(5)(h)' },
+    { key: 'vehicle', rx: /motor vehicle|car purchase|vehicle repair/i, label: 'Motor vehicles, s.17(5)(a)/(ab)' }
+  ];
+  var OUTSIDE = /fuel|petrol|diesel|government fee|stamp duty|bank charge|interest|salary|payroll/i;
+
+  function blockedRule(cat) { for (var i = 0; i < BLOCKED.length; i++) if (BLOCKED[i].rx.test(cat || '')) return BLOCKED[i]; return null; }
+
+  var BUCKETS = {
+    claimable: { order: 1, label: 'Claimable now', tone: 'good', action: 'Accept in IMS and avail in GSTR-3B' },
+    masterFix: { order: 2, label: 'In GSTR-2B, vendor master GSTIN wrong', tone: 'warn', action: 'Correct the GSTIN in the vendor master, then accept and avail' },
+    mismatch: { order: 3, label: 'In GSTR-2B, value differs', tone: 'warn', action: 'Keep Pending in IMS; ask vendor to amend, or accept at the 2B value' },
+    notFiled: { order: 3, label: 'Vendor has not reported it', tone: 'chase', action: 'Chase vendor to report in GSTR-1 before the cut-off' },
+    badGstin: { order: 4, label: 'GSTIN on record is invalid', tone: 'chase', action: 'Fix vendor master; the credit cannot match until it is correct' },
+    noGstin: { order: 5, label: 'Billed without our GSTIN', tone: 'lost', action: 'Ask vendor to re-issue as B2B; fix the billing profile for future spend' },
+    posIneligible: { order: 6, label: 'In GSTR-2B, not available (place of supply)', tone: 'lost', action: 'Not recoverable here; review out-of-state stays' },
+    blocked: { order: 7, label: 'Blocked under s.17(5)', tone: 'neutral', action: 'Do not avail; report as ineligible' },
+    rcm: { order: 8, label: 'Import of services (reverse charge)', tone: 'neutral', action: 'Pay IGST under reverse charge, then avail the same amount' },
+    outside: { order: 9, label: 'Outside GST', tone: 'neutral', action: 'No credit exists' }
+  };
+
+  // Column aliases: spend-platform export and the GST portal's GSTR-2B Excel (B2B sheet).
+  var LEDGER_COLS = {
+    id: ['txn_id', 'transaction id', 'id', 'reference'], date: ['date', 'transaction date', 'txn_date', 'invoice date'],
+    merchant: ['merchant', 'vendor', 'payee', 'merchant name', 'vendor name'], gstin: ['vendor_gstin', 'gstin', 'supplier gstin', 'vendor gstin', 'merchant gstin'],
+    invoice: ['invoice_no', 'invoice number', 'invoice', 'bill number', 'inv no'], amount: ['amount_inr', 'amount', 'total', 'amount (inr)', 'billing amount'],
+    tax: ['gst_amount', 'tax', 'gst', 'tax amount'], category: ['category', 'gl', 'expense category', 'gl category', 'account'],
+    source: ['source', 'type', 'payment method', 'mode'], currency: ['currency', 'original currency'], employee: ['employee', 'spender', 'user', 'cardholder'],
+    rate: ['gst_rate', 'rate', 'gst rate']
+  };
+  var B2B_COLS = {
+    gstin: ['gstin of supplier', 'ctin', 'supplier gstin', 'gstin'], name: ['trade/legal name', 'trade name', 'legal name', 'supplier name', 'trdnm'],
+    invoice: ['invoice number', 'inum', 'invoice no'], date: ['invoice date', 'dt', 'invoice dt'], value: ['invoice value(₹)', 'invoice value', 'val', 'invoice value (₹)'],
+    taxable: ['taxable value (₹)', 'taxable value', 'txval'], igst: ['integrated tax(₹)', 'integrated tax (₹)', 'integrated tax', 'igst'],
+    cgst: ['central tax(₹)', 'central tax (₹)', 'central tax', 'cgst'], sgst: ['state/ut tax(₹)', 'state/ut tax (₹)', 'state/ut tax', 'sgst'], cess: ['cess(₹)', 'cess (₹)', 'cess'],
+    period: ['gstr-1/iff/gstr-5 period', 'gstr-1 period', 'supprd', 'period'], filed: ['gstr-1/iff/gstr-5 filing date', 'filing date', 'supfildt'],
+    itcAvail: ['itc availability', 'itcavl'], reason: ['reason', 'rsn'], rcm: ['supply attract reverse charge', 'reverse charge', 'rev']
+  };
+
+  function parseCSV(text) {
+    var rows = [], row = [], cell = '', q = false;
+    text = String(text || '').replace(/^﻿/, '');
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; continue; }
+      if (c === '"') q = true; else if (c === ',') { row.push(cell); cell = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); cell = ''; if (row.some(function (x) { return x !== ''; })) rows.push(row); row = []; }
+      else cell += c;
+    }
+    row.push(cell); if (row.some(function (x) { return x !== ''; })) rows.push(row);
+    return rows;
+  }
+  function mapColumns(header, spec) {
+    var h = header.map(function (x) { return String(x).trim().toLowerCase().replace(/\s+/g, ' '); }), map = {}, missing = [];
+    Object.keys(spec).forEach(function (k) {
+      var idx = -1;
+      for (var a = 0; a < spec[k].length && idx < 0; a++) idx = h.indexOf(spec[k][a]);
+      if (idx >= 0) map[k] = idx; else missing.push(k);
+    });
+    return { map: map, missing: missing };
+  }
+  function rowsToObjects(text, spec, required) {
+    var rows = parseCSV(text);
+    if (!rows.length) return { error: 'The file is empty.' };
+    // GSTR-2B Excel exports carry title rows above the header; find the first row that maps the required columns.
+    for (var r = 0; r < Math.min(rows.length, 8); r++) {
+      var m = mapColumns(rows[r], spec);
+      var miss = required.filter(function (k) { return m.missing.indexOf(k) >= 0; });
+      if (!miss.length) {
+        var out = rows.slice(r + 1).map(function (cells) { var o = {}; Object.keys(m.map).forEach(function (k) { o[k] = (cells[m.map[k]] || '').trim(); }); return o; });
+        return { rows: out, missingOptional: m.missing };
+      }
+    }
+    var m0 = mapColumns(rows[0], spec);
+    return { error: 'Could not find columns: ' + required.filter(function (k) { return m0.missing.indexOf(k) >= 0; }).join(', ') + '. Rename them or use the template.' };
+  }
+
+  // Core reconciliation. ledger: spend export rows; b2b: GSTR-2B B2B rows; opts: {companyGSTIN, asOf, tolerancePct, toleranceAbs, dateWindow}
+  function reconcile(ledgerIn, b2bIn, opts) {
+    opts = opts || {};
+    var asOf = opts.asOf ? parseDate(opts.asOf) : new Date();
+    var tolPct = opts.tolerancePct == null ? 0.01 : opts.tolerancePct, tolAbs = opts.toleranceAbs == null ? 10 : opts.toleranceAbs, win = opts.dateWindow == null ? 5 : opts.dateWindow;
+    var homeState = cleanGSTIN(opts.companyGSTIN).slice(0, 2);
+
+    var b2b = b2bIn.map(function (b, i) {
+      var tax = num(b.igst) + num(b.cgst) + num(b.sgst) + num(b.cess);
+      return { i: i, gstin: cleanGSTIN(b.gstin), name: b.name || '', invoice: b.invoice || '', ninv: normInv(b.invoice), date: parseDate(b.date), value: num(b.value), taxable: num(b.taxable), tax: r2(tax),
+        period: b.period || '', filed: b.filed || '', itcAvail: !/^n/i.test(String(b.itcAvail || 'Yes')), reason: b.reason || '', rcm: /^y/i.test(String(b.rcm || 'N')), used: false, matchedTo: null };
+    });
+    var byGstin = {};
+    b2b.forEach(function (b) { (byGstin[b.gstin] = byGstin[b.gstin] || []).push(b); });
+
+    var ledger = ledgerIn.map(function (l, i) {
+      var amt = num(l.amount), rate = l.rate !== undefined && l.rate !== '' ? num(l.rate) : 18;
+      return { i: i, id: l.id || ('row-' + (i + 1)), date: parseDate(l.date), merchant: (l.merchant || '').trim(), gstin: cleanGSTIN(l.gstin), invoice: l.invoice || '', ninv: normInv(l.invoice),
+        amount: amt, taxIn: num(l.tax), rate: rate, category: l.category || '', source: (l.source || '').toLowerCase(), currency: (l.currency || 'INR').toUpperCase(), employee: l.employee || '' };
+    });
+
+    var stats = { exact: 0, fuzzy: 0, cross: 0, ambiguous: 0 };
+
+    // Pass 1: exact GSTIN + normalised invoice number. Pass 2: same GSTIN, amount within tolerance, date within window, single best candidate.
+    ledger.forEach(function (l) {
+      if (!l.gstin || !byGstin[l.gstin] || !l.ninv) return;
+      var c = byGstin[l.gstin].filter(function (b) { return !b.used && b.ninv === l.ninv; });
+      if (c.length) { c[0].used = true; c[0].matchedTo = l.id; l.match = c[0]; l.matchType = 'exact'; stats.exact++; }
+    });
+    ledger.forEach(function (l) {
+      if (l.match || !l.gstin || !byGstin[l.gstin]) return;
+      var c = byGstin[l.gstin].filter(function (b) {
+        if (b.used || !b.date || !l.date) return false;
+        return Math.abs(b.value - l.amount) <= Math.max(tolAbs, tolPct * l.amount) && Math.abs(days(b.date, l.date)) <= win;
+      });
+      if (c.length === 1) { c[0].used = true; c[0].matchedTo = l.id; l.match = c[0]; l.matchType = 'fuzzy'; stats.fuzzy++; }
+      else if (c.length > 1) { l.ambiguous = c.length; stats.ambiguous++; }
+    });
+
+    // Pass 3: the vendor master GSTIN is wrong or missing a digit. Look for the same invoice number and value under any supplier GSTIN.
+    ledger.forEach(function (l) {
+      if (l.match || !l.ninv || !l.gstin || !gstinIssue(l.gstin) && byGstin[l.gstin]) return;
+      var c = b2b.filter(function (b) { return !b.used && b.ninv === l.ninv && Math.abs(b.value - l.amount) <= Math.max(tolAbs, tolPct * l.amount); });
+      if (c.length === 1) { c[0].used = true; c[0].matchedTo = l.id; l.match = c[0]; l.matchType = 'crossGstin'; stats.cross = (stats.cross || 0) + 1; }
+    });
+
+    ledger.forEach(function (l) {
+      var blk = blockedRule(l.category), foreign = l.currency !== 'INR' || /import|foreign|overseas/i.test(l.source + ' ' + l.category);
+      var estTax = r2(l.taxIn || (l.rate > 0 ? l.amount * l.rate / (100 + l.rate) : 0));
+      l.fy = l.date ? fyOf(l.date) : null;
+      l.cutoff = l.fy != null ? cutoff(l.fy) : null;
+      l.daysLeft = l.cutoff ? days(asOf, l.cutoff) : null;
+      if (OUTSIDE.test(l.category)) { l.bucket = 'outside'; l.itc = 0; }
+      else if (foreign) { l.bucket = 'rcm'; l.itc = r2(l.amount * 0.18); l.estimated = true; l.note = 'IGST at 18% on the INR value, paid in cash under reverse charge and then availed'; }
+      else if (l.match) {
+        l.itc = l.match.tax; l.vendorName = l.match.name;
+        if (blk) { l.bucket = 'blocked'; l.note = blk.label; }
+        else if (!l.match.itcAvail) { l.bucket = 'posIneligible'; l.note = l.match.reason || 'Marked not available in GSTR-2B'; }
+        else if (Math.abs(l.match.value - l.amount) > Math.max(tolAbs, tolPct * l.amount)) { l.bucket = 'mismatch'; l.note = 'Books ₹' + fmt(l.amount) + ' vs GSTR-2B ₹' + fmt(l.match.value); }
+        else if (l.matchType === 'crossGstin') { l.bucket = 'masterFix'; l.note = 'Filed under ' + l.match.gstin + '; your vendor master has ' + l.gstin; }
+        else l.bucket = 'claimable';
+      } else {
+        l.itc = estTax; l.estimated = true;
+        if (blk) { l.bucket = 'blocked'; l.note = blk.label; }
+        else if (!l.gstin) { l.bucket = 'noGstin'; l.note = 'No supplier GSTIN captured; invoice was likely issued as B2C'; }
+        else if (gstinIssue(l.gstin)) { l.bucket = 'badGstin'; l.note = 'GSTIN fails validation (' + gstinIssue(l.gstin) + ')'; }
+        else { l.bucket = 'notFiled'; l.note = l.ambiguous ? l.ambiguous + ' possible GSTR-2B rows; needs a person to pick' : 'Not in any GSTR-2B row for this supplier'; }
+      }
+      l.recoverableBy = (l.bucket === 'notFiled' || l.bucket === 'badGstin' || l.bucket === 'mismatch' || l.bucket === 'noGstin' || l.bucket === 'masterFix') && l.daysLeft != null && l.daysLeft >= 0;
+    });
+
+    // IMS action for every GSTR-2B row.
+    b2b.forEach(function (b) {
+      var l = b.matchedTo ? ledger.filter(function (x) { return x.id === b.matchedTo; })[0] : null;
+      if (!l) { b.ims = 'Pending'; b.imsWhy = 'No matching spend in the export. Find the owner; reject if it is not ours.'; b.bucket = 'unknown'; }
+      else if (l.bucket === 'mismatch') { b.ims = 'Pending'; b.imsWhy = 'Value differs from books; query vendor before accepting.'; b.bucket = 'mismatch'; }
+      else if (l.bucket === 'blocked') { b.ims = 'Accept'; b.imsWhy = 'Genuine purchase, but report as ineligible under s.17(5).'; b.bucket = 'blocked'; }
+      else { b.ims = 'Accept'; b.imsWhy = l.bucket === 'posIneligible' ? 'Genuine purchase; credit not available.' : l.bucket === 'masterFix' ? 'Matches books by invoice number and value; fix the vendor GSTIN in your master.' : 'Matches books.'; b.bucket = l.bucket; }
+    });
+
+    var buckets = {};
+    Object.keys(BUCKETS).forEach(function (k) { buckets[k] = { key: k, count: 0, itc: 0, spend: 0 }; });
+    ledger.forEach(function (l) { var b = buckets[l.bucket]; b.count++; b.itc = r2(b.itc + l.itc); b.spend = r2(b.spend + l.amount); });
+
+    // Vendor chase list: suppliers with credit still recoverable by their action.
+    var vend = {};
+    ledger.forEach(function (l) {
+      if (['notFiled', 'badGstin', 'mismatch'].indexOf(l.bucket) < 0) return;
+      var k = l.gstin || l.merchant;
+      var v = vend[k] = vend[k] || { gstin: l.gstin, merchant: l.merchant, invoices: [], itc: 0, kinds: {} };
+      v.invoices.push(l); v.itc = r2(v.itc + l.itc); v.kinds[l.bucket] = (v.kinds[l.bucket] || 0) + 1;
+    });
+    var chase = Object.keys(vend).map(function (k) { var v = vend[k]; v.oldest = v.invoices.reduce(function (a, l) { return !a || l.date < a ? l.date : a; }, null); v.minDays = Math.min.apply(null, v.invoices.map(function (l) { return l.daysLeft == null ? 9999 : l.daysLeft; })); return v; })
+      .sort(function (a, b) { return (a.minDays < 60 ? 0 : 1) - (b.minDays < 60 ? 0 : 1) || b.itc - a.itc; });
+
+    // Merchant fix list: where credit is lost because our GSTIN never reached the invoice. One fix per merchant, not per invoice.
+    var merch = {};
+    ledger.forEach(function (l) {
+      if (['claimable', 'masterFix', 'mismatch', 'notFiled', 'badGstin', 'noGstin', 'posIneligible'].indexOf(l.bucket) < 0) return;
+      var k = l.merchant.toLowerCase();
+      var m = merch[k] = merch[k] || { merchant: l.merchant, source: l.source, category: l.category, total: 0, missing: 0, itcLost: 0, spend: 0 };
+      m.total++; m.spend = r2(m.spend + l.amount);
+      if (l.bucket === 'noGstin') { m.missing++; m.itcLost = r2(m.itcLost + l.itc); }
+    });
+    var fixes = Object.keys(merch).map(function (k) { var m = merch[k]; m.captureRate = m.total ? 1 - m.missing / m.total : 0; m.fix = fixFor(m); return m; })
+      .filter(function (m) { return m.missing > 0; }).sort(function (a, b) { return b.itcLost - a.itcLost; });
+
+    var total = ledger.reduce(function (s, l) { return s + l.itc; }, 0);
+    var fys = {};
+    ledger.forEach(function (l) { if (l.fy != null) fys[l.fy] = true; });
+    var openFy = Object.keys(fys).map(Number).filter(function (y) { return days(asOf, cutoff(y)) >= 0; }).sort();
+    var deadline = openFy.length ? { fy: fyLabel(openFy[0]), date: iso(cutoff(openFy[0])), daysLeft: days(asOf, cutoff(openFy[0])) } : null;
+
+    return { ledger: ledger, b2b: b2b, buckets: buckets, chase: chase, fixes: fixes, stats: stats, totalItc: r2(total), deadline: deadline, asOf: iso(asOf),
+      unmatched2b: b2b.filter(function (b) { return !b.matchedTo; }), homeState: homeState };
+  }
+
+  function fixFor(m) {
+    var s = (m.source || '') + ' ' + (m.category || '');
+    if (/reimburse/i.test(s)) return 'Require a GST invoice in the company name for claims above a threshold; prompt for it at receipt upload';
+    if (/travel|flight|hotel|ota/i.test(s)) return 'Make the company GSTIN mandatory in the booking profile, so every booking carries it';
+    if (/card/i.test(s)) return 'Add the company GSTIN to this merchant’s billing profile once; every future invoice becomes B2B';
+    return 'Share the company GSTIN with the vendor and ask for B2B invoicing';
+  }
+
+  function fmt(n) { n = Math.round(n); var s = String(Math.abs(n)), last3 = s.slice(-3), rest = s.slice(0, -3); if (rest) last3 = ',' + last3; return (n < 0 ? '-' : '') + rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + last3; }
+  function lakh(n) { return n >= 1e7 ? '₹' + (n / 1e7).toFixed(2) + ' Cr' : n >= 1e5 ? '₹' + (n / 1e5).toFixed(1) + ' L' : '₹' + fmt(n); }
+
+  function chaseMessage(v, company, deadline) {
+    var lines = v.invoices.slice().sort(function (a, b) { return a.date - b.date; }).map(function (l) { return '• ' + (l.invoice || '(no number)') + ' dated ' + iso(l.date) + ', ₹' + fmt(l.amount) + (l.bucket === 'mismatch' ? ' (value in your return differs: ' + l.note + ')' : ''); });
+    var ask = v.kinds.badGstin ? 'The GSTIN we have for you (' + v.gstin + ') fails validation. Could you confirm your correct GSTIN, and that these invoices were reported against our GSTIN ' + company + '?' :
+      'These invoices are not showing in our GSTR-2B. Could you report them in your next GSTR-1 against our GSTIN ' + company + (v.kinds.mismatch ? ', and correct the values flagged below' : '') + '?';
+    return 'Hello ' + (v.merchant || 'team') + ',\n\n' + ask + '\n\n' + lines.join('\n') + '\n\n' + (deadline ? 'We can only claim credit for FY ' + deadline.fy + ' invoices until ' + deadline.date + ', so it would help to have this in your October return.' : '') + '\n\nThank you,\nAccounts team';
+  }
+
+  function toCSV(rows, cols) {
+    var esc = function (v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    return [cols.map(function (c) { return esc(c[0]); }).join(',')].concat(rows.map(function (r) { return cols.map(function (c) { return esc(c[1](r)); }).join(','); })).join('\n');
+  }
+
+  return { checkChar: checkChar, cleanGSTIN: cleanGSTIN, gstinIssue: gstinIssue, validGSTIN: validGSTIN, normInv: normInv, parseDate: parseDate, iso: iso, fyOf: fyOf, fyLabel: fyLabel, cutoff: cutoff,
+    blockedRule: blockedRule, BUCKETS: BUCKETS, LEDGER_COLS: LEDGER_COLS, B2B_COLS: B2B_COLS, parseCSV: parseCSV, rowsToObjects: rowsToObjects, reconcile: reconcile, chaseMessage: chaseMessage, toCSV: toCSV, fmt: fmt, lakh: lakh, STATES: STATES };
+})();
+
+
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var L = VG.lakh, F = VG.fmt;
+  var TONE = { good: 'var(--good)', warn: 'var(--rec)', chase: 'var(--rec)', lost: 'var(--lost)', neutral: 'var(--neutral)' };
+  var state = { ledgerText: null, b2bText: null, R: null, tab: 'chase', sample: true };
+  var sample = VD.generate(2611);
+
+  function download(name, text) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + text], { type: 'text/csv' }));
+    a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function setTemplates() {
+    $('tplL').href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(VD.toCSV(sample.ledger.slice(0, 5)));
+    $('tplB').href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(VD.toCSV(sample.b2b.slice(0, 5)));
+  }
+
+  function run() {
+    var lt = state.ledgerText, bt = state.b2bText;
+    var l = VG.rowsToObjects(lt, VG.LEDGER_COLS, ['date', 'merchant', 'amount']);
+    var b = VG.rowsToObjects(bt, VG.B2B_COLS, ['gstin', 'invoice', 'value']);
+    if (l.error) { $('status').textContent = 'Spend export: ' + l.error; return; }
+    if (b.error) { $('status').textContent = 'GSTR-2B: ' + b.error; return; }
+    var g = $('gstin').value.trim();
+    var gi = VG.gstinIssue(g);
+    var R = VG.reconcile(l.rows, b.rows, { companyGSTIN: g, asOf: $('asof').value });
+    state.R = R;
+    var warn = gi ? ' Company GSTIN looks wrong (' + gi + ').' : '';
+    var noTax = l.missingOptional.indexOf('tax') >= 0 ? ' No tax column in the spend export, so unmatched rows use the GST rate column or 18%.' : '';
+    $('status').textContent = (state.sample ? 'Sample company: ' : 'Your files: ') + R.ledger.length + ' spend rows, ' + R.b2b.length + ' GSTR-2B rows. Matched ' + R.stats.exact + ' on invoice number, ' + R.stats.fuzzy + ' on value and date, ' + R.stats.cross + ' across a wrong GSTIN' + (R.stats.ambiguous ? '; ' + R.stats.ambiguous + ' need a person' : '') + '.' + warn + noTax;
+    render(R);
+  }
+
+  function recov(R) { return R.buckets.notFiled.itc + R.buckets.mismatch.itc + R.buckets.masterFix.itc + R.buckets.badGstin.itc; }
+
+  function render(R) {
+    var spend = R.ledger.reduce(function (s, l) { return s + l.amount; }, 0), rec = recov(R);
+    var dl = R.deadline;
+    $('daysLeft').textContent = dl ? dl.daysLeft : '0';
+    $('kpis').innerHTML = [
+      ['Spend checked', L(spend), R.ledger.length + ' card, bill and claim rows'],
+      ['Input credit on it', L(R.totalItc), 'before any condition is applied'],
+      ['Claim now', L(R.buckets.claimable.itc), R.buckets.claimable.count + ' invoices in GSTR-2B'],
+      ['Recoverable by ' + (dl ? dl.date.slice(8) + ' Nov' : 'the cut-off'), L(rec), R.chase.length + ' vendors to chase or fix'],
+      ['Lost: no GSTIN on invoice', L(R.buckets.noGstin.itc), R.buckets.noGstin.count + ' invoices, ' + R.fixes.length + ' merchants']
+    ].map(function (k) { return '<div class="kpi"><span class="k">' + k[0] + '</span><span class="v">' + k[1] + '</span><span class="s">' + esc(k[2]) + '</span></div>'; }).join('');
+
+    var keys = Object.keys(VG.BUCKETS).filter(function (k) { return R.buckets[k].count; }).sort(function (a, b) { return R.buckets[b].itc - R.buckets[a].itc; });
+    var max = Math.max.apply(null, keys.map(function (k) { return R.buckets[k].itc; })) || 1;
+    var color = function (k) { return k === 'claimable' ? 'var(--good)' : ['notFiled', 'mismatch', 'masterFix', 'badGstin'].indexOf(k) >= 0 ? 'var(--rec)' : ['noGstin', 'posIneligible'].indexOf(k) >= 0 ? 'var(--lost)' : 'var(--neutral)'; };
+    $('bars').innerHTML = keys.map(function (k) {
+      var b = R.buckets[k], B = VG.BUCKETS[k];
+      return '<div class="bar"><div class="lab"><span>' + esc(B.label) + '</span><span>' + b.count + ' rows</span></div><span class="val">' + L(b.itc) + '</span><div class="track"><div class="fill" style="width:' + Math.max(0.6, b.itc / max * 100) + '%;background:' + color(k) + '"></div></div></div>';
+    }).join('');
+
+    exec(R, spend, rec);
+    findings(R, rec);
+    tabs();
+  }
+
+  function exec(R, spend, rec) {
+    var top2 = R.chase.slice(0, 2), top2v = top2.reduce(function (s, v) { return s + v.itc; }, 0);
+    var pm = R.fixes.filter(function (f) { return f.captureRate === 0; })[0];
+    $('exec').innerHTML = [
+      '<strong>The problem.</strong> To claim GST input credit, the invoice must carry the company’s GSTIN and the supplier must report it, so it shows in GSTR-2B. A spend platform records the payment, not whether either condition held. For FY 2025-26 the claim window shuts on 30 November 2026.',
+      '<strong>What I built.</strong> A working check, below: a Volopay-style spend export and the GSTR-2B go in; credit by next action, a vendor chase list with ready emails, a merchant fix list and an IMS action for every supplier invoice come out.',
+      '<strong>On a fictional company</strong> with ' + L(spend) + ' of annual spend: ' + L(R.totalItc) + ' of input credit, ' + L(R.buckets.claimable.itc) + ' claimable today, and <strong>' + L(rec) + ' still recoverable if ' + R.chase.length + ' vendors act in the next ' + (R.deadline ? R.deadline.daysLeft : 0) + ' days</strong>. Two vendors hold ' + L(top2v) + ' of it.',
+      '<strong>The bigger fix is upstream.</strong> ' + L(R.buckets.noGstin.itc) + ' was lost because our GSTIN never reached the invoice' + (pm ? ', for example every one of ' + pm.total + ' ' + esc(pm.merchant) + ' invoices: one billing-profile setting would have saved it' : '') + '. Volopay sits at the moment of purchase, so it can prevent this; an accounting tool can only report it.',
+      '<strong>My recommendation.</strong> Run this as a customer-success check for five India customers before 30 November, count the rupees that come back, and only then build GSTIN capture into card issue and receipt scan.'
+    ].map(function (x) { return '<li>' + x + '</li>'; }).join('');
+  }
+
+  function findings(R, rec) {
+    var c = R.chase, out = [];
+    if (c[0]) out.push('<li><strong>' + esc(c[0].merchant) + '</strong> has not reported ' + c[0].invoices.length + ' invoices worth ' + L(c[0].invoices.reduce(function (s, l) { return s + l.amount; }, 0)) + ', carrying ' + L(c[0].itc) + ' of credit. One email, sent this week, is the single biggest action on the page.</li>');
+    var mf = R.ledger.filter(function (l) { return l.bucket === 'masterFix'; });
+    if (mf.length) out.push('<li><strong>' + esc(mf[0].merchant) + '</strong>: all ' + mf.length + ' invoices are in GSTR-2B, but the GSTIN in the vendor master has one wrong character, so a GSTIN-first match misses them. Matching on invoice number and value across GSTINs finds them; fixing one field recovers ' + L(mf.reduce(function (s, l) { return s + l.itc; }, 0)) + '.</li>');
+    var q = R.fixes.filter(function (f) { return f.merchant === 'Quickhire Jobs'; })[0];
+    if (q) out.push('<li><strong>Proof the merchant fix works:</strong> Quickhire Jobs billed as B2C for ' + q.missing + ' months, then the GSTIN was added to the billing profile and every invoice after that matched. Those ' + q.missing + ' months cost ' + L(q.itcLost) + '.</li>');
+    var r = R.ledger.filter(function (l) { return l.bucket === 'noGstin' && l.source === 'reimbursement'; });
+    if (r.length) out.push('<li><strong>Employee claims are the weakest link:</strong> ' + r.length + ' of ' + R.ledger.filter(function (l) { return l.source === 'reimbursement' && !VG.blockedRule(l.category); }).length + ' claimable employee bills had no company GSTIN on them. Volopay’s receipt scan already reads these bills, so checking for our GSTIN at submission is a small step.</li>');
+    var u = R.unmatched2b;
+    if (u.length) out.push('<li><strong>' + u.length + ' supplier invoices on our GSTIN have no matching spend</strong> (' + L(u.reduce(function (s, b) { return s + b.tax; }, 0)) + ' of tax). They may have been paid outside Volopay, or may not be ours at all. They should stay Pending in IMS until someone owns them, not be accepted by default.</li>');
+    var bl = R.buckets.blocked;
+    out.push('<li><strong>' + bl.count + ' rows (' + L(bl.itc) + ') are food and cabs</strong>, blocked by s.17(5). The check marks them as not claimable even when the supplier did report them, which keeps a well-meaning finance team from claiming credit it must later reverse with interest.</li>');
+    $('findings').innerHTML = out.join('');
+    if (c[0] && c[1]) $('findTitle').textContent = 'Most of the recoverable money sits with ' + (c[0].itc + c[1].itc > rec * 0.5 ? 'two vendors' : 'a few vendors');
+  }
+
+  var TABS = [['chase', 'Vendors to chase'], ['fixes', 'Merchants to fix'], ['ims', 'IMS actions'], ['rows', 'All rows']];
+  function tabs() {
+    $('tabs').innerHTML = TABS.map(function (t) { return '<button data-t="' + t[0] + '" aria-pressed="' + (state.tab === t[0]) + '">' + t[1] + '</button>'; }).join('');
+    Array.prototype.forEach.call($('tabs').querySelectorAll('button'), function (b) { b.onclick = function () { state.tab = b.getAttribute('data-t'); tabs(); }; });
+    var R = state.R, p = $('panel'), g = $('gstin').value.trim();
+    if (state.tab === 'chase') {
+      if (!R.chase.length) { p.innerHTML = '<p class="note">No vendor action needed.</p>'; return; }
+      p.innerHTML = '<p class="by" style="margin-bottom:10px">Sorted by credit, with anything inside 60 days of the cut-off first. Open one to read and copy the email.</p><div class="list">' + R.chase.map(function (v, i) {
+        var kinds = Object.keys(v.kinds).map(function (k) { return '<span class="pill t-' + VG.BUCKETS[k].tone + '">' + v.kinds[k] + ' · ' + esc(VG.BUCKETS[k].label) + '</span>'; }).join(' ');
+        return '<details class="msg"' + (i === 0 ? ' open' : '') + '><summary><span><strong>' + esc(v.merchant) + '</strong> <span class="mono">' + esc(v.gstin) + '</span><br>' + kinds + '</span><span>' + L(v.itc) + ' · ' + v.invoices.length + ' invoice' + (v.invoices.length > 1 ? 's' : '') + '</span></summary><pre>' + esc(VG.chaseMessage(v, g, R.deadline)) + '</pre><div class="acts"><button data-copy="' + i + '">Copy email</button></div></details>';
+      }).join('') + '</div>';
+      Array.prototype.forEach.call(p.querySelectorAll('[data-copy]'), function (b) { b.onclick = function () { var v = R.chase[+b.getAttribute('data-copy')]; var t = VG.chaseMessage(v, g, R.deadline); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { b.textContent = 'Copied'; }, function () { b.textContent = 'Select the text above to copy'; }); }; });
+    } else if (state.tab === 'fixes') {
+      p.innerHTML = '<p class="by" style="margin-bottom:10px">Merchants that billed us without our GSTIN. One change per merchant stops the loss for every future invoice.</p><div class="tablewrap"><table><tr><th>Merchant</th><th>Paid by</th><th>Invoices with our GSTIN</th><th class="num">Credit lost</th><th>The fix</th></tr>' + R.fixes.map(function (f) {
+        return '<tr><td>' + esc(f.merchant) + '</td><td>' + esc(f.source) + '</td><td>' + (f.total - f.missing) + ' of ' + f.total + ' (' + Math.round(f.captureRate * 100) + '%)</td><td class="num">' + L(f.itcLost) + '</td><td>' + esc(f.fix) + '</td></tr>';
+      }).join('') + '</table></div>';
+    } else if (state.tab === 'ims') {
+      var rows = R.b2b.slice().sort(function (a, b) { return (a.ims === 'Pending' ? 0 : 1) - (b.ims === 'Pending' ? 0 : 1) || b.tax - a.tax; });
+      var pend = rows.filter(function (b) { return b.ims === 'Pending'; }).length;
+      p.innerHTML = '<p class="by" style="margin-bottom:10px">' + pend + ' of ' + rows.length + ' supplier invoices should stay Pending; the rest can be accepted. Pending first.</p><div class="tablewrap"><table><tr><th>Supplier</th><th>Invoice</th><th class="num">Tax</th><th>IMS</th><th>Why</th></tr>' + rows.slice(0, 60).map(function (b) {
+        return '<tr><td>' + esc(b.name) + '<br><span class="mono">' + esc(b.gstin) + '</span></td><td class="mono">' + esc(b.invoice) + '<br>' + VG.iso(b.date) + '</td><td class="num">₹' + F(b.tax) + '</td><td><span class="pill ' + (b.ims === 'Pending' ? 't-warn' : 't-good') + '">' + b.ims + '</span></td><td>' + esc(b.imsWhy) + '</td></tr>';
+      }).join('') + '</table></div>' + (rows.length > 60 ? '<p class="by">Showing 60 of ' + rows.length + '. The CSV has all of them.</p>' : '');
+    } else {
+      var ord = R.ledger.slice().sort(function (a, b) { return VG.BUCKETS[a.bucket].order - VG.BUCKETS[b.bucket].order || b.itc - a.itc; });
+      p.innerHTML = '<div class="tablewrap"><table><tr><th>Date</th><th>Merchant</th><th>Paid by</th><th class="num">Amount</th><th class="num">Credit</th><th>Status</th><th>Why</th></tr>' + ord.slice(0, 80).map(function (l) {
+        var B = VG.BUCKETS[l.bucket];
+        return '<tr><td class="mono">' + VG.iso(l.date) + '</td><td>' + esc(l.merchant) + '<br><span class="mono">' + esc(l.invoice) + '</span></td><td>' + esc(l.source) + '</td><td class="num">₹' + F(l.amount) + '</td><td class="num">₹' + F(l.itc) + (l.estimated && l.itc ? '*' : '') + '</td><td><span class="pill t-' + B.tone + '">' + esc(B.label) + '</span></td><td>' + esc(l.note || (l.matchType ? 'Matched on ' + (l.matchType === 'exact' ? 'invoice number' : l.matchType === 'fuzzy' ? 'value and date' : 'invoice number across GSTINs') : '')) + '</td></tr>';
+      }).join('') + '</table></div><p class="by">* estimated from the GST rate on the row. Showing 80 of ' + ord.length + ', most important first; the CSV has all of them.</p>';
+    }
+  }
+
+  $('dlRows').onclick = function () { var R = state.R; download('gst_credit_check_rows.csv', VG.toCSV(R.ledger, [['txn_id', function (l) { return l.id; }], ['date', function (l) { return VG.iso(l.date); }], ['merchant', function (l) { return l.merchant; }], ['source', function (l) { return l.source; }], ['vendor_gstin', function (l) { return l.gstin; }], ['invoice_no', function (l) { return l.invoice; }], ['amount_inr', function (l) { return l.amount; }], ['credit_inr', function (l) { return l.itc; }], ['credit_estimated', function (l) { return l.estimated ? 'yes' : 'no'; }], ['status', function (l) { return VG.BUCKETS[l.bucket].label; }], ['next_action', function (l) { return VG.BUCKETS[l.bucket].action; }], ['why', function (l) { return l.note || ''; }], ['matched_on', function (l) { return l.matchType || ''; }]])); };
+  $('dlChase').onclick = function () { var R = state.R, rows = []; R.chase.forEach(function (v) { v.invoices.forEach(function (l) { rows.push({ v: v, l: l }); }); }); download('vendor_chase_list.csv', VG.toCSV(rows, [['vendor', function (x) { return x.v.merchant; }], ['vendor_gstin', function (x) { return x.v.gstin; }], ['invoice_no', function (x) { return x.l.invoice; }], ['date', function (x) { return VG.iso(x.l.date); }], ['amount_inr', function (x) { return x.l.amount; }], ['credit_inr', function (x) { return x.l.itc; }], ['issue', function (x) { return VG.BUCKETS[x.l.bucket].label; }], ['days_to_cutoff', function (x) { return x.l.daysLeft; }]])); };
+  $('dlIms').onclick = function () { var R = state.R; download('ims_actions.csv', VG.toCSV(R.b2b, [['supplier_gstin', function (b) { return b.gstin; }], ['supplier', function (b) { return b.name; }], ['invoice_no', function (b) { return b.invoice; }], ['invoice_date', function (b) { return VG.iso(b.date); }], ['invoice_value', function (b) { return b.value; }], ['tax', function (b) { return b.tax; }], ['ims_action', function (b) { return b.ims; }], ['why', function (b) { return b.imsWhy; }]])); };
+
+  function readFile(input, key) {
+    input.onchange = function () {
+      var f = input.files[0]; if (!f) return;
+      f.text().then(function (t) { state[key] = t; state.sample = false; if (state.ledgerText && state.b2bText) run(); else $('status').textContent = 'Loaded ' + f.name + '. Now add the other file.'; });
+    };
+  }
+  readFile($('fLedger'), 'ledgerText'); readFile($('fB2b'), 'b2bText');
+  $('loadSample').onclick = function () { state.ledgerText = VD.toCSV(sample.ledger); state.b2bText = VD.toCSV(sample.b2b); state.sample = true; $('gstin').value = sample.company.gstin; $('asof').value = '2026-11-02'; run(); };
+  $('run').onclick = run;
+  setTemplates();
+  $('loadSample').onclick();
+})();
+
+</script>
+
+</body></html>
