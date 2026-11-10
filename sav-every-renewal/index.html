@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Finds every subscription in linked bank accounts, prices moving each one to the Sav card on its published rules, and keeps renewals from failing on a prepaid balance. Independent work on synthetic data.">
+</head><body>
+<title>Every Renewal, On Sav</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* One 860px column: a memo to a founder with a working tool in the middle. */
+:root{
+  --paper:#F6F5F1; --panel:#FFFFFF; --ink:#15171B; --muted:#5C6068; --rule:#E0DED6; --soft:#EFEDE7;
+  --rec:#2a78d6; --lost:#eb6834; --neutral:#9A9C95; --good:#1F7A4D; --good-soft:#E3F1E8; --warn-soft:#FBEEE2; --chase-soft:#E5EEFA;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"Public Sans","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023;
+  --rec:#3987e5; --lost:#d95926; --neutral:#6E706B; --good:#6CCB97; --good-soft:#15291F; --warn-soft:#33241A; --chase-soft:#17243A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023;
+  --rec:#3987e5; --lost:#d95926; --neutral:#6E706B; --good:#6CCB97; --good-soft:#15291F; --warn-soft:#33241A; --chase-soft:#17243A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;margin:0;padding-inline:16px;padding-block:28px 72px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2{font-family:var(--f-display);line-height:1.06;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.6rem,9vw,4.6rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.45rem,4.4vw,2rem);font-weight:600}
+h3{font-size:1.02rem;margin:0}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow,.k,.sec{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec{color:var(--rec)}
+.dek{font-size:1.14rem;max-width:68ch}
+.by{font-size:.9rem;color:var(--muted)}
+a{color:var(--rec)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:6px}
+.note strong{color:var(--ink)}
+.exec{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--rec);border-radius:6px;padding:18px 20px}
+.exec ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:9px}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.clock{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.clock b{font-family:var(--f-display);font-size:3rem;line-height:1;color:var(--lost)}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+input[type=text],input[type=date],input[type=number],select{font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);color:var(--ink);min-width:0}
+button,.btn{font:inherit;font-size:.86rem;font-weight:600;padding:8px 12px;border-radius:4px;border:1px solid var(--rule);background:var(--soft);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+button.primary{background:var(--rec);border-color:var(--rec);color:#fff}
+button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.file{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+.file input{font-size:.8rem;max-width:100%}
+.status{font-size:.86rem;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi .v{font-family:var(--f-display);font-size:1.75rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:4px 12px;align-items:center;font-size:.88rem}
+.bar .lab{display:flex;justify-content:space-between;gap:10px}
+.bar .lab span:last-child{color:var(--muted);white-space:nowrap}
+.bar .track{grid-column:1/2;height:10px;background:var(--soft);border-radius:2px;overflow:hidden}
+.bar .fill{height:100%;border-radius:2px}
+.bar .val{grid-column:2;grid-row:1/3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+#panel table{min-width:680px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--soft);white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.t-good{background:var(--good-soft);color:var(--good)}
+.t-warn{background:var(--warn-soft);color:var(--lost)}
+.t-chase{background:var(--chase-soft);color:var(--rec)}
+.t-lost{background:var(--warn-soft);color:var(--lost)}
+.t-neutral{background:var(--soft);color:var(--muted)}
+.mono{font-family:var(--f-mono);font-size:.8rem}
+details.msg{border:1px solid var(--rule);border-radius:6px;background:var(--paper)}
+details.msg summary{cursor:pointer;padding:10px 12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+details.msg summary span:last-child{color:var(--muted);font-size:.86rem}
+details.msg pre{margin:0;padding:12px;white-space:pre-wrap;font-family:var(--f-mono);font-size:.78rem;border-top:1px solid var(--rule)}
+details.msg .acts{padding:0 12px 12px;display:flex;gap:8px}
+.list{display:flex;flex-direction:column;gap:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.card h3{font-size:.98rem}
+.card p,.card li{font-size:.92rem;color:var(--muted)}
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px}
+.steps li::before{content:counter(s);font-family:var(--f-mono);font-size:.8rem;width:26px;height:26px;border-radius:50%;background:var(--soft);display:grid;place-items:center}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.84rem}
+.flow span{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:6px 9px}
+.flow em{font-style:normal;color:var(--muted)}
+footer{font-size:.84rem;color:var(--muted);display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--rule);padding-top:18px}
+.controls input[type=number]{width:120px}
+#everyday{width:160px}
+.kpis{grid-template-columns:repeat(3,1fr)}
+td .pill{white-space:normal}
+ul.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:.84rem}
+ul.tl li{padding-left:12px;border-left:3px solid var(--rule);color:var(--muted)}
+ul.tl li.e-decline{border-color:var(--lost);color:var(--ink)}
+ul.tl li.e-topup{border-color:var(--rec)}
+ul.tl li.e-ok{border-color:var(--good)}
+.rules td:first-child{color:var(--muted)}
+@media (max-width:700px){.kpis{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.clock b{font-size:2.4rem}}
+</style>
+
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:16px">
+  <p class="eyebrow">For Sav · cards and subscriptions · UAE · independent work on synthetic data</p>
+  <h1>Every renewal, on the Sav card</h1>
+  <p class="dek">Subscriptions are the spend a card keeps month after month, and MyMoney already sees them in people’s linked bank accounts. But on a prepaid card with an AED 500 monthly gate and an AED 50 cap, “move your subscriptions for 5% cashback” is the wrong pitch. And moving them without changing how people top up makes renewals fail. I built the three pieces that fix this: a detector, a move plan priced on the card’s published rules, and a renewal guard. I’d ship them as one feature.</p>
+  <p class="by">Aditya Mathur · <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a> · built with Claude Code; every number in the summary and the tool is computed live from the data below</p>
+</header>
+
+<section>
+  <div class="exec">
+    <p class="k" style="margin-bottom:10px">The short version, for the sample person</p>
+    <ol id="exec"></ol>
+  </div>
+</section>
+
+<section>
+  <p class="sec">1 · The problem</p>
+  <h2>A good idea that the card’s own rules make easy to get wrong</h2>
+  <p>Sav earns from its card through interchange and from Sav Pro subscriptions. A card that holds someone’s recurring merchants gets used every month and topped up on payday. A card that doesn’t is one people load once and forget. Three things make this harder on the Sav card than it looks:</p>
+  <div class="two">
+    <div class="card"><h3>1 · The gate and the cap decide the value</h3><p>Cashback starts only after AED 500 of eligible spend in a month, and stops at AED 50 on Standard. Subscriptions alone rarely clear the gate. For someone who already spends a lot on the card, the cap is used up before the subscriptions arrive. The honest value of a move is different for every person, so the product has to calculate it, not advertise it.</p></div>
+    <div class="card"><h3>2 · Prepaid balances make renewals fail</h3><p>A credit card always has room for the AED 56 Netflix charge. A prepaid card has whatever was topped up. Move AED 500 of renewals onto a card that gets AED 400 every payday and some will decline. A failed renewal is silent: the person finds out when the show stops, and blames the card.</p></div>
+    <div class="card"><h3>3 · Bank data is messy</h3><p>The same merchant shows up as <span class="mono">NETFLIX.COM 8665797172 NL</span> one month and <span class="mono">NETFLIX.COM AMSTERDAM</span> the next. Fuel at AED 100 every week looks like a subscription; a Careem ride is not Careem Plus. Rent cheques, DEWA bills and your own top-ups repeat too. A subscription list with one wrong row stops being trusted.</p></div>
+    <div class="card"><h3>4 · 180 days of history hides annual plans</h3><p>MyMoney shows up to 180 days of transactions. An annual plan shows up once, or not at all, so it can’t be predicted from the data. The product should list one-off charges from known subscription merchants and ask the person, not guess.</p></div>
+  </div>
+  <div class="tablewrap" style="margin-top:4px"><table class="rules"><thead><tr><th>Sav card rule used by the tool</th><th>Standard</th><th>Pro (AED 99 a month)</th></tr></thead><tbody>
+    <tr><td>Cashback on eligible spend</td><td>5%</td><td>5%</td></tr>
+    <tr><td>Spend needed before any cashback</td><td>AED 500 a month</td><td>AED 500 a month</td></tr>
+    <tr><td>Monthly cashback cap</td><td>AED 50</td><td>AED 500</td></tr>
+    <tr><td>Per-category cap</td><td>AED 200</td><td>AED 200</td></tr>
+    <tr><td>FX fee on non-AED spend</td><td>2.8%</td><td>2.3%</td></tr>
+    <tr><td>In-app top-up</td><td>AED 1</td><td>AED 1</td></tr>
+  </tbody></table></div>
+  <p class="by">From the Sav prepaid card listing on kredit.ae, read 10 Nov 2026. That page also shows an “AED 200 a month” cap in one table, which conflicts with its own detail section; I used the detail section. These should be checked against Sav’s Key Facts Statement.</p>
+</section>
+
+<section id="tool">
+  <p class="sec">2 · The working tool</p>
+  <h2>Linked-account transactions in, an honest move plan and a renewal plan out</h2>
+  <p>It loads with a fictional Dubai resident: 180 days of transactions across an Emirates NBD debit card, a Mashreq credit card and the Sav card. Change any input and every number updates. You can also load your own CSV export; it runs in the browser and nothing is uploaded.</p>
+  <div class="sheet">
+    <div class="controls">
+      <button class="primary" id="loadSample">Load sample person</button>
+      <label class="file">Transactions (CSV)<input type="file" id="file" accept=".csv,text/csv"></label>
+      <label>Plan<select id="tier"><option value="standard">Standard</option><option value="pro">Pro</option></select></label>
+      <label>Everyday Sav card spend / month<input type="number" id="everyday" min="0" step="10"></label>
+      <label>Current card FX fee %<input type="number" id="curfx" min="0" step="0.1" value="0"></label>
+    </div>
+    <div class="controls">
+      <label>Sav balance today (AED)<input type="number" id="bal" min="0" step="10"></label>
+      <label>Usual payday top-up (AED)<input type="number" id="habit" min="0" step="50"></label>
+      <label>Payday (day of month)<input type="number" id="payday" min="1" max="28" step="1"></label>
+      <label>As of<input type="date" id="asof"></label>
+      <button id="run">Re-run</button>
+    </div>
+    <p class="status" id="status"></p>
+    <div class="kpis" id="kpis"></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="panel"></div>
+    <div class="controls"><button id="dlPlan">Download move plan (CSV)</button><button id="dlSubs">Download subscriptions (CSV)</button><a class="btn" id="tpl" download="transactions_template.csv">CSV template</a></div>
+  </div>
+  <p class="note"><strong>Accuracy, honestly.</strong> Across 20 synthetic people the detector found all 272 planted subscriptions, called nothing else a subscription, and got every cycle right. It ignored same-amount fuel and coffee, a monthly supermarket shop, utility bills, rent cheques and top-up transfers. I wrote that noise myself, so real descriptors will be messier. The merchant list has 20 entries; unknown merchants are found by timing and amount alone. Current card FX fee defaults to 0, which is the conservative setting: it never credits a move with savings it can’t see.</p>
+</section>
+
+<section>
+  <p class="sec">3 · What I would ship</p>
+  <h2>One feature in MyMoney: “Your subscriptions”</h2>
+  <ol class="steps">
+    <li><div><h3>Find them</h3><p class="by">Run the detector on the accounts people have already linked. Show every subscription with its next date, and flag price rises, trials that turned paid and paying for two of the same thing. This part is useful even to someone who never moves a single one, and it’s the reason to open the app.</p></div></li>
+    <li><div><h3>Price each move honestly</h3><p class="by">For each subscription: “earns AED 2.80 a month”, “optional: your cap is already used” or “keep it where it is: the FX fee costs more”. Show the gate effect separately, because for light users it’s most of the value.</p></div></li>
+    <li><div><h3>Make the move one tap</h3><p class="by">Open each merchant’s billing page with the card details ready to paste. For anything billed through the App Store or Google Play, one change of payment method moves every app at once, so do those first.</p></div></li>
+    <li><div><h3>Guard the renewals</h3><p class="by">On payday, suggest a top-up of the usual amount plus the next month’s renewals, and hold that part aside so coffee can’t spend it. If the held amount is short, nudge the day before a renewal, not after it fails.</p></div></li>
+  </ol>
+  <div class="tablewrap"><table><thead><tr><th></th><th>Version 1</th><th>Later</th></tr></thead><tbody>
+    <tr><td>Who</td><td>UAE users with MyMoney linked and at least 2 subscriptions off the Sav card</td><td>Saudi, once the card and data rules there are clear</td></tr>
+    <tr><td>Detection</td><td>Linked bank accounts, 180 days, a known-merchant list plus timing rules</td><td>Ask about one-off charges to catch annual plans; learn from people’s corrections</td></tr>
+    <tr><td>Renewals</td><td>Suggested payday top-up and day-before nudges</td><td>A true held balance, if the card programme allows it</td></tr>
+    <tr><td>Not doing</td><td colspan="2">Cancelling subscriptions on someone’s behalf, pulling top-ups without a mandate, or pushing Pro to people it doesn’t pay for.</td></tr>
+  </tbody></table></div>
+</section>
+
+<section>
+  <p class="sec">4 · How we would know</p>
+  <h2>Measure card use and failed renewals, not just clicks</h2>
+  <div class="two">
+    <div class="card"><h3>Main measure</h3><p>Share of people shown the feature who move at least one subscription within 30 days. Behind it: months with at least one card transaction, per person, at day 90.</p></div>
+    <div class="card"><h3>Guardrail</h3><p>Decline rate on recurring charges on the Sav card, and support contacts about failed renewals. If either rises against the holdout, the guard isn’t working and the rollout stops.</p></div>
+    <div class="card"><h3>Pro, done honestly</h3><p>Offer Pro only to people the tool says it pays for. Track their conversion and whether they’re still on Pro 60 days later. A Pro upgrade that doesn’t pay churns, and teaches people to distrust the next nudge.</p></div>
+    <div class="card"><h3>Test</h3><p>Half of eligible users see it, half don’t, for six weeks. Stop if fewer than 1 in 10 people shown it move anything in 30 days, or if recurring declines go up. Those thresholds are my starting guesses; Sav’s own data should set them.</p></div>
+  </div>
+</section>
+
+<section>
+  <p class="sec">5 · What I don’t know</p>
+  <h2>The questions that would change the plan</h2>
+  <ul class="plain">
+    <li><b>The money on Sav’s side.</b> I don’t know Sav’s interchange rate on this card. Once someone hits the cap, every extra dirham earns interchange with no cashback cost, so moving subscriptions may matter more to Sav than to the person. Only real numbers can say.</li>
+    <li><b>Held balances.</b> Whether the card issuer allows part of a prepaid balance to be set aside for renewals. If it doesn’t, version 1 relies on nudges alone.</li>
+    <li><b>Moving cards at the merchant.</b> Updating the card inside each merchant’s app is where most people will drop off. That is where I’d spend design time first.</li>
+    <li><b>Excluded categories.</b> The listing says rent, wallet loads and transfers earn no cashback. I left utilities and telecom out of the move plan because I couldn’t confirm them; the Key Facts Statement decides.</li>
+  </ul>
+  <p><b>What I’d ask first:</b> how many card users have at least one recurring merchant on the card today; whether recurring declines come before people stop using the card; and how many Standard users never clear the AED 500 gate or always hit the AED 50 cap.</p>
+</section>
+
+<section>
+  <p class="sec">6 · How it’s built</p>
+  <div class="flow"><span>Linked-account CSV</span><em>→</em><span>clean descriptors · group by merchant</span><em>→</em><span>find the cycle · group prices · flag changes</span><em>→</em><span>move plan on the card rules</span><em>→</em><span>35-day balance simulation</span></div>
+  <p class="by">31 automated tests cover descriptor cleaning, detection accuracy against a known answer key across 20 synthetic people, every decoy type, price-rise, trial and overlap flags, month-end renewal dates, the gate, the caps, the FX logic, the Pro check, all three renewal strategies, and messy bank exports with title rows, dd/mm/yyyy dates and Dr/Cr columns.</p>
+</section>
+
+<footer>
+  <p><strong>Honesty notes.</strong> The person, the accounts, every transaction and every price are invented. Real merchant and bank names appear only as realistic statement descriptors. Card rules come from kredit.ae’s Sav prepaid card page and tbreak’s July 2026 report on Sav’s Visa partnership, read 10 Nov 2026. I have no access to Sav’s data, customers or roadmap. Not affiliated with Sav. Not financial advice.</p>
+  <p>Aditya Mathur · <a href="https://adimathur-creates.github.io/">More work</a></p>
+</footer>
+</div>
+<script>
+// SD: a fictional Dubai expat's 180 days of transactions across three accounts, with the answer key.
+// Every merchant amount and pattern is invented; brand names are used only as realistic descriptors.
+var SD = (function () {
+  'use strict';
+  function rng(seed) { var s = seed >>> 0; return function () { s = (s + 0x6D2B79F5) >>> 0; var t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  var FX = 3.6725;
+  var ENBD = 'Emirates NBD Debit', MASH = 'Mashreq Credit Card', SAV = 'Sav Card';
+  var START = Date.UTC(2026, 4, 13), END = Date.UTC(2026, 10, 8); // 13 May to 8 Nov 2026: 180 days
+  function d(ms) { return new Date(ms); }
+  function iso(dt) { return dt.toISOString().slice(0, 10); }
+  function addMonths(ms, n, dom) { var x = new Date(ms), y = x.getUTCFullYear(), m = x.getUTCMonth() + n; var last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(); return Date.UTC(y, m, Math.min(dom, last)); }
+
+  // Subscriptions. known = the engine's merchant list recognises the descriptor.
+  var SUBS = [
+    { desc: 'NETFLIX.COM AMSTERDAM NL', amt: 56, acct: MASH, known: true, always: true },
+    { desc: 'SPOTIFY P{ref} STOCKHOLM SE', amt: 21.99, acct: ENBD, known: true },
+    { desc: 'ANGHAMI PLUS DUBAI AE', amt: 19.99, acct: ENBD, known: true },
+    { desc: 'OSN PLUS STREAMING DUBAI', amt: 35, acct: MASH, known: true },
+    { desc: 'SHAHID VIP MBC', amt: 24.99, acct: MASH, known: true },
+    { desc: 'GOOGLE *YOUTUBEPREMIUM G.CO', amt: 23.99, acct: MASH, known: true },
+    { desc: 'APPLE.COM/BILL ITUNES.COM', amt: 11.99, acct: ENBD, known: true },
+    { desc: 'OPENAI *CHATGPT SUBSCR SAN FRANCISCO US', usd: 20, acct: MASH, known: true, always: true },
+    { desc: 'CAREEM PLUS SUBSCRIPTION', amt: 19, acct: ENBD, known: true },
+    { desc: 'TALABAT PRO MEMBERSHIP', amt: 29, acct: ENBD, known: true },
+    { desc: 'GYMNATION AL QUOZ', amt: 249, acct: ENBD, known: true },
+    { desc: 'AMAZON PRIME AE', amt: 16, acct: MASH, known: true },
+    { desc: 'NOON ONE MEMBERSHIP', amt: 25, acct: SAV, known: true, always: true },
+    { desc: 'CALM.COM SAN FRANCISCO US', usd: 14.99, acct: MASH, known: false },
+    { desc: 'BABBEL.COM BERLIN', amt: 45, acct: ENBD, known: false },
+    { desc: 'KHALEEJ TIMES DIGITAL', amt: 7, acct: ENBD, known: false, weekly: true }
+  ];
+
+  function generate(seed) {
+    var r = rng(seed || 2611), tx = [], truth = { subs: [], bills: [], rent: [], hike: null, trial: null, single: [], transfers: [] };
+    function pick(a) { return a[Math.floor(r() * a.length)]; }
+    function between(a, b) { return a + r() * (b - a); }
+    function push(ms, acct, desc, amt, cur, type) { tx.push({ date: iso(d(ms)), account: acct, description: desc, amount: Math.round(amt * 100) / 100, currency: cur || 'AED', type: type || 'Debit' }); }
+
+    var chosen = SUBS.filter(function (s) { return s.always || r() < 0.75; });
+    // Plant one price rise and one trial on known monthly subscriptions that have room for them.
+    var monthlyKnown = chosen.filter(function (s) { return s.known && !s.weekly && !s.usd && !s.always; });
+    var hikeSub = monthlyKnown.length ? pick(monthlyKnown) : null;
+    var trialPool = monthlyKnown.filter(function (s) { return s !== hikeSub; });
+    var trialSub = trialPool.length ? pick(trialPool) : null;
+
+    chosen.forEach(function (s) {
+      var ref = String(Math.floor(between(1e8, 9.99e8)));
+      var desc = function () { return s.desc.replace('{ref}', String(Math.floor(between(1e8, 9.99e8)))); };
+      var dates = [];
+      if (s.weekly) {
+        var w = START + Math.floor(between(0, 40)) * 864e5;
+        for (; w <= END; w += 7 * 864e5) dates.push(w);
+      } else {
+        var startOff = s.known ? Math.floor(between(0, s === hikeSub ? 30 : 95)) : Math.floor(between(0, 35));
+        if (s === trialSub) startOff = Math.floor(between(0, 60));
+        var first = START + startOff * 864e5, dom = new Date(first).getUTCDate();
+        if (dom > 28) { dom = 28; first = Date.UTC(new Date(first).getUTCFullYear(), new Date(first).getUTCMonth(), 28); }
+        for (var k = 0; ; k++) {
+          var ms = addMonths(first, k, dom);
+          if (ms > END) break;
+          if (k > 0 && r() < 0.2) ms += 864e5;          // card posts a day late sometimes
+          if (ms <= END) dates.push(ms);
+        }
+      }
+      var n = dates.length, hikeFrom = s === hikeSub ? Math.max(2, Math.ceil(n / 2)) : 99;
+      dates.forEach(function (ms, i) {
+        var amt, cur = 'AED';
+        if (s.usd) { amt = s.usd * FX * (1 + 0.0245 + between(-0.003, 0.003)); cur = 'USD'; }
+        else amt = s.amt;
+        if (i >= hikeFrom) amt = Math.round(amt * 1.2 * 100) / 100 - 0.01;
+        if (s === trialSub && i === 0) amt = 1;
+        push(ms, s.acct, desc(), amt, cur);
+      });
+      truth.subs.push({ desc: s.desc.replace('{ref}', ref), cadence: s.weekly ? 'weekly' : 'monthly', account: s.acct, currency: s.usd ? 'USD' : 'AED' });
+      if (s === hikeSub) truth.hike = s.desc;
+      if (s === trialSub) truth.trial = s.desc;
+    });
+
+    // Variable monthly bills.
+    function monthly(dom, fn) { for (var k = 0; ; k++) { var ms = addMonths(START, k, dom); if (ms > END) break; if (ms >= START) fn(ms, k); } }
+    var dewaPrev = 0;
+    monthly(Math.floor(between(3, 9)), function (ms) {
+      var v; do { v = between(380, 760); } while (Math.abs(v - dewaPrev) / (dewaPrev || 1) < 0.06); dewaPrev = v;
+      push(ms, ENBD, 'DEWA BILL PAYMENT ' + Math.floor(between(1e6, 9e6)), v);
+    });
+    var duPrev = 0;
+    monthly(Math.floor(between(10, 16)), function (ms) {
+      var v; do { v = between(240, 340); } while (Math.abs(v - duPrev) / (duPrev || 1) < 0.06); duPrev = v;
+      push(ms, MASH, 'DU TELECOM POSTPAID DUBAI', v);
+    });
+    truth.bills.push('DEWA BILL PAYMENT', 'DU TELECOM POSTPAID DUBAI');
+    // Rent: four cheques a year.
+    var rentDay = START + Math.floor(between(5, 40)) * 864e5;
+    push(rentDay, ENBD, 'CHQ ' + Math.floor(between(1e5, 9e5)) + ' CLEARED', 22500);
+    push(addMonths(rentDay, 3, new Date(rentDay).getUTCDate()), ENBD, 'CHQ ' + Math.floor(between(1e5, 9e5)) + ' CLEARED', 22500);
+    truth.rent.push('CHQ CLEARED');
+    // Salary and the monthly top-up to the Sav card.
+    monthly(28, function (ms) {
+      push(ms, ENBD, 'SALARY CREDIT KESTREL TECH FZ LLC', 21500, 'AED', 'Credit');
+      push(ms, ENBD, 'TRANSFER TO SAV CARD', 400);
+      push(ms, SAV, 'TOP UP FROM EMIRATES NBD', 400, 'AED', 'Credit');
+    });
+    truth.transfers.push('TRANSFER TO SAV CARD');
+    // One annual plan seen once.
+    push(START + Math.floor(between(10, 170)) * 864e5, MASH, 'DROPBOX*ANNUAL PLAN DUBLIN IE', 440);
+    truth.single.push('DROPBOX*ANNUAL PLAN DUBLIN IE');
+
+    // Everyday spending: the noise a detector must ignore.
+    var t;
+    for (t = START + 2 * 864e5; t <= END; t += Math.floor(between(5, 10)) * 864e5) push(t, MASH, 'CARREFOUR CITY CENTRE MIRDIF', between(120, 480));
+    for (t = START + 1 * 864e5; t <= END; t += pick([4, 5, 9, 10, 11, 12]) * 864e5) push(t, ENBD, 'ENOC SERVICE STATION ' + Math.floor(between(100, 999)), 100);
+    for (t = START; t <= END; t += Math.floor(between(3, 9)) * 864e5) push(t, SAV, 'SALT CAFE KITE BEACH', 18);
+    for (t = START + 3 * 864e5; t <= END; t += pick([14, 18, 21, 40, 45, 24]) * 864e5) push(t, ENBD, 'SALIK RECHARGE ONLINE', 100);
+    for (t = START; t <= END; t += Math.floor(between(1, 4)) * 864e5) push(t, r() < 0.25 ? SAV : ENBD, 'CAREEM RIDE DUBAI', between(14, 68));
+    for (t = START + 864e5; t <= END; t += Math.floor(between(2, 6)) * 864e5) push(t, r() < 0.3 ? SAV : MASH, 'TALABAT ORDER ' + Math.floor(between(1e5, 9e5)), between(35, 140));
+    monthly(Math.floor(between(18, 24)), function (ms) { push(ms, MASH, 'LULU HYPERMARKET AL BARSHA', between(600, 1300)); });
+    for (t = START + 4 * 864e5; t <= END; t += Math.floor(between(6, 20)) * 864e5) push(t, MASH, 'STARBUCKS DUBAI MALL', between(19, 42));
+
+    tx.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    return {
+      person: { name: 'Rhea (fictional)', city: 'Dubai', from: iso(d(START)), to: iso(d(END)) },
+      defaults: { asOf: '2026-11-10', balance: 120, habit: 400, payday: 28, currentFx: 0 },
+      tx: tx, truth: truth
+    };
+  }
+  function toCSV(tx) {
+    var cols = ['Date', 'Account', 'Description', 'Amount (AED)', 'Original currency', 'Type'];
+    return cols.join(',') + '\n' + tx.map(function (x) {
+      return [x.date, x.account, '"' + x.description.replace(/"/g, '""') + '"', x.amount.toFixed(2), x.currency, x.type].join(',');
+    }).join('\n') + '\n';
+  }
+  return { generate: generate, toCSV: toCSV };
+})();
+
+
+// SR: recurring-charge detection, a Sav-card move plan priced on the card's published rules, and a renewal guard for a prepaid balance.
+// Pure functions. No network. Runs in the browser and in Node.
+var SR = (function () {
+  'use strict';
+
+  // Sav Card rules as listed on kredit.ae (Sav prepaid card page, read 10 Nov 2026). Editable in the UI.
+  var PRICING = {
+    rate: 0.05,                         // cashback on eligible spend
+    gate: 500,                          // AED of qualifying spend per calendar month before any cashback
+    capTotal: { standard: 50, pro: 500 },
+    capCategory: 200,                   // AED cashback per category per month
+    proFee: 99,                         // AED per month
+    fx: { standard: 0.028, pro: 0.023 },
+    topupFee: 1                         // AED per in-app bank transfer top-up
+  };
+
+  // Known merchants. kind: sub = subscription, bill = variable recurring bill, rent, transfer = moving own money.
+  var KNOWN = [
+    [/CAREEM\s*PLUS/, 'Careem Plus', 'Memberships', 'sub'],
+    [/TALABAT\s*PRO/, 'Talabat Pro', 'Memberships', 'sub'],
+    [/NOON\s*ONE/, 'noon One', 'Memberships', 'sub'],
+    [/AMAZON\s*PRIME|AMZN\s*PRIME|PRIMEVIDEO/, 'Amazon Prime', 'Memberships', 'sub'],
+    [/NETFLIX/, 'Netflix', 'Video', 'sub'],
+    [/OSN/, 'OSN+', 'Video', 'sub'],
+    [/SHAHID/, 'Shahid VIP', 'Video', 'sub'],
+    [/YOUTUBE/, 'YouTube Premium', 'Video', 'sub'],
+    [/SPOTIFY/, 'Spotify', 'Music', 'sub'],
+    [/ANGHAMI/, 'Anghami', 'Music', 'sub'],
+    [/APPLE\.?COM\/?BILL|ITUNES/, 'Apple (App Store, iCloud)', 'Apps and cloud', 'sub'],
+    [/GOOGLE\s*\*?\s*(ONE|STORAGE|PLAY)/, 'Google One / Play', 'Apps and cloud', 'sub'],
+    [/OPENAI|CHATGPT/, 'ChatGPT Plus', 'Apps and cloud', 'sub'],
+    [/ADOBE/, 'Adobe', 'Apps and cloud', 'sub'],
+    [/DROPBOX/, 'Dropbox', 'Apps and cloud', 'sub'],
+    [/GYMNATION|FITNESS\s*FIRST/, 'Gym membership', 'Fitness', 'sub'],
+    [/DEWA/, 'DEWA (electricity, water)', 'Utilities', 'bill'],
+    [/\bDU\b|ETISALAT|EMIRATES\s*INTEGRATED/, 'Mobile and home internet', 'Telecom', 'bill'],
+    [/\bCHQ\b|CHEQUE|\bRENT\b|EJARI/, 'Rent cheque', 'Rent', 'rent'],
+    [/TRANSFER|TOP\s*-?UP|\bIPP\b|\bFT\b|ATM/, 'Transfer or top-up', 'Own money', 'transfer']
+  ];
+  var DROP = /\b(POS|PUR|PURCHASE|ECOM|E-COM|CARD|VISA|MC|DEBIT|INT'?L|INTL|PAYPAL|SQ|DUBAI|ABU|DHABI|SHARJAH|AE|ARE|UAE|AMSTERDAM|NL|LU|LUXEMBOURG|US|USA|IE|DUBLIN|SG|SINGAPORE|GB|LONDON|SE|STOCKHOLM|CA|SAN|FRANCISCO|DE|BERLIN|AL|QUOZ|MARINA|MALL|LLC|FZ|FZE|FZCO|COM|WWW|HTTPS?)\b/g;
+
+  function normDesc(d) {
+    var s = String(d || '').toUpperCase().replace(/[0-9]+/g, ' ').replace(/[*#_]+/g, ' ').replace(/\s+-\s+/g, ' ');
+    s = s.replace(/\.COM\b/g, ' ').replace(DROP, ' ').replace(/[^A-Z&\/\.\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    // Drop random reference tokens: long all-consonant strings or mixed tokens left after digits were removed.
+    s = s.split(' ').filter(function (w) { return w.length > 1 && !/^[BCDFGHJKLMNPQRSTVWXZ]{5,}$/.test(w); }).slice(0, 3).join(' ');
+    return s;
+  }
+  function knownFor(desc) {
+    var u = String(desc || '').toUpperCase();
+    for (var i = 0; i < KNOWN.length; i++) if (KNOWN[i][0].test(u)) return { name: KNOWN[i][1], cat: KNOWN[i][2], kind: KNOWN[i][3] };
+    return null;
+  }
+  function keyFor(desc) { var k = knownFor(desc); return k ? k.name : normDesc(desc); }
+
+  // ---------- dates ----------
+  function parseDate(s) {
+    s = String(s || '').trim(); var m;
+    if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    if ((m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/))) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+    var MON = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
+    if ((m = s.match(/^(\d{1,2})[\s\-]([A-Za-z]{3})[A-Za-z]*[\s\-](\d{4})$/)) && MON[m[2].toUpperCase()] !== undefined) return new Date(Date.UTC(+m[3], MON[m[2].toUpperCase()], +m[1]));
+    return null;
+  }
+  function iso(d) { return d.toISOString().slice(0, 10); }
+  function addDays(d, n) { return new Date(d.getTime() + n * 864e5); }
+  function daysBetween(a, b) { return Math.round((b - a) / 864e5); }
+  function addMonths(d, n, dom) {
+    var y = d.getUTCFullYear(), m = d.getUTCMonth() + n;
+    var last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    return new Date(Date.UTC(y, m, Math.min(dom || d.getUTCDate(), last)));
+  }
+
+  // ---------- CSV ----------
+  function parseCSV(text) {
+    var rows = [], row = [], f = '', q = false, t = String(text || '').replace(/^﻿/, '');
+    for (var i = 0; i < t.length; i++) {
+      var c = t[i];
+      if (q) { if (c === '"') { if (t[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true;
+      else if (c === ',') { row.push(f); f = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+      else f += c;
+    }
+    if (f !== '' || row.length) { row.push(f); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (x) { return String(x).trim() !== ''; }); });
+  }
+  function num(s) {
+    if (typeof s === 'number') return s;
+    var t = String(s || '').replace(/AED|USD|د\.إ|,|\s/gi, '');
+    var neg = /^\(.*\)$/.test(t) || /^-/.test(t); t = t.replace(/[()\-+]/g, '');
+    var v = parseFloat(t); return isNaN(v) ? NaN : (neg ? -v : v);
+  }
+  var COLS = {
+    date: ['date', 'transaction date', 'txn date', 'posting date', 'value date'],
+    account: ['account', 'card', 'source', 'account name'],
+    description: ['description', 'merchant', 'narration', 'details', 'transaction details'],
+    amount: ['amount (aed)', 'amount_aed', 'amount', 'debit', 'aed amount'],
+    currency: ['original currency', 'currency', 'txn currency'],
+    type: ['type', 'dr/cr', 'direction']
+  };
+  function readTransactions(text) {
+    var rows = parseCSV(text), hi = -1, map = {};
+    for (var r = 0; r < Math.min(rows.length, 15) && hi < 0; r++) {
+      var low = rows[r].map(function (x) { return String(x).trim().toLowerCase(); }), m = {};
+      Object.keys(COLS).forEach(function (k) {
+        for (var a = 0; a < COLS[k].length; a++) { var ix = low.indexOf(COLS[k][a]); if (ix >= 0) { m[k] = ix; break; } }
+      });
+      if (m.date !== undefined && m.description !== undefined && m.amount !== undefined) { hi = r; map = m; }
+    }
+    if (hi < 0) return { error: 'Could not find date, description and amount columns.', rows: [] };
+    var out = [];
+    for (var i = hi + 1; i < rows.length; i++) {
+      var x = rows[i], d = parseDate(x[map.date]), a = num(x[map.amount]);
+      if (!d || isNaN(a)) continue;
+      var type = map.type !== undefined ? String(x[map.type] || '').trim().toLowerCase() : '';
+      var isCredit = /^(cr|credit|in)/.test(type);
+      out.push({
+        date: d, account: map.account !== undefined ? String(x[map.account] || '').trim() || 'Account' : 'Account',
+        description: String(x[map.description] || '').trim(), amount: Math.abs(a),
+        currency: map.currency !== undefined ? (String(x[map.currency] || '').trim().toUpperCase() || 'AED') : 'AED',
+        credit: isCredit
+      });
+    }
+    return { rows: out };
+  }
+
+  // ---------- detection ----------
+  var CAD = {
+    weekly: { lo: 6, hi: 8, days: 7, perMonth: 52 / 12, min: 4 },
+    monthly: { lo: 26, hi: 35, days: 30.4, perMonth: 1, min: 3 },
+    quarterly: { lo: 84, hi: 98, days: 91, perMonth: 1 / 3, min: 2 }
+  };
+  function cadenceOf(dates) {
+    if (dates.length < 2) return null;
+    var iv = []; for (var i = 1; i < dates.length; i++) iv.push(daysBetween(dates[i - 1], dates[i]));
+    var best = null;
+    Object.keys(CAD).forEach(function (k) {
+      var c = CAD[k], ok = 0;
+      iv.forEach(function (d) {
+        if (d >= c.lo && d <= c.hi) ok++;
+        else if (k === 'monthly' && d >= 2 * c.lo && d <= 2 * c.hi) ok += 0.5;   // one missed or skipped month
+      });
+      var share = ok / iv.length;
+      if (share >= 0.75 && (!best || share > best.share)) best = { name: k, share: share };
+    });
+    return best ? best.name : null;
+  }
+  // Group amounts into price levels in date order. A level holds amounts within tol of its running mean.
+  function levels(amts, tol) {
+    var L = [];
+    amts.forEach(function (a) {
+      var cur = L[L.length - 1];
+      if (cur && Math.abs(a - cur.mean) / cur.mean <= tol) { cur.n++; cur.sum += a; cur.mean = cur.sum / cur.n; }
+      else L.push({ n: 1, sum: a, mean: a });
+    });
+    return L;
+  }
+  function round2(x) { return Math.round(x * 100) / 100; }
+
+  function detect(txns, opts) {
+    opts = opts || {};
+    var asOf = opts.asOf ? parseDate(opts.asOf) : null;
+    var savName = (opts.savAccount || 'Sav Card').toLowerCase();
+    var groups = {};
+    txns.forEach(function (t) {
+      if (t.credit) return;
+      var k = keyFor(t.description);
+      if (!k) return;
+      (groups[k] = groups[k] || []).push(t);
+    });
+    var subs = [], other = [], singles = [];
+    Object.keys(groups).forEach(function (k) {
+      var g = groups[k].slice().sort(function (a, b) { return a.date - b.date; });
+      var known = knownFor(g[0].description);
+      var kind = known ? known.kind : null;
+      var rec = { key: k, name: known ? known.name : titleCase(k), cat: known ? known.cat : 'Other', known: !!known,
+                  count: g.length, account: mode(g.map(function (t) { return t.account; })),
+                  currency: mode(g.map(function (t) { return t.currency; })), sample: g[g.length - 1].description,
+                  first: g[0].date, last: g[g.length - 1].date, flags: [] };
+      if (kind === 'transfer') { rec.kind = 'transfer'; rec.why = 'Moving your own money, not a purchase'; if (g.length >= 2) other.push(rec); return; }
+      if (g.length === 1) {
+        if (known && kind === 'sub') { rec.amount = g[0].amount; rec.kind = 'single'; rec.why = 'One charge in the history window: likely an annual plan or a new one'; singles.push(rec); }
+        return;
+      }
+      // Trial: a first charge under 15% of the rest, followed by full-price charges.
+      var series = g;
+      if (g.length >= 3) {
+        var restMed = median(g.slice(1).map(function (t) { return t.amount; }));
+        if (g[0].amount <= restMed * 0.15) { rec.flags.push({ t: 'trial', s: 'Trial turned paid on ' + g[1].date.getUTCDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][g[1].date.getUTCMonth()] }); rec.trialEnd = g[1].date; series = g.slice(1); }
+      }
+      var cad = cadenceOf(series.map(function (t) { return t.date; }));
+      var amts = series.map(function (t) { return t.amount; });
+      var lv = levels(amts, 0.03);
+      var fixed = lv.length <= 2 && lv[lv.length - 1].n >= 1 && (lv.length === 1 || lv[0].n >= 2);
+      var minN = cad ? CAD[cad].min : 99;
+      if (known && cad === 'monthly') minN = 2;
+      if (!cad || series.length < minN) {
+        if (kind === 'bill' || kind === 'rent') { rec.kind = kind; rec.why = 'Known bill, but no steady cycle found'; other.push(rec); }
+        else if (series.length >= 4) { rec.kind = 'none'; rec.why = fixed ? 'Same amount, but no steady cycle (' + series.length + ' charges)' : 'Irregular timing and amounts'; other.push(rec); }
+        return;
+      }
+      rec.cadence = cad;
+      rec.dom = mode(series.map(function (t) { return t.date.getUTCDate(); }));
+      if (kind === 'rent') { rec.kind = 'rent'; rec.amount = round2(lv[lv.length - 1].mean); rec.why = 'Rent: excluded from cashback, usually not payable by card'; rec.next = nextDate(series, cad); other.push(rec); return; }
+      if (!fixed) {
+        if (kind === 'bill' || kind === 'sub') { rec.kind = 'bill'; rec.amount = round2(median(amts)); rec.why = 'Recurring, but the amount changes every cycle: a bill'; rec.next = nextDate(series, cad); other.push(rec); }
+        else { rec.kind = 'none'; rec.why = 'Regular timing, but the amount changes every time'; other.push(rec); }
+        return;
+      }
+      if (kind === 'bill') { rec.kind = 'bill'; rec.amount = round2(lv[lv.length - 1].mean); rec.why = 'Recurring bill'; rec.next = nextDate(series, cad); other.push(rec); return; }
+      rec.kind = 'sub';
+      rec.amount = round2(lv[lv.length - 1].mean);
+      rec.monthly = round2(rec.amount * CAD[cad].perMonth);
+      if (lv.length === 2) {
+        var ch = (lv[1].mean - lv[0].mean) / lv[0].mean;
+        if (ch > 0) rec.flags.push({ t: 'hike', s: 'Price up ' + Math.round(ch * 100) + '% (AED ' + round2(lv[0].mean) + ' to ' + round2(lv[1].mean) + ')' });
+        else rec.flags.push({ t: 'drop', s: 'Price down ' + Math.round(-ch * 100) + '%' });
+      }
+      rec.next = nextDate(series, cad);
+      if (asOf) while (rec.next < asOf) rec.next = cad === 'monthly' ? addMonths(rec.next, 1, rec.dom) : addDays(rec.next, CAD[cad].days);
+      rec.onSav = rec.account.toLowerCase() === savName;
+      if (/APPLE|GOOGLE/.test(rec.key.toUpperCase())) rec.flags.push({ t: 'store', s: 'App-store billing: one payment-method change moves every app subscription billed here' });
+      subs.push(rec);
+    });
+    // Overlap: two or more paid services in the same entertainment category.
+    ['Music', 'Video'].forEach(function (c) {
+      var inCat = subs.filter(function (s) { return s.cat === c; });
+      if (inCat.length >= 2) inCat.forEach(function (s) {
+        s.flags.push({ t: 'overlap', s: 'Also paying for ' + inCat.filter(function (o) { return o !== s; }).map(function (o) { return o.name; }).join(', ') });
+      });
+    });
+    subs.sort(function (a, b) { return b.monthly - a.monthly; });
+    return { subs: subs, other: other, singles: singles };
+  }
+  function nextDate(series, cad) {
+    var last = series[series.length - 1].date;
+    if (cad === 'monthly') {
+      var dom = mode(series.map(function (t) { return t.date.getUTCDate(); }));
+      return addMonths(last, 1, dom);
+    }
+    if (cad === 'quarterly') return addMonths(last, 3);
+    return addDays(last, 7);
+  }
+  function median(a) { var s = a.slice().sort(function (x, y) { return x - y; }), n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : 0; }
+  function mode(a) { var c = {}, best = a[0], bn = 0; a.forEach(function (x) { c[x] = (c[x] || 0) + 1; if (c[x] > bn) { bn = c[x]; best = x; } }); return best; }
+  function titleCase(s) { return String(s).toLowerCase().replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); }); }
+
+  function savEveryday(txns, det, o) {
+    o = o || {};
+    var savName = (o.savAccount || 'Sav Card').toLowerCase(), skip = {};
+    det.subs.forEach(function (x) { skip[x.key] = 1; });
+    det.other.forEach(function (x) { if (x.kind === 'transfer' || x.kind === 'rent') skip[x.key] = 1; });
+    var debits = txns.filter(function (t) { return !t.credit && String(t.account).toLowerCase() === savName && !skip[keyFor(t.description)]; });
+    if (!debits.length) return { monthly: 0, daily: 0, days: 0 };
+    var all = txns.map(function (t) { return t.date.getTime(); });
+    var span = Math.max(30, (Math.max.apply(null, all) - Math.min.apply(null, all)) / 864e5 + 1);
+    var sum = debits.reduce(function (a, t) { return a + t.amount; }, 0);
+    return { monthly: round2(sum / span * 30.4), daily: round2(sum / span), days: Math.round(span) };
+  }
+
+  // ---------- move plan ----------
+  // Which subscriptions are worth moving to the Sav card, priced on the card's real rules.
+  function plan(subs, o) {
+    o = o || {};
+    var P = o.pricing || PRICING, tier = o.tier || 'standard';
+    var cap = P.capTotal[tier], fx = P.fx[tier], other = Math.max(0, o.otherSpend || 0), curFx = Math.max(0, o.currentFx || 0);
+    var already = subs.filter(function (s) { return s.onSav; });
+    var cands = subs.filter(function (s) { return !s.onSav; }).map(function (s) {
+      var foreign = s.currency !== 'AED';
+      return { s: s, m: s.monthly, fxCost: foreign ? s.monthly * fx : 0, fxSaved: foreign ? s.monthly * curFx : 0, foreign: foreign };
+    });
+    var alreadyM = already.reduce(function (a, s) { return a + s.monthly; }, 0);
+    // Cashback before anything moves: only the spend already on the card, and only if it clears the gate.
+    var beforeQual = other + alreadyM;
+    var before = beforeQual >= P.gate ? Math.min(beforeQual * P.rate, cap) : 0;
+    function score(c) { return c.m * P.rate - c.fxCost + c.fxSaved; }
+    cands.sort(function (a, b) { return score(b) - score(a); });
+    var hopeful = cands.filter(function (c) { return score(c) > 0; }), rows, gateMet, baseCb, qual, room;
+    for (var pass = 0; pass < 4; pass++) {
+      qual = other + alreadyM + hopeful.reduce(function (a, c) { return a + c.m; }, 0);
+      gateMet = qual >= P.gate;
+      baseCb = gateMet ? Math.min((other + alreadyM) * P.rate, cap) : 0;
+      room = gateMet ? Math.max(0, cap - baseCb) : 0;
+      var catUsed = {}, hopeSet = hopeful;
+      rows = cands.map(function (c) {
+        var cat = c.s.cat, catRoom = P.capCategory - (catUsed[cat] || 0);
+        var cb = gateMet && hopeSet.indexOf(c) >= 0 ? Math.max(0, Math.min(c.m * P.rate, room, catRoom)) : 0;
+        var net = cb - c.fxCost + c.fxSaved, verdict, why;
+        if (net > 0.5) { verdict = 'move'; room -= cb; catUsed[cat] = (catUsed[cat] || 0) + cb; why = 'Earns AED ' + cb.toFixed(2) + ' a month' + (c.fxCost ? ' after the ' + (fx * 100).toFixed(1) + '% FX fee' : ''); }
+        else if (net >= -0.5) { verdict = 'neutral'; why = !gateMet ? 'No cashback until the month clears AED ' + P.gate : (cb < c.m * P.rate - 0.01 ? 'Monthly cashback cap already used' : 'Roughly break-even'); }
+        else { verdict = 'keep'; why = c.foreign ? (gateMet && cb < c.m * P.rate - 0.01 ? 'Cap already used, so moving it only adds the ' + (fx * 100).toFixed(1) + '% FX fee on ' + c.s.currency + ' billing' : 'Billed in ' + c.s.currency + ': the ' + (fx * 100).toFixed(1) + '% FX fee costs more than it earns') : 'Costs more than it earns'; }
+        return { _c: c, name: c.s.name, account: c.s.account, cat: cat, currency: c.s.currency, monthly: round2(c.m), cashback: round2(cb), fxCost: round2(c.fxCost), fxSaved: round2(c.fxSaved), net: round2(net), verdict: verdict, why: why, next: c.s.next, store: c.s.flags.some(function (f) { return f.t === 'store'; }) };
+      });
+      var movedC = rows.filter(function (r) { return r.verdict === 'move'; }).map(function (r) { return r._c; });
+      var finalQual = other + alreadyM + movedC.reduce(function (a, c) { return a + c.m; }, 0);
+      if (!gateMet || finalQual >= P.gate || movedC.length === hopeful.length) { qual = gateMet ? finalQual : qual; break; }
+      hopeful = movedC;
+    }
+    rows.forEach(function (r) { delete r._c; });
+    var moved = rows.filter(function (r) { return r.verdict === 'move'; });
+    var cb = moved.reduce(function (a, r) { return a + r.cashback; }, 0);
+    var fxc = moved.reduce(function (a, r) { return a + r.fxCost - r.fxSaved; }, 0);
+    var topups = moved.length ? 1 : 0;
+    var netSubs = cb - fxc - topups * P.topupFee;
+    var movedM = moved.reduce(function (a, r) { return a + r.monthly; }, 0);
+    var after = baseCb + cb;
+    return {
+      tier: tier, rows: rows, moved: moved, gateMet: gateMet, qualifying: round2(qual), gate: P.gate,
+      gapToGate: round2(Math.max(0, P.gate - qual)), cashbackSubs: round2(cb), fxNet: round2(fxc), topupFees: topups * P.topupFee,
+      netSubs: round2(netSubs), baseCashback: round2(baseCb), capLeft: round2(room), movedMonthly: round2(movedM),
+      totalMonthlyCashback: round2(after), before: round2(before), gain: round2(after - before - fxc - topups * P.topupFee), gateUnlock: round2(Math.max(0, baseCb - before)), alreadyOnSav: already.map(function (s) { return s.name; })
+    };
+  }
+  // Is Sav Pro worth AED 99 for this person? Compare everything the card earns under each tier.
+  function proCheck(subs, o) {
+    var P = (o && o.pricing) || PRICING;
+    var s = plan(subs, Object.assign({}, o, { tier: 'standard' })), p = plan(subs, Object.assign({}, o, { tier: 'pro' }));
+    var other = Math.max(0, (o && o.otherSpend) || 0);
+    var fxOtherStd = 0, fxOtherPro = 0; // everyday spend assumed in AED
+    var stdTotal = s.totalMonthlyCashback - s.fxNet - s.topupFees - fxOtherStd;
+    var proTotal = p.totalMonthlyCashback - p.fxNet - p.topupFees - fxOtherPro - P.proFee;
+    // Break-even everyday spend: Pro adds (cap_pro - cap_std) room at 5%.
+    var needSpend = round2((P.proFee + P.capTotal.standard) / P.rate);
+    return { standard: round2(stdTotal), pro: round2(proTotal), worth: proTotal > stdTotal, gain: round2(proTotal - stdTotal), breakEvenSpend: needSpend };
+  }
+
+  // ---------- renewal guard ----------
+  // Simulate the prepaid balance day by day and count renewals that would be declined.
+  // strategy: 'habit' = one fixed top-up on payday; 'pot' = payday top-up plus a ring-fenced renewal pot; 'jit' = top up the shortfall the day before each renewal.
+  function guard(renewals, o) {
+    var P = o.pricing || PRICING;
+    var start = parseDate(o.asOf), days = o.horizon || 35, daily = Math.max(0, o.daily || 0), habit = Math.max(0, o.habit || 0), payday = o.payday || 28;
+    var list = [];
+    renewals.forEach(function (r) {
+      var d = r.next, guardN = 0;
+      while (d && daysBetween(start, d) <= days && guardN++ < 10) {
+        if (daysBetween(start, d) >= 1) list.push({ name: r.name, date: d, amount: r.amount });
+        d = r.cadence === 'monthly' ? addMonths(d, 1, r.dom) : r.cadence === 'weekly' ? addDays(d, 7) : r.cadence === 'quarterly' ? addMonths(d, 3) : null;
+      }
+    });
+    list.sort(function (a, b) { return a.date - b.date; });
+    function run(strategy) {
+      var free = Math.max(0, o.balance || 0), pot = 0, topups = 0, declines = [], events = [], spendShort = 0;
+      function committedUntilNextPayday(fromDay) {
+        var sum = 0;
+        for (var i = 0; i < list.length; i++) {
+          var dd = daysBetween(start, list[i].date);
+          if (dd >= fromDay && dd < fromDay + daysToPayday(fromDay)) sum += list[i].amount;
+        }
+        return sum;
+      }
+      function daysToPayday(fromDay) {
+        for (var k = 1; k <= 31; k++) if (addDays(start, fromDay + k).getUTCDate() === payday) return k;
+        return 31;
+      }
+      if (strategy === 'pot') {
+        // Day 0: fund the pot for renewals that land before the next payday.
+        var need = committedUntilNextPayday(1);
+        var fromFree = Math.min(free, need); free -= fromFree; pot += fromFree;
+        if (pot < need) { topups++; events.push({ date: start, s: 'Top up AED ' + round2(need - pot) + ' into the renewal pot now', t: 'topup' }); pot = need; }
+      }
+      for (var day = 1; day <= days; day++) {
+        var date = addDays(start, day);
+        if (date.getUTCDate() === payday) {
+          var add = habit;
+          if (strategy === 'pot') { var c = committedUntilNextPayday(day); add += c; pot += c; events.push({ date: date, s: 'Payday top-up AED ' + round2(add) + ', of which AED ' + round2(c) + ' locked for renewals', t: 'topup' }); free += habit; }
+          else { free += add; events.push({ date: date, s: 'Payday top-up AED ' + round2(add), t: 'topup' }); }
+          if (add > 0) topups++;
+        }
+        var today = list.filter(function (x) { return daysBetween(start, x.date) === day; });
+        today.forEach(function (x) {
+          if (strategy === 'jit' && free < x.amount) {
+            var gap = round2(x.amount - free); free += gap; topups++;
+            events.push({ date: addDays(date, -1), s: 'Nudge the day before: top up AED ' + gap + ' for ' + x.name, t: 'topup' });
+          }
+          var src = strategy === 'pot' ? 'pot' : 'free';
+          var bal = src === 'pot' ? pot : free;
+          if (bal + 1e-9 >= x.amount) {
+            if (src === 'pot') pot -= x.amount; else free -= x.amount;
+            events.push({ date: date, s: x.name + ' renews, AED ' + x.amount, t: 'ok' });
+          } else {
+            declines.push({ name: x.name, date: date, amount: x.amount, balance: round2(bal) });
+            events.push({ date: date, s: x.name + ' declined: AED ' + round2(bal) + ' available, AED ' + x.amount + ' needed', t: 'decline' });
+          }
+        });
+        // Everyday card spend comes out after renewals post. If the balance cannot cover it, the person pays some other way.
+        var spent = Math.min(free, daily); spendShort += daily - spent; free -= spent;
+      }
+      return { strategy: strategy, declines: declines, topups: topups, fees: topups * P.topupFee, events: events, spendShort: round2(spendShort) };
+    }
+    return { renewals: list, habit: run('habit'), pot: run('pot'), jit: run('jit') };
+  }
+
+  function toCSV(rows, cols) {
+    function esc(v) { v = v === undefined || v === null ? '' : (v instanceof Date ? iso(v) : String(v)); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+    return cols.join(',') + '\n' + rows.map(function (r) { return cols.map(function (c) { return esc(r[c]); }).join(','); }).join('\n') + '\n';
+  }
+
+  return { PRICING: PRICING, normDesc: normDesc, keyFor: keyFor, knownFor: knownFor, parseDate: parseDate, iso: iso, addMonths: addMonths, addDays: addDays,
+           parseCSV: parseCSV, num: num, readTransactions: readTransactions, cadenceOf: cadenceOf, levels: levels, detect: detect, plan: plan, proCheck: proCheck,
+           guard: guard, toCSV: toCSV, savEveryday: savEveryday };
+})();
+
+
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function aed(v, dp) { if (v === undefined || v === null || isNaN(v)) return '–'; var d = dp === undefined ? 2 : dp; return 'AED ' + Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function day(d) { return d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : '–'; }
+  var CAD = { weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly' };
+  var state = { txns: null, source: '', tab: 'subs', R: null, P: null, G: null, pc: null, E: null, user: false };
+
+  function download(name, text) {
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' })); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+
+  function loadSample() {
+    var d = SD.generate(2611);
+    state.txns = SR.readTransactions(SD.toCSV(d.tx)).rows; state.source = d.person.name + ' · Dubai · ' + d.tx.length + ' transactions across 3 accounts, ' + d.person.from + ' to ' + d.person.to;
+    state.user = false;
+    $('asof').value = d.defaults.asOf; $('bal').value = d.defaults.balance; $('habit').value = d.defaults.habit; $('payday').value = d.defaults.payday; $('curfx').value = 0;
+    $('everyday').value = '';
+    run();
+  }
+
+  function run() {
+    if (!state.txns) return;
+    var asOf = $('asof').value || '2026-11-10';
+    var R = SR.detect(state.txns, { asOf: asOf });
+    var E = SR.savEveryday(state.txns, R);
+    var ev = $('everyday').value === '' ? E.monthly : Math.max(0, parseFloat($('everyday').value) || 0);
+    if ($('everyday').value === '') $('everyday').placeholder = E.monthly.toFixed(0) + ' (from data)';
+    var tier = $('tier').value, curFx = Math.max(0, parseFloat($('curfx').value) || 0) / 100;
+    var P = SR.plan(R.subs, { tier: tier, otherSpend: ev, currentFx: curFx });
+    var pc = SR.proCheck(R.subs, { otherSpend: ev, currentFx: curFx });
+    var moveSet = R.subs.filter(function (u) { return u.onSav || P.moved.some(function (m) { return m.name === u.name; }); });
+    var G = SR.guard(moveSet, { asOf: asOf, balance: parseFloat($('bal').value) || 0, habit: parseFloat($('habit').value) || 0, daily: ev / 30.4, payday: parseInt($('payday').value, 10) || 28 });
+    state.R = R; state.P = P; state.G = G; state.pc = pc; state.E = { monthly: ev };
+    $('status').textContent = state.source + '. ' + R.subs.length + ' subscriptions, ' + R.other.length + ' other repeating payees. Everyday Sav card spend: ' + aed(ev, 0) + ' a month.';
+    renderKpis(); renderExec(); renderTab();
+  }
+
+  function renderKpis() {
+    var R = state.R, P = state.P, G = state.G;
+    var total = R.subs.reduce(function (a, u) { return a + u.monthly; }, 0), off = R.subs.filter(function (u) { return !u.onSav; });
+    var k = [
+      [R.subs.length, 'subscriptions found', aed(total, 0) + ' a month in total'],
+      [off.length, 'not on the Sav card', P.moved.length + ' worth moving'],
+      [aed(P.before, 0) + ' → ' + aed(P.totalMonthlyCashback, 0), 'cashback a month', P.gateMet ? 'clears the AED ' + P.gate + ' gate' : 'still under the AED ' + P.gate + ' gate'],
+      [aed(P.gain), 'net gain a month', P.tier === 'pro' ? 'before the AED 99 Pro fee' : 'after FX and top-up fees'],
+      [G.habit.declines.length, 'renewals declined', 'next 35 days, old top-up habit'],
+      [G.pot.declines.length, 'declined with a renewal pot', G.pot.topups + ' top-ups instead of ' + G.jit.topups]
+    ];
+    $('kpis').innerHTML = k.map(function (x) { return '<div class="kpi"><span class="v">' + esc(x[0]) + '</span><span class="k">' + esc(x[1]) + '</span><span class="s">' + esc(x[2]) + '</span></div>'; }).join('');
+  }
+
+  function renderExec() {
+    var R = state.R, P = state.P, G = state.G, pc = state.pc;
+    var total = R.subs.reduce(function (a, u) { return a + u.monthly; }, 0), off = R.subs.filter(function (u) { return !u.onSav; });
+    var stay = P.rows.filter(function (r) { return r.verdict !== 'move'; });
+    var accts = {}; R.subs.forEach(function (u) { accts[u.account] = 1; });
+    var hikes = R.subs.filter(function (u) { return u.flags.some(function (f) { return f.t === 'hike'; }); });
+    var L = [];
+    L.push('<b>' + R.subs.length + ' subscriptions</b> across ' + Object.keys(accts).length + ' accounts, ' + aed(total, 0) + ' a month. ' + off.length + ' of them are not on the Sav card' + (hikes.length ? '; ' + esc(hikes[0].name) + ' quietly went up in price' : '') + '.');
+    if (P.moved.length) {
+      var unlock = P.gateUnlock > 0 ? ' <b>' + aed(P.gateUnlock, 0) + ' of that is the gate unlocking</b> on spend already on the card; the subscriptions themselves add ' + aed(P.cashbackSubs, 0) + '.' : '';
+      L.push('Moving <b>' + P.moved.length + '</b> of them takes monthly cashback from <b>' + aed(P.before, 0) + ' to ' + aed(P.totalMonthlyCashback, 0) + '</b>.' + unlock);
+    } else L.push('Moving subscriptions earns this person nothing on ' + (P.tier === 'pro' ? 'Pro' : 'Standard') + (P.gateMet ? ': the cashback cap is already used.' : ': the month still does not clear the AED ' + P.gate + ' gate.'));
+    if (stay.length) L.push('<b>' + stay.length + ' should stay where they are</b> or move only for convenience: the cap is used, or an FX fee beats the cashback. The tool says so instead of promising 5%.');
+    L.push('Keep the old top-up habit and <b>' + G.habit.declines.length + ' renewal' + (G.habit.declines.length === 1 ? '' : 's') + ' decline</b> in the next 35 days. A renewal pot funded on payday brings that to <b>' + G.pot.declines.length + '</b> with ' + G.pot.topups + ' top-ups.');
+    L.push(pc.worth ? 'Sav Pro pays for itself here: <b>' + aed(pc.gain) + ' a month better</b> than Standard after the AED 99 fee.' : 'Sav Pro is <b>not</b> worth it for this person: ' + aed(-pc.gain) + ' a month worse than Standard after the fee. It starts to pay at about ' + aed(pc.breakEvenSpend, 0) + ' a month of eligible card spend, so that is when to offer it.');
+    $('exec').innerHTML = L.map(function (x) { return '<li>' + x + '</li>'; }).join('');
+  }
+
+  var TABS = [['subs', 'Subscriptions'], ['plan', 'Move plan'], ['guard', 'Renewal guard'], ['other', 'Not subscriptions']];
+  function renderTab() {
+    $('tabs').innerHTML = TABS.map(function (t) { return '<button data-tab="' + t[0] + '" aria-pressed="' + (state.tab === t[0]) + '">' + t[1] + '</button>'; }).join('');
+    var R = state.R, P = state.P, G = state.G, h = '';
+    if (state.tab === 'subs') {
+      h = '<div class="tablewrap"><table><thead><tr><th>Subscription</th><th>Paid from</th><th>Cycle</th><th class="num">Amount</th><th>Next</th><th>Worth knowing</th></tr></thead><tbody>' +
+        R.subs.map(function (u) {
+          return '<tr><td><b>' + esc(u.name) + '</b><br><span class="mono">' + esc(u.sample) + '</span></td><td>' + (u.onSav ? '<span class="pill t-good">Sav Card</span>' : esc(u.account)) + '</td><td>' + esc(CAD[u.cadence]) + '</td><td class="num">' + aed(u.amount) + (u.currency !== 'AED' ? '<br><span class="pill t-neutral">billed in ' + esc(u.currency) + '</span>' : '') + '</td><td>' + day(u.next) + '</td><td>' +
+            (u.flags.length ? u.flags.map(function (f) { return '<span class="pill ' + (f.t === 'hike' || f.t === 'overlap' ? 't-warn' : f.t === 'trial' ? 't-chase' : 't-neutral') + '">' + esc(f.s) + '</span>'; }).join('<br>') : '<span class="by">–</span>') + '</td></tr>';
+        }).join('') + '</tbody></table></div>' +
+        (R.singles.length ? '<p class="by" style="margin-top:10px">Seen once, so not counted: ' + R.singles.map(function (u) { return esc(u.name) + ' (' + aed(u.amount, 0) + ', ' + day(u.first) + ')'; }).join(', ') + '. Likely annual plans. A 180-day history cannot see an annual renewal coming; the product should ask.</p>' : '');
+    } else if (state.tab === 'plan') {
+      var V = { move: ['t-good', 'Move'], neutral: ['t-neutral', 'Optional'], keep: ['t-warn', 'Keep where it is'] };
+      h = '<p class="by" style="margin-bottom:10px">Priced on ' + (P.tier === 'pro' ? 'Sav Pro' : 'Sav Standard') + ': 5% cashback once the month clears AED ' + P.gate + ' of eligible spend, capped at ' + aed(SR.PRICING.capTotal[P.tier], 0) + ' a month and AED 200 per category; ' + (SR.PRICING.fx[P.tier] * 100).toFixed(1) + '% FX fee on non-AED billing; AED 1 per top-up. Spend already on the card uses the cap first.</p>' +
+        '<div class="tablewrap"><table><thead><tr><th>Subscription</th><th>Now on</th><th class="num">A month</th><th class="num">Cashback</th><th class="num">FX fee</th><th class="num">Net</th><th>Verdict</th></tr></thead><tbody>' +
+        P.rows.map(function (r) {
+          return '<tr><td><b>' + esc(r.name) + '</b>' + (r.store ? '<br><span class="by">One change in the store settings moves all its apps</span>' : '') + '</td><td>' + esc(r.account) + '</td><td class="num">' + aed(r.monthly) + '</td><td class="num">' + aed(r.cashback) + '</td><td class="num">' + (r.fxCost ? '−' + aed(r.fxCost) : '–') + '</td><td class="num"><b>' + aed(r.net) + '</b></td><td><span class="pill ' + V[r.verdict][0] + '">' + V[r.verdict][1] + '</span><br><span class="by">' + esc(r.why) + '</span></td></tr>';
+        }).join('') + '</tbody></table></div>' +
+        '<p class="by" style="margin-top:10px">' + (P.alreadyOnSav.length ? 'Already on the Sav card: ' + esc(P.alreadyOnSav.join(', ')) + '. ' : '') + 'Eligible spend this month with the moves: ' + aed(P.qualifying, 0) + '. Cashback before: ' + aed(P.before) + '; after: ' + aed(P.totalMonthlyCashback) + '; net gain after fees: <b>' + aed(P.gain) + '</b>.</p>';
+    } else if (state.tab === 'guard') {
+      var rowsG = [['Old habit', 'One top-up of the usual amount on payday', G.habit], ['Renewal pot', 'Payday top-up plus the next month’s renewals, held aside', G.pot], ['Day-before nudge', 'Top up the exact gap the day before each renewal', G.jit]];
+      h = '<p class="by" style="margin-bottom:10px">Next 35 days on a prepaid balance, after the moves. Renewals post first; everyday card spend comes out after. If the balance cannot cover everyday spend, the person pays another way at the till, which is visible and retryable. A declined renewal is neither.</p>' +
+        '<div class="tablewrap"><table><thead><tr><th>Approach</th><th>How it works</th><th class="num">Renewals declined</th><th class="num">Top-ups</th><th class="num">Fees</th></tr></thead><tbody>' +
+        rowsG.map(function (x) { return '<tr><td><b>' + x[0] + '</b></td><td>' + x[1] + '</td><td class="num">' + (x[2].declines.length ? '<span class="pill t-warn">' + x[2].declines.length + '</span>' : '<span class="pill t-good">0</span>') + '</td><td class="num">' + x[2].topups + '</td><td class="num">' + aed(x[2].fees, 0) + '</td></tr>'; }).join('') +
+        '</tbody></table></div><div class="two" style="margin-top:14px"><div class="card"><h3>Old habit</h3>' + timeline(G.habit) + '</div><div class="card"><h3>Renewal pot</h3>' + timeline(G.pot) + '</div></div>';
+    } else {
+      var K = { bill: ['t-chase', 'Bill'], rent: ['t-neutral', 'Rent'], transfer: ['t-neutral', 'Own money'], none: ['t-neutral', 'Not recurring'] };
+      h = '<p class="by" style="margin-bottom:10px">Repeating payees the detector looked at and did not call subscriptions, and why. Getting these wrong is what makes a subscription list feel broken.</p><div class="tablewrap"><table><thead><tr><th>Payee</th><th>Charges</th><th>Class</th><th>Why</th></tr></thead><tbody>' +
+        R.other.map(function (o) { return '<tr><td><b>' + esc(o.name) + '</b><br><span class="mono">' + esc(o.sample) + '</span></td><td class="num">' + o.count + '</td><td><span class="pill ' + K[o.kind][0] + '">' + K[o.kind][1] + '</span></td><td>' + esc(o.why) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+    }
+    $('panel').innerHTML = h;
+  }
+  function timeline(run) {
+    var ev = run.events.slice(0, 14);
+    return '<ul class="tl">' + ev.map(function (e) { return '<li class="e-' + e.t + '"><span class="mono">' + day(e.date) + '</span> ' + esc(e.s) + '</li>'; }).join('') + (run.events.length > ev.length ? '<li class="by">… ' + (run.events.length - ev.length) + ' more</li>' : '') + '</ul>';
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-tab]'); if (b) { state.tab = b.getAttribute('data-tab'); renderTab(); }
+  });
+  $('loadSample').addEventListener('click', loadSample);
+  $('run').addEventListener('click', run);
+  ['tier', 'everyday', 'curfx', 'bal', 'habit', 'payday', 'asof'].forEach(function (id) { $(id).addEventListener('change', run); });
+  $('file').addEventListener('change', function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var res = SR.readTransactions(rd.result);
+      if (res.error || !res.rows.length) { $('status').textContent = res.error || 'No transactions found in that file.'; return; }
+      state.txns = res.rows; state.source = f.name + ' · ' + res.rows.length + ' transactions'; state.user = true; $('everyday').value = ''; run();
+    };
+    rd.readAsText(f);
+  });
+  $('dlPlan').addEventListener('click', function () { if (state.P) download('sav_move_plan.csv', SR.toCSV(state.P.rows, ['name', 'account', 'currency', 'monthly', 'cashback', 'fxCost', 'net', 'verdict', 'why', 'next'])); });
+  $('dlSubs').addEventListener('click', function () {
+    if (!state.R) return;
+    download('subscriptions.csv', SR.toCSV(state.R.subs.map(function (u) { return { name: u.name, account: u.account, cadence: u.cadence, amount: u.amount, currency: u.currency, monthly: u.monthly, next: u.next, flags: u.flags.map(function (f) { return f.s; }).join('; ') }; }), ['name', 'account', 'cadence', 'amount', 'currency', 'monthly', 'next', 'flags']));
+  });
+  $('tpl').href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('Date,Account,Description,Amount (AED),Original currency,Type\n2026-10-05,Emirates NBD Debit,NETFLIX.COM AMSTERDAM NL,56.00,AED,Debit\n2026-10-28,Emirates NBD Debit,SALARY CREDIT,21500.00,AED,Credit\n');
+  loadSample();
+})();
+
+</script>
+
+</body></html>
