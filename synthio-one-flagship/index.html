@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A flagship event plan for Synthio Labs at MAPS 2027, with the payback maths. Independent plan from public sources.">
+</head><body>
+<title>One Flagship, Done Properly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* One 860px column: a memo to a founder with a working tool in the middle. */
+:root{
+  --paper:#F6F5F1; --panel:#FFFFFF; --ink:#15171B; --muted:#5C6068; --rule:#E0DED6; --soft:#EFEDE7;
+  --rec:#2a78d6; --lost:#eb6834; --neutral:#9A9C95; --good:#1F7A4D; --good-soft:#E3F1E8; --warn-soft:#FBEEE2; --chase-soft:#E5EEFA;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"Public Sans","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023;
+  --rec:#3987e5; --lost:#d95926; --neutral:#6E706B; --good:#6CCB97; --good-soft:#15291F; --warn-soft:#33241A; --chase-soft:#17243A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023;
+  --rec:#3987e5; --lost:#d95926; --neutral:#6E706B; --good:#6CCB97; --good-soft:#15291F; --warn-soft:#33241A; --chase-soft:#17243A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;margin:0;padding-inline:16px;padding-block:28px 72px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2{font-family:var(--f-display);line-height:1.06;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.6rem,9vw,4.6rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.45rem,4.4vw,2rem);font-weight:600}
+h3{font-size:1.02rem;margin:0}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow,.k,.sec{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec{color:var(--rec)}
+.dek{font-size:1.14rem;max-width:68ch}
+.by{font-size:.9rem;color:var(--muted)}
+a{color:var(--rec)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:6px}
+.note strong{color:var(--ink)}
+.exec{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--rec);border-radius:6px;padding:18px 20px}
+.exec ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:9px}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.clock{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.clock b{font-family:var(--f-display);font-size:3rem;line-height:1;color:var(--lost)}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+input[type=text],input[type=date],input[type=number],select{font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);color:var(--ink);min-width:0}
+button,.btn{font:inherit;font-size:.86rem;font-weight:600;padding:8px 12px;border-radius:4px;border:1px solid var(--rule);background:var(--soft);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+button.primary{background:var(--rec);border-color:var(--rec);color:#fff}
+button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.file{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+.file input{font-size:.8rem;max-width:100%}
+.status{font-size:.86rem;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi .v{font-family:var(--f-display);font-size:1.75rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:4px 12px;align-items:center;font-size:.88rem}
+.bar .lab{display:flex;justify-content:space-between;gap:10px}
+.bar .lab span:last-child{color:var(--muted);white-space:nowrap}
+.bar .track{grid-column:1/2;height:10px;background:var(--soft);border-radius:2px;overflow:hidden}
+.bar .fill{height:100%;border-radius:2px}
+.bar .val{grid-column:2;grid-row:1/3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+#panel table{min-width:680px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--soft);white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.t-good{background:var(--good-soft);color:var(--good)}
+.t-warn{background:var(--warn-soft);color:var(--lost)}
+.t-chase{background:var(--chase-soft);color:var(--rec)}
+.t-lost{background:var(--warn-soft);color:var(--lost)}
+.t-neutral{background:var(--soft);color:var(--muted)}
+.mono{font-family:var(--f-mono);font-size:.8rem}
+details.msg{border:1px solid var(--rule);border-radius:6px;background:var(--paper)}
+details.msg summary{cursor:pointer;padding:10px 12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+details.msg summary span:last-child{color:var(--muted);font-size:.86rem}
+details.msg pre{margin:0;padding:12px;white-space:pre-wrap;font-family:var(--f-mono);font-size:.78rem;border-top:1px solid var(--rule)}
+details.msg .acts{padding:0 12px 12px;display:flex;gap:8px}
+.list{display:flex;flex-direction:column;gap:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.card h3{font-size:.98rem}
+.card p,.card li{font-size:.92rem;color:var(--muted)}
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px}
+.steps li::before{content:counter(s);font-family:var(--f-mono);font-size:.8rem;width:26px;height:26px;border-radius:50%;background:var(--soft);display:grid;place-items:center}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.84rem}
+.flow span{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:6px 9px}
+.flow em{font-style:normal;color:var(--muted)}
+footer{font-size:.84rem;color:var(--muted);display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--rule);padding-top:18px}
+.controls input[type=number]{width:120px}
+#everyday{width:160px}
+.kpis{grid-template-columns:repeat(3,1fr)}
+td .pill{white-space:normal}
+ul.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:.84rem}
+ul.tl li{padding-left:12px;border-left:3px solid var(--rule);color:var(--muted)}
+ul.tl li.e-decline{border-color:var(--lost);color:var(--ink)}
+ul.tl li.e-topup{border-color:var(--rec)}
+ul.tl li.e-ok{border-color:var(--good)}
+.rules td:first-child{color:var(--muted)}
+@media (max-width:700px){.kpis{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.clock b{font-size:2.4rem}}
+.calc{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.calc label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+.calc input{width:100%}
+.funnel{display:flex;flex-direction:column;gap:6px}
+.frow{display:grid;grid-template-columns:160px 1fr 70px;gap:10px;align-items:center;font-size:.88rem}
+.frow .track{height:12px;background:var(--soft);border-radius:2px;overflow:hidden}
+.frow .fill{height:100%;background:var(--rec)}
+.frow b{text-align:right;font-variant-numeric:tabular-nums}
+.timeline{display:flex;flex-direction:column;gap:0;border-left:2px solid var(--rule);margin-left:6px}
+.timeline .t{position:relative;padding:0 0 14px 18px}
+.timeline .t::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--panel);border:2px solid var(--rec)}
+.timeline .w{font-family:var(--f-mono);font-size:.72rem;color:var(--rec);letter-spacing:.04em;text-transform:uppercase}
+@media (max-width:700px){.calc{grid-template-columns:1fr 1fr}.frow{grid-template-columns:110px 1fr 56px}}
+</style>
+
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:16px">
+  <p class="eyebrow">For Synthio Labs · Founder’s Office Associate · US market · independent plan from public sources</p>
+  <h1>One flagship, done properly</h1>
+  <p class="dek">Synthio sells a new kind of colleague to pharma: an AI medical expert that talks to doctors. Buyers have to hear it to believe it, and the people who need to hear it are in a small number of rooms each year. With a seed-stage team and limited founder time, the question isn’t which events to attend. It’s which one to own, and how to make it turn into pilots. This is how I’d run that, using Medical Affairs’ biggest US meeting as the example.</p>
+  <p class="by">Aditya Mathur · <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a> · all dates and figures sourced at the bottom; anything I guessed is labelled and editable</p>
+</header>
+
+<section>
+  <div class="exec">
+    <p class="k" style="margin-bottom:10px">The short version</p>
+    <ol>
+      <li><b>Own one room, attend two.</b> MAPS Global Annual Meeting (Miami, 14–17 March 2027) is the flagship: it’s the Medical Affairs society, and Synthio’s AI medical expert is a Medical Affairs product first. Pharma USA (Philadelphia, March 2027) and DIA (San Diego, 28 June–1 July 2027) are for meetings, not booths.</li>
+      <li><b>Make them hear it.</b> The product is a voice. The centre of the event is a live “call the AI medical expert” demo on a public FDA label, plus a 20-seat founder dinner for heads of Medical Affairs and Medical Information.</li>
+      <li><b>Tell the story without logos.</b> Pharma customers rarely let vendors name them. The campaign runs on anonymised proof (“a top-10 pharma”), the public Soteri Skin result (5,000+ eczema patients reached in 48 hours), and the live demo.</li>
+      <li><b>Judge it on pilots, not badge scans.</b> The calculator below shows the meetings and pilots the event must produce to pay back. If the plan can’t show that before money is spent, it gets cut.</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <p class="sec">1 · Why these three rooms</p>
+  <h2>Match each product to the buyer who sits in that room</h2>
+  <div class="tablewrap"><table><thead><tr><th>Event</th><th>When and where</th><th>Who’s in the room</th><th>Synthio fit</th><th>Play</th></tr></thead><tbody>
+    <tr><td><b>MAPS Global Annual Meeting</b></td><td>14–17 Mar 2027, Miami</td><td>Medical Affairs: the society has 18,000+ members across 400+ companies</td><td>AI medical expert (physician conversations, medical information), Jarvis for field medical teams</td><td><span class="pill t-good">Own it</span> live demo, founder dinner, pre-booked meetings</td></tr>
+    <tr><td><b>Reuters Events Pharma USA</b></td><td>March 2027, Philadelphia*</td><td>1,200+ attendees, 87% director level or above, all from top-50 pharma; commercial, marketing, medical, AI</td><td>Ather (omnichannel HCP engagement), Polaris HQ insights</td><td><span class="pill t-chase">Meetings</span> founders attend; 10–15 pre-booked meetings</td></tr>
+    <tr><td><b>DIA Global Annual Meeting</b></td><td>28 Jun–1 Jul 2027, San Diego</td><td>4,000+ across clinical, regulatory, medical affairs, market access, digital health</td><td>Simulation Studio (clinician and patient digital twins) for research and strategy teams</td><td><span class="pill t-neutral">Selective</span> one founder, targeted meetings</td></tr>
+  </tbody></table></div>
+  <p class="by">* The organiser’s page lists both 10–11 and 16–17 March and doesn’t confirm the venue; Philadelphia is where the 2026 edition was held. Confirm before booking anything.</p>
+</section>
+
+<section>
+  <p class="sec">2 · The flagship plan</p>
+  <h2>MAPS 2027, from today to 30 days after</h2>
+  <div class="timeline">
+    <div class="t"><p class="w">Weeks 1–2 (now)</p><p><b>Decide and budget.</b> Confirm with the founders what’s already committed. Get the real exhibit and sponsorship quotes, and check if any speaking or session slots are still open. Set the pilot target that would justify the spend (see calculator).</p></div>
+    <div class="t"><p class="w">Weeks 3–6</p><p><b>Build the target list.</b> About 150 accounts: top-50 pharma plus biotechs with 2027 launches. Name 2–3 people per account: VP or Head of Medical Affairs, Head of Medical Information, Field Medical Excellence lead. Sources: the MAPS speaker list, LinkedIn, and launch calendars.</p></div>
+    <div class="t"><p class="w">Weeks 6–10</p><p><b>Make the assets.</b> Three of them: a one-page brief, “The physicians your field team never reaches”; a 90-second demo recording; and the live demo script, built on one public FDA label, on-label only, no patient data, cleared with Synthio’s compliance lead.</p></div>
+    <div class="t"><p class="w">Weeks 10–16</p><p><b>Book the meetings before the flight.</b> Founder-signed invitations to the 20-seat dinner, with a three-touch email and LinkedIn sequence to the rest of the list. Target 25 meetings booked before arrival, tracked in one sheet per account.</p></div>
+    <div class="t"><p class="w">Event week</p><p><b>Run the room.</b> Every visitor can call the AI medical expert and ask a real clinical question; every meeting ends with a named next step. Daily 15-minute debrief: who came, what they asked, which objections came up.</p></div>
+    <div class="t"><p class="w">Within 48 hours</p><p><b>Follow up while they remember.</b> A personal note from the founder who met them, with the recording of their own demo call, or a one-page pilot outline for warm accounts.</p></div>
+    <div class="t"><p class="w">Day 30</p><p><b>Report to the founders.</b> Meetings held, pilots in discussion, cost per meeting, which story landed, and whether to repeat it in 2028.</p></div>
+  </div>
+</section>
+
+<section>
+  <p class="sec">3 · Will it pay back?</p>
+  <h2>The numbers the event has to hit, before money is spent</h2>
+  <p>Every input is my guess and is editable. The point is the structure: work out the pilots needed to justify the cost first, then check whether the plan can realistically produce them.</p>
+  <div class="sheet">
+    <div class="calc">
+      <label>All-in cost (USD)<input type="number" id="cost" value="40000" step="1000" min="0"></label>
+      <label>Named accounts targeted<input type="number" id="accts" value="150" step="10" min="0"></label>
+      <label>Accounts that take a meeting (%)<input type="number" id="mtg" value="20" step="1" min="0" max="100"></label>
+      <label>Meetings that become a pilot discussion (%)<input type="number" id="pil" value="25" step="1" min="0" max="100"></label>
+      <label>Pilot discussions that sign (%)<input type="number" id="win" value="30" step="1" min="0" max="100"></label>
+      <label>Founder days spent<input type="number" id="days" value="8" step="1" min="0"></label>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="funnel" id="funnel"></div>
+    <p class="status" id="verdict"></p>
+  </div>
+</section>
+
+<section>
+  <p class="sec">4 · The weekly rhythm</p>
+  <h2>“A founder’s ten-item list becomes ten outcomes by Friday”</h2>
+  <p>The same discipline runs everything else. Each item has one owner, a finished state anyone can check, and a date. Anything slipping gets raised on Wednesday, not reported on Friday.</p>
+  <div class="tablewrap"><table><thead><tr><th>Founder ask</th><th>Outcome by Friday</th><th>Owner</th><th>Status</th></tr></thead><tbody>
+    <tr><td>“Get us into MAPS properly”</td><td>Exhibit quote, dinner venue shortlist and a go/no-go memo in the founders’ inbox</td><td>FO</td><td><span class="pill t-good">On track</span></td></tr>
+    <tr><td>“We need a story for medical affairs”</td><td>Draft one-pager reviewed by the CEO and compliance</td><td>FO + product marketing</td><td><span class="pill t-chase">Review Wed</span></td></tr>
+    <tr><td>“Follow up with the people from last week”</td><td>Every contact has a sent note and a next step in the tracker</td><td>FO</td><td><span class="pill t-good">Done</span></td></tr>
+    <tr><td>“Prep the board update”</td><td>Pipeline, pilots and hiring numbers pulled and checked</td><td>FO</td><td><span class="pill t-warn">Blocked: CRM export</span></td></tr>
+  </tbody></table></div>
+  <p class="by">Examples only, to show the format. Not Synthio’s actual priorities.</p>
+</section>
+
+<section>
+  <p class="sec">5 · What I don’t know</p>
+  <ul class="plain">
+    <li>Which events Synthio has already committed to, and the real budget. The plan bends to both.</li>
+    <li>What Synthio can say publicly about its top-10 pharma pilots. That decides how much of the story is case study and how much is live demo.</li>
+    <li>Which product the founders want to lead with in 2027. If it’s Ather for commercial teams, Pharma USA becomes the flagship and MAPS drops to meetings.</li>
+  </ul>
+</section>
+
+<footer>
+  <p><strong>Sources and honesty notes.</strong> Synthio products, funding, founders and the Soteri Skin result: Synthio’s seed announcement (Business Wire, Nov 2025; Synthio blog) and its Y Combinator profile. MAPS 2027 dates and membership: the MAPS 2027 meeting site. DIA 2027 dates, venue and attendance: diaglobal.org. Pharma USA audience figures: the Reuters Events Pharma USA page, which shows conflicting March dates. Calculator inputs are my assumptions, not Synthio data. Example tracker rows are illustrative. Read 11 Nov 2026. Not affiliated with Synthio Labs.</p>
+  <p>Aditya Mathur · <a href="https://adimathur-creates.github.io/">More work</a></p>
+</footer>
+</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function v(id) { var x = parseFloat($(id).value); return isNaN(x) || x < 0 ? 0 : x; }
+  function usd(x) { return '$' + Math.round(x).toLocaleString('en-US'); }
+  function run() {
+    var cost = v('cost'), accts = v('accts'), mtg = Math.min(100, v('mtg')) / 100, pil = Math.min(100, v('pil')) / 100, win = Math.min(100, v('win')) / 100, days = v('days');
+    var meetings = accts * mtg, pilots = meetings * pil, deals = pilots * win;
+    var k = [
+      [Math.round(meetings), 'meetings', usd(meetings ? cost / meetings : 0) + ' each'],
+      [pilots.toFixed(1), 'pilot discussions', usd(pilots ? cost / pilots : 0) + ' each'],
+      [deals.toFixed(1), 'signed pilots', deals ? usd(cost / deals) + ' of event cost per signed pilot' : 'none at these rates'],
+      [deals ? usd(cost / deals) : '–', 'first-year value each signed pilot must exceed', 'just to cover the event'],
+      [days ? (meetings / days).toFixed(1) : '–', 'meetings per founder day', 'founder time is the scarcer budget'],
+      [deals >= 1 ? 'Go' : 'Rethink', 'verdict at these inputs', deals >= 1 ? 'at least one signed pilot expected' : 'fewer than one signed pilot expected']
+    ];
+    $('kpis').innerHTML = k.map(function (x) { return '<div class="kpi"><span class="v">' + x[0] + '</span><span class="k">' + x[1] + '</span><span class="s">' + x[2] + '</span></div>'; }).join('');
+    var rows = [['Accounts targeted', accts], ['Meetings', meetings], ['Pilot discussions', pilots], ['Signed pilots', deals]];
+    $('funnel').innerHTML = rows.map(function (r) { return '<div class="frow"><span>' + r[0] + '</span><div class="track"><div class="fill" style="width:' + (accts ? r[1] / accts * 100 : 0).toFixed(1) + '%"></div></div><b>' + (r[1] >= 10 ? Math.round(r[1]) : r[1].toFixed(1)) + '</b></div>'; }).join('');
+    $('verdict').textContent = deals >= 1 ? 'At these rates the event pays back if one signed pilot is worth more than ' + usd(cost / deals) + ' in its first year. Check that against Synthio’s real pilot size before committing.' : 'At these rates the event is unlikely to produce a signed pilot. Raise the meeting rate with pre-booking, cut the cost, or drop to meetings-only.';
+  }
+  ['cost', 'accts', 'mtg', 'pil', 'win', 'days'].forEach(function (id) { $(id).addEventListener('input', run); });
+  run();
+})();
+</script>
+
+</body></html>
