@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Routes every failed smallcase Gateway transaction to whoever can fix it: partner, investor, broker, market or Gateway. Independent work on synthetic data.">
+</head><body>
+<title>Whose Failure Is It</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* One 860px column: a memo to a founder with a working tool in the middle. */
+:root{
+  --paper:#F6F5F1; --panel:#FFFFFF; --ink:#15171B; --muted:#5C6068; --rule:#E0DED6; --soft:#EFEDE7;
+  --rec:#2a78d6; --lost:#eb6834; --neutral:#9A9C95; --good:#1F7A4D; --good-soft:#E3F1E8; --warn-soft:#FBEEE2; --chase-soft:#E5EEFA;
+  --c-partner:#eb6834; --c-user:#2a78d6; --c-broker:#7a5bd1; --c-market:#8C8E87; --c-gateway:#B07D12;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"Public Sans","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023;
+  --rec:#3987e5; --lost:#d95926; --neutral:#6E706B; --c-partner:#d95926; --c-user:#3987e5; --c-broker:#9479e0; --c-market:#77796F; --c-gateway:#D2A23A; --good:#6CCB97; --good-soft:#15291F; --warn-soft:#33241A; --chase-soft:#17243A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023;
+  --rec:#3987e5; --lost:#d95926; --neutral:#6E706B; --c-partner:#d95926; --c-user:#3987e5; --c-broker:#9479e0; --c-market:#77796F; --c-gateway:#D2A23A; --good:#6CCB97; --good-soft:#15291F; --warn-soft:#33241A; --chase-soft:#17243A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;margin:0;padding-inline:16px;padding-block:28px 72px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2{font-family:var(--f-display);line-height:1.06;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.6rem,9vw,4.6rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.45rem,4.4vw,2rem);font-weight:600}
+h3{font-size:1.02rem;margin:0}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow,.k,.sec{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec{color:var(--rec)}
+.dek{font-size:1.14rem;max-width:68ch}
+.by{font-size:.9rem;color:var(--muted)}
+a{color:var(--rec)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:6px}
+.note strong{color:var(--ink)}
+.exec{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--rec);border-radius:6px;padding:18px 20px}
+.exec ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:9px}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.clock{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.clock b{font-family:var(--f-display);font-size:3rem;line-height:1;color:var(--lost)}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+input[type=text],input[type=date],input[type=number],select{font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);color:var(--ink);min-width:0}
+button,.btn{font:inherit;font-size:.86rem;font-weight:600;padding:8px 12px;border-radius:4px;border:1px solid var(--rule);background:var(--soft);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+button.primary{background:var(--rec);border-color:var(--rec);color:#fff}
+button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.file{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+.file input{font-size:.8rem;max-width:100%}
+.status{font-size:.86rem;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi .v{font-family:var(--f-display);font-size:1.75rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:4px 12px;align-items:center;font-size:.88rem}
+.bar .lab{display:flex;justify-content:space-between;gap:10px}
+.bar .lab span:last-child{color:var(--muted);white-space:nowrap}
+.bar .track{grid-column:1/2;height:10px;background:var(--soft);border-radius:2px;overflow:hidden}
+.bar .fill{height:100%;border-radius:2px}
+.bar .val{grid-column:2;grid-row:1/3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+#panel table{min-width:680px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--soft);white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.t-good{background:var(--good-soft);color:var(--good)}
+.t-warn{background:var(--warn-soft);color:var(--lost)}
+.t-chase{background:var(--chase-soft);color:var(--rec)}
+.t-lost{background:var(--warn-soft);color:var(--lost)}
+.t-neutral{background:var(--soft);color:var(--muted)}
+.mono{font-family:var(--f-mono);font-size:.8rem}
+details.msg{border:1px solid var(--rule);border-radius:6px;background:var(--paper)}
+details.msg summary{cursor:pointer;padding:10px 12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+details.msg summary span:last-child{color:var(--muted);font-size:.86rem}
+details.msg pre{margin:0;padding:12px;white-space:pre-wrap;font-family:var(--f-mono);font-size:.78rem;border-top:1px solid var(--rule)}
+details.msg .acts{padding:0 12px 12px;display:flex;gap:8px}
+.list{display:flex;flex-direction:column;gap:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.card h3{font-size:.98rem}
+.card p,.card li{font-size:.92rem;color:var(--muted)}
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px}
+.steps li::before{content:counter(s);font-family:var(--f-mono);font-size:.8rem;width:26px;height:26px;border-radius:50%;background:var(--soft);display:grid;place-items:center}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.84rem}
+.flow span{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:6px 9px}
+.flow em{font-style:normal;color:var(--muted)}
+footer{font-size:.84rem;color:var(--muted);display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--rule);padding-top:18px}
+.controls input[type=number]{width:120px}
+#everyday{width:160px}
+.kpis{grid-template-columns:repeat(3,1fr)}
+td .pill{white-space:normal}
+.dcard{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--rule);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.dhead{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+pre.report{white-space:pre-wrap;font-family:var(--f-mono);font-size:.78rem;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:14px;margin:0;max-height:520px;overflow:auto}
+.owners td:nth-child(2){font-family:var(--f-mono);font-size:.8rem}
+ul.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:.84rem}
+ul.tl li{padding-left:12px;border-left:3px solid var(--rule);color:var(--muted)}
+ul.tl li.e-decline{border-color:var(--lost);color:var(--ink)}
+ul.tl li.e-topup{border-color:var(--rec)}
+ul.tl li.e-ok{border-color:var(--good)}
+.rules td:first-child{color:var(--muted)}
+@media (max-width:700px){.kpis{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.clock b{font-size:2.4rem}}
+</style>
+
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:16px">
+  <p class="eyebrow">For CASE Platforms (smallcase) · Partner Platforms · Gateway · independent work on synthetic data</p>
+  <h1>Whose failure is it?</h1>
+  <p class="dek">When a partner’s Gateway conversion drops, the first question is always the same: our SDK, the broker, the investor, or the partner’s own integration? Answering it usually takes a ticket, logs from three systems and days of back and forth, while the partner assumes it’s Gateway. I built the diagnosis that answers it in a minute, using the error codes and order statuses Gateway already publishes, and sends each failure to whoever can fix it.</p>
+  <p class="by">Aditya Mathur · <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a> · built with Claude Code; every number in the summary and the tool is computed live from the data below</p>
+</header>
+
+<section>
+  <div class="exec">
+    <p class="k" style="margin-bottom:10px">The short version, for the sample partner</p>
+    <ol id="exec"></ol>
+  </div>
+</section>
+
+<section>
+  <p class="sec">1 · The problem</p>
+  <h2>Every failed transaction looks like Gateway’s fault to the partner</h2>
+  <p>Gateway is how 250+ wealth players and financial institutions put investing inside their own apps. Partner adoption grows when transactions complete. When they don’t, the partner sees one thing: “it failed inside the smallcase flow”. The data to tell the causes apart already exists. Gateway documents its transaction error codes (1001 to 4006) and the order errorCodes brokers return. But a code isn’t an owner, and the same drop in conversion can come from five different places, each with a different fix:</p>
+  <div class="tablewrap"><table class="owners"><thead><tr><th>Owner</th><th>Example codes</th><th>Who acts</th><th>What changes</th></tr></thead><tbody>
+    <tr><td><b style="color:var(--c-partner)">Partner integration</b></td><td>3001, 3003, invalid_jwt, 1001*</td><td>Partner’s engineers</td><td>Fresh transactionId per attempt, one smallcaseAuthId per user, a working webhook, AMO after hours</td></tr>
+    <tr><td><b style="color:var(--c-user)">Investor</b></td><td>1010–1012, marginsExceeded, holdingsAuthorization</td><td>The investor, if the flow asks at the right moment</td><td>Funds and CDSL authorisation checked before the order screen, not after</td></tr>
+    <tr><td><b style="color:var(--c-broker)">Broker</b></td><td>adapterError, omsMaintenance</td><td>smallcase broker ops</td><td>Incident alert, a notice before login, re-offer the order after recovery</td></tr>
+    <tr><td><b style="color:var(--c-market)">Market rules</b></td><td>circuitLimitExceeded, ASMGSMList</td><td>Nobody</td><td>Explain it to the investor; don’t count it against anyone</td></tr>
+    <tr><td><b style="color:var(--c-gateway)">smallcase Gateway</b></td><td>2000, order status ERROR</td><td>smallcase engineering</td><td>Investigate first; reconcile unknown statuses</td></tr>
+  </tbody></table></div>
+  <p class="by">* user_mismatch (1001) is usually an investor logging in with another account. When one smallcaseAuthId is saved against several of the partner’s users, it’s a partner bug. The tool tells them apart.</p>
+</section>
+
+<section id="tool">
+  <p class="sec">2 · The working tool</p>
+  <h2>A partner’s Gateway log in, every failure routed, a report out</h2>
+  <p>It loads with a fictional wealth app’s 30 days of Gateway transactions: about 16,000 attempts across six fictional brokers, on Android, iOS and web. The columns are the ones a partner already gets from SDK responses and webhooks. Upload your own CSV in the same shape; it runs in the browser and nothing is uploaded.</p>
+  <div class="sheet">
+    <div class="controls">
+      <button class="primary" id="loadSample">Load sample partner</button>
+      <label class="file">Gateway transactions (CSV)<input type="file" id="file" accept=".csv,text/csv"></label>
+      <label>Partner name<input type="text" id="partner" size="18"></label>
+      <button id="run">Re-run</button>
+    </div>
+    <p class="status" id="status"></p>
+    <div class="kpis" id="kpis"></div>
+    <div>
+      <p class="k" style="margin-bottom:10px">Everything that didn’t complete, by who can fix it</p>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div id="panel"></div>
+    <div class="controls"><button id="dlRows">Download routed failures (CSV)</button><button id="dlRecon">Download reconcile list (CSV)</button><button id="dlRep">Download partner report</button><a class="btn" id="tpl" download="gateway_log_template.csv">CSV template</a></div>
+  </div>
+  <p class="note"><strong>Accuracy, honestly.</strong> Across 20 synthetic partners (308,952 transactions) it routed every failure to the owner I planted. It found all seven planted problems every time, put the broker incident on the right broker and hours, and raised no false incident on a healthy broker. I wrote that data myself, so a real log will be messier. Real code mixes will differ, and the thresholds should be tuned on Gateway’s own data.</p>
+</section>
+
+<section>
+  <p class="sec">3 · What I would ship</p>
+  <h2>Four changes, ordered by how much partner pain they remove</h2>
+  <ol class="steps">
+    <li><div><h3>Integration health for every partner</h3><p class="by">The same routing, as a page in the partner dashboard and a weekly email to the partner’s engineering lead. Partner bugs come with evidence and the exact fix, and broker and market failures are shown as “not yours”. That last part is what stops a partner blaming Gateway for a broker outage.</p></div></li>
+    <li><div><h3>Checks before the order screen</h3><p class="by">Most investor failures are predictable. Check funds before a buy, since Gateway can already fetch funds. Prompt CDSL authorisation before a sell at brokers where it keeps failing. Offer AMO automatically after hours. Each one turns a rejection after login into a prompt before it.</p></div></li>
+    <li><div><h3>Broker incident detection</h3><p class="by">Compare each broker’s connection-failure rate per hour with its own normal rate. During an incident, show a notice in the broker chooser and offer to place the order when the broker recovers. Alert broker ops before the first partner complains.</p></div></li>
+    <li><div><h3>Catch integration bugs in the sandbox</h3><p class="by">Fail the integration checklist if a transactionId is reused, a smallcaseAuthId is saved for two users, or the webhook doesn’t answer. These are the bugs this tool finds in production; they’re cheaper to catch before go-live.</p></div></li>
+  </ol>
+  <div class="tablewrap"><table><thead><tr><th></th><th>Version 1</th><th>Later</th></tr></thead><tbody>
+    <tr><td>Who</td><td>The 5 partners with the most “conversion is down” tickets</td><td>Every Gateway partner, in the dashboard</td></tr>
+    <tr><td>Data</td><td>Gateway’s own transaction and order records, so the partner sends nothing</td><td>Partner-side context (app version, platform) passed in the notes field</td></tr>
+    <tr><td>Output</td><td>Weekly report, sent by the partner manager</td><td>Live dashboard, alerts, SDK pre-checks</td></tr>
+    <tr><td>Not doing</td><td colspan="2">Ranking brokers publicly, or showing partners another partner’s data.</td></tr>
+  </tbody></table></div>
+</section>
+
+<section>
+  <p class="sec">4 · How we would know</p>
+  <h2>Partner completion and time to diagnose, not dashboard views</h2>
+  <div class="two">
+    <div class="card"><h3>Main measure</h3><p>Completion rate per partner, counting only transactions that got past the investor’s own choices (so investor drop-offs don’t hide integration bugs).</p></div>
+    <div class="card"><h3>Speed</h3><p>Time from a partner’s “conversion is down” ticket to a named cause. Today’s baseline comes from the support queue.</p></div>
+    <div class="card"><h3>Proof the report works</h3><p>Partner-side failures should fall within two releases of a partner getting the report. If they don’t, the report is being read and ignored, and the fix is in how it’s delivered.</p></div>
+    <div class="card"><h3>Guardrail</h3><p>False broker-incident alerts. One wrong alert to broker ops costs more trust than ten missed small ones, so the bar starts high and drops only with evidence.</p></div>
+  </div>
+</section>
+
+<section>
+  <p class="sec">5 · What I don’t know</p>
+  <ul class="plain">
+    <li><b>What exists internally.</b> smallcase almost certainly monitors brokers and errors already. This is the partner-facing layer and the routing logic. I’d start by finding out what’s there and building only the gap.</li>
+    <li><b>The real mix of codes.</b> My numbers are invented. The first week would be spent on real logs to see which owner actually dominates, partner by partner.</li>
+    <li><b>Broker-specific behaviour.</b> CDSL authorisation and dormant-account rules differ by broker. The hotspot logic finds them from data rather than assuming them.</li>
+    <li><b>The order of the four changes.</b> If most partners are well integrated, pre-checks in the SDK move more transactions than the health report does, and should go first.</li>
+  </ul>
+</section>
+
+<section>
+  <p class="sec">6 · How it’s built</p>
+  <div class="flow"><span>Gateway log (SDK responses + webhooks)</span><em>→</em><span>classify every transaction against the documented codes</span><em>→</em><span>7 pattern checks</span><em>→</em><span>owner · evidence · fix</span><em>→</em><span>partner report · reconcile list</span></div>
+  <p class="by">27 automated tests. They check owner routing against a known answer key (20 synthetic partners), each of the seven pattern checks, broker incidents on the right broker and hours with no false alarms, single codes against the docs (including the marginExceeded spelling the docs flag and unknown codes falling back safely), market hours, the reconcile list, the partner report, and messy exports with title rows, other header names and dd/mm/yyyy dates.</p>
+</section>
+
+<footer>
+  <p><strong>Honesty notes.</strong> The partner, its users, the brokers and every transaction are invented. Broker names are fictional on purpose, so no real broker is implied to have had an incident. Error codes, order errorCodes and statuses come from smallcase Gateway’s public developer docs (Transaction Errors; Order errors: placement and execution; Transaction Responses; User and broker sessions), read 11 Nov 2026, with descriptions paraphrased. Company figures are from CASE Platforms’ August 2026 announcement. I have no access to smallcase’s data, partners or internal tools. Not affiliated with CASE Platforms.</p>
+  <p>Aditya Mathur · <a href="https://adimathur-creates.github.io/">More work</a></p>
+</footer>
+</div>
+<script>
+// GD: 30 days of a fictional wealth app's smallcase Gateway transactions, with planted problems and the answer key.
+// Partner, users and brokers are invented. Broker names are fictional on purpose: no real broker had these incidents.
+var GD = (function () {
+  'use strict';
+  function rng(seed) { var s = seed >>> 0; return function () { s = (s + 0x6D2B79F5) >>> 0; var t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  var BROKERS = [['Kestrel Broking', 26], ['Northwind Securities', 20], ['Peregrine Capital', 16], ['Lark Invest', 14], ['Tern Securities', 12], ['Heron Direct', 12]];
+  var CDSL_BROKERS = { 'Tern Securities': 1, 'Heron Direct': 1 };
+  var START = Date.UTC(2026, 9, 5); // Mon 5 Oct 2026
+  var DAYS = 30;
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function stamp(ms) { var d = new Date(ms); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()) + ' ' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()); }
+  function open(ms) { var d = new Date(ms), wd = d.getUTCDay(), m = d.getUTCHours() * 60 + d.getUTCMinutes(); return wd >= 1 && wd <= 5 && m >= 555 && m < 930; }
+
+  function generate(seed) {
+    var r = rng(seed || 7), hex = function (n) { var s = ''; while (s.length < n) s += Math.floor(r() * 16).toString(16); return s; };
+    function pick(arr) { return arr[Math.floor(r() * arr.length)]; }
+    function wpick(arr) { var tot = arr.reduce(function (a, x) { return a + x[1]; }, 0), v = r() * tot; for (var i = 0; i < arr.length; i++) { v -= arr[i][1]; if (v <= 0) return arr[i][0]; } return arr[arr.length - 1][0]; }
+
+    // Planted problems.
+    var weekdays = []; for (var dd = 5; dd < 25; dd++) { var w = new Date(START + dd * 864e5).getUTCDay(); if (w >= 1 && w <= 5) weekdays.push(dd); }
+    var incDay = pick(weekdays), incBroker = pick(['Peregrine Capital', 'Lark Invest', 'Northwind Securities']);
+    var incFrom = START + incDay * 864e5 + 11 * 3600e3, incTo = incFrom + 2 * 3600e3;
+    var whDay = pick(weekdays.filter(function (x) { return x !== incDay; })), whFrom = START + whDay * 864e5 + 10 * 3600e3, whTo = whFrom + 6 * 3600e3;
+    var bugVersion = '5.2.0', bugFromDay = 8;
+
+    var users = [];
+    for (var u = 0; u < 2600; u++) {
+      var plat = wpick([['android', 50], ['web', 35], ['ios', 15]]);
+      users.push({ id: 'U' + (100000 + u), broker: wpick(BROKERS), platform: plat, auth: null, newVersionDay: plat === 'android' && r() < 0.55 ? bugFromDay + Math.floor(r() * 6) : 99, sharedFrom: null });
+    }
+    // Partner bug: 14 users get another user's smallcaseAuthId saved against them.
+    var shared = [];
+    for (var k = 0; k < 14; k++) { var a = users[k * 2], b = users[k * 2 + 1]; a.auth = 'SCA' + hex(10); b.auth = a.auth; b.sharedFrom = a.id; a.broker = b.broker = a.broker; shared.push(a.auth); }
+
+    var rows = [], truth = { incident: { broker: incBroker, from: incFrom, to: incTo }, webhook: { from: whFrom, to: whTo }, bugVersion: bugVersion, shared: shared, amoPlatform: 'android', cdsl: Object.keys(CDSL_BROKERS) };
+    function hourWeight() { return wpick([[8, 3], [9, 9], [10, 12], [11, 12], [12, 10], [13, 9], [14, 10], [15, 8], [16, 3], [17, 2], [18, 2], [19, 2], [20, 3], [21, 3], [22, 2]]); }
+
+    for (var day = 0; day < DAYS; day++) {
+      var wd = new Date(START + day * 864e5).getUTCDay(), n = wd === 0 || wd === 6 ? 120 : 640;
+      for (var i = 0; i < n; i++) {
+        var usr = i < 28 && day % 3 === 0 ? users[i] : users[28 + Math.floor(r() * (users.length - 28))];
+        var ms = START + day * 864e5 + hourWeight() * 3600e3 + Math.floor(r() * 3600) * 1000;
+        var version = usr.platform === 'android' ? (day >= usr.newVersionDay ? bugVersion : '5.1.4') : usr.platform === 'ios' ? '5.1.2' : 'web';
+        var intent = wpick([['SECURITIES', 63], ['SMALLCASE', 23], ['HOLDINGS_IMPORT', 14]]);
+        var side = intent === 'HOLDINGS_IMPORT' ? '' : wpick([['BUY', 68], ['SELL', 20], ['MIXED', 12]]);
+        var o = { created_at: stamp(ms), transaction_id: 'TRX_' + hex(16), partner_user_id: usr.id, intent: intent, auth_mode: usr.auth ? 'connected' : 'guest', broker: usr.broker, platform: usr.platform,
+                  app_version: version, error_code: '', smallcase_auth_id: usr.auth || '', side: side, variety: 'regular', batch_status: '', orders_total: 0, orders_complete: 0, order_error_codes: '', order_statuses: '',
+                  webhook_delivered: '', _owner: null, _diag: [] };
+        var inWh = ms >= whFrom && ms < whTo;
+        function err(code, owner) { o.error_code = String(code); o._owner = owner; }
+        function finish() { rows.push(o); }
+
+        if (usr.sharedFrom && usr.auth) { err(1001, 'partner'); o._diag.push('authmap'); }
+        else if (!usr.auth && r() < 0.09) err(1010, 'user');
+        else if (!usr.auth && r() < 0.01) err(1007, 'user');
+        else if (r() < 0.05) err(1011, 'user');
+        else if (usr.platform === 'android' && r() < 0.003) err(1014, 'user');
+        else if (usr.auth && shared.indexOf(usr.auth) < 0 && r() < 0.008) err(1001, 'user');
+        else if (intent === 'HOLDINGS_IMPORT') {
+          if (r() < 0.06) err(1003, 'user');
+          else if (inWh) { err(3003, 'partner'); o._diag.push('webhook'); }
+          else { o.webhook_delivered = 'yes'; if (!usr.auth) usr.auth = 'SCA' + hex(10); o.smallcase_auth_id = usr.auth; }
+        }
+        else if (r() < 0.04) err(1012, 'user');
+        else if (r() < 0.02) err(1005, 'user');
+        else if (r() < 0.004) err(1030, 'user');
+        else if (r() < 0.003) err(2000, 'gateway');
+        else if (intent === 'SMALLCASE' && r() < 0.01) err(4000, 'user');
+        else if (intent === 'SMALLCASE' && r() < 0.008) err(4006, 'user');
+        else if (intent === 'SMALLCASE' && r() < 0.008) err(1020, 'market');
+        else if (!open(ms)) {
+          if (usr.platform === 'android') { err(4004, 'partner'); o._diag.push('amo'); }
+          else {
+            var na = intent === 'SMALLCASE' ? 4 + Math.floor(r() * 8) : 1 + Math.floor(r() * 5);
+            o.variety = 'amo'; o.batch_status = 'PLACED'; o.orders_total = na; o.orders_complete = 0;
+            o.order_statuses = Array(na).fill('PLACED').join(';'); o.webhook_delivered = inWh ? 'no' : 'yes'; if (inWh) o._diag.push('webhook');
+            if (!usr.auth) { usr.auth = 'SCA' + hex(10); o.smallcase_auth_id = usr.auth; }
+          }
+        }
+        else {
+          // Order reaches the broker.
+          var nn = intent === 'SMALLCASE' ? 4 + Math.floor(r() * 8) : 1 + Math.floor(r() * 5), codes = [], statuses = [], cause = null, all = false, sellOnly = false;
+          var inInc = usr.broker === incBroker && ms >= incFrom && ms < incTo;
+          if (inInc && r() < 0.75) { cause = 'adapterError'; all = true; }
+          else if ((side === 'BUY' || side === 'MIXED') && r() < 0.06) { cause = 'marginsExceeded'; all = true; }
+          else if ((side === 'SELL' || side === 'MIXED') && r() < (CDSL_BROKERS[usr.broker] ? 0.25 : 0.01)) { cause = 'holdingsAuthorization'; sellOnly = true; all = side === 'SELL'; }
+          else if (side === 'SELL' && r() < 0.02) { cause = 'checkHoldings'; all = true; }
+          else if (r() < 0.004) { cause = 'adapterError'; all = nn === 1; }
+          else if (r() < 0.002) { cause = 'networkError'; all = nn === 1; }
+          else if (r() < 0.012) { cause = pick(['circuitLimitExceeded', 'ASMGSMList', 'orderUnmatched']); all = nn === 1; }
+          else if (r() < 0.002) { cause = 'ERROR'; }
+          else if (r() < 0.0015) { cause = 'otherError'; all = nn === 1; }
+          var rejected = cause === 'ERROR' ? 0 : !cause ? 0 : all ? nn : Math.max(1, sellOnly ? Math.ceil(nn / 2) : 1);
+          if (rejected >= nn) rejected = nn;
+          for (var j = 0; j < nn; j++) {
+            if (j < rejected) { statuses.push('REJECTED'); codes.push(cause); }
+            else if (cause === 'ERROR' && j === 0) statuses.push('ERROR');
+            else statuses.push('COMPLETE');
+          }
+          o.orders_total = nn; o.orders_complete = statuses.filter(function (s) { return s === 'COMPLETE'; }).length;
+          o.batch_status = o.orders_complete === nn ? 'COMPLETED' : o.orders_complete === 0 && cause !== 'ERROR' ? 'UNPLACED' : 'MARKEDCOMPLETE';
+          o.order_error_codes = codes.join(';'); o.order_statuses = statuses.join(';');
+          o.webhook_delivered = inWh ? 'no' : 'yes'; if (inWh) o._diag.push('webhook');
+          if (cause) {
+            o._owner = { adapterError: 'broker', networkError: 'broker', marginsExceeded: 'user', holdingsAuthorization: 'user', checkHoldings: 'user', circuitLimitExceeded: 'market', ASMGSMList: 'market', orderUnmatched: 'market', ERROR: 'gateway', otherError: 'gateway' }[cause];
+            if ((cause === 'adapterError' || cause === 'networkError') && usr.broker === incBroker && ms >= incFrom && ms < incTo) o._diag.push('incident');
+            if (cause === 'marginsExceeded') o._diag.push('funds');
+            if (cause === 'holdingsAuthorization') o._diag.push('cdsl');
+          }
+          if (o.orders_complete > 0 && !usr.auth) { usr.auth = 'SCA' + hex(10); o.smallcase_auth_id = usr.auth; }
+        }
+        finish();
+        // Partner bug: the new Android build retries a failed or abandoned attempt with the same transactionId.
+        if (version === bugVersion && o.error_code && o.error_code !== '3001' && r() < 0.4) {
+          var re = {}; for (var key in o) re[key] = o[key];
+          re.created_at = stamp(ms + (20 + Math.floor(r() * 90)) * 1000); re.error_code = '3001'; re._owner = 'partner'; re._diag = ['reuse'];
+          re.batch_status = ''; re.orders_total = 0; re.orders_complete = 0; re.order_error_codes = ''; re.order_statuses = ''; re.webhook_delivered = ''; re.variety = 'regular';
+          rows.push(re);
+        }
+      }
+    }
+    rows.sort(function (a, b) { return a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0; });
+    return { partner: 'Fernbrook Wealth (fictional)', from: stamp(START).slice(0, 10), to: stamp(START + (DAYS - 1) * 864e5).slice(0, 10), rows: rows, truth: truth };
+  }
+  var COLS = ['created_at', 'transaction_id', 'partner_user_id', 'intent', 'auth_mode', 'broker', 'platform', 'app_version', 'error_code', 'smallcase_auth_id', 'side', 'variety', 'batch_status', 'orders_total', 'orders_complete', 'order_error_codes', 'order_statuses', 'webhook_delivered'];
+  function toCSV(rows) {
+    return COLS.join(',') + '\n' + rows.map(function (o) { return COLS.map(function (c) { var v = String(o[c] === undefined ? '' : o[c]); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); }).join('\n') + '\n';
+  }
+  return { generate: generate, toCSV: toCSV, COLS: COLS };
+})();
+
+
+// GW: route every failed smallcase Gateway transaction to whoever can fix it, and find the patterns behind the failures.
+// Error codes and order statuses follow the public Gateway docs (Transaction Errors; Order errors: placement and execution).
+// Pure functions, no network. Runs in the browser and in Node.
+var GW = (function () {
+  'use strict';
+
+  var OWNERS = {
+    partner: { label: 'Partner integration', short: 'Partner', color: 'var(--c-partner)' },
+    user: { label: 'Investor action needed', short: 'Investor', color: 'var(--c-user)' },
+    broker: { label: 'Broker', short: 'Broker', color: 'var(--c-broker)' },
+    market: { label: 'Market rules', short: 'Market', color: 'var(--c-market)' },
+    gateway: { label: 'smallcase Gateway', short: 'Gateway', color: 'var(--c-gateway)' }
+  };
+
+  // Transaction-level errors from the SDK / API (code -> [message, owner, stage, what to do]).
+  var TXN = {
+    '1001': ['user_mismatch', 'user', 'login', 'Investor logged in with a different broker account than the one linked'],
+    '1003': ['consent_denied', 'user', 'consent', 'Investor declined holdings consent (asked once per broker)'],
+    '1005': ['transaction_expired', 'user', 'order', 'Session timed out before the investor finished'],
+    '1007': ['no_broker', 'user', 'broker choice', 'Investor has no supported broker and chose to open an account'],
+    '1008': ['no_broker', 'broker', 'broker choice', 'Chosen broker does not support this intent'],
+    '1010': ['user_cancelled', 'user', 'broker choice', 'Closed the broker chooser'],
+    '1011': ['user_cancelled', 'user', 'login', 'Closed after choosing a broker, before logging in'],
+    '1012': ['user_cancelled', 'user', 'order', 'Logged in, then left at the order screen'],
+    '1014': ['no_compatible_browser', 'user', 'login', 'No browser on the device for broker login'],
+    '1020': ['no_order', 'market', 'order', 'smallcase already matches the rebalance'],
+    '1030': ['trading_not_enabled', 'user', 'order', 'Account not enabled to trade on NSE'],
+    '2000': ['internal_error', 'gateway', 'any', 'Error in smallcase APIs or SDK'],
+    '3001': ['transaction_expired', 'partner', 'start', 'transactionId already used or expired: create a new one for every attempt'],
+    '3003': ['webhook_unreachable', 'partner', 'after order', 'Partner webhook could not be reached'],
+    '3004': ['init_sdk', 'partner', 'start', 'Transaction triggered before the SDK finished initialising'],
+    '4000': ['already_subscribed', 'user', 'order', 'Already subscribed to this smallcase'],
+    '4004': ['market_closed', 'market', 'order', 'Market closed for this order'],
+    '4005': ['market_closed', 'market', 'order', 'Order type not allowed after hours'],
+    '4006': ['order_pending', 'user', 'order', 'Last order for this smallcase is still pending'],
+    'invalid_jwt': ['invalid_jwt', 'partner', 'start', 'Auth token not signed with the shared secret, or bad payload'],
+    'invalid_gateway': ['invalid_gateway', 'partner', 'start', 'Wrong gateway name in SDK init'],
+    'invalid_transactionId': ['invalid_transactionId', 'partner', 'start', 'transactionId passed to the SDK is wrong'],
+    'transaction_in_process': ['transaction_in_process', 'partner', 'start', 'Second transaction triggered while one is running'],
+    'invalid_user_data': ['invalid_user_data', 'partner', 'start', 'smallcaseAuthToken missing or invalid']
+  };
+  // Order-level errorCodes (order placed but rejected at the broker or exchange).
+  var ORD = {
+    marginsExceeded: ['user', 'Not enough funds'], marginExceeded: ['user', 'Not enough funds'], peakMargin: ['user', 'Peak-margin rules: more funds needed'],
+    debtorNotAllowed: ['user', 'Debit balance must be cleared'], checkHoldings: ['user', 'Not enough sellable holdings'],
+    sellNeedsAuth: ['user', 'Sell needs depository authorisation'], holdingsAuthorization: ['user', 'Sell needs CDSL authorisation'],
+    kycPending: ['user', 'Demat KYC pending'], iciciKycPending: ['user', 'Demat KYC pending'], kiteClientReactivationRequired: ['user', 'Dormant account must be reactivated'],
+    clientNotEnabled: ['user', 'Equity trading not enabled'], kiteClientNotEnabled: ['user', 'Delivery orders not enabled'], exchgNotEnabled: ['user', 'Exchange not enabled'], kiteExchgNotEnabled: ['user', 'Exchange not enabled'],
+    blockedNRI: ['user', 'Account type does not allow this'], axisBlockednri: ['user', 'Account type does not allow this'],
+    circuitLimitExceeded: ['market', 'Price outside circuit limits'], orderUnmatched: ['market', 'No counterparty (illiquid or circuit)'], ASMGSMList: ['market', 'Stock under ASM/GSM restriction'],
+    kiteASMGSMList: ['market', 'Stock under ASM/GSM restriction'], stockTipsBlocked: ['market', 'Exchange restricted the stock'], kiteStockTipsBlocked: ['market', 'Exchange restricted the stock'],
+    kiteIllquidStocks: ['market', 'Illiquid stock restricted'], securityNotAllowed: ['market', 'Security not tradable on this exchange'], intradayNotAllowed: ['market', 'Trade-to-trade stock: sell after delivery'],
+    exchangeMismatch: ['market', 'Sell must wait a day (exchange mismatch)'], tradingSystemNotReady: ['market', 'Broker not accepting orders (market closed)'], checkFreezeQty: ['market', 'Above freeze quantity'],
+    qtyNotMultipleOfLot: ['partner', 'Quantity not a multiple of lot size'], tradingSymbol: ['partner', 'Trading symbol no longer valid'], stockBlockedSymbolNotFound: ['partner', 'Trading symbol no longer valid'],
+    adapterError: ['broker', 'Gateway could not reach the broker'], networkError: ['broker', 'Order status could not be fetched from the broker'], omsMaintenance: ['broker', 'Broker order system under maintenance'],
+    userNotLoggedIn: ['broker', 'Broker session expired'], clientBlocked: ['broker', 'Broker blocked orders from this account'], dealerLocationmapping: ['broker', 'Account needs dealer branch mapping'],
+    otherError: ['gateway', 'Unclassified failure']
+  };
+  var CDSL_AUTH = { holdingsAuthorization: 1, sellNeedsAuth: 1 };
+  var FUNDS = { marginsExceeded: 1, marginExceeded: 1, peakMargin: 1 };
+  var BROKER_DOWN = { adapterError: 1, networkError: 1, omsMaintenance: 1 };
+
+  // ---------- parsing ----------
+  function parseCSV(text) {
+    var rows = [], row = [], f = '', q = false, t = String(text || '').replace(/^﻿/, '');
+    for (var i = 0; i < t.length; i++) {
+      var c = t[i];
+      if (q) { if (c === '"') { if (t[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true; else if (c === ',') { row.push(f); f = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+      else f += c;
+    }
+    if (f !== '' || row.length) { row.push(f); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (x) { return String(x).trim() !== ''; }); });
+  }
+  var COLS = ['created_at', 'transaction_id', 'partner_user_id', 'intent', 'auth_mode', 'broker', 'platform', 'app_version', 'error_code',
+              'smallcase_auth_id', 'side', 'variety', 'batch_status', 'orders_total', 'orders_complete', 'order_error_codes', 'order_statuses', 'webhook_delivered'];
+  var ALIAS = { created_at: ['created_at', 'createdat', 'timestamp', 'time', 'created'], transaction_id: ['transaction_id', 'transactionid', 'txn_id'], partner_user_id: ['partner_user_id', 'user_id', 'userid'],
+    smallcase_auth_id: ['smallcase_auth_id', 'smallcaseauthid', 'auth_id'], error_code: ['error_code', 'errorcode', 'error'], order_error_codes: ['order_error_codes', 'errorcodes', 'order_errors'] };
+  function parseTime(s) {
+    var m = String(s || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{1,2}):(\d{2})(?::(\d{2}))?/);
+    if (m) return { y: +m[1], mo: +m[2], d: +m[3], h: +m[4], mi: +m[5], s: +(m[6] || 0), ms: Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)) };
+    m = String(s || '').trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})[ T](\d{1,2}):(\d{2})(?::(\d{2}))?/);
+    if (m) return { y: +m[3], mo: +m[2], d: +m[1], h: +m[4], mi: +m[5], s: +(m[6] || 0), ms: Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4], +m[5], +(m[6] || 0)) };
+    return null;
+  }
+  function read(text) {
+    var rows = parseCSV(text), hi = -1, map = {};
+    for (var r = 0; r < Math.min(rows.length, 10) && hi < 0; r++) {
+      var low = rows[r].map(function (x) { return String(x).trim().toLowerCase().replace(/\s+/g, '_'); }), m = {};
+      COLS.forEach(function (c) { var names = ALIAS[c] || [c]; for (var k = 0; k < names.length; k++) { var ix = low.indexOf(names[k]); if (ix >= 0) { m[c] = ix; break; } } });
+      if (m.created_at !== undefined && m.transaction_id !== undefined && m.broker !== undefined) { hi = r; map = m; }
+    }
+    if (hi < 0) return { error: 'Need at least created_at, transaction_id and broker columns.', rows: [] };
+    var out = [];
+    for (var i = hi + 1; i < rows.length; i++) {
+      var x = rows[i], o = {};
+      COLS.forEach(function (c) { o[c] = map[c] !== undefined ? String(x[map[c]] === undefined ? '' : x[map[c]]).trim() : ''; });
+      o.t = parseTime(o.created_at); if (!o.t || !o.transaction_id) continue;
+      o.orders_total = parseInt(o.orders_total, 10) || 0; o.orders_complete = parseInt(o.orders_complete, 10) || 0;
+      o.codes = o.order_error_codes ? o.order_error_codes.split(/[;|]/).map(function (s) { return s.trim(); }).filter(Boolean) : [];
+      o.statuses = o.order_statuses ? o.order_statuses.split(/[;|]/).map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean) : [];
+      o.intent = o.intent.toUpperCase(); o.side = o.side.toUpperCase(); o.variety = o.variety.toLowerCase(); o.batch_status = o.batch_status.toUpperCase();
+      out.push(o);
+    }
+    return { rows: out };
+  }
+
+  // ---------- market hours (IST, regular session; holidays not modelled) ----------
+  function weekday(t) { return new Date(Date.UTC(t.y, t.mo - 1, t.d)).getUTCDay(); }
+  function marketOpen(t) { var wd = weekday(t), mins = t.h * 60 + t.mi; return wd >= 1 && wd <= 5 && mins >= 555 && mins < 930; }
+  function hourKey(t) { return t.y + '-' + pad(t.mo) + '-' + pad(t.d) + ' ' + pad(t.h) + ':00'; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  // ---------- classify one transaction ----------
+  function classify(o) {
+    var ec = String(o.error_code || '').trim();
+    if (ec) {
+      var e = TXN[ec];
+      if (!e) return { outcome: 'failed', owner: 'gateway', code: ec, reason: 'Unrecognised error code: add it to the map', stage: 'any' };
+      return { outcome: e[1] === 'user' && /cancel|expired|no_broker|consent|browser/.test(e[0]) ? 'dropped' : 'failed', owner: e[1], code: ec + ' ' + e[0], reason: e[3], stage: e[2] };
+    }
+    if (o.statuses.indexOf('ERROR') >= 0) return { outcome: o.orders_complete > 0 ? 'partial' : 'failed', owner: 'gateway', code: 'order status ERROR', reason: 'Order status unknown: reconcile with Gateway support', stage: 'order' };
+    var bs = o.batch_status;
+    if (o.intent === 'HOLDINGS_IMPORT' || o.intent === 'CONNECT') return { outcome: 'success', owner: null, code: '', reason: '', stage: '' };
+    if (bs === 'COMPLETED' || (bs === 'PLACED' && o.variety === 'amo') || (bs === 'PLACED')) {
+      if (o.orders_total && o.orders_complete < o.orders_total && bs === 'COMPLETED') return orderFail(o, 'partial');
+      return { outcome: 'success', owner: null, code: '', reason: '', stage: '' };
+    }
+    if (bs === 'MARKEDCOMPLETE' || bs === 'PARTIALLYFILLED') return orderFail(o, 'partial');
+    if (bs === 'UNPLACED') return orderFail(o, 'failed');
+    return { outcome: 'success', owner: null, code: '', reason: '', stage: '' };
+  }
+  function orderFail(o, outcome) {
+    // Pick the code that explains the most rejected orders; the owner follows that code.
+    var cnt = {}; o.codes.forEach(function (c) { cnt[c] = (cnt[c] || 0) + 1; });
+    var top = Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; })[0];
+    if (!top) return { outcome: outcome, owner: 'gateway', code: 'no errorCode', reason: 'Rejected without an errorCode', stage: 'order' };
+    var m = ORD[top] || ['gateway', 'Unrecognised errorCode: needs a fallback'];
+    return { outcome: outcome, owner: m[0], code: top, reason: m[1], stage: 'order' };
+  }
+
+  // ---------- analyse a whole log ----------
+  function analyse(rows, opts) {
+    opts = opts || {};
+    rows = rows.slice().sort(function (a, b) { return a.t.ms - b.t.ms; });
+    rows.forEach(function (o) { var c = classify(o); for (var k in c) o[k] = c[k]; o.diag = []; });
+    var D = [];
+
+    // 1. transactionId reused: the same id appears on more than one attempt, or 3001 errors.
+    var seen = {}, reuse = [];
+    rows.forEach(function (o) { if (seen[o.transaction_id]) { reuse.push(o); } else seen[o.transaction_id] = o; });
+    var e3001 = rows.filter(function (o) { return String(o.error_code) === '3001'; });
+    var reuseSet = {}; reuse.concat(e3001).forEach(function (o) { reuseSet[o.transaction_id + '|' + o.t.ms] = o; });
+    var reuseRows = Object.keys(reuseSet).map(function (k) { return reuseSet[k]; });
+    if (reuseRows.length >= 5) {
+      var by = groupCount(reuseRows, function (o) { return (o.platform || 'unknown') + (o.app_version ? ' ' + o.app_version : ''); });
+      var share = shareOfTop(by);
+      reuseRows.forEach(function (o) { o.diag.push('reuse'); o.owner = 'partner'; });
+      D.push({ id: 'reuse', owner: 'partner', title: 'transactionId reused on retry', count: reuseRows.length,
+        evidence: reuseRows.length + ' attempts reused a transactionId that was already used or had expired' + (share.p >= 0.8 ? ', ' + Math.round(share.p * 100) + '% of them from ' + share.k : '') + '.',
+        fix: 'Create a fresh transactionId on the server for every attempt, including retries. Never cache it on the client.', top: share.p >= 0.8 ? share.k : null });
+    }
+
+    // 2. One smallcaseAuthId stored against several partner users -> user_mismatch for the later ones.
+    var authUsers = {};
+    rows.forEach(function (o) { if (o.smallcase_auth_id && o.partner_user_id) { (authUsers[o.smallcase_auth_id] = authUsers[o.smallcase_auth_id] || {})[o.partner_user_id] = 1; } });
+    var shared = Object.keys(authUsers).filter(function (a) { return Object.keys(authUsers[a]).length > 1; });
+    if (shared.length) {
+      var sharedSet = {}; shared.forEach(function (a) { sharedSet[a] = 1; });
+      var hit = rows.filter(function (o) { return sharedSet[o.smallcase_auth_id] && String(o.error_code) === '1001'; });
+      hit.forEach(function (o) { o.diag.push('authmap'); o.owner = 'partner'; o.reason = 'smallcaseAuthId stored against more than one user'; });
+      var usersAffected = {}; shared.forEach(function (a) { Object.keys(authUsers[a]).forEach(function (u) { usersAffected[u] = 1; }); });
+      D.push({ id: 'authmap', owner: 'partner', title: 'One broker account linked to several of your users', count: hit.length, ids: shared,
+        evidence: shared.length + ' smallcaseAuthIds are stored against ' + Object.keys(usersAffected).length + ' different users; ' + hit.length + ' transactions failed with user_mismatch (1001) because of it.',
+        fix: 'Treat smallcaseAuthId as unique per user. When Gateway returns one already saved for another user (for example a shared browser session), stop and resolve the conflict instead of saving it twice.' });
+    }
+
+    // 3. Webhook outage: 3003 errors or undelivered webhooks clustered in time.
+    var wh = rows.filter(function (o) { return String(o.error_code) === '3003' || (/^(no|false|0)$/i.test(o.webhook_delivered) && o.outcome !== 'dropped'); });
+    if (wh.length >= 5) {
+      var win = densestWindow(wh, 6 * 3600e3);
+      var inWin = wh.filter(function (o) { return o.t.ms >= win.from && o.t.ms <= win.to; });
+      inWin.forEach(function (o) { o.diag.push('webhook'); if (String(o.error_code) === '3003') o.owner = 'partner'; });
+      var undelivered = inWin.filter(function (o) { return String(o.error_code) !== '3003' && (o.outcome === 'success' || o.outcome === 'partial'); });
+      D.push({ id: 'webhook', owner: 'partner', title: 'Your webhook endpoint was down', count: inWin.length, from: win.from, to: win.to,
+        evidence: inWin.length + ' webhook failures between ' + fmt(win.from) + ' and ' + fmt(win.to) + '. ' + undelivered.length + ' of them were orders that went through, so your records may not show them.',
+        fix: 'Fetch those transactions with the Fetch transaction details API (list in the Reconcile tab), alert on webhook 5xx, and keep a pull job as a backstop.', reconcile: undelivered.map(function (o) { return o.transaction_id; }) });
+    }
+
+    // 4. Regular orders sent while the market is closed.
+    var closed = rows.filter(function (o) { return /^400[45]/.test(String(o.error_code)) || (o.codes.indexOf('tradingSystemNotReady') >= 0); });
+    var regAfter = closed.filter(function (o) { return o.variety !== 'amo' && !marketOpen(o.t); });
+    if (regAfter.length >= 5) {
+      var byP = groupCount(regAfter, function (o) { return o.platform || 'unknown'; }), sp = shareOfTop(byP);
+      var amoOk = rows.filter(function (o) { return o.variety === 'amo' && o.platform === sp.k; }).length;
+      regAfter.forEach(function (o) { o.diag.push('amo'); o.owner = 'partner'; o.reason = 'Regular order sent after market hours; send it as AMO'; });
+      D.push({ id: 'amo', owner: 'partner', title: 'Orders sent as regular after market hours', count: regAfter.length, top: sp.p >= 0.8 ? sp.k : null,
+        evidence: regAfter.length + ' orders failed with market_closed outside 9:15–15:30 because they were sent as regular, not AMO' + (sp.p >= 0.8 ? '; ' + Math.round(sp.p * 100) + '% came from ' + sp.k + (amoOk === 0 ? ', which never sends AMO' : '') : '') + '.',
+        fix: 'Set variety to amo when the market is closed (Gateway supports regular and amo for securities transactions) and tell the investor when the order will execute.' });
+    }
+
+    // 5. Broker incidents: hours where a broker's connectivity failures jump far above its own baseline.
+    var reach = rows.filter(function (o) { return o.orders_total > 0 || o.codes.length; });
+    var brokers = uniq(reach.map(function (o) { return o.broker; }));
+    var incidents = [];
+    brokers.forEach(function (b) {
+      var br = reach.filter(function (o) { return o.broker === b; });
+      var down = function (o) { return o.codes.some(function (c) { return BROKER_DOWN[c]; }); };
+      var base = br.filter(down).length / Math.max(1, br.length);
+      var hours = {}; br.forEach(function (o) { var k = hourKey(o.t); (hours[k] = hours[k] || []).push(o); });
+      var hot = function (k, minD) { var h = hours[k]; if (!h) return false; var d = h.filter(down).length; return d >= minD && d / h.length >= Math.max(0.3, 5 * base); };
+      var core = Object.keys(hours).filter(function (k) { return hot(k, 4); }), badSet = {};
+      // An incident that clears the bar in one hour often spills into the next: extend to neighbours that are just as bad, on fewer orders.
+      core.forEach(function (k) {
+        badSet[k] = 1; var t0 = parseTime(k + ':00').ms;
+        [-1, 1, -2, 2].forEach(function (step) { var nk = hourKey(parseTime(new Date(t0 + step * 3600e3).toISOString().slice(0, 16).replace('T', ' '))); if (hot(nk, 2) && (Math.abs(step) === 1 || badSet[hourKey(parseTime(new Date(t0 + (step / 2) * 3600e3).toISOString().slice(0, 16).replace('T', ' ')))])) badSet[nk] = 1; });
+      });
+      var bad = Object.keys(badSet).sort();
+      // Merge consecutive hours into one incident.
+      var cur = null;
+      bad.forEach(function (k) {
+        var t0 = parseTime(k + ':00').ms;
+        if (cur && t0 - cur.last <= 3600e3) { cur.last = t0; cur.hours.push(k); } else { cur = { broker: b, first: t0, last: t0, hours: [k] }; incidents.push(cur); }
+      });
+      incidents.filter(function (x) { return x.broker === b; }).forEach(function (x) {
+        var inside = br.filter(function (o) { return o.t.ms >= x.first && o.t.ms < x.last + 3600e3; });
+        x.failed = inside.filter(down); x.total = inside.length;
+        var outside = br.filter(function (o) { return o.t.ms < x.first || o.t.ms >= x.last + 3600e3; }); x.base = outside.filter(down).length / Math.max(1, outside.length);
+        x.failed.forEach(function (o) { o.diag.push('incident'); o.reason = 'Broker incident: ' + b; });
+      });
+    });
+    incidents.forEach(function (x) {
+      D.push({ id: 'incident', owner: 'broker', title: 'Broker incident: ' + x.broker, count: x.failed.length, broker: x.broker, from: x.first, to: x.last + 3600e3,
+        evidence: x.failed.length + ' of ' + x.total + ' orders at ' + x.broker + ' failed to reach the broker between ' + fmt(x.first) + ' and ' + fmt(x.last + 3600e3) + ' (normally ' + (x.base * 100).toFixed(1) + '%).',
+        fix: 'Not the partner’s bug. smallcase: alert broker ops, show a “this broker is having trouble” notice before login, and re-offer the order once the broker recovers.' });
+    });
+
+    // 6. Sells blocked on CDSL authorisation, concentrated at some brokers.
+    var sells = rows.filter(function (o) { return (o.side === 'SELL' || o.side === 'MIXED') && (o.orders_total > 0 || o.codes.length); });
+    var authFail = sells.filter(function (o) { return o.codes.some(function (c) { return CDSL_AUTH[c]; }); });
+    if (authFail.length >= 5) {
+      var rates = brokers.map(function (b) {
+        var s = sells.filter(function (o) { return o.broker === b; }), f = s.filter(function (o) { return o.codes.some(function (c) { return CDSL_AUTH[c]; }); });
+        return { broker: b, sells: s.length, failed: f.length, rate: s.length ? f.length / s.length : 0 };
+      }).filter(function (r) { return r.sells >= 20; }).sort(function (a, b) { return b.rate - a.rate; });
+      var hot = rates.filter(function (r) { return r.rate >= 0.1; });
+      authFail.forEach(function (o) { o.diag.push('cdsl'); });
+      D.push({ id: 'cdsl', owner: 'user', title: 'Sells blocked waiting for CDSL authorisation', count: authFail.length, brokers: hot.map(function (r) { return r.broker; }),
+        evidence: authFail.length + ' sell transactions were rejected for missing depository authorisation' + (hot.length ? ', mostly at ' + hot.map(function (r) { return r.broker + ' (' + Math.round(r.rate * 100) + '% of sells)'; }).join(', ') : '') + '.',
+        fix: 'Prompt the investor to authorise holdings before the sell screen for these brokers, not after the rejection. A product fix in the SDK, not a partner bug.' });
+    }
+
+    // 7. Buys rejected for funds.
+    var buys = rows.filter(function (o) { return (o.side === 'BUY' || o.side === 'MIXED') && (o.orders_total > 0 || o.codes.length); });
+    var fundFail = buys.filter(function (o) { return o.codes.some(function (c) { return FUNDS[c]; }); });
+    if (fundFail.length >= 5) {
+      fundFail.forEach(function (o) { o.diag.push('funds'); });
+      D.push({ id: 'funds', owner: 'user', title: 'Buys rejected for insufficient funds', count: fundFail.length,
+        evidence: fundFail.length + ' buys (' + pct(fundFail.length, buys.length) + ' of buys that reached the broker) were rejected for funds.',
+        fix: 'Check funds before the order screen (Gateway can fetch funds) and offer “add funds” in the flow instead of a rejection after login.' });
+    }
+
+    // 8. Orders with unknown status: need reconciliation.
+    var unk = rows.filter(function (o) { return o.statuses.indexOf('ERROR') >= 0; });
+    if (unk.length) D.push({ id: 'unknown', owner: 'gateway', title: 'Orders with unknown status', count: unk.length, reconcile: unk.map(function (o) { return o.transaction_id; }),
+      evidence: unk.length + ' transactions have an order in ERROR status: placed, but Gateway could not confirm the outcome.', fix: 'Reconcile with Gateway support; do not show these as failed to the investor until confirmed.' });
+
+    // ---------- summary ----------
+    var S = { total: rows.length, success: 0, partial: 0, failed: 0, dropped: 0, byOwner: {}, byCode: {}, byStage: {} };
+    Object.keys(OWNERS).forEach(function (k) { S.byOwner[k] = 0; });
+    rows.forEach(function (o) {
+      S[o.outcome]++;
+      if (o.owner) { S.byOwner[o.owner]++; var key = o.owner + '|' + o.code; S.byCode[key] = S.byCode[key] || { owner: o.owner, code: o.code, reason: o.reason, n: 0 }; S.byCode[key].n++; }
+      if (o.outcome === 'dropped') S.byStage[o.stage] = (S.byStage[o.stage] || 0) + 1;
+    });
+    S.notOk = S.failed + S.partial + S.dropped;
+    S.started = rows.length;
+    var reachedBroker = rows.filter(function (o) { return o.outcome !== 'dropped' && o.owner !== 'partner' || o.outcome === 'success'; });
+    S.partnerFixable = S.byOwner.partner;
+    // Broker scorecard.
+    S.brokers = brokers.concat(uniq(rows.map(function (o) { return o.broker; })).filter(function (b) { return brokers.indexOf(b) < 0; })).map(function (b) {
+      var br = rows.filter(function (o) { return o.broker === b; });
+      var inc = br.filter(function (o) { return o.diag.indexOf('incident') >= 0; }).length;
+      var bk = br.filter(function (o) { return o.owner === 'broker'; }).length;
+      return { broker: b, total: br.length, success: br.filter(function (o) { return o.outcome === 'success'; }).length, brokerFail: bk, incident: inc,
+        cdsl: br.filter(function (o) { return o.diag.indexOf('cdsl') >= 0; }).length };
+    }).sort(function (a, b) { return b.total - a.total; });
+    var reconcile = [];
+    D.forEach(function (d) { (d.reconcile || []).forEach(function (id) { reconcile.push({ transaction_id: id, why: d.title }); }); });
+    return { rows: rows, diagnoses: D, summary: S, reconcile: reconcile, incidents: incidents };
+  }
+
+  // ---------- helpers ----------
+  function groupCount(a, f) { var c = {}; a.forEach(function (x) { var k = f(x); c[k] = (c[k] || 0) + 1; }); return c; }
+  function shareOfTop(c) { var tot = 0, k = null, n = 0; Object.keys(c).forEach(function (x) { tot += c[x]; if (c[x] > n) { n = c[x]; k = x; } }); return { k: k, p: tot ? n / tot : 0 }; }
+  function uniq(a) { var s = {}, o = []; a.forEach(function (x) { if (x && !s[x]) { s[x] = 1; o.push(x); } }); return o; }
+  function pct(a, b) { return b ? Math.round(a / b * 1000) / 10 + '%' : '0%'; }
+  function densestWindow(a, span) {
+    var t = a.map(function (o) { return o.t.ms; }).sort(function (x, y) { return x - y; }), best = { n: 0, from: t[0], to: t[0] }, j = 0;
+    for (var i = 0; i < t.length; i++) { while (t[i] - t[j] > span) j++; if (i - j + 1 > best.n) best = { n: i - j + 1, from: t[j], to: t[i] }; }
+    return best;
+  }
+  function fmt(ms) { var d = new Date(ms); return d.getUTCDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()] + ' ' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()); }
+
+  // A plain-text report a partner manager can send to the partner's engineering team.
+  function partnerReport(A, partner) {
+    var S = A.summary, P = A.diagnoses.filter(function (d) { return d.owner === 'partner'; }), O = A.diagnoses.filter(function (d) { return d.owner !== 'partner'; });
+    var L = [];
+    L.push('Subject: Gateway integration health, ' + (partner || 'your integration') + ': ' + P.length + ' fix' + (P.length === 1 ? '' : 'es') + ' on your side');
+    L.push('');
+    L.push('Hi team,');
+    L.push('');
+    L.push('We looked at ' + S.total.toLocaleString('en-IN') + ' Gateway transactions. ' + pct(S.success, S.total) + ' completed. Of the rest, ' + S.byOwner.partner.toLocaleString('en-IN') + ' trace to the integration and can be fixed without any change from brokers or investors:');
+    P.forEach(function (d, i) { L.push(''); L.push((i + 1) + '. ' + d.title + ' (' + d.count + ')'); L.push('   What we saw: ' + d.evidence); L.push('   Fix: ' + d.fix); });
+    if (O.length) {
+      L.push(''); L.push('Not on your side, for context:');
+      O.forEach(function (d) { L.push('- ' + d.title + ' (' + d.count + '): ' + d.fix); });
+    }
+    if (A.reconcile.length) { L.push(''); L.push('Please re-fetch ' + A.reconcile.length + ' transactions with the Fetch transaction details API; the list is attached.'); }
+    L.push(''); L.push('Happy to get on a call with your engineers.');
+    return L.join('\n');
+  }
+
+  function toCSV(rows, cols) {
+    function esc(v) { v = v === undefined || v === null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+    return cols.join(',') + '\n' + rows.map(function (r) { return cols.map(function (c) { return esc(r[c]); }).join(','); }).join('\n') + '\n';
+  }
+
+  return { OWNERS: OWNERS, TXN: TXN, ORD: ORD, COLS: COLS, read: read, parseTime: parseTime, marketOpen: marketOpen, classify: classify, analyse: analyse, partnerReport: partnerReport, toCSV: toCSV, fmt: fmt };
+})();
+
+
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function n(v) { return Number(v).toLocaleString('en-IN'); }
+  function pct(a, b) { return b ? (Math.round(a / b * 1000) / 10) + '%' : '0%'; }
+  var O = GW.OWNERS, ORDER = ['partner', 'user', 'broker', 'market', 'gateway'];
+  var state = { rows: null, source: '', tab: 'diag', A: null };
+
+  function download(name, text, type) {
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: type || 'text/csv' })); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function pill(owner) { return '<span class="pill" style="background:color-mix(in srgb,' + O[owner].color + ' 16%,transparent);color:' + O[owner].color + '">' + esc(O[owner].short) + '</span>'; }
+
+  function loadSample() {
+    var d = GD.generate(7);
+    state.rows = GW.read(GD.toCSV(d.rows)).rows;
+    state.source = d.partner + ' · ' + n(d.rows.length) + ' Gateway transactions, ' + d.from + ' to ' + d.to;
+    if (!$('partner').value) $('partner').value = 'Fernbrook Wealth';
+    run();
+  }
+  function run() {
+    if (!state.rows) return;
+    var A = GW.analyse(state.rows); state.A = A;
+    $('status').textContent = state.source + '.';
+    renderKpis(); renderBars(); renderExec(); renderTab();
+  }
+
+  function renderKpis() {
+    var S = state.A.summary, inc = state.A.diagnoses.filter(function (d) { return d.id === 'incident'; });
+    var k = [
+      [n(S.total), 'transactions started', 'securities, smallcase and holdings import'],
+      [pct(S.success, S.total), 'completed', n(S.notOk) + ' did not'],
+      [n(S.byOwner.partner), 'trace to the partner', pct(S.byOwner.partner, S.notOk) + ' of everything that went wrong'],
+      [n(S.byOwner.user), 'need the investor', 'left the flow, or a funds, KYC or authorisation problem'],
+      [inc.length, 'broker incident' + (inc.length === 1 ? '' : 's'), inc.length ? inc.map(function (d) { return d.broker; }).join(', ') : 'none found'],
+      [n(state.A.reconcile.length), 'to reconcile', 'orders the partner may not have recorded']
+    ];
+    $('kpis').innerHTML = k.map(function (x) { return '<div class="kpi"><span class="v">' + esc(x[0]) + '</span><span class="k">' + esc(x[1]) + '</span><span class="s">' + esc(x[2]) + '</span></div>'; }).join('');
+  }
+  function renderBars() {
+    var S = state.A.summary, max = Math.max.apply(null, ORDER.map(function (k) { return S.byOwner[k]; })) || 1;
+    $('bars').innerHTML = ORDER.map(function (k) {
+      var v = S.byOwner[k];
+      return '<div class="bar"><div class="lab"><span>' + esc(O[k].label) + '</span><span>' + pct(v, S.notOk) + '</span></div><div class="track"><div class="fill" style="width:' + (v / max * 100).toFixed(1) + '%;background:' + O[k].color + '"></div></div><div class="val">' + n(v) + '</div></div>';
+    }).join('');
+  }
+  function renderExec() {
+    var A = state.A, S = A.summary, D = A.diagnoses, by = function (id) { return D.filter(function (d) { return d.id === id; })[0]; };
+    var P = D.filter(function (d) { return d.owner === 'partner'; });
+    var L = [];
+    L.push('<b>' + pct(S.success, S.total) + '</b> of ' + n(S.total) + ' transactions completed. Of the ' + n(S.notOk) + ' that didn’t, <b>' + n(S.byOwner.partner) + ' (' + pct(S.byOwner.partner, S.notOk) + ') trace to the partner’s own integration</b>, ' + n(S.byOwner.user) + ' to investors, and only ' + n(S.byOwner.broker + S.byOwner.gateway) + ' to brokers or Gateway.');
+    if (P.length) L.push('The partner’s share comes from <b>' + P.length + ' fixable bugs</b>: ' + P.map(function (d) { return esc(d.title.charAt(0).toLowerCase() + d.title.slice(1)) + ' (' + n(d.count) + ' transactions)'; }).join('; ') + '. None needs a change from a broker or an investor.');
+    var inc = D.filter(function (d) { return d.id === 'incident'; });
+    if (inc.length) L.push('<b>One real broker incident</b>: ' + esc(inc[0].evidence) + ' That one is smallcase’s to handle, and it should not show up as a partner problem.');
+    var c = by('cdsl'), f = by('funds');
+    if (c || f) L.push('Investor-side failures are mostly <b>predictable</b>: ' + [c ? n(c.count) + ' sells blocked on CDSL authorisation, concentrated at ' + esc(c.brokers.join(' and ')) : '', f ? n(f.count) + ' buys rejected for funds' : ''].filter(Boolean).join(', and ') + '. Both can be checked before the order screen instead of failing after login.');
+    if (A.reconcile.length) L.push('<b>' + n(A.reconcile.length) + ' transactions</b> need re-fetching because the partner may never have recorded them.');
+    $('exec').innerHTML = L.map(function (x) { return '<li>' + x + '</li>'; }).join('');
+  }
+
+  var TABS = [['diag', 'What went wrong'], ['codes', 'By error code'], ['brokers', 'Brokers'], ['report', 'Report to the partner'], ['recon', 'Reconcile'], ['rows', 'Failed transactions']];
+  function renderTab() {
+    $('tabs').innerHTML = TABS.map(function (t) { return '<button data-tab="' + t[0] + '" aria-pressed="' + (state.tab === t[0]) + '">' + t[1] + '</button>'; }).join('');
+    var A = state.A, S = A.summary, h = '';
+    if (state.tab === 'diag') {
+      var D = A.diagnoses.slice().sort(function (a, b) { return ORDER.indexOf(a.owner) - ORDER.indexOf(b.owner) || b.count - a.count; });
+      h = '<div class="list">' + D.map(function (d) {
+        return '<div class="dcard" style="border-left-color:' + O[d.owner].color + '"><div class="dhead"><h3>' + esc(d.title) + '</h3><span>' + pill(d.owner) + ' <b class="mono">' + n(d.count) + '</b></span></div><p><b>What we saw:</b> ' + esc(d.evidence) + '</p><p><b>Fix:</b> ' + esc(d.fix) + '</p></div>';
+      }).join('') + '</div>';
+    } else if (state.tab === 'codes') {
+      var C = Object.keys(S.byCode).map(function (k) { return S.byCode[k]; }).sort(function (a, b) { return ORDER.indexOf(a.owner) - ORDER.indexOf(b.owner) || b.n - a.n; });
+      h = '<div class="tablewrap"><table><thead><tr><th>Owner</th><th>Code</th><th>What it means</th><th class="num">Transactions</th></tr></thead><tbody>' +
+        C.map(function (c) { return '<tr><td>' + pill(c.owner) + '</td><td class="mono">' + esc(c.code) + '</td><td>' + esc(c.reason) + '</td><td class="num">' + n(c.n) + '</td></tr>'; }).join('') + '</tbody></table></div>' +
+        '<p class="by" style="margin-top:10px">Investor drop-offs by stage: ' + Object.keys(S.byStage).map(function (k) { return esc(k) + ' ' + n(S.byStage[k]); }).join(' · ') + '. A rising drop-off at one stage on one platform is a UX bug, not an investor choice.</p>';
+    } else if (state.tab === 'brokers') {
+      h = '<div class="tablewrap"><table><thead><tr><th>Broker</th><th class="num">Transactions</th><th class="num">Completed</th><th class="num">Broker failures</th><th class="num">In an incident</th><th class="num">Sells blocked on CDSL</th></tr></thead><tbody>' +
+        S.brokers.map(function (b) { return '<tr><td><b>' + esc(b.broker) + '</b></td><td class="num">' + n(b.total) + '</td><td class="num">' + pct(b.success, b.total) + '</td><td class="num">' + n(b.brokerFail) + '</td><td class="num">' + (b.incident ? '<span class="pill t-warn">' + n(b.incident) + '</span>' : '–') + '</td><td class="num">' + (b.cdsl ? n(b.cdsl) : '–') + '</td></tr>'; }).join('') +
+        '</tbody></table></div><p class="by" style="margin-top:10px">An incident is an hour in which a broker’s connection failures (adapterError, networkError, omsMaintenance) are at least 4 orders and 30% of its orders, and five times its own normal rate. Neighbouring hours that are just as bad join the incident.</p>';
+    } else if (state.tab === 'report') {
+      var rep = GW.partnerReport(A, $('partner').value || 'your integration');
+      h = '<p class="by" style="margin-bottom:10px">What a partner manager would send the partner’s engineering lead: only the partner’s fixes are framed as asks.</p><pre class="report" id="reptext">' + esc(rep) + '</pre><div class="controls" style="margin-top:10px"><button id="copyRep">Copy</button></div>';
+    } else if (state.tab === 'recon') {
+      h = A.reconcile.length ? '<p class="by" style="margin-bottom:10px">Fetch each of these with the Fetch transaction details API, or confirm with Gateway support for unknown statuses.</p><div class="tablewrap"><table><thead><tr><th>transactionId</th><th>Why</th></tr></thead><tbody>' + A.reconcile.slice(0, 200).map(function (r) { return '<tr><td class="mono">' + esc(r.transaction_id) + '</td><td>' + esc(r.why) + '</td></tr>'; }).join('') + '</tbody></table></div>' + (A.reconcile.length > 200 ? '<p class="by">… ' + n(A.reconcile.length - 200) + ' more in the download.</p>' : '') : '<p class="by">Nothing to reconcile.</p>';
+    } else {
+      var F = A.rows.filter(function (o) { return o.owner; });
+      h = '<div class="tablewrap"><table><thead><tr><th>Time</th><th>transactionId</th><th>Broker</th><th>Platform</th><th>Owner</th><th>Code</th><th>Why</th></tr></thead><tbody>' +
+        F.slice(0, 250).map(function (o) { return '<tr><td class="mono">' + esc(o.created_at.slice(5, 16)) + '</td><td class="mono">' + esc(o.transaction_id.slice(0, 14)) + '</td><td>' + esc(o.broker) + '</td><td>' + esc(o.platform + (o.app_version && o.app_version !== 'web' ? ' ' + o.app_version : '')) + '</td><td>' + pill(o.owner) + '</td><td class="mono">' + esc(o.code) + '</td><td>' + esc(o.reason) + '</td></tr>'; }).join('') +
+        '</tbody></table></div><p class="by" style="margin-top:10px">First 250 of ' + n(F.length) + '. Download all for the full list.</p>';
+    }
+    $('panel').innerHTML = h;
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-tab]'); if (b) { state.tab = b.getAttribute('data-tab'); renderTab(); return; }
+    if (e.target.id === 'copyRep') { try { navigator.clipboard.writeText($('reptext').textContent); e.target.textContent = 'Copied'; } catch (x) { } }
+  });
+  $('loadSample').addEventListener('click', loadSample);
+  $('run').addEventListener('click', run);
+  $('partner').addEventListener('change', function () { if (state.A) renderTab(); });
+  $('file').addEventListener('change', function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var res = GW.read(rd.result);
+      if (res.error || !res.rows.length) { $('status').textContent = res.error || 'No transactions found in that file.'; return; }
+      state.rows = res.rows; state.source = f.name + ' · ' + n(res.rows.length) + ' transactions'; run();
+    };
+    rd.readAsText(f);
+  });
+  $('dlRows').addEventListener('click', function () { if (state.A) download('gateway_failures_routed.csv', GW.toCSV(state.A.rows.filter(function (o) { return o.owner; }).map(function (o) { return { created_at: o.created_at, transaction_id: o.transaction_id, broker: o.broker, platform: o.platform, app_version: o.app_version, owner: O[o.owner].label, code: o.code, reason: o.reason, diagnosis: o.diag.join(';') }; }), ['created_at', 'transaction_id', 'broker', 'platform', 'app_version', 'owner', 'code', 'reason', 'diagnosis'])); });
+  $('dlRecon').addEventListener('click', function () { if (state.A) download('reconcile.csv', GW.toCSV(state.A.reconcile, ['transaction_id', 'why'])); });
+  $('dlRep').addEventListener('click', function () { if (state.A) download('integration_health_report.txt', GW.partnerReport(state.A, $('partner').value), 'text/plain'); });
+  $('tpl').href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(GD.COLS.join(',') + '\n2026-10-05 10:01:22,TRX_0001,U1001,SECURITIES,guest,Broker A,android,5.2.0,1010,,BUY,regular,,0,0,,,\n2026-10-05 10:04:10,TRX_0002,U1002,SECURITIES,connected,Broker B,web,web,,SCA123,BUY,regular,UNPLACED,2,0,marginsExceeded;marginsExceeded,REJECTED;REJECTED,yes\n');
+  loadSample();
+})();
+
+</script>
+
+</body></html>
