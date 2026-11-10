@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plan to NOC · GoodScore overdue-resolution analytics</title>
+<meta name="description" content="Where GoodScore's overdue-resolution funnel leaks between a detected overdue and a closure the member can see on their credit report: event model, SQL, a plan-risk score and three sized experiments. By Aditya Mathur.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f5f3; --paper:#fcfcfb; --ink:#0f1b1a; --muted:#52514e; --line:#d9dcd8; --soft:#eef0ed;
+  --accent:#2a78d6; --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --crit:#d03b3b; --crit-bg:#fbe9e8; --good:#0a7d0a; --good-bg:#e5f3e5; --warn-bg:#fff3d6;
+  --grid:#e6e8e4;
+  --display:'IBM Plex Sans Condensed','IBM Plex Sans',system-ui,sans-serif;
+  --body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121211; --paper:#1a1a19; --ink:#f0efec; --muted:#c3c2b7; --line:#33332f; --soft:#22221f;
+  --accent:#3987e5; --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --crit:#ff8a80; --crit-bg:#3a1a18; --good:#7fd49b; --good-bg:#14301d; --warn-bg:#3a2e0e; --grid:#2a2a27; color-scheme:dark}}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.6;margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 20px 72px;display:grid;gap:30px}
+.wrap>*{min-width:0}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.15;text-wrap:balance}
+h1{font-size:clamp(34px,6vw,54px);letter-spacing:-.01em}
+h2{font-size:25px} h3{font-size:17.5px}
+p{margin:0} ul,ol{margin:0;padding-left:20px} li{margin:3px 0}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:18.5px;max-width:72ch}
+.muted{color:var(--muted)} .small{font-size:13.5px} .mono{font-family:var(--mono)}
+section{display:grid;gap:14px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:14px;align-content:start}
+.cols-exp{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:22px 26px}
+.note{background:var(--warn-bg);border-radius:8px;padding:12px 14px;font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.tile{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:4px;align-content:start}
+.tile .v{font-family:var(--display);font-size:34px;font-weight:700;line-height:1}
+.tile .l{font-size:13.5px;color:var(--muted)}
+.cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;background:var(--soft)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.bad{color:var(--crit);font-weight:600} .ok{color:var(--good);font-weight:600}
+details{border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+details summary{cursor:pointer;padding:9px 12px;font:500 13.5px var(--mono);color:var(--muted)}
+details pre{margin:0;padding:12px 14px;overflow-x:auto;font:12.5px/1.5 var(--mono);border-top:1px solid var(--line);background:var(--soft);white-space:pre}
+.chart{width:100%;height:auto;display:block}
+.chart text{font-family:var(--body);fill:var(--muted);font-size:12px}
+.chart .lbl{fill:var(--ink);font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.filters label{display:grid;gap:4px;font-size:12.5px;color:var(--muted)}
+select{font:14px var(--body);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--paper);font-size:12.5px;padding:6px 9px;border-radius:6px;opacity:0;transition:opacity .1s;z-index:9;max-width:260px}
+.exp{border-left:3px solid var(--accent);padding-left:14px;display:grid;gap:8px}
+.kv{display:grid;grid-template-columns:96px 1fr;gap:4px 14px;font-size:14.5px}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.tree{font:13.5px/1.7 var(--mono);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;white-space:pre}
+footer{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px;display:grid;gap:6px}
+@media (max-width:560px){.kv{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="tip" role="tooltip"></div>
+<main class="wrap">
+
+<header style="display:grid;gap:14px">
+  <span class="eyebrow">Product analytics · credit health · GoodScore</span>
+  <h1>Plan to NOC</h1>
+  <p class="lede">GoodScore now leads with "Improve: settles overdue accounts", in five steps: Detect, Reduce, Plan, Close, Rebuild. The member is paying for one outcome, a better score. The score only moves when a plan is paid in full <em>and</em> the lender reports it to the bureau. I modelled that whole path, measured it in SQL, and found where it breaks and which three fixes to test first.</p>
+  <p class="small muted">Aditya Mathur · November 2026 · <a href="https://adimathur-creates.github.io/">portfolio</a> · <a href="https://linkedin.com/in/adityaamathur">LinkedIn</a> · follows my June <a href="https://adimathur-creates.github.io/GoodScore-Diagnostic/">retention and trust memo</a>, one level deeper</p>
+  <div class="note"><b>Simulated data, real method.</b> I don't have GoodScore's warehouse. The <span data-k="detected"></span> overdue accounts here come from a simulation whose rates are my assumptions, built from public evidence and written down in <a href="src/simulate.py">simulate.py</a>. Read the numbers as "what this analysis would show if the assumptions hold". What carries over to real data is the event model, the SQL, the risk score and the test designs.</div>
+</header>
+
+<section class="tiles" aria-label="Headline results">
+  <div class="tile"><span class="v"><b data-k="p_ref45"></b> of 100</span><span class="l">detected overdue accounts end as a closure the member can <b>see on their report</b> within 45 days of paying</span></div>
+  <div class="tile"><span class="v"><b data-k="invisible45"></b>%</span><span class="l">of paid-off accounts still look unresolved at day 45: <b data-k="tix_inv"></b> vs <b data-k="tix_vis"></b> tickets per 100, <b data-k="can_inv"></b>% vs <b data-k="can_vis"></b>% cancel</span></div>
+  <div class="tile"><span class="v">+<b data-k="s_pay_d"></b> pts</span><span class="l">plan completion from moving the first due date to just after payday (model estimate, test 1 checks it)</span></div>
+  <div class="tile"><span class="v">₹<b data-k="waiver3089"></b></span><span class="l">median waiver that turns a 30–89 DPD account into "SETTLED" and costs about <b data-k="sc_gap"></b> score points vs "CLOSED"</span></div>
+</section>
+
+<section>
+  <h2>1. The problem, defined</h2>
+  <div class="panel">
+    <p><b>Problem statement.</b> Of the overdue accounts GoodScore detects for a member, too few end as a closure the member can see on their credit report. The ones that end invisible cost support tickets and subscriptions, and the ones that end "SETTLED" move the score far less than the member was promised.</p>
+    <div class="cols2">
+      <div><h3>Why it is worth a product analyst's first quarter</h3>
+        <ul>
+          <li><b>Subscription retention.</b> Members pay monthly to watch the score move. A closure they can't see looks like no progress.</li>
+          <li><b>The loan marketplace.</b> GoodScore shows loan offers "as the score rises" and quotes 5–6 months to 750+. Every closure that doesn't land pushes a member's first loan out.</li>
+          <li><b>The lender network.</b> 30 partner lenders take part in settlements. I assume they value closures that complete, so completion rate is also what keeps lenders offering waivers. This is an assumption, not a known term.</li>
+        </ul></div>
+      <div><h3>What public evidence says</h3>
+        <ul>
+          <li>Reviews praise converting overdues into EMIs, and one member describes 3 of 7 loans closed, with NOCs, after seven months. The path works, slowly.</li>
+          <li>Another member says a loan removed from CIBIL still showed as active with dues in the app, with promised callbacks never made. That is the "paid but invisible" gap below.</li>
+          <li>The homepage process ends at "Close (lender confirmation and NOC tracking) → Rebuild". There is no step for "the bureau shows it", which is where the score actually changes.</li>
+        </ul></div>
+    </div>
+  </div>
+  <h3>North-star and the tree under it</h3>
+<div class="tree">Visible closures within 45 days of final payment, per 100 detected overdue accounts  (now: <b data-k="p_ref45"></b>)
+ = offer rate            lender returns a plan            <b data-k="p_offered"></b> of 100
+ × acceptance            member says yes                  → <b data-k="p_accepted"></b>
+ × completion            every instalment paid            → <b data-k="p_paid"></b>
+ × NOC rate              lender confirms closure          → <b data-k="p_noc"></b>
+ × visible-in-45         bureau shows it within 45 days   → <b data-k="p_ref45"></b>  (<b data-k="p_ref"></b> by 10 Nov)
+Guardrails: share of 30–89 DPD closures reported SETTLED · tickets per 100 paid-off
+            cancellations within 60 days · lender counter-offer rejections</div>
+  <p class="small muted">Why 45 days and not "eventually": lenders report to bureaus on a monthly cycle, so a closure that is right should appear within one or two cycles. Past 45 days the member has usually already called support.</p>
+</section>
+
+<section>
+  <h2>2. Event model, and the data-quality trap first</h2>
+  <div class="cols2">
+    <div class="scroll"><table>
+      <thead><tr><th>Table</th><th>One row per</th><th>Key fields</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">overdue_accounts</td><td>overdue tradeline after de-duplication</td><td>lender type, DPD bucket, outstanding, in-network</td></tr>
+        <tr><td class="mono">offers</td><td>lender plan returned</td><td>waiver %, settlement amount</td></tr>
+        <tr><td class="mono">plans</td><td>plan the member accepted</td><td>one-time or EMI, tenure, first due date, autopay mandate</td></tr>
+        <tr><td class="mono">instalments</td><td>due instalment</td><td>due date, paid / paid late / missed</td></tr>
+        <tr><td class="mono">closures</td><td>fully paid account</td><td>paid date, NOC date, bureau date, CLOSED or SETTLED, score change</td></tr>
+        <tr><td class="mono">support_tickets</td><td>ticket</td><td>category</td></tr>
+        <tr><td class="mono">users</td><td>member</td><td>income and its source (salary SMS or typed), payday, city tier</td></tr>
+      </tbody></table></div>
+    <div class="panel">
+      <h3>Count accounts, not bureau rows</h3>
+      <p>GoodScore shows CIBIL, Experian and CRIF. The same loan arrives once per bureau, spelled differently ("HDFC BANK LTD", "HDFC Bank") and masked differently ("XXXXXXXX4821", "****4821"). In the simulated book, <b data-k="dq_raw"></b> raw rows describe <b data-k="dq_true"></b> real accounts, so counting rows inflates every funnel stage <b data-k="dq_infl"></b>×. Exact de-duplication still leaves <b data-k="dq_exact"></b> (<b data-k="dq_exact_infl"></b>×). Normalising the lender name plus the last four digits plus the open month gets to <b data-k="dq_norm"></b>, within <b data-k="dq_err"></b>%. The small gap is accounts no bureau reports at all.</p>
+      <details><summary>SQL · dq_bureau_duplicates</summary><pre data-sql="dq_bureau_duplicates"></pre></details>
+    </div>
+  </div>
+  <details><summary>SQL · base view (one row per account, every stage joined)</summary><pre data-sql="base"></pre></details>
+</section>
+
+<section>
+  <h2>3. The funnel</h2>
+  <div class="panel">
+    <div class="filters" role="group" aria-label="Filter the funnel">
+      <label>Lender type<select id="f_l"><option value="">All</option><option>bank</option><option>nbfc</option><option>digital</option></select></label>
+      <label>Days past due<select id="f_d"><option value="">All</option><option>30-89</option><option>90-179</option><option>180+</option></select></label>
+      <label>Income known from<select id="f_i"><option value="">All</option><option value="sms">Salary SMS</option><option value="declared">Typed by member</option></select></label>
+      <span class="small muted" id="f_note"></span>
+    </div>
+    <svg class="chart" id="funnel" viewBox="0 0 900 300" role="img" aria-label="Funnel per 100 detected accounts"></svg>
+    <p class="small muted">Per 100 detected accounts. From "paid off" onward, only plans whose last instalment was due by 10 Oct count, so long plans don't look like failures. Hover a bar for counts.</p>
+    <details><summary>SQL · funnel</summary><pre data-sql="funnel"></pre></details>
+  </div>
+  <p>The biggest drop in absolute terms is the first one: no offer, mostly because the lender isn't in the network. That is a partnerships lever, not a product analytics one, so I set it aside. The three leaks below are the ones the product controls.</p>
+</section>
+
+<section>
+  <h2>4. Leak A: plans that were never going to finish</h2>
+  <div class="cols2">
+    <div class="panel">
+      <h3>The instalment doesn't fit, or it lands before payday</h3>
+      <p><b data-k="over35_share"></b>% of EMI plans ask for more than 35% of the member's monthly income. They finish <b data-k="comp_over35"></b>% of the time, against <b data-k="comp_under35"></b>% for plans under 35%. The current sizing rule caps tenure at six months, so a large settlement simply produces a large EMI.</p>
+      <p>Separately, today's default sets the first due date seven days after acceptance, whatever the payday. Only <b data-k="aligned_share"></b>% of plans happen to fall in the five days after salary lands. Those pay the first instalment <b data-k="first_aligned"></b>% of the time vs <b data-k="first_pre"></b>% for plans due in the pre-payday crunch, and finish <b data-k="comp_aligned"></b>% vs <b data-k="comp_pre"></b>%.</p>
+      <div class="scroll"><table id="t_aff"></table></div>
+      <details><summary>SQL · emi_completion_by_affordability</summary><pre data-sql="emi_completion_by_affordability"></pre></details>
+      <details><summary>SQL · completion_by_payday_gap</summary><pre data-sql="completion_by_payday_gap"></pre></details>
+    </div>
+    <div class="panel">
+      <h3>Most plans that break, break at instalment 1</h3>
+      <svg class="chart" id="surv" viewBox="0 0 460 260" role="img" aria-label="Share of EMI plans still alive after each instalment"></svg>
+      <div class="legend"><span><i style="background:var(--s1)"></i>Income from salary SMS</span><span><i style="background:var(--s2)"></i>Income typed by member</span></div>
+      <p class="small">Survival after each instalment, with still-running plans censored rather than counted as failures. The first instalment is the cliff, which is why the due date matters more than reminders later in the plan.</p>
+      <p class="small"><b>A hypothesis I killed.</b> I expected typed income to be the main culprit, since people round up and the EMI is sized on it. It hurts, but only by a few points. The tenure cap is what produces unaffordable EMIs.</p>
+      <div class="scroll"><table id="t_src"></table></div>
+      <details><summary>SQL · emi_survival</summary><pre data-sql="emi_survival"></pre></details>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>5. Leak B: paid in full, still invisible</h2>
+  <div class="cols2">
+    <div class="panel">
+      <h3>The bureau is the slow step</h3>
+      <svg class="chart" id="vis" viewBox="0 0 460 260" role="img" aria-label="Share of paid-off accounts visible on the bureau by days since final payment"></svg>
+      <div class="legend"><span><i style="background:var(--s1)"></i>Banks</span><span><i style="background:var(--s2)"></i>NBFCs</span><span><i style="background:var(--s3)"></i>Digital lenders</span></div>
+      <p class="small">Median days from last payment to the bureau: banks <b data-k="lag_bank"></b>, NBFCs <b data-k="lag_nbfc"></b>, digital lenders <b data-k="lag_dig"></b>. <b data-k="nonoc_dig"></b>% of digital-lender payoffs have no NOC at all yet (banks <b data-k="nonoc_bank"></b>%).</p>
+      <details><summary>SQL · visibility_curve and lag_by_lender_type</summary><pre data-sql="visibility_curve"></pre><pre data-sql="lag_by_lender_type"></pre></details>
+    </div>
+    <div class="panel">
+      <h3>Invisibility is what fills the support queue</h3>
+      <div class="scroll"><table id="t_tix"></table></div>
+      <p>At day 45, <b data-k="invisible45"></b>% of paid-off accounts still don't show on the report (banks <b data-k="inv_bank"></b>%, NBFCs <b data-k="inv_nbfc"></b>%, digital lenders <b data-k="inv_dig"></b>%). These members raise <b data-k="tix_inv"></b> tickets per 100 accounts against <b data-k="tix_vis"></b>, and <b data-k="can_inv"></b>% cancel within 60 days against <b data-k="can_vis"></b>%.</p>
+      <p>Most of this is not a failure. The bureau is simply slow. It turns into a product problem because the app gives no expected date, so a normal 50-day lag looks identical to a lender that never reported.</p>
+      <details><summary>SQL · tickets_and_churn</summary><pre data-sql="tickets_and_churn"></pre></details>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>6. Leak C: settled when it could have closed</h2>
+  <div class="panel">
+    <div class="scroll"><table id="t_set"></table></div>
+    <p>For accounts 30–89 days past due, waivers are small (median ₹<b data-k="waiver3089"></b>), yet any waiver reports the account as SETTLED, and SETTLED lifts the score by about <b data-k="sc_settled"></b> points against <b data-k="sc_closed"></b> for CLOSED. <b data-k="settled3089"></b>% of 30–89 DPD closures in this book took the waiver. For a member whose goal is a loan at 750+, saving ₹<b data-k="waiver3089"></b> is a bad trade, and the app currently frames the waiver only as savings.</p>
+    <p class="small muted">The size of the SETTLED penalty is an assumption in the simulation; the direction is standard bureau practice. On real data, this table is the first query I would run.</p>
+    <details><summary>SQL · settled_vs_closed</summary><pre data-sql="settled_vs_closed"></pre></details>
+  </div>
+</section>
+
+<section>
+  <h2>7. A plan-risk score at the moment of acceptance</h2>
+  <div class="cols2">
+    <div class="panel">
+      <p>A logistic regression on what is known when the member taps "accept": EMI-to-income, where income came from, payday alignment, autopay mandate, DPD bucket, lender type, tenure, number of overdue accounts and city tier. No feature uses anything that happens later. Trained on <b data-k="n_train"></b> finished EMI plans, tested on <b data-k="n_test"></b> held out.</p>
+      <ul>
+        <li>AUC <b data-k="auc"></b> on the held-out set. The riskiest tenth of plans break <b data-k="dec1"></b>% of the time, the safest tenth <b data-k="dec10"></b>%.</li>
+        <li>Flagging the top 20% reaches <b data-k="top20"></b>% of all breaks. That is the queue for the fit check in test 2: these plans get a renegotiation offer before acceptance, not a reminder after a miss.</li>
+        <li>It is deliberately a simple, explainable model. A credit-ops person has to be able to tell a member why their plan was flagged.</li>
+      </ul>
+      <div class="scroll"><table id="t_coef"></table></div>
+    </div>
+    <div class="panel">
+      <h3>Break rate by risk decile (held-out plans)</h3>
+      <svg class="chart" id="dec" viewBox="0 0 460 260" role="img" aria-label="Break rate by risk decile"></svg>
+      <p class="small muted">Overall break rate <b data-k="break_rate"></b>%. Decile 1 is the riskiest tenth.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>8. What to do, sized, and how to test it</h2>
+  <div class="panel">
+    <div class="scroll"><table>
+      <thead><tr><th>Change (applied to the <b data-k="s_plans"></b> accepted plans that could have finished)</th><th class="n">Plans that finish</th></tr></thead>
+      <tbody>
+        <tr><td>Today's rules</td><td class="n"><b data-k="s_base"></b>%</td></tr>
+        <tr><td>First due date set to 2 days after the payday read from salary SMS</td><td class="n"><b data-k="s_pay"></b>%</td></tr>
+        <tr><td>Fit check: if the EMI is over 35% of income (typed income discounted 25%), ask the lender for up to 12 months; assume 60% of lenders agree. <b data-k="fit_n"></b> plans qualify</td><td class="n"><b data-k="s_fit"></b>%</td></tr>
+        <tr><td>Both</td><td class="n"><b data-k="s_both"></b>%</td></tr>
+        <tr><td>Both, plus autopay mandate on by default at acceptance</td><td class="n"><b data-k="s_all"></b>%</td></tr>
+      </tbody></table></div>
+    <p class="small muted">These come from re-scoring each plan under the simulation's own behaviour rules with the change applied, so they inherit every assumption. They are the reason to run the tests, not a substitute for them.</p>
+  </div>
+
+  <div class="cols-exp">
+    <div class="exp"><h3>Test 1 · Payday-aligned first due date</h3>
+      <dl class="kv">
+        <dt>Unit</dt><dd>Accepted plan, members with salary SMS (payday known)</dd>
+        <dt>Arms</dt><dd>Control: due in 7 days. Treatment: due 2 days after next payday, never more than 25 days out.</dd>
+        <dt>Primary</dt><dd>First instalment paid by its due date</dd>
+        <dt>Then</dt><dd>Completion at the last due date</dd>
+        <dt>Guardrails</dt><dd>Lender rejection of the later date; days from acceptance to closure</dd>
+        <dt>Size</dt><dd><b data-k="e1n"></b> plans per arm to detect +4 pts (α 0.05, power 0.8)</dd>
+        <dt>Ship if</dt><dd>First-instalment lift ≥ 3 pts and lender rejection stays under 5%</dd>
+      </dl></div>
+    <div class="exp"><h3>Test 2 · Fit check before acceptance</h3>
+      <dl class="kv">
+        <dt>Unit</dt><dd>Offer, within partner lenders that agree to counter-offers</dd>
+        <dt>Arms</dt><dd>Control: today's plan. Treatment: plans in the top-20% risk band, or over 35% of income, get a longer-tenure counter-offer, or a "close the smallest account first" sequence for members with 3+ overdues.</dd>
+        <dt>Primary</dt><dd>Plan completion</dd>
+        <dt>Guardrails</dt><dd>Acceptance rate (a longer plan may put people off); lender withdrawal of offers; total days to closure</dd>
+        <dt>Size</dt><dd><b data-k="e2n"></b> plans per arm to detect +4 pts</dd>
+        <dt>Ship if</dt><dd>Completion lift ≥ 3 pts with acceptance not down more than 2 pts</dd>
+      </dl></div>
+    <div class="exp"><h3>Test 3 · Closure tracker with an expected date</h3>
+      <dl class="kv">
+        <dt>Unit</dt><dd>Paid-off account</dd>
+        <dt>Arms</dt><dd>Control: today. Treatment: "Expected on your report by {date}" from that lender's measured lag, a push when the NOC arrives, and an automatic bureau dispute at day 45 if it still hasn't shown.</dd>
+        <dt>Primary</dt><dd>Accounts with any "paid, still showing active" ticket</dd>
+        <dt>Secondary</dt><dd>Cancellation within 60 days</dd>
+        <dt>Size</dt><dd><b data-k="e3n"></b> per arm to detect a 30% drop. The effect is large, so two weeks of payoffs is enough.</dd>
+        <dt>Ship if</dt><dd>Tickets down ≥ 20% and the expected dates are right for at least 80% of accounts</dd>
+      </dl></div>
+    <div class="exp"><h3>Rule change · Close by default at 30–89 DPD</h3>
+      <dl class="kv">
+        <dt>What</dt><dd>For 30–89 DPD, default to "pay in full in EMIs → CLOSED". Show the waiver option with a plain line: "This will show as SETTLED on your report and lifts your score less."</dd>
+        <dt>Measure</dt><dd>SETTLED share at 30–89 DPD; score change at 90 days; acceptance rate</dd>
+        <dt>Why not a test</dt><dd>It is a disclosure members should get anyway. Measure it before and after, and watch acceptance.</dd>
+      </dl></div>
+  </div>
+</section>
+
+<section>
+  <h2>9. The dashboard I would build in week two</h2>
+  <div class="cols2">
+    <div class="panel"><h3>Daily, for the resolution squad</h3>
+      <ul>
+        <li>North-star: visible closures within 45 days per 100 detected, by weekly cohort</li>
+        <li>Funnel by lender, DPD bucket and income source (the explorer above)</li>
+        <li>First-instalment on-time rate, by days-after-payday bucket</li>
+        <li>Paid-off accounts past day 45 with no bureau update, by lender: the dispute queue</li>
+        <li>NOC overdue by lender (paid, no NOC after 30 days): the lender-escalation list</li>
+      </ul></div>
+    <div class="panel"><h3>Weekly, for the founders</h3>
+      <ul>
+        <li>SETTLED vs CLOSED mix and 90-day score change, by DPD bucket</li>
+        <li>Tickets per 100 paid-off and cancellations within 60 days, split by visible / not visible</li>
+        <li>Plan-risk score calibration: predicted vs actual break rate, by decile</li>
+        <li>Lender scorecard: offer rate, waiver depth, NOC time, bureau time</li>
+      </ul></div>
+  </div>
+</section>
+
+<section>
+  <h2>10. My first 90 days on this</h2>
+  <div class="cols2">
+    <div class="panel"><ol>
+      <li><b>Weeks 1–2.</b> Map these tables to the real event names. Rebuild the funnel and confirm the account de-duplication against a hand-checked sample of 200 members. Ship the dashboard.</li>
+      <li><b>Weeks 3–6.</b> Run the real versions of sections 4–6. Launch test 3 first: the cheapest, the fastest to read, and the biggest effect on tickets and cancellations.</li>
+      <li><b>Weeks 7–12.</b> Launch test 1. Fit the risk score on real plans, check its calibration, then hand the top band to test 2 with the partnerships team.</li>
+    </ol></div>
+    <div class="panel"><h3>Where I could be wrong</h3>
+      <ul>
+        <li>If lenders, not GoodScore, set the first due date, test 1 becomes a lender negotiation, not a settings change.</li>
+        <li>If the real bureau lag is mostly under 30 days, Leak B shrinks and the tracker matters less than NOC chasing.</li>
+        <li>The SETTLED penalty differs by bureau and score model. The direction is safe; the size is not.</li>
+        <li>Members who choose autopay are probably more organised to begin with, so the mandate effect in raw data overstates what a default would do. That is why it sits behind tests 1 and 2.</li>
+      </ul></div>
+  </div>
+</section>
+
+<footer>
+  <p><b>Files.</b> <a href="src/simulate.py">simulate.py</a> (the book and every assumption) · <a href="sql/analysis.sql">analysis.sql</a> (DuckDB; each block is named) · <a href="src/analyze.py">analyze.py</a> (runs the SQL, fits the risk score, sizes the fixes) · <a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/goodscore-plan-to-noc">all files and CSVs on GitHub</a> · <a href="results.json">results.json</a></p>
+  <p>Built by Aditya Mathur for the Product Analytics role at GoodScore. Public sources: GoodScore's website and app-store listings, public user reviews, and Series A coverage (Oct 2025). AI tools helped write the code; the problem framing, the metric design and the calls are mine. Not affiliated with GoodScore.</p>
+</footer>
+</main>
+
+<script>
+const D = /*__DATA__*/null;
+const $ = s => document.querySelector(s);
+document.querySelectorAll('[data-k]').forEach(el => el.textContent = D.K[el.dataset.k]);
+document.querySelectorAll('pre[data-sql]').forEach(el => el.textContent = D.sql[el.dataset.sql]);
+const tip = $('#tip');
+function hover(el, html){
+  el.addEventListener('mousemove', e => {tip.innerHTML = html; tip.style.opacity = 1;
+    tip.style.left = Math.min(e.clientX + 12, innerWidth - 270) + 'px'; tip.style.top = (e.clientY + 12) + 'px';});
+  el.addEventListener('mouseleave', () => tip.style.opacity = 0);
+}
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent){const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e;}
+const pct = x => (x*100).toFixed(0) + '%';
+const fmt = n => n.toLocaleString('en-IN');
+
+// ---------- funnel explorer
+function funnel(){
+  const fl = $('#f_l').value, fd = $('#f_d').value, fi = $('#f_i').value;
+  const rows = D.results.cube.filter(r => (!fl || r.lender_type === fl) && (!fd || r.dpd_bucket === fd) && (!fi || r.income_source === fi));
+  const s = k => rows.reduce((a, r) => a + r[k], 0);
+  const det = s('detected'), acc = s('accepted'), cf = s('could_finish') || 1;
+  const fin = k => s(k) / cf * acc;
+  const stages = [['Detected', det, det], ['Lender offer', s('offered'), s('offered')], ['Plan accepted', acc, acc],
+    ['1st instalment paid', s('first_paid'), s('first_paid')], ['Paid off', fin('paid_off'), s('paid_off')],
+    ['On bureau (any time)', fin('reflected'), s('reflected')], ['On bureau ≤ 45 days', fin('reflected_45d'), s('reflected_45d')]];
+  const svg = $('#funnel'); svg.innerHTML = '';
+  const L = 170, W = 900 - L - 70, bh = 30, gap = 9;
+  stages.forEach(([name, v, raw], i) => {
+    const per = v / det * 100, y = 10 + i * (bh + gap), w = Math.max(2, per / 100 * W);
+    el('text', {x: L - 10, y: y + bh/2 + 4, 'text-anchor': 'end', class: 'lbl'}, svg).textContent = name;
+    const r = el('rect', {x: L, y, width: w, height: bh, rx: 4, fill: i === stages.length - 1 ? 'var(--s2)' : 'var(--s1)'}, svg);
+    el('text', {x: L + w + 8, y: y + bh/2 + 4}, svg).textContent = per.toFixed(0);
+    if (i > 0) {const prev = stages[i-1][1] / det * 100; hover(r, `<b>${name}</b><br>${per.toFixed(1)} per 100 detected<br>${fmt(raw)} accounts<br>lost vs previous step: ${(prev - per).toFixed(1)} per 100`);}
+    else hover(r, `<b>Detected</b><br>${fmt(raw)} overdue accounts`);
+  });
+  $('#f_note').textContent = `${fmt(det)} accounts in this cut`;
+}
+['#f_l','#f_d','#f_i'].forEach(s => $(s).addEventListener('change', funnel));
+funnel();
+
+// ---------- line chart helper (one y-axis, 0-100%)
+function lines(svgSel, series, xs, xlab, ymin){
+  const svg = $(svgSel), W = 460, H = 260, l = 44, r = 14, t = 12, b = 38;
+  const x = v => l + (v - xs[0]) / (xs[xs.length-1] - xs[0]) * (W - l - r);
+  const y = v => t + (1 - (v - ymin) / (1 - ymin)) * (H - t - b);
+  for (let g = ymin; g <= 1.0001; g += (1 - ymin) / 4){
+    el('line', {x1: l, x2: W - r, y1: y(g), y2: y(g), stroke: 'var(--grid)'}, svg);
+    el('text', {x: l - 6, y: y(g) + 4, 'text-anchor': 'end'}, svg).textContent = pct(g);
+  }
+  xs.forEach(v => el('text', {x: x(v), y: H - b + 16, 'text-anchor': 'middle'}, svg).textContent = v);
+  el('text', {x: (l + W - r) / 2, y: H - 4, 'text-anchor': 'middle'}, svg).textContent = xlab;
+  series.forEach(sr => {
+    el('path', {d: sr.pts.map((p, i) => (i ? 'L' : 'M') + x(p[0]) + ' ' + y(p[1])).join(''), fill: 'none', stroke: sr.color, 'stroke-width': 2}, svg);
+    sr.pts.forEach(p => {
+      el('circle', {cx: x(p[0]), cy: y(p[1]), r: 4, fill: sr.color, stroke: 'var(--paper)', 'stroke-width': 2}, svg);
+      const hit = el('circle', {cx: x(p[0]), cy: y(p[1]), r: 11, fill: 'transparent'}, svg);
+      hover(hit, `<b>${sr.name}</b><br>${xlab}: ${p[0]}<br>${pct(p[1])}`);
+    });
+    const lp = sr.pts[sr.pts.length - 1];
+    el('text', {x: x(lp[0]) - 4, y: y(lp[1]) + (sr.dy || -9), 'text-anchor': 'end', class: 'lbl'}, svg).textContent = pct(lp[1]);
+  });
+}
+const sv = D.results.emi_survival;
+lines('#surv', [
+  {name: 'Salary SMS', color: 'var(--s1)', pts: [[0, 1]].concat(sv.filter(r => r.income_source === 'sms').map(r => [r.inst_no, r.still_alive])), dy: -9},
+  {name: 'Typed income', color: 'var(--s2)', pts: [[0, 1]].concat(sv.filter(r => r.income_source === 'declared').map(r => [r.inst_no, r.still_alive])), dy: 16}
+], [0,1,2,3,4,5,6], 'Instalments paid', 0.4);
+const vc = D.results.visibility_curve;
+const days = [...new Set(vc.map(r => r.day))];
+lines('#vis', [['bank','Banks','var(--s1)', -9], ['nbfc','NBFCs','var(--s2)', 4], ['digital','Digital lenders','var(--s3)', 16]].map(([k, n, c, dy]) =>
+  ({name: n, color: c, dy, pts: vc.filter(r => r.lender_type === k).map(r => [r.day, r.visible])})), days, 'Days since final payment', 0);
+
+// ---------- decile bars
+(function(){
+  const v = D.results.risk_model.break_rate_by_decile, svg = $('#dec'), W = 460, H = 260, l = 44, b = 34, t = 12;
+  const bw = (W - l - 10) / v.length;
+  [0, .25, .5, .75, 1].forEach(g => {const yy = t + (1 - g) * (H - t - b);
+    el('line', {x1: l, x2: W - 10, y1: yy, y2: yy, stroke: 'var(--grid)'}, svg);
+    el('text', {x: l - 6, y: yy + 4, 'text-anchor': 'end'}, svg).textContent = pct(g);});
+  v.forEach((p, i) => {
+    const h = p * (H - t - b), xx = l + i * bw + 3;
+    const r = el('rect', {x: xx, y: H - b - h, width: bw - 6, height: h, rx: 4, fill: 'var(--s1)'}, svg);
+    el('text', {x: xx + (bw - 6) / 2, y: H - b + 16, 'text-anchor': 'middle'}, svg).textContent = i + 1;
+    if (i === 0 || i === v.length - 1) el('text', {x: xx + (bw - 6) / 2, y: H - b - h - 6, 'text-anchor': 'middle', class: 'lbl'}, svg).textContent = pct(p);
+    hover(r, `<b>Risk decile ${i + 1}</b><br>${pct(p)} of these plans broke`);
+  });
+  el('text', {x: (l + W) / 2, y: H - 2, 'text-anchor': 'middle'}, svg).textContent = 'Risk decile (1 = riskiest)';
+})();
+
+// ---------- tables
+function table(sel, head, rows){
+  $(sel).innerHTML = '<thead><tr>' + head.map(h => `<th class="${h[1] || ''}">${h[0]}</th>`).join('') + '</tr></thead><tbody>' +
+    rows.map(r => '<tr>' + r.map((c, i) => `<td class="${head[i][1] || ''}">${c}</td>`).join('') + '</tr>').join('') + '</tbody>';
+}
+const bandName = {a: 'Under 15%', b: '15–25%', c: '25–35%', d: 'Over 35%'};
+const aff = D.results.emi_completion_by_affordability, bands = ['a','b','c','d'];
+table('#t_aff', [['EMI as share of income'], ['Due after payday', 'n'], ['Due other days', 'n'], ['Plans', 'n']],
+  bands.map(bd => {const on = aff.find(r => r.emi_band[0] === bd && r.due_soon_after_payday), off = aff.find(r => r.emi_band[0] === bd && !r.due_soon_after_payday);
+    const c = v => `<span class="${v < 0.6 ? 'bad' : ''}">${pct(v)}</span>`;
+    return [bandName[bd], c(on.completion), c(off.completion), fmt(on.plans + off.plans)];}));
+table('#t_src', [['Income from'], ['EMI ÷ income, as seen', 'n'], ['1st paid', 'n'], ['Finished', 'n']],
+  D.results.completion_by_income_source.map(r => [r.income_source === 'sms' ? 'Salary SMS' : 'Typed', pct(r.emi_to_income_as_seen), pct(r.first_instalment_paid), pct(r.completion)]));
+table('#t_tix', [['Paid-off account at day 45'], ['Accounts', 'n'], ['Tickets per 100', 'n'], ['Member cancelled ≤ 60 days', 'n']],
+  D.results.tickets_and_churn.slice().reverse().map(r => [r.invisible_45d ? '<span class="bad">Not on report yet</span>' : '<span class="ok">On report</span>', fmt(r.paid_off_accounts), r.tickets_per_100.toFixed(0), pct(r.user_cancelled_within_60d)]));
+table('#t_set', [['Days past due'], ['Reported as'], ['Accounts', 'n'], ['Median waiver', 'n'], ['Score change at 90 days', 'n']],
+  D.results.settled_vs_closed.slice().sort((a, b) => ({'30-89':0,'90-179':1,'180+':2}[a.dpd_bucket] - {'30-89':0,'90-179':1,'180+':2}[b.dpd_bucket]) || a.bureau_status.localeCompare(b.bureau_status))
+  .map(r => [r.dpd_bucket, r.bureau_status, fmt(r.accounts), '₹' + fmt(r.median_waiver_rupees), '+' + r.avg_score_change_90d.toFixed(0)]));
+const fname = {emi_to_income: 'EMI ÷ income', mandate: 'Autopay mandate', aligned: 'Due just after payday', declared: 'Income typed, not SMS',
+  tenure_months: 'Tenure (months)', dpd180: '180+ DPD', dpd90: '90–179 DPD', nbfc: 'NBFC lender', digital: 'Digital lender', n_overdue: 'Number of overdue accounts', tier3: 'Tier-3 city'};
+table('#t_coef', [['Feature (at acceptance)'], ['Odds of breaking, per 1 s.d.', 'n']],
+  D.results.risk_model.coefficients.slice(0, 6).map(c => [fname[c.feature], `<span class="${c.odds_per_sd > 1.1 ? 'bad' : c.odds_per_sd < 0.9 ? 'ok' : ''}">×${c.odds_per_sd.toFixed(2)}</span>`]));
+</script>
+</body>
+</html>
