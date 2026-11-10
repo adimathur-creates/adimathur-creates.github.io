@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Slow Scam · catching investment scams on Google Pay before the big transfer · Aditya Mathur</title>
+<meta name="description" content="A product case: Google's India scam protections work when the scam is live on a call. Most money is lost to investment scams that run for days with no call. A payer-side journey score, an intervention ladder, a working prototype, a simulation and a launch plan.">
+<style>
+:root{--bg:#fbfaf8;--surface:#fff;--ink:#17191d;--muted:#5d6370;--line:#e6e4df;--accent:#1d5d4b;--accent-soft:#e6f1ed;--tag:#f1efea;--warn:#8a4b0f;--warn-soft:#fbf0e3;--bad:#a12a2a;--bad-soft:#fbe9e9;--s1:#2a78d6;--s2:#eb6834;--grid:#ecebe7}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101215;--surface:#171a1f;--ink:#e9ebee;--muted:#9ba2ae;--line:#272b33;--accent:#6fcfb0;--accent-soft:#132a23;--tag:#1f232a;--warn:#f0b46e;--warn-soft:#2a2116;--bad:#f08a8a;--bad-soft:#2c1717;--s1:#3987e5;--s2:#d95926;--grid:#23262c}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent);text-underline-offset:3px}
+.wrap{max-width:880px;margin:0 auto;padding:44px 18px 80px}
+.kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.08;margin:0 0 12px;letter-spacing:-.02em}
+.lede{font-size:19px;color:var(--muted);margin:0 0 14px;max-width:720px}
+.byline{font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 16px}
+.disclaimer{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding:4px 0 4px 12px;margin:18px 0 0}
+h2{font-size:24px;line-height:1.2;margin:56px 0 10px;letter-spacing:-.01em}
+h2 .n{color:var(--muted);font-weight:500;margin-right:6px}
+h3{font-size:17px;margin:26px 0 6px}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 14px;padding-left:22px}li{margin:5px 0}
+.tldr{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:28px 0 0}
+.tldr h2{margin:0 0 10px;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tldr li{margin:8px 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 6px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px;line-height:1.1;letter-spacing:-.01em}
+.stat span{font-size:13.5px;color:var(--muted);display:block;margin-top:4px;line-height:1.35}
+table.pol{font-size:13.5px}table.pol th{font-size:11px;padding:8px 7px;white-space:normal}table.pol td{padding:8px 7px}table.pol td:first-child{min-width:150px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:10px 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--tag)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.pick td{background:var(--accent-soft)}
+tr:last-child td{border-bottom:0}
+.tablewrap{overflow-x:auto}
+.note{font-size:13.5px;color:var(--muted)}
+.callout{background:var(--accent-soft);border-radius:12px;padding:14px 16px;margin:14px 0}
+.callout.warn{background:var(--warn-soft)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h3{margin-top:0}
+.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+.rung{border-radius:12px;padding:12px;border:1px solid var(--line);background:var(--surface);font-size:14px}
+.rung b{display:block;font-size:15px;margin-bottom:4px}
+.rung .when{font-size:12.5px;color:var(--muted);display:block;margin-bottom:6px}
+.r1{border-top:4px solid var(--s1)}.r2{border-top:4px solid var(--warn)}.r3{border-top:4px solid var(--bad)}.r0{border-top:4px solid var(--line)}
+/* timeline */
+.tl{position:relative;margin:16px 0 8px;padding-left:22px;border-left:2px solid var(--line)}
+.tl .ev{position:relative;margin:0 0 14px}
+.tl .ev:before{content:"";position:absolute;left:-29px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
+.tl .ev.t1:before{border-color:var(--s1);background:var(--s1)}
+.tl .ev.t2:before{border-color:var(--warn);background:var(--warn)}
+.tl .ev.t3:before{border-color:var(--bad);background:var(--bad)}
+.tl .ev.in:before{border-style:dashed}
+.tl .when{font-size:12.5px;color:var(--muted)}
+.tl .what{font-weight:600}
+.tl .sees{font-size:14px;color:var(--muted)}
+.pill{display:inline-block;font-size:12px;border-radius:999px;padding:1px 9px;margin-left:6px;font-weight:600;vertical-align:1px}
+.p0{background:var(--tag);color:var(--muted)}.p1{background:color-mix(in srgb,var(--s1) 16%,transparent);color:var(--s1)}.p2{background:var(--warn-soft);color:var(--warn)}.p3{background:var(--bad-soft);color:var(--bad)}
+/* prototype */
+.proto{display:grid;grid-template-columns:330px 1fr;gap:20px;align-items:start;margin:14px 0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
+.tabs button,.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.phone{width:330px;border:10px solid #1b1d22;border-radius:34px;background:#f6f7f9;color:#17191d;min-height:540px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);display:flex;flex-direction:column}
+.ph-top{background:#fff;padding:14px 16px 10px;border-bottom:1px solid #e7e8ec;font-size:13px;color:#5d6370;display:flex;justify-content:space-between}
+.ph-body{padding:14px 14px 18px;flex:1;display:flex;flex-direction:column;gap:10px}
+.payee{background:#fff;border-radius:16px;padding:14px;text-align:center}
+.avatar{width:46px;height:46px;border-radius:50%;background:#dfe6f1;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#3a4a66}
+.payee .amt{font-size:34px;font-weight:700;letter-spacing:-.02em;margin:4px 0}
+.payee .id{font-size:12.5px;color:#5d6370;word-break:break-all}
+.payee .badge{display:inline-block;margin-top:6px;font-size:12px;background:#e3f4ea;color:#1e6b3c;border-radius:999px;padding:2px 9px}
+.sheet{background:#fff;border-radius:16px;padding:14px;font-size:14px}
+.sheet h4{margin:0 0 6px;font-size:16px}
+.sheet.s2{border:2px solid #c9771f}.sheet.s3{border:2px solid #b42d2d}
+.sheet ul{padding-left:18px;margin:6px 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips button{font:inherit;font-size:13px;border:1px solid #cfd3da;background:#fff;border-radius:999px;padding:5px 10px;cursor:pointer;color:#17191d}
+.chips button:hover{border-color:#1d5d4b}
+.cta{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.cta button{font:inherit;font-size:14px;border-radius:999px;padding:9px;border:1px solid #cfd3da;background:#fff;cursor:pointer;color:#17191d}
+.cta .go{background:#1d5d4b;color:#fff;border-color:#1d5d4b}
+.cta .stop{background:#b42d2d;color:#fff;border-color:#b42d2d}
+.cta .ghost{border:0;color:#5d6370;background:transparent;font-size:13px}
+.cta button:disabled{opacity:.5;cursor:not-allowed}
+.paybtn{margin-top:auto;background:#1a73e8;color:#fff;border:0;border-radius:999px;padding:12px;font:inherit;font-weight:600}
+.done{background:#fff;border-radius:16px;padding:14px;text-align:center;font-size:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.panel .ctx{font-size:14px;color:var(--muted);margin-bottom:8px}
+.sig{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.sig:last-child{border-bottom:0}
+.sig .pts{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.meter{position:relative;height:12px;background:var(--tag);border-radius:999px;margin:16px 0 26px}
+.meter .fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:var(--ink)}
+.meter .tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--muted)}
+.meter .tick span{position:absolute;top:18px;left:-34px;width:70px;text-align:center;font-size:11px;color:var(--muted);white-space:nowrap}
+.steps{font-size:13.5px;color:var(--muted);margin-top:8px}
+.lang{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);margin-top:10px}
+/* charts */
+figure{margin:16px 0 18px}
+figcaption{font-size:13.5px;color:var(--muted);margin-top:6px}
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-size:12px;font-family:inherit}
+.chart .lbl{fill:var(--ink);font-size:12.5px;font-weight:600}
+.chart .grid line{stroke:var(--grid)}
+.chart .axis{stroke:var(--muted)}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:6px 9px;border-radius:8px;opacity:0;transition:opacity .1s;z-index:10;max-width:260px}
+.sliders{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:10px 0}
+.sliders label{font-size:13.5px;color:var(--muted);display:block}
+.sliders input{width:100%}
+.sliders output{font-weight:600;color:var(--ink)}
+.live{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.live .stat b{font-size:30px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0}
+summary{cursor:pointer;font-weight:600}
+code{font-size:13.5px;background:var(--tag);padding:1px 5px;border-radius:5px}
+.src{font-size:14px}.src li{margin:4px 0}
+footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px}
+@media (max-width:760px){.stats{grid-template-columns:1fr 1fr}.grid2,.live{grid-template-columns:1fr}.ladder{grid-template-columns:1fr 1fr}.proto{grid-template-columns:1fr}.phone{margin:0 auto}.sliders{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Product case · Payments trust &amp; safety · India · November 2026</p>
+<h1>The Slow Scam</h1>
+<p class="lede">Google's newest India scam protections step in while a scam is happening live on a phone call. But most money is lost to investment scams that run for days, with no call at the moment of payment. This is how I would catch those on Google Pay, before the big transfer.</p>
+<div class="byline"><span>By <a href="https://adimathur-creates.github.io/">Aditya Mathur</a></span><span><a href="https://www.linkedin.com/in/adityaamathur">LinkedIn</a></span><span><a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/google-pay-slow-scam">Code, data and tests</a></span></div>
+<p class="disclaimer">Independent work. I don't work at Google, this is not a Google product, and I have no access to Google data. Facts about scams and Google's features come from public sources (listed at the end). Every result marked <b>simulated</b> comes from a synthetic population I built. It shows the method and the trade-offs; it is not a forecast.</p>
+
+<section class="tldr">
+<h2>In one minute</h2>
+<ul>
+<li><b>The problem.</b> Indians reported losing ₹19,813 crore to cyber fraud in 2025, and about three-quarters of it went to fake investment schemes. These run for days in WhatsApp and Telegram groups. The victim pays on their own, to a different stranger's UPI ID each time, often after a small "profit" is paid to them first.</li>
+<li><b>The gap.</b> Google's 2025 protections for India look for a live scam: an unknown caller, screen sharing, a payment app opened mid-call. A slow investment scam trips none of these. Fraud lists catch the receiving IDs, but scammers change them about daily.</li>
+<li><b>The bet.</b> The receiving ID changes. The victim's pattern doesn't. Score each payment on the payer's own history (new people, rising amounts, a stranger paid you first), then respond in steps: a one-tap question, a warning that names the scam, a short hold.</li>
+<li><b>Simulated result.</b> Compared with a simple "warn on big payments to new people" rule, it protects more of what victims would have lost (69.2% vs 63.7%) and shows full warnings to genuine users about 19x less often (6.4 vs 123 per 1,000 users a month). In the median journey, 98.7% of the money is still in the victim's account when the first full warning appears.</li>
+<li><b>What I would do first at Google.</b> Replay the score on six months of real Google Pay history with confirmed scam labels, before showing anything to anyone. The plan below says how, and what would make me kill it.</li>
+</ul>
+</section>
+
+<div class="stats">
+<div class="stat"><b>₹19,813 crore</b><span>reported lost to cyber fraud in India in 2025 (I4C)</span></div>
+<div class="stat"><b>~3 in 4</b><span>of those rupees went to fake investment schemes</span></div>
+<div class="stat"><b>69.2%</b><span>of victim losses protected, simulated (amount rule: 63.7%)</span></div>
+<div class="stat"><b>6.4</b><span>full warnings per 1,000 genuine users a month, simulated (amount rule: 123)</span></div>
+</div>
+
+<h2><span class="n">1</span>The problem, in numbers</h2>
+<ul>
+<li><b>Big and still rising in count.</b> India's cybercrime reporting portal recorded ₹19,813 crore lost and about 21.8 lakh complaints in 2025.</li>
+<li><b>Mostly investment scams.</b> Moneylife puts 76% of 2025 losses on fake investment schemes; I4C's breakdown has investment schemes at 77% and digital arrest at 8%. So the scam that gets the headlines is not where most of the money goes.</li>
+<li><b>"UPI fraud" counts miss most of it.</b> The Finance Ministry told Parliament that UPI fraud cost ₹805 crore from January to November 2025. That is a small slice of the total, because the victim authorises every payment themselves. To the system, it looks like a normal payment.</li>
+<li><b>Recovery is poor.</b> Moneylife reports that about three out of four rupees lost are never recovered. The money moves through chains of mule accounts within hours.</li>
+</ul>
+
+<h3>How the scam runs, from the victim's side</h3>
+<p>Bank and RBI advisories describe the same pattern again and again:</p>
+<ol>
+<li><b>The hook.</b> An ad, an SMS or a WhatsApp/Telegram group offers easy tasks ("like these videos") or stock tips with big returns.</li>
+<li><b>The bait.</b> The victim is paid a small amount first: a task "commission" or a "profit withdrawal". This builds trust. Bank advisories tell people to check where that first commission came from.</li>
+<li><b>The deposits.</b> The victim is told to pay to unlock bigger tasks or to invest. Each payment goes to a personal UPI ID, often a different one each time. The RBI advisory notes these UPI details are updated daily.</li>
+<li><b>The trap.</b> The fake app shows growing profits. To withdraw, the victim must pay a "tax", a "fee" or a "margin call". Each payment is bigger than the last.</li>
+<li><b>The end.</b> Savings are gone. Some victims move to bank transfers once UPI limits get in the way. That money is outside any UPI app's view.</li>
+</ol>
+
+<h2><span class="n">2</span>What Google already does, and where this scam slips through</h2>
+<p>Google has done a lot here. The point is not that it does too little. Its newest tools aim at one kind of moment, and this scam rarely creates that moment.</p>
+<div class="tablewrap"><table>
+<tr><th>Protection (public)</th><th>What has to happen for it to act</th><th>Why a slow investment scam slips through</th></tr>
+<tr><td>Google Pay scam warnings (41 million in 2024; over 1 million a week by late 2025)</td><td>Not public. Likely payee risk and transaction models.</td><td>Unknown from outside. This is the first thing I would want to learn (section 9).</td></tr>
+<tr><td>Screen-sharing alert in Google Pay, Paytm and Navi (Android 11+)</td><td>A call with an unknown contact, plus screen sharing, plus a financial app opened. Then a one-tap exit and a 30-second wait.</td><td>The victim pays alone, hours after chatting in a group. There is no call and no screen sharing.</td></tr>
+<tr><td>Scam Detection on calls (Gemini Nano, on device)</td><td>A live phone call. Pixel 9 and later, English only, off by default.</td><td>No call at payment time. Most Indian phones are not Pixels.</td></tr>
+<tr><td>Fraud lists: I4C Suspect Registry, DoT's Fraud Risk Indicator, RBI's MuleHunter.AI</td><td>The receiving account or number was reported and listed.</td><td>Receiving IDs change about daily. The list catches up after the money has moved. (Still useful: I use it as one signal.)</td></tr>
+<tr><td>SEBI's <code>@valid</code> UPI IDs with a green thumbs-up (since Oct 2025)</td><td>The user notices the badge is missing.</td><td>Victims are told the personal ID is normal. The app can notice the missing badge for them.</td></tr>
+</table></div>
+
+<h2><span class="n">3</span>The insight: the receiving ID changes, the victim's pattern doesn't</h2>
+<p>A payment app sees the payer's own history. That history is very different during a scam:</p>
+<div class="grid2">
+<div class="card"><h3>What a scam looks like from the payer's side</h3>
+<ul>
+<li>Several people paid for the first time in a few days</li>
+<li>A small credit from a stranger, then payments to <i>other</i> strangers</li>
+<li>Each payment bigger than the last, across different people</li>
+<li>Total paid to new people far above the person's usual month</li>
+<li>Personal UPI IDs, never an <code>@valid</code> one, for something called an "investment"</li>
+</ul></div>
+<div class="card"><h3>In the simulation (scam vs genuine payments to new people)</h3>
+<ul>
+<li>Came within 10 days of a small credit from a different stranger: <b>79.3%</b> of scam payments vs <b>30.6%</b> of genuine ones</li>
+<li>Score reached the full-warning level: <b>70.7%</b> vs <b>2.2%</b></li>
+<li>Typical task scam: 6 payments to 5 different IDs, each about 2.2x the last</li>
+<li>Typical stock-tips scam: 8 payments over 12 days, first one ₹16,000</li>
+</ul>
+<p class="note">From <code>sql/metrics.sql</code> on the sample data. Simulated.</p></div>
+</div>
+
+<h3>The people a bad solution would hurt</h3>
+<p>Many honest payments look like this too. I built these people into the simulation on purpose, and the results report their friction separately:</p>
+<ul>
+<li><b>Someone moving flat:</b> a token, a big deposit and a broker, all to people they have never paid.</li>
+<li><b>A shopkeeper on a personal UPI ID:</b> paid by many strangers every day, trying new suppliers.</li>
+<li><b>A freelancer:</b> paid by new clients, pays new helpers.</li>
+<li><b>A student:</b> new friends send money for splits; pays people they just met.</li>
+<li><b>Someone buying second-hand:</b> one big payment to a stranger on OLX.</li>
+<li><b>A real investor:</b> big, rising payments, but to <code>@valid</code> broker and fund IDs.</li>
+</ul>
+
+<h2><span class="n">4</span>The design</h2>
+<h3>A journey score for each payment to a person</h3>
+<p>Before a payment to a personal UPI ID goes out, add up these signals. Payments to merchants and to <code>@valid</code> IDs are not scored. Payments under ₹500 never get friction. People you have paid and been paid by before are not scored.</p>
+<div class="tablewrap"><table>
+<tr><th>Signal (what the user would be told)</th><th class="num">Points</th><th>Why</th></tr>
+<tr><td>First payment to this person</td><td class="num">1.0</td><td>Every scam payment is to someone new.</td></tr>
+<tr><td>New people paid in 7 days (2 / 3–4 / 5+), ignoring tiny ones like an auto ride</td><td class="num">0.6 / 1.4 / 2.0</td><td>Receiving IDs rotate, so victims pay many new people fast.</td></tr>
+<tr><td>A stranger sent you a small amount (up to ₹5,000) in the last 10 days, and now you pay a <i>different</i> stranger at least 1.5x that</td><td class="num">1.6</td><td>The bait. Cut to a quarter for people paid by 8+ strangers a month, like shops.</td></tr>
+<tr><td>This payment is 1.8x / 3x the biggest recent payment to a different new person</td><td class="num">0.9 / 1.3</td><td>Escalation across people. A token then a deposit to the same landlord does not count.</td></tr>
+<tr><td>Money to new people in 14 days is 0.5x / 1.5x your usual month</td><td class="num">0.7 / 1.4</td><td>Scaled to each person, so it works for a student and a business owner.</td></tr>
+<tr><td>This UPI ID was paid for the first time by 5+ / 15+ people today</td><td class="num">0.8 / 1.3</td><td>Mule IDs collect from many victims. Weak alone: busy shops look the same.</td></tr>
+<tr><td>This UPI ID is on a government fraud list</td><td class="num">3.0</td><td>Precise but late. Adds to the score instead of acting alone.</td></tr>
+<tr><td>Round amount of ₹5,000 or more</td><td class="num">0.2</td><td>A small nudge.</td></tr>
+</table></div>
+<p class="note">The weights are hand-set and readable on purpose. At Google I would start here as a baseline and compare it with a model trained on real labels. A score people can read is easier to defend to Legal, to users and to regulators.</p>
+
+<h3>A ladder of responses, not one big warning</h3>
+<p>UK research on these "authorised" scams found that generic warnings barely work: people stop reading them, and scammers coach victims to click through. What worked in a controlled study was a warning shown only for risky payments, with a clear button to cancel or wait. That cut fraud by 81% in the study, against 18% for a general warning that also lost force with repeat exposure. So the design keeps friction rare and makes each step specific.</p>
+<div class="ladder">
+<div class="rung r0"><b>0 · Nothing</b><span class="when">Score under 3.2</span>The payment goes through as today. This is almost every payment.</div>
+<div class="rung r1"><b>1 · Quick question</b><span class="when">Score 3.2+</span>"What's this payment for?" One tap. If the answer is "investment" or "a job or task", go straight to step 2. Asked once per person.</div>
+<div class="rung r2"><b>2 · Warning that names the scam</b><span class="when">Score 4.6+</span>Says <i>why</i> in plain words ("a stranger paid you ₹300, now you're paying a different stranger"). Main button: don't pay now. "Pay anyway" unlocks after 30 seconds.</div>
+<div class="rung r3"><b>3 · Short hold</b><span class="when">Score 6.6+</span>The payment waits 4 hours unless cancelled. One tap to call 1930 or someone they trust. Needs Legal and NPCI sign-off first.</div>
+</div>
+<p>Fatigue rules: one full warning per 72 hours unless the risk rises by a full point; one hold per 24 hours. Scammers will coach victims to answer "family" to the question, so later steps depend on the score, not only on the answer.</p>
+
+<h2><span class="n">5</span>Try it</h2>
+<p>Pick a person and step through their payments. The phone shows what they would see; the panel shows what the engine saw. It is the same code the simulation uses, running in your browser.</p>
+<div class="tabs" id="storyTabs" role="group" aria-label="Choose a person"></div>
+<div class="proto">
+  <div>
+    <div class="phone" aria-live="polite"><div class="ph-top"><span id="phWho">UPI payment</span><span>9:41</span></div><div class="ph-body" id="phBody"></div></div>
+    <div class="lang">Warning language: <button class="btn" id="langEn" aria-pressed="true">English</button><button class="btn" id="langHi" aria-pressed="false">हिन्दी</button></div>
+  </div>
+  <div class="panel">
+    <div class="ctx" id="pCtx"></div>
+    <div id="pNote" style="font-size:14.5px;margin-bottom:6px"></div>
+    <div class="meter" id="pMeter"></div>
+    <div id="pSigs"></div>
+    <div class="steps" id="pSteps"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" id="prevBtn">Back</button><button class="btn primary" id="nextBtn">Next event</button><button class="btn" id="resetBtn">Start over</button></div>
+  </div>
+</div>
+
+<h3>One journey, frozen: Neha's task scam</h3>
+<p class="note">Neha is invented. The timeline is her story run through the engine (step 1 assumes she answers the question honestly; coached victims are covered by the score).</p>
+<div class="tl"><div class="ev in"><div class="when">Day 1, 19:10</div><div class="what">Receives ₹300 from Riya (HR)</div><div class="sees">Paid for liking 3 YouTube videos. Not scored, but remembered.</div></div><div class="ev in"><div class="when">Day 1, 21:40</div><div class="what">Receives ₹450 from Priya (Tasks)</div><div class="sees">Second &quot;commission&quot;. Not scored, but remembered.</div></div><div class="ev t0"><div class="when">Day 2, 20:05</div><div class="what">Pays ₹1,500 to Kumar S <span class="pill p0">no friction</span></div><div class="sees">&quot;Prepaid task&quot; to unlock higher commission. Score 2.6: A stranger sent you a small amount, and now you are paying a different stranger (₹450 received); First payment to this person. <b>100% of her eventual loss is still in her account.</b></div></div><div class="ev t2"><div class="when">Day 2, 22:30</div><div class="what">Pays ₹3,600 to Anil Store <span class="pill p2">full warning</span></div><div class="sees">Next task level. Score 4.9: A stranger sent you a small amount, and now you are paying a different stranger (₹450 received); First payment to this person; Much bigger than your last payment to a new person (2.4x). <b>98% of her eventual loss is still in her account.</b></div></div><div class="ev t2"><div class="when">Day 3, 19:20</div><div class="what">Pays ₹9,000 to RK Enterprises <span class="pill p2">full warning</span></div><div class="sees">&quot;Merge task&quot;, earnings shown as ₹21,000. Score 5.8: A stranger sent you a small amount, and now you are paying a different stranger (₹450 received); 3 new people paid in the last 7 days; First payment to this person. She was warned the day before, so the fatigue rules show a reminder question first; answering "a job or task" brings the warning back. <b>95% of her eventual loss is still in her account.</b></div></div><div class="ev t3"><div class="when">Day 3, 23:10</div><div class="what">Pays ₹24,000 to Sunita D <span class="pill p3">hold</span></div><div class="sees">&quot;Account frozen, pay to release your earnings&quot;. Score 7.3: A stranger sent you a small amount, and now you are paying a different stranger (₹450 received); 4 new people paid in the last 7 days; Money sent to new people in 14 days is large for you (₹38,100 vs usual ₹12,800/month). <b>86% of her eventual loss is still in her account.</b></div></div><div class="ev t2"><div class="when">Day 4, 11:00</div><div class="what">Pays ₹60,000 to Mohd Irfan <span class="pill p2">full warning</span></div><div class="sees">&quot;Final tax to withdraw&quot;. Score 10.1: This UPI ID is on a government fraud list; 5 new people paid in the last 7 days; A stranger sent you a small amount, and now you are paying a different stranger (₹450 received). A hold was already used in the last 24 hours, so this is a full warning instead. <b>61% of her eventual loss is still in her account.</b></div></div></div>
+
+<h2><span class="n">6</span>Does it work? A simulation</h2>
+<p>I built a fictional population of 80,000 UPI payers over 60 days (after a 30-day warm-up), with 358 planted scam journeys of three types: task scams, stock-tips groups, and quick "double your money" scams. Genuine payers include every look-alike from section 3. In total the engine scored 14.1 lakh payments to people. Thresholds were chosen on one random seed and every number here comes from a different seed.</p>
+<p>Four policies, same people, same payments:</p>
+<div class="tablewrap"><table class="pol"><tr><th>Policy</th><th class="num">Victims warned</th><th class="num">By 3rd payment</th><th class="num">Losses protected</th><th class="num">Questions*</th><th class="num">Full warnings*</th><th class="num">Users warned / mo</th><th class="num">Precision</th></tr><tr><td>Amount rule (₹10,000+ to a new person)</td><td class="num">86.6%</td><td class="num">61.2%</td><td class="num"><b>63.7%</b></td><td class="num">–</td><td class="num"><b>122.5</b></td><td class="num">8.88%</td><td class="num">1.0%</td></tr><tr><td>Fraud lists only</td><td class="num">64%</td><td class="num">38.3%</td><td class="num"><b>29.3%</b></td><td class="num">–</td><td class="num"><b>4.2</b></td><td class="num">0.42%</td><td class="num">13.3%</td></tr><tr><td>Journey score</td><td class="num">92.7%</td><td class="num">86.6%</td><td class="num"><b>64.7%</b></td><td class="num">63</td><td class="num"><b>6.2</b></td><td class="num">0.57%</td><td class="num">14.0%</td></tr><tr class="pick"><td>Journey score + fraud lists <b>(recommended)</b></td><td class="num">93.6%</td><td class="num">89.9%</td><td class="num"><b>69.2%</b></td><td class="num">63</td><td class="num"><b>6.4</b></td><td class="num">0.59%</td><td class="num">13.8%</td></tr></table></div>
+<p class="note">* Per 1,000 genuine users per month, counted after fatigue rules. "Protected" is the expected share of victims' total losses avoided, including later bank transfers they would never make once they stop. It uses the response assumptions you can change below. Precision is what share of users shown a full warning in a month are real victims, if 1 in 1,000 users is being scammed that month.</p>
+
+<figure class="chart">
+<svg viewBox="0 0 760 360" role="img" aria-label="Trade-off between warnings to genuine users and losses protected"><g class="grid"><line x1="56" x2="736" y1="312" y2="312"/><text x="48" y="316" text-anchor="end">0%</text><line x1="56" x2="736" y1="238.5" y2="238.5"/><text x="48" y="242.5" text-anchor="end">25%</text><line x1="56" x2="736" y1="165" y2="165"/><text x="48" y="169" text-anchor="end">50%</text><line x1="56" x2="736" y1="91.5" y2="91.5"/><text x="48" y="95.5" text-anchor="end">75%</text><line x1="56" x2="736" y1="18" y2="18"/><text x="48" y="22" text-anchor="end">100%</text><line x1="174.8249007371232" x2="174.8249007371232" y1="18" y2="312"/><text x="174.8249007371232" y="330" text-anchor="middle">0.1</text><line x1="344.8249007371232" x2="344.8249007371232" y1="18" y2="312"/><text x="344.8249007371232" y="330" text-anchor="middle">1</text><line x1="514.8249007371232" x2="514.8249007371232" y1="18" y2="312"/><text x="514.8249007371232" y="330" text-anchor="middle">10</text><line x1="684.8249007371232" x2="684.8249007371232" y1="18" y2="312"/><text x="684.8249007371232" y="330" text-anchor="middle">100</text></g><text x="408" y="352" text-anchor="middle">Full warnings per 1,000 genuine users per month (log scale)</text><text transform="translate(14 165) rotate(-90)" text-anchor="middle">Share of victim losses protected</text><polyline fill="none" stroke="var(--s1)" stroke-width="2" points="107.17509926287681,148.82999999999998 167.04612734180841,140.892 188.2857125652194,135.012 226,128.838 258.35638868894955,127.956 297.95179856925733,125.604 323.5853155137122,121.19399999999999 353.84823612930455,118.84199999999998 398.53985946479924,116.19600000000003 417.88278833753253,112.37399999999998 449.8930771781789,109.72800000000002 481.875496314384,108.55199999999998 522.7953831795339,98.55600000000001 539.0842825125179,95.616 561.8234074465747,94.44 584.8288615095809,94.146 603.8175772354718,79.15199999999999 631.9016438654241,79.44600000000003 658.8702919706452,79.44600000000003 681.5799301591866,77.094 693.0137665273462,71.80199999999999 710.3699655235029,72.97800000000001 718.3203949531834,72.68399999999998"/><circle cx="107.17509926287681" cy="148.82999999999998" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 6.8: 0.04 warnings per 1,000 genuine users a month, 55.5% of losses protected, 81.3% of victims warned"/><circle cx="167.04612734180841" cy="140.892" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 6.6: 0.09 warnings per 1,000 genuine users a month, 58.2% of losses protected, 81.8% of victims warned"/><circle cx="188.2857125652194" cy="135.012" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 6.4: 0.12 warnings per 1,000 genuine users a month, 60.2% of losses protected, 85.2% of victims warned"/><circle cx="226" cy="128.838" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 6.2: 0.2 warnings per 1,000 genuine users a month, 62.3% of losses protected, 86.9% of victims warned"/><circle cx="258.35638868894955" cy="127.956" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 6: 0.31 warnings per 1,000 genuine users a month, 62.6% of losses protected, 87.4% of victims warned"/><circle cx="297.95179856925733" cy="125.604" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 5.8: 0.53 warnings per 1,000 genuine users a month, 63.4% of losses protected, 88% of victims warned"/><circle cx="323.5853155137122" cy="121.19399999999999" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 5.6: 0.75 warnings per 1,000 genuine users a month, 64.9% of losses protected, 89.1% of victims warned"/><circle cx="353.84823612930455" cy="118.84199999999998" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 5.4: 1.13 warnings per 1,000 genuine users a month, 65.7% of losses protected, 91.1% of victims warned"/><circle cx="398.53985946479924" cy="116.19600000000003" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 5.2: 2.07 warnings per 1,000 genuine users a month, 66.6% of losses protected, 92.5% of victims warned"/><circle cx="417.88278833753253" cy="112.37399999999998" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 5: 2.69 warnings per 1,000 genuine users a month, 67.9% of losses protected, 92.7% of victims warned"/><circle cx="449.8930771781789" cy="109.72800000000002" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 4.8: 4.15 warnings per 1,000 genuine users a month, 68.8% of losses protected, 93.3% of victims warned"/><circle cx="481.875496314384" cy="108.55199999999998" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 4.6: 6.4 warnings per 1,000 genuine users a month, 69.2% of losses protected, 93.6% of victims warned"/><circle cx="522.7953831795339" cy="98.55600000000001" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 4.4: 11.14 warnings per 1,000 genuine users a month, 72.6% of losses protected, 94.4% of victims warned"/><circle cx="539.0842825125179" cy="95.616" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 4.2: 13.89 warnings per 1,000 genuine users a month, 73.6% of losses protected, 94.4% of victims warned"/><circle cx="561.8234074465747" cy="94.44" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 4: 18.9 warnings per 1,000 genuine users a month, 74% of losses protected, 95.5% of victims warned"/><circle cx="584.8288615095809" cy="94.146" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 3.8: 25.81 warnings per 1,000 genuine users a month, 74.1% of losses protected, 96.6% of victims warned"/><circle cx="603.8175772354718" cy="79.15199999999999" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 3.6: 33.38 warnings per 1,000 genuine users a month, 79.2% of losses protected, 97.2% of victims warned"/><circle cx="631.9016438654241" cy="79.44600000000003" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 3.4: 48.83 warnings per 1,000 genuine users a month, 79.1% of losses protected, 97.2% of victims warned"/><circle cx="658.8702919706452" cy="79.44600000000003" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 3.2: 70.36 warnings per 1,000 genuine users a month, 79.1% of losses protected, 97.5% of victims warned"/><circle cx="681.5799301591866" cy="77.094" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 3: 95.7 warnings per 1,000 genuine users a month, 79.9% of losses protected, 97.5% of victims warned"/><circle cx="693.0137665273462" cy="71.80199999999999" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 2.8: 111.73 warnings per 1,000 genuine users a month, 81.7% of losses protected, 97.5% of victims warned"/><circle cx="710.3699655235029" cy="72.97800000000001" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 2.6: 141.34 warnings per 1,000 genuine users a month, 81.3% of losses protected, 97.8% of victims warned"/><circle cx="718.3203949531834" cy="72.68399999999998" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="Warning threshold 2.4: 157.41 warnings per 1,000 genuine users a month, 81.4% of losses protected, 98.9% of victims warned"/><circle cx="481.875496314384" cy="108.55199999999998" r="8" fill="none" stroke="var(--ink)" stroke-width="2"/><text class="lbl" x="469.875496314384" y="92.55199999999998" text-anchor="end">Launch threshold (4.6): 6.4 warnings, 69.2% protected</text><rect x="693.8381643870996" y="118.722" width="12" height="12" rx="2" fill="var(--s2)" stroke="var(--surface)" stroke-width="2" data-tip="Amount rule: 122.5 warnings per 1,000 genuine users a month, 63.7% protected"/><text class="lbl" x="687.8381643870996" y="128.72199999999998" text-anchor="end">Amount rule: 123 warnings, 63.7%</text><rect x="444.60128464139336" y="219.85800000000003" width="12" height="12" rx="2" fill="var(--s2)" stroke="var(--surface)" stroke-width="2" data-tip="Fraud lists only: 4.2 warnings per 1,000 genuine users a month, 29.3% protected"/><text class="lbl" x="462.60128464139336" y="229.85800000000003" text-anchor="start">Fraud lists only: 4 warnings, 29.3%</text><g transform="translate(66 26)"><circle cx="5" cy="5" r="4" fill="var(--s1)"/><text x="14" y="9">Journey score + lists, at different thresholds</text><rect x="1" y="19" width="9" height="9" rx="2" fill="var(--s2)"/><text x="14" y="28">Simple rules</text></g></svg>
+<figcaption><b>The trade-off.</b> Each blue point is one threshold for the journey score (with fraud lists). Moving right shows more warnings to genuine users; moving up protects more. The two orange points are the simple rules. Simulated.</figcaption>
+</figure>
+
+<h3>What the results say</h3>
+<ul>
+<li><b>Fraud lists alone are precise but late.</b> They reach 64% of victims, often after the money has moved, and protect 29.3%.</li>
+<li><b>An amount rule reaches people, but buries everyone in warnings.</b> 8.9% of genuine users would see a full warning every month. People learn to ignore that.</li>
+<li><b>The journey score gets more protection with far less noise</b>, and adding the lists as one signal improves it (64.7% → 69.2%).</li>
+<li><b>It acts early.</b> 89.9% of victims see a full warning by their third scam payment. In the median journey, 98.7% of the money is still theirs at that point.</li>
+<li><b>Its blind spot:</b> quick scams under ₹500 a payment. The "no friction under ₹500" rule lets them through (reached 61.7% vs 100% for task and stock scams). I think that trade is right: those losses are small and friction on every small payment would hurt millions.</li>
+</ul>
+
+<h3>Who still gets friction</h3>
+<div class="tablewrap"><table><tr><th>Genuine group</th><th class="num">Payers</th><th class="num">Questions / 1k / mo</th><th class="num">Full warnings / 1k / mo</th></tr><tr><td>Freelancer</td><td class="num">4,039</td><td class="num">123</td><td class="num">48.2</td></tr><tr><td>Moving flat (in the window)</td><td class="num">4,825</td><td class="num">390</td><td class="num">27.9</td></tr><tr><td>Shopkeeper on a personal UPI ID</td><td class="num">6,266</td><td class="num">199</td><td class="num">15.2</td></tr><tr><td>Student</td><td class="num">11,132</td><td class="num">107</td><td class="num">6.2</td></tr><tr><td>Second-hand buyer</td><td class="num">5,631</td><td class="num">36</td><td class="num">2.1</td></tr><tr><td>Family emergency (pays a relative)</td><td class="num">2,287</td><td class="num">1</td><td class="num">0.2</td></tr><tr><td>Everyday payer</td><td class="num">39,825</td><td class="num">1</td><td class="num">0.1</td></tr><tr><td>Real investor (@valid)</td><td class="num">5,637</td><td class="num">1</td><td class="num">0.1</td></tr></table></div>
+<p>The freelancer case is the worst: new clients pay them, then they pay new helpers, so it looks like bait. At Google I would give each group a friction budget and check it by state and language, not only overall.</p>
+
+<h3>Which signals matter</h3>
+<figure class="chart">
+<svg viewBox="0 0 760 272" role="img" aria-label="Protection lost when each signal is removed"><text x="240" y="24" text-anchor="end" style="fill:var(--ink)">Stranger paid you first (bait)</text><rect x="250" y="12" width="440" height="16" rx="4" fill="var(--s1)" data-tip="Without 'Stranger paid you first (bait)': protection 63.4% (−5.8 points), full warnings 2.7 per 1,000 genuine users a month"/><text x="698" y="24">−5.8 pts</text><text x="240" y="54" text-anchor="end" style="fill:var(--ink)">Money to new people vs usual month</text><rect x="250" y="42" width="440" height="16" rx="4" fill="var(--s1)" data-tip="Without 'Money to new people vs usual month': protection 63.4% (−5.8 points), full warnings 1.84 per 1,000 genuine users a month"/><text x="698" y="54">−5.8 pts</text><text x="240" y="84" text-anchor="end" style="fill:var(--ink)">New people paid in 7 days</text><rect x="250" y="72" width="371.72413793103453" height="16" rx="4" fill="var(--s1)" data-tip="Without 'New people paid in 7 days': protection 64.3% (−4.9 points), full warnings 1.93 per 1,000 genuine users a month"/><text x="629.7241379310345" y="84">−4.9 pts</text><text x="240" y="114" text-anchor="end" style="fill:var(--ink)">On a government fraud list</text><rect x="250" y="102" width="341.37931034482756" height="16" rx="4" fill="var(--s1)" data-tip="Without 'On a government fraud list': protection 64.7% (−4.5 points), full warnings 6.22 per 1,000 genuine users a month"/><text x="599.3793103448276" y="114">−4.5 pts</text><text x="240" y="144" text-anchor="end" style="fill:var(--ink)">First payment to this person</text><rect x="250" y="132" width="227.58620689655174" height="16" rx="4" fill="var(--s1)" data-tip="Without 'First payment to this person': protection 66.2% (−3 points), full warnings 0.92 per 1,000 genuine users a month"/><text x="485.58620689655174" y="144">−3 pts</text><text x="240" y="174" text-anchor="end" style="fill:var(--ink)">Many first-time payers today</text><rect x="250" y="162" width="151.72413793103453" height="16" rx="4" fill="var(--s1)" data-tip="Without 'Many first-time payers today': protection 67.2% (−2 points), full warnings 4.46 per 1,000 genuine users a month"/><text x="409.72413793103453" y="174">−2 pts</text><text x="240" y="204" text-anchor="end" style="fill:var(--ink)">Rising amounts across people</text><rect x="250" y="192" width="144.1379310344828" height="16" rx="4" fill="var(--s1)" data-tip="Without 'Rising amounts across people': protection 67.3% (−1.9 points), full warnings 3.45 per 1,000 genuine users a month"/><text x="402.1379310344828" y="204">−1.9 pts</text><text x="240" y="234" text-anchor="end" style="fill:var(--ink)">Round amount</text><rect x="250" y="222" width="53.10344827586209" height="16" rx="4" fill="var(--s1)" data-tip="Without 'Round amount': protection 68.5% (−0.7 points), full warnings 5.69 per 1,000 genuine users a month"/><text x="311.1034482758621" y="234">−0.7 pts</text><line class="axis" x1="250" x2="250" y1="6" y2="246"/></svg>
+<figcaption><b>Remove one signal at a time.</b> How much protection drops (in percentage points) without it. The payer-side signals (bait, money to new people, new people per week) and the fraud lists carry the most. Simulated.</figcaption>
+</figure>
+
+<h3>Change my assumptions</h3>
+<p>The biggest unknown is how people respond to a warning. These sliders recompute protection for all 358 simulated victims, for the journey score and for the amount rule.</p>
+<div class="sliders">
+<label>Stop paying after a full warning: <output id="o_h2"></output><input type="range" id="h2" min="0.05" max="0.8" step="0.05"></label>
+<label>Each repeat warning works this much as well: <output id="o_decay"></output><input type="range" id="decay" min="0.3" max="1" step="0.05"></label>
+<label>Stop paying after a hold: <output id="o_h3"></output><input type="range" id="h3" min="0.1" max="0.95" step="0.05"></label>
+</div>
+<div class="live">
+<div class="stat"><b id="liveJ"></b><span>journey score + lists: share of victim losses protected</span></div>
+<div class="stat"><b id="liveA"></b><span>amount rule: share of victim losses protected</span></div>
+</div>
+<p class="note">Defaults: 35% stop after a full warning (well below the 81% seen in the UK study, which was an online experiment), 70% for each repeat, 60% after a hold, 3% after only the question.</p>
+
+<h2><span class="n">7</span>How I would launch it and test it</h2>
+<h3>Phases</h3>
+<ol>
+<li><b>Replay (weeks 1–4).</b> Run the score over six months of Google Pay history and join it to confirmed scam reports (1930 and portal reports matched to transactions, user reports, bank disputes). Draw the real version of the trade-off chart. If the curve isn't clearly better than today's warnings, stop here.</li>
+<li><b>Shadow (2 weeks).</b> Score live payments without showing anything. Check speed, coverage and how many people would be asked.</li>
+<li><b>Question only, 1% of users.</b> Learn how people answer, how many drop off, and how often later-confirmed victims answered "family".</li>
+<li><b>Full warnings.</b> Test with two designs at once (below). Rewrite the copy until people actually stop.</li>
+<li><b>Holds.</b> Only after Legal and NPCI agree. Start with people who switch it on themselves, for example older users or families protecting a parent.</li>
+<li><b>Scale.</b> All languages, voice read-out, and share the journey signal with RBI's planned intelligence platform so that switching apps doesn't beat it.</li>
+</ol>
+
+<h3>The experiment</h3>
+<ul>
+<li><b>Primary metric:</b> confirmed scam loss per 1,000 users per month.</li>
+<li><b>Why it's hard:</b> scams are rare. To detect a 20% drop in the share of users scammed, with 80% power, you need about 3.5 lakh users per group if 1 in 1,000 users is scammed in a month, and about 35.3 lakh if it's 1 in 10,000. Google Pay has the scale; a small team doesn't.</li>
+<li><b>Design 1, regression discontinuity:</b> compare payments just above and just below the warning threshold. Nobody at high risk is denied protection, which matters ethically.</li>
+<li><b>Design 2, a small holdout for the new steps only:</b> today's protections stay on for everyone. Keep it short and stop early if harm shows.</li>
+<li><b>Leading signal:</b> after a full warning, did the person stop paying new people for 7 days? This arrives in days, not months.</li>
+</ul>
+
+<h3>Metrics</h3>
+<div class="grid2">
+<div class="card"><h3>Goal and drivers</h3><ul>
+<li><b>Goal:</b> ₹ lost to scams per 1,000 active users a month (confirmed)</li>
+<li>Share of confirmed scam journeys with a full warning by the 3rd payment</li>
+<li>Share who stop paying new people within 48 hours of a warning</li>
+<li>Time from scam to report (faster reports freeze more money)</li>
+</ul></div>
+<div class="card"><h3>Guardrails</h3><ul>
+<li>Full warnings per 1,000 genuine users a month: budget ≤ 6</li>
+<li>Payments completed after the question: ≥ 97%</li>
+<li>Support contacts about stopped payments</li>
+<li>Users leaving for another app after a warning</li>
+<li>Friction by group, state and language</li>
+</ul></div>
+</div>
+<div class="callout warn"><b>When I would stop or rethink:</b> fewer than 15% stop after a full warning after 4 weeks of copy changes; more than 10 full warnings per 1,000 genuine users a month at the launch threshold; payments to people drop by more than 2% for scored users; or the replay curve is not clearly better than today's warnings.</div>
+
+<h2><span class="n">8</span>Who I would need, and what each team needs from me</h2>
+<div class="tablewrap"><table>
+<tr><th>Team</th><th>What they need to decide</th><th>What I'd bring</th></tr>
+<tr><td>Engineering</td><td>Can it score inside the payment flow? Google Pay handles about 7.6 billion UPI payments a month (about 2,900 a second on average). The score must add under 50 ms. If scoring is down, payments go through.</td><td>A feature list that is mostly rolling counters per user, plus one streaming count per receiving ID (first-time payers in 24 hours).</td></tr>
+<tr><td>UX research and design</td><td>Copy that names the scam, in Hindi and at least eight more languages, with voice read-out. "Pay anyway" is never the main button.</td><td>Research with recent victims (through 1930 and DigiKavach partners) and with the look-alike groups, before any build.</td></tr>
+<tr><td>Legal and privacy</td><td>The legal basis under the DPDP Act and its Rules to use payment history this way; what users are told; whether a payment app may hold a payment the user started; how warnings affect liability.</td><td>A design that uses only data the app already has. It does not read messages, contacts or other apps.</td></tr>
+<tr><td>Marketing</td><td>How to explain a warning without scaring people off UPI. A tie-in with DigiKavach ("Mauka Ganwao, Paise Bachao").</td><td>The "why am I seeing this?" screen and help article.</td></tr>
+<tr><td>Policy and partnerships</td><td>Links with I4C (a pre-filled 1930 report), DoT's risk indicator, RBI's intelligence platform, SEBI's <code>@valid</code> badges, and banks for money that leaves by bank transfer.</td><td>A short proposal for what signal Google could share back, and what it would get.</td></tr>
+<tr><td>Android safety</td><td>How this fits with the in-call screen-sharing alert, so no one gets two warnings for one payment.</td><td>Rules for which warning wins.</td></tr>
+</table></div>
+
+<h2><span class="n">9</span>Risks, and what I can't know from outside</h2>
+<h3>Risks</h3>
+<ul>
+<li><b>Coached victims.</b> Scammers already tell people what to tap. That is why the score, not the answer, drives later steps.</li>
+<li><b>Moving to another app.</b> A scammer can say "use a different app". A warning still plants doubt, but the real fix is sharing the signal across the industry.</li>
+<li><b>Unfair friction.</b> Freelancers, shopkeepers and students get more of it. Each needs its own budget.</li>
+<li><b>Holding money.</b> Delaying a payment someone chose to make is a serious step. It needs a clear legal basis and an easy way out.</li>
+<li><b>Scams change.</b> Scripts adapt. The score needs regular checks against fresh labels and someone actively trying to beat it.</li>
+<li><b>My numbers are simulated.</b> The direction should hold. The size of the gain must come from real data.</li>
+</ul>
+<h3>What I'd ask in my first week</h3>
+<ul>
+<li>What triggers today's million-plus weekly warnings, and how often do people stop after one?</li>
+<li>How much investment-scam money leaves through Google Pay, compared with net banking?</li>
+<li>How good are the scam labels, and how long until a scam is reported?</li>
+<li>Is there already a count of first-time payers per receiving ID?</li>
+</ul>
+
+<h2><span class="n">10</span>Method and code</h2>
+<p>All code is in the <a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/google-pay-slow-scam">repository</a>:</p>
+<ul>
+<li><code>src/engine.js</code>: the scoring engine and the fatigue rules. The prototype above runs this file.</li>
+<li><code>src/simulate.js</code>: builds the population and compares the policies. Every rate is written down there as an assumption.</li>
+<li><code>sql/metrics.sql</code>: DuckDB queries on a sample of the payments. One query recomputes the "new people in 7 days" signal in SQL and checks it against the engine: 7,071 payments, 0 differences.</li>
+<li><code>test/engine.test.js</code>: 15 tests, including each look-alike case.</li>
+</ul>
+<details><summary>Main assumptions in the simulation</summary>
+<ul>
+<li>Victim share oversampled to 0.45% so there are enough journeys to measure. Precision is reported at realistic rates instead.</li>
+<li>Task scams: 1–3 bait credits of ₹100–800, then 4–8 payments starting at ₹800–2,500 and growing 1.6–3x each time. Stock-tips scams: first deposit ₹5,000–25,000, a ₹1,000–5,000 "profit" a few days later, then 4–11 deposits growing 1.2–2.2x, capped at ₹1 lakh each; half later move money by bank transfer (1–4x more). Quick scams: 2–5 payments from ₹199.</li>
+<li>Receiving IDs: a new one 75% of the time. They are about a day old at most; the chance one is already on a fraud list grows with age (half-life about 2 days).</li>
+<li>Innocent IDs wrongly on a list: 0.05% of payments to people.</li>
+<li>Responses: 3% stop after the question only (when answered falsely); 35% after a full warning, 70% as effective each repeat; 60% after a hold. 60% of victims answer the question honestly. 3% of genuine users answer "investment" for a payment to a person. Genuine users abandon 8% of payments after a full warning, 15% after a hold.</li>
+</ul></details>
+
+<h2>Sources</h2>
+<ol class="src">
+<li><a href="https://ianslive.in/indians-lose-over-rs-52976-crore-to-cyber-frauds-over-six-years-report--20260103154943">IANS: Indians lose over ₹52,976 crore to cyber frauds over six years (I4C data; ₹19,813 crore in 2025)</a></li>
+<li><a href="https://moneylife.in/article/housing-society-problems-and-solutions-occupancy-rights-leakage-disputes-and-agm-decisions/article/fraud-alert-india-is-losing-over-22000-crore-a-year-in-cyber-scams-and-the-worst-is-yet-to-come/80612.html">Moneylife: India is losing over ₹22,000 crore a year in cyber scams (76% to investment schemes; recovery)</a></li>
+<li><a href="https://www.dhyeyaias.com/current-affairs/daily-pre-pare/view/cheating-and-financial-fraud">Summary of I4C 2025 data (investment schemes ~77% of losses)</a></li>
+<li><a href="https://www.thequint.com/news/webqoof/wef-cybersecurity-report-flags-cyber-fraud-as-pervasive-threat">The Quint: UPI frauds ₹805 crore, Jan–Nov 2025 (Parliament reply)</a></li>
+<li><a href="https://blog.google/intl/en-in/company-news/googles-safety-charter-for-indias-ai-led-transformation/">Google India blog: Safety Charter (Google Pay, 41 million warnings in 2024)</a></li>
+<li><a href="https://blog.google/intl/en-in/company-news/protecting-vulnerable-audiences-is-at-the-heart-of-ai-safety-efforts/">Google India blog: Protecting vulnerable audiences (screen-sharing pilot, Scam Detection, DigiKavach)</a></li>
+<li><a href="https://techcrunch.com/2025/11/20/google-steps-up-ai-scam-protection-in-india-but-gaps-remain">TechCrunch: Google steps up AI scam protection in India, but gaps remain (Pixel 9, English only)</a></li>
+<li><a href="https://www.business-standard.com/industry/news/google-fraud-warning-feature-epnv-otp-replacement-india-125112001218_1.html">Business Standard: Google Pay shows over 1 million warnings a week</a></li>
+<li><a href="https://www.indiatvnews.com/technology/news/googles-new-android-safety-feature-warns-users-when-opening-banking-apps-during-unknown-calls-2025-12-08-1020795">India TV: Android in-call protection and the 30-second delay</a></li>
+<li><a href="https://www.bk.mufg.jp/global/globalnetwork/asiaoceania/pdf/RBI_advisory_on_frauds.pdf">RBI advisory on investment, part-time job and ponzi scams (UPI details updated daily; mule accounts)</a></li>
+<li><a href="https://www.axis.bank.in/fraud-awareness/prevent-frauds/investment-and-task-based-fraud">Axis Bank: investment and task-based fraud (check the receiver's name and the first commission)</a></li>
+<li><a href="https://www.business-standard.com/amp/finance/personal-finance/pay-safe-invest-smart-sebi-s-new-valid-upi-handles-protect-your-money-125100200130_1.html">Business Standard: SEBI's @valid UPI handles</a></li>
+<li><a href="https://www.policyedge.in/p/i4c-and-rbih-partner-to-use-ai-for-detecting-mule-accounts-and-financial-fraud">Policy Edge: I4C and RBIH partner on MuleHunter.AI (May 2026)</a></li>
+<li><a href="https://www.business-standard.com/industry/news/dot-launches-financial-fraud-risk-indicator-to-aid-cybercrime-detection-125052101912_1.html">Business Standard: DoT's Financial Fraud Risk Indicator</a></li>
+<li><a href="https://www.outlookbusiness.com/economy-and-policy/phonepe-google-pay-combined-upi-market-share-drops-below-80-for-first-time">Outlook Business: UPI app market share, May 2026</a> and <a href="https://startuptalky.com/upi-hits-record-23-2-billion-transactions-in-may-2026-transaction/">StartupTalky: 23.2 billion UPI transactions in May 2026</a></li>
+<li><a href="https://www.nottingham.ac.uk/cedex/documents/papers/cedex-discussion-paper-2023-08.pdf">University of Nottingham CeDEx: interventions against authorised push payment fraud (81% vs 18%)</a></li>
+<li><a href="https://www.ukfinance.org.uk/news-and-insight/blog/how-understanding-human-behaviour-key-effective-prevention-app-fraud">UK Finance: static warnings are no longer effective; fraudsters coach victims</a></li>
+<li><a href="https://www.finextra.com/pressarticle/103066/banks-scam-warnings-failing-to-stop-their-customers-taking-risks-to-make-payments">Finextra: only a third of UK adults read fraud warnings</a></li>
+<li><a href="https://www.businesstoday.in/personal-finance/banking/story/npci-to-tighten-upi-rules-peer-to-peer-collect-feature-to-end-in-october-489244-2025-08-13">Business Today: NPCI ends person-to-person collect requests (Oct 2025)</a></li>
+</ol>
+
+<footer><span>Aditya Mathur · Bengaluru</span><a href="https://adimathur-creates.github.io/">More product work</a><a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a><span>Simulation generated 2026-11-10 · seed 2026</span></footer>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>/*
+ * The Slow Scam: journey scoring engine.
+ *
+ * Scores each outgoing UPI payment from ONE payer, using only:
+ *   - that payer's own payment history inside the payment app, and
+ *   - two payee-side facts the app already gets (how many first-time payers
+ *     this receiving ID had in the last 24h, and whether it is on a fraud list).
+ * It never reads messages, contacts or other apps.
+ *
+ * Works in the browser (window.SlowScam) and in Node (module.exports).
+ */
+(function (root) {
+  'use strict';
+
+  var DAY = 1440; // minutes
+
+  var DEFAULT_CONFIG = {
+    weights: {
+      newPayee: 1.0,     // first ever payment to this person
+      vel2: 0.6,         // 2 new people paid in 7 days
+      vel3: 1.4,         // 3-4 new people paid in 7 days
+      vel5: 2.0,         // 5+ new people paid in 7 days
+      bait: 1.6,         // a stranger paid you a small amount, now you pay a different stranger
+      esc: 0.9,          // this payment is 1.8x+ the biggest recent payment to a new person
+      esc3: 1.3,         // 3x+
+      cum1: 0.7,         // money to new people in 14 days >= 0.5x your usual month
+      cum2: 1.4,         // >= 1.5x your usual month
+      fan1: 0.8,         // receiving ID got first payments from 5+ different people in 24h
+      fan2: 1.3,         // 15+
+      listed: 3.0,       // receiving ID is on a fraud list (I4C Suspect Registry, DoT FRI)
+      round: 0.2         // round amount of Rs 5,000 or more
+    },
+    thresholds: { t1: 3.2, t2: 4.6, t3: 6.6 },
+    minAmount: 500,         // never add friction below Rs 500
+    minCounted: 500,        // tiny new payees (tea stall, auto) don't count towards velocity or escalation
+    baitMax: 5000,          // a "bait" credit is small...
+    baitRatio: 1.5,         // ...and this payment is at least 1.5x that credit
+    manyStrangers: 8,       // people paid by 8+ strangers a month (shops, freelancers)...
+    busyDamp: 0.25,         // ...get only a quarter of the bait points
+    t2CooldownMin: 72 * 60, // after a full warning, wait 72h unless risk clearly rises
+    t3CooldownMin: 24 * 60,
+    useLists: true
+  };
+
+  var LABELS = {
+    newPayee: 'First payment to this person',
+    vel: 'new people paid in the last 7 days',
+    bait: 'A stranger sent you a small amount, and now you are paying a different stranger',
+    esc: 'Much bigger than your last payment to a new person',
+    cum: 'Money sent to new people in 14 days is large for you',
+    fan: 'This UPI ID was paid for the first time by many different people today',
+    listed: 'This UPI ID is on a government fraud list',
+    round: 'Round amount',
+    small: 'Under \u20b9500: no friction',
+    valid: 'SEBI-verified @valid UPI ID',
+    merchant: 'Verified merchant',
+    known: 'You have paid or been paid by this person before'
+  };
+
+  function createState(t0) {
+    return {
+      t0: t0 || 0,
+      seen: new Map(),      // cp -> {out, in, firstOutT}
+      newIndOut: [],        // outflows to new-ish individuals {t, amt, cp}
+      strangerIn: [],       // credits from individuals who were new at the time {t, amt, cp}
+      outLog: [],           // ordinary outflows for the "usual month" baseline {t, amt}
+      lastT2: -Infinity, lastT2Score: -Infinity, t2Count: 0,
+      lastT3: -Infinity,
+      asked: new Set()
+    };
+  }
+
+  function prune(arr, minT) {
+    var i = 0;
+    while (i < arr.length && arr[i].t < minT) i++;
+    if (i > 0) arr.splice(0, i);
+  }
+
+  function isNewish(st, e) {
+    var rec = st.seen.get(e.cp);
+    if (!rec) return true;
+    if (rec.in > 0) return false; // two-way relationship
+    return rec.firstOutT !== undefined && (e.t - rec.firstOutT) <= 14 * DAY;
+  }
+
+  function baselineMonthly(st, t) {
+    var sum = 0;
+    for (var i = 0; i < st.outLog.length; i++) if (st.outLog[i].t >= t - 30 * DAY) sum += st.outLog[i].amt;
+    var days = Math.min(30, Math.max(7, (t - st.t0) / DAY));
+    return Math.max(5000, sum * 30 / days);
+  }
+
+  function distinctStrangers30(st, t) {
+    var s = new Set();
+    for (var i = 0; i < st.strangerIn.length; i++) if (st.strangerIn[i].t >= t - 30 * DAY) s.add(st.strangerIn[i].cp);
+    return s.size;
+  }
+
+  function fmt(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
+
+  /*
+   * Score one outgoing payment BEFORE it is sent.
+   * e = {t (minutes), dir:'out', amt, cp, cpType:'individual'|'merchant'|'valid', fanIn, flagged}
+   * Returns {score, scoreNoLists, tier, signals:[{id,label,pts}], pts:{id:pts}, newish}
+   */
+  function scorePayment(st, e, cfg) {
+    cfg = cfg || DEFAULT_CONFIG;
+    var w = cfg.weights, th = cfg.thresholds;
+    var signals = [], pts = {};
+    function add(id, label, p) { signals.push({ id: id, label: label, pts: p }); pts[id] = (pts[id] || 0) + p; }
+
+    if (e.dir !== 'out') return null;
+    if (e.cpType === 'valid') return result(0, 0, [{ id: 'valid', label: LABELS.valid, pts: 0 }], {}, false);
+    if (e.cpType === 'merchant') return result(0, 0, [{ id: 'merchant', label: LABELS.merchant, pts: 0 }], {}, false);
+
+    var newish = isNewish(st, e);
+    var listedPts = (e.flagged ? w.listed : 0);
+    if (!newish) {
+      var known = [{ id: 'known', label: LABELS.known, pts: 0 }];
+      if (e.flagged) known.push({ id: 'listed', label: LABELS.listed, pts: w.listed });
+      return result(cfg.useLists ? listedPts : 0, 0, known, e.flagged ? { listed: w.listed } : {}, false);
+    }
+
+    if (e.amt < cfg.minAmount) {
+      var sm = [{ id: 'small', label: LABELS.small, pts: 0 }];
+      if (e.flagged) sm.push({ id: 'listed', label: LABELS.listed, pts: w.listed });
+      var r0 = result(cfg.useLists ? listedPts : 0, 0, sm, e.flagged ? { listed: w.listed } : {}, true);
+      return r0;
+    }
+
+    var isNew = !st.seen.get(e.cp);
+    if (isNew) add('new', LABELS.newPayee, w.newPayee);
+
+    // velocity: distinct new people paid in 7 days, including this one
+    var s7 = new Set([e.cp]);
+    for (var i = 0; i < st.newIndOut.length; i++) {
+      var q = st.newIndOut[i];
+      if (q.t >= e.t - 7 * DAY && q.amt >= cfg.minCounted) s7.add(q.cp);
+    }
+    var n = s7.size;
+    if (n >= 5) add('vel', n + ' ' + LABELS.vel, w.vel5);
+    else if (n >= 3) add('vel', n + ' ' + LABELS.vel, w.vel3);
+    else if (n >= 2) add('vel', n + ' ' + LABELS.vel, w.vel2);
+
+    // bait: small credit from a stranger in 10 days, now paying a DIFFERENT stranger
+    var bait = null;
+    for (var j = st.strangerIn.length - 1; j >= 0; j--) {
+      var c = st.strangerIn[j];
+      if (c.t < e.t - 10 * DAY) break;
+      var crec = st.seen.get(c.cp);
+      if (c.amt <= cfg.baitMax && e.amt >= cfg.baitRatio * c.amt && c.cp !== e.cp && !(crec && crec.out > 0)) { bait = c; break; }
+    }
+    if (bait) {
+      var bp = w.bait;
+      if (distinctStrangers30(st, e.t) >= cfg.manyStrangers) bp *= cfg.busyDamp;
+      add('bait', LABELS.bait + ' (' + fmt(bait.amt) + ' received)', bp);
+    }
+
+    // escalation (across DIFFERENT new people) and cumulative, over the last 14 days
+    var maxPrior = 0, sumPrior = 0, nPrior = 0;
+    for (var k = 0; k < st.newIndOut.length; k++) {
+      var o = st.newIndOut[k];
+      if (o.t >= e.t - 14 * DAY && o.amt >= cfg.minCounted) {
+        sumPrior += o.amt; nPrior++;
+        if (o.cp !== e.cp && o.amt > maxPrior) maxPrior = o.amt;
+      }
+    }
+    if (maxPrior > 0) {
+      var r = e.amt / maxPrior;
+      if (r >= 3) add('esc', LABELS.esc + ' (' + r.toFixed(1) + 'x)', w.esc3);
+      else if (r >= 1.8) add('esc', LABELS.esc + ' (' + r.toFixed(1) + 'x)', w.esc);
+    }
+    var base = baselineMonthly(st, e.t), cum = sumPrior + e.amt;
+    if (nPrior === 0) { /* a single payment is judged by the other signals */ }
+    else if (cum >= 1.5 * base) add('cum', LABELS.cum + ' (' + fmt(cum) + ' vs usual ' + fmt(base) + '/month)', w.cum2);
+    else if (cum >= 0.5 * base) add('cum', LABELS.cum + ' (' + fmt(cum) + ' vs usual ' + fmt(base) + '/month)', w.cum1);
+
+    // payee-side network facts
+    if (e.fanIn >= 15) add('fan', LABELS.fan + ' (' + e.fanIn + ')', w.fan2);
+    else if (e.fanIn >= 5) add('fan', LABELS.fan + ' (' + e.fanIn + ')', w.fan1);
+
+    if (e.amt >= 5000 && e.amt % 1000 === 0) add('round', LABELS.round, w.round);
+
+    var sNo = 0;
+    for (var s = 0; s < signals.length; s++) sNo += signals[s].pts;
+    if (e.flagged) { signals.push({ id: 'listed', label: LABELS.listed, pts: w.listed }); pts.listed = w.listed; }
+    var total = sNo + (cfg.useLists ? listedPts : 0);
+    var out = result(total, sNo, signals, pts, true);
+    out.n7 = n;
+    return out;
+
+    function result(score, scoreNoLists, sig, p, nw) {
+      var tier = score >= th.t3 ? 3 : score >= th.t2 ? 2 : score >= th.t1 ? 1 : 0;
+      return { score: round2(score), scoreNoLists: round2(scoreNoLists), tier: tier, signals: sig, pts: p, newish: nw, n7: 0 };
+    }
+  }
+
+  function round2(x) { return Math.round(x * 100) / 100; }
+
+  function tierFor(score, th) { return score >= th.t3 ? 3 : score >= th.t2 ? 2 : score >= th.t1 ? 1 : 0; }
+
+  /*
+   * Apply fatigue rules to a raw tier. Mutates the payer's state.
+   * Rules: ask the purpose question once per payee; one full warning per 72h
+   * unless the score rises by 1+ point; one hold per 24h.
+   */
+  function decide(st, e, score, rawTier, cfg) {
+    cfg = cfg || DEFAULT_CONFIG;
+    var tier = rawTier;
+    if (tier === 3 && e.t - st.lastT3 < cfg.t3CooldownMin) tier = 2;
+    if (tier === 2 && e.t - st.lastT2 < cfg.t2CooldownMin && score < st.lastT2Score + 1) tier = 1;
+    if (tier === 1 && st.asked.has(e.cp)) tier = 0;
+    if (tier >= 2) { st.lastT2 = e.t; st.lastT2Score = score; st.t2Count++; }
+    if (tier === 3) st.lastT3 = e.t;
+    if (tier >= 1) st.asked.add(e.cp);
+    return tier;
+  }
+
+  /* Update the payer's state after a payment or credit actually happens. */
+  function observe(st, e) {
+    var rec = st.seen.get(e.cp);
+    var wasNew = !rec;
+    if (e.dir === 'out') {
+      var newish = e.cpType === 'individual' && isNewish(st, e);
+      if (newish) st.newIndOut.push({ t: e.t, amt: e.amt, cp: e.cp });
+      else st.outLog.push({ t: e.t, amt: e.amt });
+      if (!rec) { rec = { out: 0, in: 0, firstOutT: e.t }; st.seen.set(e.cp, rec); }
+      if (rec.firstOutT === undefined) rec.firstOutT = e.t;
+      rec.out++;
+    } else {
+      if (e.cpType === 'individual' && wasNew) st.strangerIn.push({ t: e.t, amt: e.amt, cp: e.cp });
+      if (!rec) { rec = { out: 0, in: 0 }; st.seen.set(e.cp, rec); }
+      rec.in++;
+    }
+    var cut = e.t - 30 * DAY;
+    prune(st.newIndOut, cut); prune(st.strangerIn, cut); prune(st.outLog, cut);
+  }
+
+  var api = {
+    DAY: DAY, DEFAULT_CONFIG: DEFAULT_CONFIG, LABELS: LABELS,
+    createState: createState, scorePayment: scorePayment, decide: decide, observe: observe,
+    tierFor: tierFor, baselineMonthly: baselineMonthly
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.SlowScam = api;
+})(typeof window !== 'undefined' ? window : this);
+</script>
+<script>/* Five scripted payers for the prototype. Names and IDs are invented. */
+(function (root) {
+  'use strict';
+  var DAY = 1440, H = 60;
+
+  function history(kind) {
+    var ev = [];
+    for (var d = 0; d < 30; d++) {
+      var base = d * DAY;
+      if (kind === 'kirana') {
+        for (var c = 0; c < 15; c++) ev.push({ t: base + 8 * H + c * 40, dir: 'in', amt: 50 + ((d * 37 + c * 53) % 350), cp: 'cust' + d + '_' + c, cpType: 'individual' });
+        if (d % 3 === 0) ev.push({ t: base + 15 * H, dir: 'out', amt: 6000, cp: 'sup_regular', cpType: 'individual' });
+        ev.push({ t: base + 21 * H, dir: 'out', amt: 400, cp: 'm' + d, cpType: 'merchant' });
+      } else {
+        var m = kind === 'senior' ? 600 : 300;
+        ev.push({ t: base + 10 * H, dir: 'out', amt: m, cp: 'm' + d, cpType: 'merchant' });
+        if (d % 5 === 0) ev.push({ t: base + 12 * H, dir: 'out', amt: kind === 'senior' ? 5000 : 1000, cp: 'family', cpType: 'individual' });
+        if (d % 7 === 0) ev.push({ t: base + 13 * H, dir: 'in', amt: 800, cp: 'family', cpType: 'individual' });
+        if (d % 6 === 0) ev.push({ t: base + 14 * H, dir: 'in', amt: 500, cp: 'friend', cpType: 'individual' });
+      }
+    }
+    return ev;
+  }
+
+  function at(day, hh, mm) { return (31 + day) * DAY + hh * H + (mm || 0); }
+
+  var STORIES = [
+    {
+      id: 'neha', who: 'Neha, 26, Pune', kind: 'Task scam', truth: 'scam', base: 'everyday',
+      intro: 'Joined a Telegram "work from home" group. Was paid small amounts for liking videos, then asked to "prepay" tasks.',
+      events: [
+        { t: at(0, 19, 10), dir: 'in', amt: 300, cp: 'riya.hr', name: 'Riya (HR)', note: 'Paid for liking 3 YouTube videos' },
+        { t: at(0, 21, 40), dir: 'in', amt: 450, cp: 'tasks.priya', name: 'Priya (Tasks)', note: 'Second "commission"' },
+        { t: at(1, 20, 5), dir: 'out', amt: 1500, cp: 'kumar.s88', name: 'Kumar S', fanIn: 3, note: '"Prepaid task" to unlock higher commission' },
+        { t: at(1, 22, 30), dir: 'out', amt: 3600, cp: 'anil.store21', name: 'Anil Store', fanIn: 6, note: 'Next task level' },
+        { t: at(2, 19, 20), dir: 'out', amt: 9000, cp: 'rk.enterprises', name: 'RK Enterprises', fanIn: 4, note: '"Merge task", earnings shown as \u20b921,000' },
+        { t: at(2, 23, 10), dir: 'out', amt: 24000, cp: 'sunita.d', name: 'Sunita D', fanIn: 9, note: '"Account frozen, pay to release your earnings"' },
+        { t: at(3, 11, 0), dir: 'out', amt: 60000, cp: 'mohd.irfan', name: 'Mohd Irfan', fanIn: 2, flagged: true, note: '"Final tax to withdraw"' }
+      ]
+    },
+    {
+      id: 'ramesh', who: 'Ramesh, 58, Nagpur', kind: 'Stock-tips group', truth: 'scam', base: 'senior',
+      intro: 'Added to a WhatsApp "VIP stock tips" group. Told to deposit on a trading app that shows fake profits.',
+      events: [
+        { t: at(0, 11, 0), dir: 'out', amt: 15000, cp: 'vikas.capital', name: 'Vikas Capital', fanIn: 2, note: 'First deposit on the "trading app"' },
+        { t: at(2, 16, 0), dir: 'in', amt: 3000, cp: 'arjun.k', name: 'Arjun K', note: 'App shows \u20b942,000 profit. A \u20b93,000 "withdrawal" arrives, from a different person' },
+        { t: at(3, 10, 30), dir: 'out', amt: 30000, cp: 'meena.traders', name: 'Meena Traders', fanIn: 5, note: '"IPO allotment" deposit' },
+        { t: at(5, 12, 0), dir: 'out', amt: 50000, cp: 'deepak.s', name: 'Deepak S', fanIn: 7, note: 'Top-up to "unlock" the IPO' },
+        { t: at(6, 18, 0), dir: 'out', amt: 100000, cp: 'gupta.agencies', name: 'Gupta Agencies', fanIn: 12, flagged: true, note: '"Margin call", pay or lose everything' },
+        { t: at(8, 10, 0), dir: 'out', amt: 100000, cp: 'navin.r', name: 'Navin R', fanIn: 18, note: '"Exit fee" to withdraw' }
+      ]
+    },
+    {
+      id: 'arjun', who: 'Arjun, 29, Bengaluru', kind: 'Moving to a new flat', truth: 'genuine', base: 'everyday',
+      intro: 'Genuine. Pays a token, a deposit and a broker, all to people he has never paid before.',
+      events: [
+        { t: at(0, 18, 0), dir: 'out', amt: 10000, cp: 'suresh.landlord', name: 'Suresh R (landlord)', fanIn: 0, note: 'Token advance' },
+        { t: at(1, 11, 0), dir: 'out', amt: 90000, cp: 'suresh.landlord', name: 'Suresh R (landlord)', fanIn: 0, note: 'Security deposit, same landlord' },
+        { t: at(1, 11, 30), dir: 'out', amt: 15000, cp: 'nikhil.broker', name: 'Nikhil (broker)', fanIn: 1, note: 'Brokerage' }
+      ]
+    },
+    {
+      id: 'meena', who: 'Meena, 41, Madurai', kind: 'Runs a kirana store', truth: 'genuine', base: 'kirana',
+      intro: 'Genuine. Gets paid by about 15 customers a day on her personal UPI ID, and is trying two new suppliers.',
+      events: [
+        { t: at(0, 15, 0), dir: 'out', amt: 12000, cp: 'balaji.agencies', name: 'Balaji Agencies', fanIn: 2, note: 'New supplier, first order' },
+        { t: at(3, 15, 0), dir: 'out', amt: 18000, cp: 'murugan.oils', name: 'Sri Murugan Oils', fanIn: 1, note: 'Another new supplier' }
+      ]
+    },
+    {
+      id: 'kabir', who: 'Kabir, 34, Gurugram', kind: 'Real investing', truth: 'genuine', base: 'everyday',
+      intro: 'Genuine. Tops up his broker and mutual fund. Both use SEBI-verified @valid UPI IDs.',
+      events: [
+        { t: at(0, 10, 0), dir: 'out', amt: 50000, cp: 'broker.brk@validhdfc', name: 'His broker (@valid)', cpType: 'valid', note: 'Adds money to his trading account' },
+        { t: at(1, 10, 0), dir: 'out', amt: 25000, cp: 'fund.mf@validicici', name: 'His mutual fund (@valid)', cpType: 'valid', note: 'Lump-sum investment' }
+      ]
+    }
+  ];
+
+  function play(E, story, cfg) {
+    var st = E.createState(0);
+    history(story.base).forEach(function (e) { E.observe(st, e); });
+    return story.events.map(function (raw) {
+      var e = { t: raw.t, dir: raw.dir, amt: raw.amt, cp: raw.cp, cpType: raw.cpType || 'individual', fanIn: raw.fanIn || 0, flagged: !!raw.flagged };
+      var res = null, tier = 0;
+      if (e.dir === 'out') { res = E.scorePayment(st, e, cfg); tier = E.decide(st, e, res.score, res.tier, cfg); }
+      var step = { raw: raw, e: e, res: res, tier: tier, base: E.baselineMonthly(st, e.t) };
+      E.observe(st, e);
+      return step;
+    });
+  }
+
+  var api = { STORIES: STORIES, history: history, play: play };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.SlowScamStories = api;
+})(typeof window !== 'undefined' ? window : this);
+</script>
+<script>
+var DATA = {"heed":{"h1":0.03,"h2":0.35,"decay":0.7,"h3":0.6,"g2":0.08,"g3":0.15,"gInvest":0.03},"traces":[{"a":"quick","L":2626,"off":0,"j":"00","m":"00","r":[2626,889]},{"a":"quick","L":2947,"off":0,"j":"200","m":"000","r":[2947,2142,418]},{"a":"task","L":43400,"off":0,"j":"02310","m":"00020","r":[43400,42400,40400,30900,5900]},{"a":"task","L":189700,"off":0,"j":"0222303","m":"0002202","r":[189700,188500,186000,180200,169400,150000,100000]},{"a":"quick","L":60183,"off":0,"j":"00222","m":"20202","r":[60183,46887,41803,21803,20000]},{"a":"task","L":284700,"off":0,"j":"00322302","m":"00020202","r":[284700,283300,282500,274100,254700,251000,151000,100000]},{"a":"stock","L":1055783,"off":768783,"j":"020232","m":"220222","r":[1055783,1044783,1024783,998783,951783,868783]},{"a":"stock","L":2670526,"off":1926526,"j":"022222322","m":"222022022","r":[2670526,2648526,2608526,2526526,2426526,2326526,2226526,2126526,2026526]},{"a":"quick","L":14736,"off":0,"j":"030","m":"000","r":[14736,13199,3987]},{"a":"stock","L":375000,"off":0,"j":"022012","m":"220022","r":[375000,355000,330000,251000,199000,100000]},{"a":"task","L":28800,"off":0,"j":"0233","m":"0002","r":[28800,25300,24000,15600]},{"a":"task","L":137500,"off":0,"j":"012311","m":"000022","r":[137500,136100,132100,125000,104000,65000]},{"a":"task","L":17900,"off":0,"j":"1021","m":"0002","r":[17900,15600,14600,10300]},{"a":"stock","L":295000,"off":0,"j":"03131","m":"22222","r":[295000,270000,240000,190000,100000]},{"a":"task","L":433000,"off":0,"j":"11330210","m":"00220020","r":[433000,431100,425400,411000,311000,235000,200000,100000]},{"a":"task","L":38600,"off":0,"j":"2223","m":"0020","r":[38600,36400,31700,21000]},{"a":"stock","L":742019,"off":393019,"j":"022223","m":"222202","r":[742019,727019,701019,660019,593019,493019]},{"a":"stock","L":363000,"off":0,"j":"0231133","m":"0222220","r":[363000,357000,344000,317000,272000,200000,100000]},{"a":"stock","L":495000,"off":0,"j":"1213131","m":"2222202","r":[495000,479000,451000,400000,300000,200000,100000]},{"a":"task","L":157600,"off":0,"j":"231111","m":"002202","r":[157600,155700,146600,127200,91200,86000]},{"a":"quick","L":27333,"off":0,"j":"01112","m":"02000","r":[27333,26036,12026,11406,2945]},{"a":"task","L":221200,"off":0,"j":"0322203","m":"0002200","r":[221200,219300,215400,208500,192000,160000,100000]},{"a":"quick","L":1974,"off":0,"j":"00","m":"00","r":[1974,1332]},{"a":"stock","L":3868536,"off":2942536,"j":"210221021310","m":"220022022220","r":[3868536,3848536,3822536,3787536,3737536,3642536,3542536,3442536,3342536,3242536,3142536,3042536]},{"a":"quick","L":20492,"off":0,"j":"1230","m":"0020","r":[20492,18592,13014,2872]},{"a":"task","L":262600,"off":0,"j":"0123011","m":"0000022","r":[262600,261400,258700,251800,237000,200000,100000]},{"a":"task","L":82400,"off":0,"j":"00221","m":"00022","r":[82400,80600,77500,70000,49000]},{"a":"task","L":16100,"off":0,"j":"0222","m":"0000","r":[16100,14300,13500,9300]},{"a":"quick","L":7342,"off":0,"j":"222","m":"000","r":[7342,5284,4413]},{"a":"quick","L":48411,"off":0,"j":"01021","m":"00022","r":[48411,47060,40552,37518,17518]},{"a":"stock","L":1004000,"off":0,"j":"022332322202","m":"222222222202","r":[1004000,988000,953000,900000,800000,700000,600000,500000,400000,300000,200000,100000]},{"a":"stock","L":2199803,"off":1602803,"j":"02232222","m":"22202222","r":[2199803,2183803,2157803,2102803,2002803,1902803,1802803,1702803]},{"a":"stock","L":1892936,"off":1284936,"j":"022222303","m":"202222202","r":[1892936,1874936,1852936,1812936,1756936,1684936,1584936,1484936,1384936]},{"a":"stock","L":2889177,"off":1968177,"j":"03020000111","m":"22020000222","r":[2889177,2867177,2828177,2768177,2668177,2568177,2468177,2368177,2268177,2168177,2068177]},{"a":"task","L":356700,"off":0,"j":"03030220","m":"00020220","r":[356700,355400,352900,332900,246900,240000,200000,100000]},{"a":"quick","L":9785,"off":0,"j":"002","m":"000","r":[9785,8687,6398]},{"a":"task","L":51700,"off":0,"j":"0003","m":"0002","r":[51700,46300,44400,32000]},{"a":"task","L":105900,"off":0,"j":"11203","m":"00002","r":[105900,104300,100500,91000,66000]},{"a":"stock","L":801000,"off":0,"j":"0232222222","m":"2202202222","r":[801000,779000,750000,700000,600000,500000,400000,300000,200000,100000]},{"a":"quick","L":11811,"off":0,"j":"0011","m":"0000","r":[11811,11227,10251,7647]},{"a":"stock","L":934285,"off":545285,"j":"0232232","m":"2222022","r":[934285,921285,902285,866285,820285,745285,645285]},{"a":"task","L":288200,"off":0,"j":"0302023","m":"2002020","r":[288200,277300,275200,271000,242000,193000,93000]},{"a":"quick","L":20311,"off":0,"j":"00202","m":"00200","r":[20311,19672,16795,5541,4500]},{"a":"quick","L":36646,"off":0,"j":"02322","m":"00220","r":[36646,35725,34299,14299,3797]},{"a":"stock","L":721000,"off":0,"j":"031133131","m":"220202222","r":[721000,697000,627000,588000,500000,400000,300000,200000,100000]},{"a":"task","L":411500,"off":0,"j":"20223020","m":"00222020","r":[411500,409100,404600,375600,365000,265000,200000,100000]},{"a":"stock","L":1585302,"off":1181302,"j":"20203323","m":"00202222","r":[1585302,1577302,1565302,1539302,1500302,1449302,1381302,1281302]},{"a":"quick","L":3189,"off":0,"j":"022","m":"000","r":[3189,2629,1736]},{"a":"task","L":403400,"off":0,"j":"00202322","m":"00202022","r":[403400,401200,396900,371900,361000,300000,200000,100000]},{"a":"task","L":399600,"off":0,"j":"03222232","m":"02202222","r":[399600,398100,387700,359700,356000,256000,200000,100000]},{"a":"task","L":79500,"off":0,"j":"22322","m":"00202","r":[79500,78100,74200,55100,48000]},{"a":"stock","L":387000,"off":0,"j":"313120","m":"222200","r":[387000,371000,344000,292000,192000,100000]},{"a":"stock","L":69000,"off":0,"j":"20020","m":"00020","r":[69000,63000,55000,45000,27000]},{"a":"task","L":66300,"off":0,"j":"22032","m":"00022","r":[66300,64500,61600,54200,37000]},{"a":"task","L":302200,"off":0,"j":"0223202","m":"0022202","r":[302200,300500,297100,287000,226000,200000,100000]},{"a":"stock","L":852000,"off":0,"j":"022123111210","m":"222222222220","r":[852000,838000,816000,787000,749000,696000,600000,500000,400000,300000,200000,100000]},{"a":"stock","L":1020000,"off":0,"j":"023222232232","m":"222222222202","r":[1020000,1000000,966000,897000,800000,700000,600000,500000,400000,300000,200000,100000]},{"a":"stock","L":2304201,"off":1249201,"j":"023120111311","m":"222220222222","r":[2304201,2281201,2235201,2149201,2049201,1949201,1849201,1749201,1649201,1549201,1449201,1349201]},{"a":"task","L":354400,"off":0,"j":"2322302","m":"0022202","r":[354400,352600,347700,334000,296000,200000,100000]},{"a":"task","L":42600,"off":0,"j":"0311","m":"0002","r":[42600,32700,30200,25000]},{"a":"stock","L":1184420,"off":632420,"j":"0212121","m":"2022222","r":[1184420,1162420,1119420,1032420,932420,832420,732420]},{"a":"task","L":31400,"off":0,"j":"0222","m":"0020","r":[31400,29300,22300,3700]},{"a":"stock","L":1217230,"off":868230,"j":"023312","m":"222222","r":[1217230,1207230,1187230,1146230,1068230,968230]},{"a":"stock","L":1980295,"off":1396295,"j":"0223223222","m":"0022220222","r":[1980295,1974295,1962295,1942295,1911295,1862295,1794295,1696295,1596295,1496295]},{"a":"task","L":26500,"off":0,"j":"2322","m":"0002","r":[26500,24600,20900,13300]},{"a":"task","L":25800,"off":0,"j":"2131","m":"0020","r":[25800,24900,18700,2300]},{"a":"stock","L":1288903,"off":717903,"j":"02232222","m":"22222022","r":[1288903,1272903,1240903,1198903,1117903,1017903,917903,817903]},{"a":"stock","L":475000,"off":0,"j":"0230232","m":"2220222","r":[475000,456000,430000,375000,300000,200000,100000]},{"a":"stock","L":1932393,"off":1093393,"j":"021212121301","m":"002220222202","r":[1932393,1923393,1908393,1878393,1833393,1777393,1693393,1593393,1493393,1393393,1293393,1193393]},{"a":"task","L":174600,"off":0,"j":"222023","m":"000022","r":[174600,173300,164400,161000,140000,100000]},{"a":"quick","L":37119,"off":0,"j":"01001","m":"00002","r":[37119,36300,31942,29889,18539]},{"a":"task","L":366400,"off":0,"j":"03003232","m":"00002222","r":[366400,364300,359400,347000,326000,280000,200000,100000]},{"a":"stock","L":390000,"off":0,"j":"0230222","m":"2220222","r":[390000,379000,363000,333000,290000,200000,100000]},{"a":"stock","L":344000,"off":0,"j":"22320","m":"22020","r":[344000,321000,282000,200000,100000]},{"a":"quick","L":7773,"off":0,"j":"100","m":"000","r":[7773,6864,2263]},{"a":"task","L":445900,"off":0,"j":"02030023","m":"02020022","r":[445900,443400,431300,425000,334000,300000,200000,100000]},{"a":"task","L":248100,"off":0,"j":"2222032","m":"0002022","r":[248100,247200,245400,240400,227000,193000,100000]},{"a":"stock","L":707000,"off":0,"j":"02220323202","m":"22220222202","r":[707000,697000,682000,664000,641000,596000,500000,400000,300000,200000,100000]},{"a":"stock","L":4001889,"off":3141889,"j":"02312112210","m":"22222222220","r":[4001889,3983889,3957889,3909889,3841889,3741889,3641889,3541889,3441889,3341889,3241889]},{"a":"task","L":279800,"off":0,"j":"11213113","m":"00020222","r":[279800,276800,275400,267800,254000,229000,188000,100000]},{"a":"task","L":27900,"off":0,"j":"2222","m":"0020","r":[27900,25300,24300,6400]},{"a":"task","L":300700,"off":0,"j":"2222322","m":"0220222","r":[300700,293900,265900,248300,246000,147000,100000]},{"a":"task","L":23600,"off":0,"j":"1211","m":"0002","r":[23600,21200,16000,14800]},{"a":"task","L":258300,"off":0,"j":"0212131","m":"0020222","r":[258300,256100,251400,241000,220000,183000,83000]},{"a":"stock","L":533000,"off":0,"j":"2020222222","m":"0020022222","r":[533000,526000,516000,500000,480000,451000,400000,300000,200000,100000]},{"a":"task","L":285800,"off":0,"j":"0220303","m":"0000200","r":[285800,281700,279700,271000,247000,200000,100000]},{"a":"task","L":275100,"off":0,"j":"2003202","m":"0002202","r":[275100,273700,270900,264300,245000,145000,100000]},{"a":"task","L":79500,"off":0,"j":"010213","m":"000022","r":[79500,78300,76300,72800,66000,47000]},{"a":"task","L":274100,"off":0,"j":"02130121","m":"00020222","r":[274100,272900,266200,263400,242400,231000,191000,91000]},{"a":"stock","L":457000,"off":0,"j":"22223302","m":"22222202","r":[457000,446000,422000,404000,369000,299000,200000,100000]},{"a":"quick","L":1947,"off":0,"j":"00","m":"00","r":[1947,649]},{"a":"task","L":49600,"off":0,"j":"0212","m":"0022","r":[49600,47600,42800,32000]},{"a":"stock","L":385000,"off":0,"j":"01221301","m":"00222202","r":[385000,380000,372000,360000,334000,290000,200000,100000]},{"a":"quick","L":28898,"off":0,"j":"0002","m":"0002","r":[28898,25719,18485,16690]},{"a":"task","L":234300,"off":0,"j":"222320","m":"002020","r":[234300,229000,227100,214000,183000,83000]},{"a":"stock","L":2430681,"off":1872681,"j":"3230322","m":"2220222","r":[2430681,2407681,2362681,2272681,2172681,2072681,1972681]},{"a":"stock","L":1507407,"off":1121407,"j":"02200222","m":"20200220","r":[1507407,1495407,1480407,1461407,1437407,1387407,1312407,1221407]},{"a":"task","L":421700,"off":0,"j":"22322322","m":"00222222","r":[421700,419800,416300,389300,379000,279000,200000,100000]},{"a":"stock","L":201000,"off":0,"j":"023133","m":"222222","r":[201000,190000,175000,155000,123000,70000]},{"a":"task","L":64100,"off":0,"j":"02223","m":"00002","r":[64100,62600,59000,52600,36000]},{"a":"quick","L":1307,"off":0,"j":"00","m":"00","r":[1307,451]},{"a":"quick","L":26197,"off":0,"j":"0021","m":"0002","r":[26197,24435,21315,12976]},{"a":"stock","L":398000,"off":0,"j":"0222222","m":"0220222","r":[398000,391000,376000,351000,300000,200000,100000]},{"a":"task","L":430700,"off":0,"j":"02030211","m":"00020022","r":[430700,428700,422800,411000,331000,231000,200000,100000]},{"a":"stock","L":534000,"off":0,"j":"213133330","m":"222222220","r":[534000,523000,508000,481000,440000,379000,300000,200000,100000]},{"a":"stock","L":3315133,"off":2547133,"j":"0202230230","m":"2202220200","r":[3315133,3300133,3273133,3219133,3147133,3047133,2947133,2847133,2747133,2647133]},{"a":"quick","L":1597,"off":0,"j":"22","m":"00","r":[1597,998]},{"a":"quick","L":12885,"off":0,"j":"322","m":"000","r":[12885,9952,1199]},{"a":"task","L":198000,"off":0,"j":"200130","m":"000220","r":[198000,192800,191000,178000,147000,51000]},{"a":"stock","L":930193,"off":549193,"j":"033321","m":"220202","r":[930193,910193,883193,839193,749193,649193]},{"a":"task","L":73700,"off":0,"j":"02300","m":"00000","r":[73700,69900,68200,59400,41000]},{"a":"stock","L":166000,"off":0,"j":"22320","m":"22220","r":[166000,155000,135000,106000,39000]},{"a":"task","L":87900,"off":0,"j":"20000","m":"00000","r":[87900,86100,80800,71900,53000]},{"a":"task","L":135100,"off":0,"j":"02203","m":"02000","r":[135100,133000,121500,116000,86000]},{"a":"task","L":34300,"off":0,"j":"1123","m":"0002","r":[34300,32600,27600,18800]},{"a":"stock","L":1246002,"off":960002,"j":"01312","m":"20020","r":[1246002,1223002,1187002,1139002,1060002]},{"a":"stock","L":1119816,"off":708816,"j":"023230","m":"222200","r":[1119816,1104816,1073816,1008816,908816,808816]},{"a":"stock","L":223000,"off":0,"j":"02332","m":"22222","r":[223000,209000,188000,157000,94000]},{"a":"task","L":398100,"off":0,"j":"02131232","m":"00222022","r":[398100,395900,391000,380000,328000,300000,200000,100000]},{"a":"quick","L":8676,"off":0,"j":"000","m":"000","r":[8676,6155,1268]},{"a":"stock","L":842000,"off":0,"j":"02013120310","m":"20022220220","r":[842000,823000,800000,768000,700000,600000,500000,400000,300000,200000,100000]},{"a":"task","L":110500,"off":0,"j":"02223","m":"00222","r":[110500,109100,105200,94000,62000]},{"a":"task","L":61300,"off":0,"j":"0023","m":"0022","r":[61300,58900,52400,37000]},{"a":"stock","L":612000,"off":0,"j":"02312021","m":"22220022","r":[612000,590000,556000,493000,400000,300000,200000,100000]},{"a":"task","L":301200,"off":0,"j":"12311312","m":"00022222","r":[301200,300100,297400,291000,277000,249000,149000,100000]},{"a":"quick","L":3430,"off":0,"j":"00","m":"00","r":[3430,2297]},{"a":"stock","L":2961335,"off":2313335,"j":"02220220","m":"22020220","r":[2961335,2936335,2853335,2813335,2713335,2613335,2513335,2413335]},{"a":"stock","L":1014997,"off":551997,"j":"0210122","m":"2220202","r":[1014997,999997,967997,921997,851997,751997,651997]},{"a":"stock","L":340000,"off":0,"j":"02222","m":"22222","r":[340000,318000,270000,200000,100000]},{"a":"quick","L":5368,"off":0,"j":"02","m":"00","r":[5368,3762]},{"a":"quick","L":5086,"off":0,"j":"322","m":"000","r":[5086,3869,537]},{"a":"task","L":343500,"off":0,"j":"2232222","m":"0022222","r":[343500,341200,336100,325000,293000,200000,100000]},{"a":"task","L":201700,"off":0,"j":"0232222","m":"0002222","r":[201700,200000,197200,192300,181000,159000,100000]},{"a":"task","L":38800,"off":0,"j":"20302","m":"00200","r":[38800,37600,35500,24800,5300]},{"a":"stock","L":644000,"off":0,"j":"012020210","m":"202020220","r":[644000,632000,612000,576000,500000,400000,300000,200000,100000]},{"a":"task","L":318700,"off":0,"j":"0322322","m":"0022022","r":[318700,316700,312400,302000,273000,200000,100000]},{"a":"task","L":247200,"off":0,"j":"2012103","m":"0002202","r":[247200,246300,244200,238500,226000,190000,100000]},{"a":"quick","L":58264,"off":0,"j":"02220","m":"02220","r":[58264,53635,41665,21665,1665]},{"a":"stock","L":2732746,"off":2167746,"j":"02030220","m":"22020220","r":[2732746,2714746,2690746,2648746,2567746,2467746,2367746,2267746]},{"a":"task","L":314000,"off":0,"j":"00222303","m":"00202202","r":[314000,312200,309300,297300,291000,262000,200000,100000]},{"a":"stock","L":793000,"off":0,"j":"0222222232","m":"2222022222","r":[793000,770000,732000,680000,600000,500000,400000,300000,200000,100000]},{"a":"task","L":249000,"off":0,"j":"0222332","m":"0002222","r":[249000,245700,244300,237800,222000,187000,100000]},{"a":"stock","L":857715,"off":629715,"j":"200020","m":"000020","r":[857715,849715,839715,820715,781715,729715]},{"a":"stock","L":724000,"off":0,"j":"022323302","m":"222222202","r":[724000,701000,662000,591000,500000,400000,300000,200000,100000]},{"a":"task","L":72500,"off":0,"j":"02302","m":"00002","r":[72500,71000,67500,45500,37000]},{"a":"task","L":294700,"off":0,"j":"0232322","m":"0002220","r":[294700,292500,286900,275000,253000,153000,53000]},{"a":"task","L":39200,"off":0,"j":"0223","m":"0002","r":[39200,35000,33500,24000]},{"a":"task","L":150500,"off":0,"j":"023222","m":"000222","r":[150500,146900,138000,136300,119000,88000]},{"a":"stock","L":791000,"off":0,"j":"0222222332","m":"2222222222","r":[791000,767000,733000,685000,600000,500000,400000,300000,200000,100000]},{"a":"stock","L":890000,"off":0,"j":"02223320223","m":"22222020222","r":[890000,871000,839000,777000,700000,600000,500000,400000,300000,200000,100000]},{"a":"stock","L":2525580,"off":1909580,"j":"0222232322","m":"0222222222","r":[2525580,2519580,2508580,2487580,2453580,2407580,2309580,2209580,2109580,2009580]},{"a":"quick","L":1118,"off":0,"j":"00","m":"00","r":[1118,730]},{"a":"task","L":357300,"off":0,"j":"23223202","m":"00022202","r":[357300,355700,352400,343000,319000,240000,140000,100000]},{"a":"task","L":60100,"off":0,"j":"1221","m":"0022","r":[60100,58200,52600,36000]},{"a":"stock","L":918450,"off":694450,"j":"02121","m":"22222","r":[918450,900450,867450,824450,768450]},{"a":"task","L":169400,"off":0,"j":"023202","m":"002202","r":[169400,167400,162800,151000,127000,86000]},{"a":"stock","L":2022516,"off":1103516,"j":"020002222223","m":"000002222220","r":[2022516,2013516,1996516,1963516,1901516,1803516,1703516,1603516,1503516,1403516,1303516,1203516]},{"a":"task","L":126900,"off":0,"j":"222232","m":"000022","r":[126900,125300,122500,117800,105000,34000]},{"a":"task","L":68800,"off":0,"j":"20132","m":"00202","r":[68800,66500,62700,46500,40000]},{"a":"stock","L":750000,"off":0,"j":"10220111311","m":"20220222022","r":[750000,737000,720000,697000,634000,600000,500000,400000,300000,200000,100000]},{"a":"task","L":130700,"off":0,"j":"220322","m":"020022","r":[130700,128900,109600,105800,97000,60000]},{"a":"task","L":130500,"off":0,"j":"222030","m":"000020","r":[130500,129200,122100,119500,103000,31000]},{"a":"quick","L":37544,"off":0,"j":"0231","m":"0220","r":[37544,32763,21644,1644]},{"a":"task","L":260900,"off":0,"j":"2223323","m":"0002222","r":[260900,259400,253100,249500,236000,198000,100000]},{"a":"quick","L":21472,"off":0,"j":"0020","m":"0020","r":[21472,20567,14700,2161]},{"a":"stock","L":128000,"off":0,"j":"00120","m":"00200","r":[128000,122000,110000,93000,57000]},{"a":"task","L":154600,"off":0,"j":"021003","m":"020002","r":[154600,145000,123000,120600,84600,80000]},{"a":"task","L":28400,"off":0,"j":"0121","m":"0002","r":[28400,27100,24400,16500]},{"a":"stock","L":3579683,"off":2717683,"j":"02220223200","m":"22220220200","r":[3579683,3559683,3525683,3482683,3417683,3317683,3217683,3117683,3017683,2917683,2817683]},{"a":"stock","L":1734401,"off":1368401,"j":"020222","m":"220222","r":[1734401,1712401,1679401,1629401,1568401,1468401]},{"a":"stock","L":2120279,"off":1646279,"j":"2222200","m":"2222200","r":[2120279,2104279,2070279,2019279,1946279,1846279,1746279]},{"a":"quick","L":2479,"off":0,"j":"22","m":"00","r":[2479,1540]},{"a":"stock","L":1012000,"off":0,"j":"022222232222","m":"202202222222","r":[1012000,988000,953000,900000,800000,700000,600000,500000,400000,300000,200000,100000]},{"a":"stock","L":1711530,"off":1092530,"j":"20222302","m":"20222202","r":[1711530,1690530,1655530,1592530,1492530,1392530,1292530,1192530]},{"a":"quick","L":12250,"off":0,"j":"010","m":"000","r":[12250,10879,7301]},{"a":"task","L":28700,"off":0,"j":"0032","m":"0000","r":[28700,25900,18900,17200]},{"a":"stock","L":1885495,"off":1371495,"j":"0202223","m":"2002200","r":[1885495,1860495,1826495,1767495,1671495,1571495,1471495]},{"a":"task","L":29400,"off":0,"j":"0223","m":"0002","r":[29400,25500,18500,17100]},{"a":"task","L":396100,"off":0,"j":"22232200","m":"02022200","r":[396100,394100,381900,377000,321000,224000,200000,100000]},{"a":"stock","L":1448468,"off":1082468,"j":"02023322","m":"02022222","r":[1448468,1440468,1428468,1412468,1391468,1354468,1282468,1182468]},{"a":"stock","L":843000,"off":0,"j":"022332220332","m":"022022220202","r":[843000,836000,823000,801000,758000,700000,600000,500000,400000,300000,200000,100000]},{"a":"task","L":293400,"off":0,"j":"00232202","m":"00020202","r":[293400,292500,290000,282400,261400,257000,200000,100000]},{"a":"quick","L":6359,"off":0,"j":"023","m":"000","r":[6359,5604,2231]},{"a":"task","L":36600,"off":0,"j":"0232","m":"0020","r":[36600,34500,30600,8600]},{"a":"stock","L":2609603,"off":1770603,"j":"22032322202","m":"22022222202","r":[2609603,2590603,2566603,2531603,2470603,2370603,2270603,2170603,2070603,1970603,1870603]},{"a":"stock","L":1918166,"off":1242166,"j":"02202222222","m":"02202222222","r":[1918166,1912166,1902166,1888166,1861166,1818166,1742166,1642166,1542166,1442166,1342166]},{"a":"task","L":28000,"off":0,"j":"2222","m":"0002","r":[28000,26500,23500,15800]},{"a":"task","L":297400,"off":0,"j":"0022323","m":"0022202","r":[297400,295700,291500,281000,255000,200000,100000]},{"a":"task","L":200800,"off":0,"j":"220322","m":"000222","r":[200800,198400,192200,180000,123000,23000]},{"a":"quick","L":4660,"off":0,"j":"00","m":"00","r":[4660,1281]},{"a":"stock","L":503000,"off":0,"j":"02131331","m":"22222202","r":[503000,492000,470000,436000,380000,300000,200000,100000]},{"a":"stock","L":1467784,"off":1050784,"j":"022222","m":"222222","r":[1467784,1443784,1402784,1350784,1250784,1150784]},{"a":"task","L":47000,"off":0,"j":"1201","m":"0002","r":[47000,45300,33700,29000]},{"a":"stock","L":2135681,"off":1386681,"j":"032121121","m":"222222222","r":[2135681,2113681,2029681,1986681,1886681,1786681,1686681,1586681,1486681]},{"a":"stock","L":846000,"off":0,"j":"02231202112","m":"22222202222","r":[846000,830000,808000,772000,700000,600000,500000,400000,300000,200000,100000]},{"a":"task","L":30100,"off":0,"j":"01212","m":"00002","r":[30100,28800,26300,22200,15100]},{"a":"task","L":148500,"off":0,"j":"23223","m":"00222","r":[148500,142900,140600,128000,92000]},{"a":"stock","L":1128170,"off":714170,"j":"010230","m":"200200","r":[1128170,1105170,1073170,1004170,914170,814170]},{"a":"task","L":34100,"off":0,"j":"1311","m":"0002","r":[34100,31700,27400,19000]},{"a":"task","L":161500,"off":0,"j":"232200","m":"002000","r":[161500,159600,154900,129900,120000,45000]},{"a":"quick","L":48901,"off":0,"j":"21211","m":"00020","r":[48901,40480,39304,23506,3506]},{"a":"task","L":24400,"off":0,"j":"1200","m":"0000","r":[24400,23000,16800,13600]},{"a":"stock","L":1953910,"off":1474910,"j":"0230220","m":"2220020","r":[1953910,1936910,1907910,1865910,1774910,1674910,1574910]},{"a":"quick","L":9112,"off":0,"j":"0002","m":"0000","r":[9112,8759,7891,5867]},{"a":"stock","L":577000,"off":0,"j":"22022200","m":"22022200","r":[577000,558000,528000,470000,400000,300000,200000,100000]},{"a":"quick","L":28550,"off":0,"j":"0220","m":"0200","r":[28550,26866,11590,3124]},{"a":"stock","L":1640724,"off":1250724,"j":"020233","m":"220222","r":[1640724,1624724,1597724,1542724,1450724,1350724]},{"a":"stock","L":326000,"off":0,"j":"03032","m":"22002","r":[326000,304000,271000,200000,100000]},{"a":"stock","L":173000,"off":0,"j":"03012","m":"02022","r":[173000,164000,148000,121000,68000]},{"a":"task","L":347000,"off":0,"j":"00232111","m":"00022222","r":[347000,345900,343100,335400,319000,284000,200000,100000]},{"a":"stock","L":542000,"off":0,"j":"2023121","m":"2002222","r":[542000,518000,476000,400000,300000,200000,100000]},{"a":"stock","L":714858,"off":507858,"j":"222323","m":"222222","r":[714858,703858,688858,670858,631858,577858]},{"a":"stock","L":2284273,"off":1749273,"j":"02123311","m":"22222222","r":[2284273,2272273,2250273,2209273,2149273,2049273,1949273,1849273]},{"a":"task","L":371300,"off":0,"j":"02223002","m":"00202002","r":[371300,370400,364700,348200,346000,300000,200000,100000]},{"a":"quick","L":36442,"off":0,"j":"01010","m":"20000","r":[36442,17437,13482,3189,970]},{"a":"stock","L":3738412,"off":2700412,"j":"022131211311","m":"222222222222","r":[3738412,3713412,3673412,3600412,3500412,3400412,3300412,3200412,3100412,3000412,2900412,2800412]},{"a":"task","L":27200,"off":0,"j":"02223","m":"00002","r":[27200,26100,24300,21100,15800]},{"a":"stock","L":2693054,"off":1829054,"j":"02232222203","m":"22222022202","r":[2693054,2675054,2644054,2606054,2529054,2429054,2329054,2229054,2129054,2029054,1929054]},{"a":"task","L":291700,"off":0,"j":"0222320","m":"0002220","r":[291700,290200,286800,277000,248000,148000,100000]},{"a":"task","L":47000,"off":0,"j":"1121","m":"0022","r":[47000,45200,41500,31000]},{"a":"stock","L":433000,"off":0,"j":"0222032","m":"2222022","r":[433000,422000,400000,363000,300000,200000,100000]},{"a":"task","L":247700,"off":0,"j":"023222","m":"002202","r":[247700,245500,240100,205100,192000,100000]},{"a":"quick","L":3863,"off":0,"j":"0002","m":"0000","r":[3863,3385,2524,2277]},{"a":"task","L":312500,"off":0,"j":"22322322","m":"00220222","r":[312500,311600,309100,285100,272300,265000,165000,100000]},{"a":"task","L":31600,"off":0,"j":"0023","m":"0002","r":[31600,30500,27900,21000]},{"a":"task","L":136100,"off":0,"j":"031103","m":"020200","r":[136100,134000,123800,117700,98000,36000]},{"a":"task","L":43200,"off":0,"j":"1330","m":"0020","r":[43200,41000,35700,9700]},{"a":"stock","L":1922751,"off":1503751,"j":"023222","m":"222222","r":[1922751,1901751,1864751,1793751,1703751,1603751]},{"a":"task","L":130700,"off":0,"j":"12003","m":"00002","r":[130700,128300,121800,105000,75000]},{"a":"stock","L":550469,"off":306469,"j":"010311","m":"000222","r":[550469,541469,529469,509469,473469,406469]},{"a":"stock","L":2968063,"off":2343063,"j":"01233131","m":"20222222","r":[2968063,2948063,2915063,2843063,2743063,2643063,2543063,2443063]},{"a":"stock","L":736000,"off":0,"j":"02021121210","m":"02022222220","r":[736000,727000,712000,684000,626000,591000,500000,400000,300000,200000,100000]},{"a":"stock","L":714747,"off":429747,"j":"02231","m":"22222","r":[714747,692747,666747,616747,529747]},{"a":"task","L":400000,"off":0,"j":"00232030","m":"00222020","r":[400000,398200,393200,380000,355000,259000,200000,100000]},{"a":"stock","L":1175494,"off":615494,"j":"0222220","m":"2222220","r":[1175494,1150494,1102494,1015494,915494,815494,715494]},{"a":"task","L":388600,"off":0,"j":"01131301","m":"00022202","r":[388600,385000,383200,375300,356000,300000,200000,100000]},{"a":"stock","L":500000,"off":0,"j":"02232222","m":"22222222","r":[500000,487000,465000,431000,387000,300000,200000,100000]},{"a":"quick","L":11077,"off":0,"j":"00222","m":"00000","r":[11077,10642,9219,3254,667]},{"a":"stock","L":710000,"off":0,"j":"020223220","m":"220222220","r":[710000,692000,663000,600000,500000,400000,300000,200000,100000]},{"a":"quick","L":2757,"off":0,"j":"00","m":"00","r":[2757,2035]},{"a":"stock","L":835000,"off":0,"j":"02222222322","m":"22202222222","r":[835000,822000,801000,759000,694000,600000,500000,400000,300000,200000,100000]},{"a":"quick","L":23380,"off":0,"j":"0203","m":"0200","r":[23380,21274,6545,1141]},{"a":"stock","L":2165447,"off":1698447,"j":"0202222","m":"2202222","r":[2165447,2147447,2117447,2067447,1998447,1898447,1798447]},{"a":"task","L":183300,"off":0,"j":"222232","m":"000222","r":[183300,181900,178500,168600,150000,100000]},{"a":"stock","L":449000,"off":0,"j":"030022","m":"200022","r":[449000,425000,374000,300000,200000,100000]},{"a":"task","L":23900,"off":0,"j":"1213","m":"0000","r":[23900,22800,16200,13900]},{"a":"stock","L":2164232,"off":1171232,"j":"023332233020","m":"222222222020","r":[2164232,2148232,2123232,2071232,1971232,1871232,1771232,1671232,1571232,1471232,1371232,1271232]},{"a":"task","L":411800,"off":0,"j":"22030223","m":"00020222","r":[411800,407000,405400,393000,361000,300000,200000,100000]},{"a":"quick","L":22197,"off":0,"j":"20220","m":"00020","r":[22197,21390,20063,17722,6284]},{"a":"task","L":181600,"off":0,"j":"0200320","m":"0000220","r":[181600,179800,174700,171700,160000,137000,37000]},{"a":"stock","L":1936797,"off":1482797,"j":"2030222","m":"2020022","r":[1936797,1916797,1888797,1849797,1782797,1682797,1582797]},{"a":"stock","L":272000,"off":0,"j":"0012102","m":"0002202","r":[272000,264000,254000,234000,201000,136000,86000]},{"a":"task","L":163100,"off":0,"j":"03223","m":"02020","r":[163100,160600,145900,139000,100000]},{"a":"task","L":20200,"off":0,"j":"2223","m":"0000","r":[20200,19200,16900,12500]},{"a":"task","L":257500,"off":0,"j":"203022","m":"002022","r":[257500,255100,249200,157200,117200,100000]},{"a":"quick","L":11372,"off":0,"j":"000","m":"000","r":[11372,10146,7609]},{"a":"stock","L":660082,"off":424082,"j":"03222","m":"22222","r":[660082,648082,622082,588082,524082]},{"a":"stock","L":89000,"off":0,"j":"02322","m":"02222","r":[89000,83000,71000,55000,34000]},{"a":"task","L":281300,"off":0,"j":"2130023","m":"0020000","r":[281300,278900,273300,230300,221000,200000,100000]},{"a":"quick","L":5182,"off":0,"j":"32","m":"00","r":[5182,3555]},{"a":"task","L":303400,"off":0,"j":"1200113","m":"0200222","r":[303400,301200,277200,273100,261000,200000,100000]},{"a":"stock","L":825000,"off":0,"j":"001231121200","m":"000222222200","r":[825000,817000,799000,776000,748000,648000,600000,500000,400000,300000,200000,100000]},{"a":"quick","L":4393,"off":0,"j":"02","m":"00","r":[4393,2646]},{"a":"stock","L":1023000,"off":0,"j":"022230222222","m":"222220222222","r":[1023000,1002000,959000,900000,800000,700000,600000,500000,400000,300000,200000,100000]},{"a":"stock","L":1829954,"off":1168954,"j":"013113021","m":"202222022","r":[1829954,1810954,1780954,1744954,1668954,1568954,1468954,1368954,1268954]},{"a":"quick","L":4600,"off":0,"j":"10","m":"00","r":[4600,1190]},{"a":"stock","L":1131022,"off":710022,"j":"202020","m":"202000","r":[1131022,1114022,1079022,1010022,910022,810022]},{"a":"task","L":165400,"off":0,"j":"013113","m":"002022","r":[165400,160300,158000,142400,133000,99000]},{"a":"task","L":219200,"off":0,"j":"2303222","m":"0002222","r":[219200,218000,214800,208800,175800,159000,59000]},{"a":"task","L":158600,"off":0,"j":"232030","m":"020020","r":[158600,157000,140200,137200,130000,92000]},{"a":"quick","L":1408,"off":0,"j":"00","m":"00","r":[1408,973]},{"a":"stock","L":1036000,"off":0,"j":"020202222222","m":"220202222222","r":[1036000,1013000,947000,900000,800000,700000,600000,500000,400000,300000,200000,100000]},{"a":"task","L":27800,"off":0,"j":"0222","m":"0002","r":[27800,26100,18400,14800]},{"a":"stock","L":939000,"off":0,"j":"02222322232","m":"22222222022","r":[939000,921000,883000,800000,700000,600000,500000,400000,300000,200000,100000]},{"a":"task","L":51400,"off":0,"j":"02302","m":"00202","r":[51400,49700,46500,33100,26000]},{"a":"stock","L":1591228,"off":1100228,"j":"0202033","m":"2202022","r":[1591228,1570228,1538228,1481228,1400228,1300228,1200228]},{"a":"quick","L":8714,"off":0,"j":"003","m":"000","r":[8714,7396,5379]},{"a":"stock","L":2050346,"off":1580346,"j":"02322032","m":"22222022","r":[2050346,2040346,2024346,1991346,1946346,1878346,1780346,1680346]},{"a":"task","L":35200,"off":0,"j":"0222","m":"0002","r":[35200,33300,29900,21000]},{"a":"task","L":35900,"off":0,"j":"2230","m":"0020","r":[35900,33700,28800,17900]},{"a":"stock","L":2634018,"off":2091018,"j":"1203021","m":"2002022","r":[2634018,2611018,2570018,2491018,2391018,2291018,2191018]},{"a":"task","L":280300,"off":0,"j":"2232223","m":"0022222","r":[280300,277900,274000,263000,243000,200000,100000]},{"a":"stock","L":526000,"off":0,"j":"02313121","m":"22222222","r":[526000,516000,496000,454000,400000,300000,200000,100000]},{"a":"quick","L":3547,"off":0,"j":"20","m":"00","r":[3547,2313]},{"a":"task","L":69400,"off":0,"j":"02220","m":"00200","r":[69400,67800,64200,49100,42000]},{"a":"stock","L":1008198,"off":593198,"j":"032023","m":"222022","r":[1008198,985198,948198,882198,793198,693198]},{"a":"quick","L":7942,"off":0,"j":"010","m":"000","r":[7942,5602,902]},{"a":"quick","L":2724,"off":0,"j":"020","m":"000","r":[2724,1890,282]},{"a":"task","L":318000,"off":0,"j":"12130311","m":"00020222","r":[318000,314900,307900,306800,293000,258000,158000,100000]},{"a":"task","L":313400,"off":0,"j":"00202232","m":"00002222","r":[313400,312300,310400,305200,294000,270000,200000,100000]},{"a":"stock","L":3323594,"off":2434594,"j":"31131310132","m":"22222220220","r":[3323594,3309594,3284594,3232594,3134594,3034594,2934594,2834594,2734594,2634594,2534594]},{"a":"stock","L":1929106,"off":1391106,"j":"0210230100","m":"0220220200","r":[1929106,1923106,1912106,1896106,1867106,1832106,1783106,1691106,1591106,1491106]},{"a":"stock","L":316000,"off":0,"j":"03223023","m":"00222022","r":[316000,311000,303000,292000,270000,243000,193000,100000]},{"a":"stock","L":2180494,"off":1509494,"j":"0233232202","m":"2022222202","r":[2180494,2168494,2153494,2125494,2087494,2009494,1909494,1809494,1709494,1609494]},{"a":"task","L":382300,"off":0,"j":"03113120","m":"00022200","r":[382300,378500,376900,368700,317700,300000,200000,100000]},{"a":"stock","L":108000,"off":0,"j":"01312","m":"00022","r":[108000,102000,93000,79000,52000]},{"a":"task","L":138100,"off":0,"j":"030113","m":"000222","r":[138100,136400,132800,124600,85600,70000]},{"a":"task","L":312300,"off":0,"j":"0213110","m":"0022220","r":[312300,310300,305100,292000,261000,200000,100000]},{"a":"task","L":385500,"off":0,"j":"02203222","m":"00202022","r":[385500,383200,378200,368100,351000,251000,151000,51000]},{"a":"task","L":281300,"off":0,"j":"2222320","m":"0002220","r":[281300,276000,274100,263000,242000,200000,100000]},{"a":"quick","L":4152,"off":0,"j":"00","m":"00","r":[4152,1638]},{"a":"task","L":355300,"off":0,"j":"02223223","m":"00202222","r":[355300,353500,349700,332600,323000,285000,185000,100000]},{"a":"stock","L":1163671,"off":835671,"j":"02022333","m":"02022222","r":[1163671,1155671,1144671,1129671,1110671,1079671,1031671,935671]},{"a":"stock","L":2015105,"off":1228105,"j":"023202222302","m":"022202222202","r":[2015105,2009105,1997105,1973105,1941105,1900105,1828105,1728105,1628105,1528105,1428105,1328105]},{"a":"task","L":21100,"off":0,"j":"22220","m":"00000","r":[21100,20200,18600,15700,5900]},{"a":"stock","L":175000,"off":0,"j":"02222","m":"20222","r":[175000,164000,144000,114000,76000]},{"a":"stock","L":637000,"off":0,"j":"0223232022","m":"0020222022","r":[637000,632000,621000,600000,565000,500000,400000,300000,200000,100000]},{"a":"quick","L":1498,"off":0,"j":"000","m":"000","r":[1498,1277,473]},{"a":"quick","L":32766,"off":0,"j":"02022","m":"00020","r":[32766,30979,26955,16632,767]},{"a":"stock","L":858000,"off":0,"j":"0231230112","m":"2222220222","r":[858000,834000,786000,700000,600000,500000,400000,300000,200000,100000]},{"a":"stock","L":256636,"off":166636,"j":"01210","m":"00220","r":[256636,251636,245636,232636,208636]},{"a":"task","L":296800,"off":0,"j":"11233111","m":"00202222","r":[296800,293300,291600,279600,273000,225000,125000,25000]},{"a":"task","L":249600,"off":0,"j":"022322","m":"002222","r":[249600,247400,241200,226000,135000,100000]},{"a":"stock","L":628445,"off":384445,"j":"220222","m":"220222","r":[628445,615445,589445,569445,530445,480445]},{"a":"task","L":90200,"off":0,"j":"02323","m":"00022","r":[90200,88200,83700,74000,52000]},{"a":"quick","L":50320,"off":0,"j":"11201","m":"00202","r":[50320,43665,42419,22419,19392]},{"a":"task","L":253200,"off":0,"j":"0223030","m":"0022020","r":[253200,248300,246400,236300,194300,178000,78000]},{"a":"task","L":207800,"off":0,"j":"023211","m":"002222","r":[207800,205600,199800,172800,159000,100000]},{"a":"stock","L":1867222,"off":1222222,"j":"022220200","m":"222220200","r":[1867222,1853222,1826222,1785222,1722222,1622222,1522222,1422222,1322222]},{"a":"stock","L":3070881,"off":2427881,"j":"0121231021","m":"0222222022","r":[3070881,3064881,3054881,3034881,3000881,2927881,2827881,2727881,2627881,2527881]},{"a":"task","L":201500,"off":0,"j":"223003","m":"002002","r":[201500,196100,194100,166100,151000,100000]},{"a":"task","L":57700,"off":0,"j":"22220","m":"00020","r":[57700,56300,53800,49400,37000]},{"a":"task","L":49500,"off":0,"j":"2232","m":"0022","r":[49500,47300,40700,12700]},{"a":"stock","L":1726316,"off":1094316,"j":"022322223","m":"222222222","r":[1726316,1706316,1681316,1633316,1570316,1494316,1394316,1294316,1194316]},{"a":"stock","L":980000,"off":0,"j":"020232202020","m":"220222202000","r":[980000,958000,923000,878000,800000,700000,600000,500000,400000,300000,200000,100000]},{"a":"stock","L":244000,"off":0,"j":"02123","m":"22202","r":[244000,221000,193000,153000,100000]},{"a":"task","L":88300,"off":0,"j":"20032","m":"00022","r":[88300,84400,83100,73000,47000]},{"a":"task","L":93200,"off":0,"j":"02220","m":"00020","r":[93200,91600,87900,79000,54000]},{"a":"quick","L":2851,"off":0,"j":"00","m":"00","r":[2851,888]},{"a":"stock","L":372000,"off":0,"j":"020322","m":"200222","r":[372000,358000,336000,288000,188000,100000]},{"a":"stock","L":2312591,"off":1426591,"j":"01202111331","m":"20202222222","r":[2312591,2290591,2259591,2199591,2126591,2026591,1926591,1826591,1726591,1626591,1526591]},{"a":"quick","L":19266,"off":0,"j":"2223","m":"2000","r":[19266,9059,3383,2398]},{"a":"stock","L":1478464,"off":1157464,"j":"02222","m":"22222","r":[1478464,1458464,1419464,1350464,1257464]},{"a":"task","L":30000,"off":0,"j":"0231","m":"0020","r":[30000,28200,21500,3600]},{"a":"stock","L":1342248,"off":1025248,"j":"02121","m":"22222","r":[1342248,1318248,1273248,1213248,1125248]},{"a":"task","L":48000,"off":0,"j":"2230","m":"0020","r":[48000,45600,39300,13300]},{"a":"task","L":49300,"off":0,"j":"2223","m":"0202","r":[49300,47600,36400,32000]},{"a":"task","L":80600,"off":0,"j":"02201","m":"00202","r":[80600,79000,72400,53000,50000]},{"a":"task","L":141900,"off":0,"j":"223223","m":"000220","r":[141900,139800,135700,127000,109000,72000]},{"a":"stock","L":1411346,"off":993346,"j":"2202222","m":"0002222","r":[1411346,1402346,1385346,1351346,1281346,1193346,1093346]},{"a":"stock","L":830000,"off":0,"j":"0322222220","m":"2222202220","r":[830000,805000,762000,700000,600000,500000,400000,300000,200000,100000]},{"a":"stock","L":297000,"off":0,"j":"02120","m":"22220","r":[297000,276000,239000,181000,100000]},{"a":"stock","L":2771287,"off":2087287,"j":"01211230210","m":"02022220220","r":[2771287,2763287,2753287,2735287,2712287,2672287,2587287,2487287,2387287,2287287,2187287]},{"a":"stock","L":888000,"off":0,"j":"022202220230","m":"202200220220","r":[888000,876000,854000,819000,775000,700000,600000,500000,400000,300000,200000,100000]},{"a":"task","L":180600,"off":0,"j":"112131","m":"000222","r":[180600,179200,176700,169300,152000,100000]},{"a":"task","L":41000,"off":0,"j":"0223","m":"0202","r":[41000,38700,27800,23000]},{"a":"stock","L":558000,"off":0,"j":"0212031","m":"2220022","r":[558000,537000,494000,400000,300000,200000,100000]},{"a":"stock","L":796034,"off":464034,"j":"020030","m":"220000","r":[796034,781034,762034,730034,660034,564034]},{"a":"task","L":437800,"off":0,"j":"02023023","m":"00022022","r":[437800,435900,431200,418000,385000,285000,200000,100000]},{"a":"quick","L":10875,"off":0,"j":"000","m":"000","r":[10875,4756,2997]},{"a":"task","L":331300,"off":0,"j":"22223203","m":"00020200","r":[331300,330300,328100,321700,311000,279000,179000,79000]},{"a":"stock","L":1924388,"off":994388,"j":"023130111212","m":"222200222222","r":[1924388,1907388,1882388,1849388,1794388,1694388,1594388,1494388,1394388,1294388,1194388,1094388]},{"a":"task","L":90500,"off":0,"j":"012130","m":"000220","r":[90500,88300,87000,80500,67000,23000]},{"a":"stock","L":3142603,"off":2118603,"j":"222233222222","m":"222222222222","r":[3142603,3119603,3080603,3018603,2918603,2818603,2718603,2618603,2518603,2418603,2318603,2218603]},{"a":"task","L":70100,"off":0,"j":"20011","m":"00022","r":[70100,64300,62000,50900,17900]},{"a":"quick","L":4688,"off":0,"j":"00","m":"00","r":[4688,3231]},{"a":"task","L":368100,"off":0,"j":"22220320","m":"00220220","r":[368100,366100,360700,350000,329000,283000,200000,100000]},{"a":"task","L":67000,"off":0,"j":"023023","m":"000022","r":[67000,65900,64000,59700,52700,36000]}]};
+(function(){
+'use strict';
+var E = window.SlowScam, S = window.SlowScamStories, cfg = E.DEFAULT_CONFIG, th = cfg.thresholds;
+var inr = function(n){ return '₹' + Math.round(n).toLocaleString('en-IN'); };
+var esc = function(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+
+/* ---------- tooltips on chart marks ---------- */
+var tip = document.getElementById('tip');
+document.querySelectorAll('[data-tip]').forEach(function(el){
+  el.addEventListener('mousemove', function(ev){ tip.textContent = el.getAttribute('data-tip'); tip.style.opacity = 1; tip.style.left = (ev.clientX + 12) + 'px'; tip.style.top = (ev.clientY + 12) + 'px'; });
+  el.addEventListener('mouseleave', function(){ tip.style.opacity = 0; });
+});
+
+/* ---------- prototype ---------- */
+var lang = 'en', storyIdx = 0, step = 0, played = [], phase = 'pay', answer = null, timer = null;
+var T = {
+  en: {
+    ask: 'Quick check before you pay', what: "What's this payment for?", why1: 'We ask because this is your first payment to this person.',
+    chips: [['family','Family or friend'],['rent','Rent or deposit'],['buy','Buying something'],['invest','Investment or trading'],['task','A job or task'],['other','Something else']],
+    t2inv: 'This looks like an investment scam', t2task: 'This looks like a task-job scam', t2gen: 'This payment looks like a scam',
+    why: 'Why we think so', valid: 'Real investments go to an @valid UPI ID with a green thumbs-up. This is a personal account.',
+    coach: 'Scammers often tell people to ignore this screen.', dont: "Don't pay now", talk: 'Talk to someone I trust first', payAnyway: 'Pay anyway', wait: 'Pay anyway (wait {s}s)',
+    t3: 'We have paused this payment for 4 hours', t3b: 'If someone is pushing you to pay quickly, that is a warning sign. The payment goes out in 4 hours unless you cancel it.',
+    cancel: 'Cancel payment', call: 'Call 1930 (cyber crime helpline)', keep: 'Keep it scheduled',
+    remind: 'Reminder: we warned you about a similar payment recently', paid: 'Payment sent', stopped: 'Payment not sent. Nothing left your account.', held: 'Payment scheduled for 4 hours from now. You can still cancel it.',
+    pay: 'Pay', received: 'Money received'
+  },
+  hi: {
+    ask: 'पैसे भेजने से पहले एक सवाल', what: 'यह पैसे किसलिए भेज रहे हैं?', why1: 'हम इसलिए पूछ रहे हैं क्योंकि आप इन्हें पहली बार पैसे भेज रहे हैं।',
+    chips: [['family','परिवार या दोस्त'],['rent','किराया या डिपॉज़िट'],['buy','कुछ ख़रीद रहे हैं'],['invest','निवेश या ट्रेडिंग'],['task','कोई जॉब या टास्क'],['other','कुछ और']],
+    t2inv: 'यह निवेश वाली ठगी जैसा दिख रहा है', t2task: 'यह "टास्क जॉब" वाली ठगी जैसा दिख रहा है', t2gen: 'यह भुगतान ठगी जैसा दिख रहा है',
+    why: 'हमें ऐसा क्यों लग रहा है', valid: 'असली निवेश हमेशा @valid UPI ID पर जाता है, जिस पर हरा अंगूठा दिखता है। यह एक निजी खाता है।',
+    coach: 'ठग अक्सर कहते हैं कि इस चेतावनी को अनदेखा करें।', dont: 'अभी न भेजें', talk: 'पहले किसी भरोसेमंद से बात करें', payAnyway: 'फिर भी भेजें', wait: 'फिर भी भेजें ({s} सेकंड रुकें)',
+    t3: 'हमने यह भुगतान 4 घंटे के लिए रोक दिया है', t3b: 'अगर कोई आप पर जल्दी पैसे भेजने का दबाव डाल रहा है, तो यह ख़तरे का संकेत है। अगर आप रद्द नहीं करते, तो भुगतान 4 घंटे बाद जाएगा।',
+    cancel: 'भुगतान रद्द करें', call: '1930 पर कॉल करें (साइबर क्राइम हेल्पलाइन)', keep: 'भुगतान रहने दें',
+    remind: 'याद दिला दें: हाल ही में हमने ऐसे ही एक भुगतान पर चेतावनी दी थी', paid: 'भुगतान हो गया', stopped: 'भुगतान नहीं भेजा गया। आपके खाते से कुछ नहीं गया।', held: 'भुगतान 4 घंटे बाद जाएगा। आप अभी भी रद्द कर सकते हैं।',
+    pay: 'भेजें', received: 'पैसे मिले'
+  }
+};
+var REASON_HI = { 'new':'आप इन्हें पहली बार पैसे भेज रहे हैं', vel:'पिछले 7 दिनों में आपने कई नए लोगों को पैसे भेजे हैं', bait:'किसी अजनबी ने आपको थोड़े पैसे भेजे थे, और अब आप किसी दूसरे अजनबी को भेज रहे हैं', esc:'यह रकम पिछली बार से कहीं ज़्यादा है', cum:'नए लोगों को भेजी गई कुल रकम आपके आम महीने से बहुत ज़्यादा है', fan:'आज इस UPI ID को कई अलग-अलग लोगों ने पहली बार पैसे भेजे हैं', listed:'यह UPI ID सरकारी धोखाधड़ी सूची में है', round:'पूरी गोल रकम' };
+
+var tabs = document.getElementById('storyTabs');
+S.STORIES.forEach(function(s, i){
+  var b = document.createElement('button'); b.textContent = s.who.split(',')[0] + ' · ' + s.kind; b.setAttribute('aria-pressed', i === 0);
+  b.onclick = function(){ storyIdx = i; reset(); Array.prototype.forEach.call(tabs.children, function(c, j){ c.setAttribute('aria-pressed', j === i); }); };
+  tabs.appendChild(b);
+});
+function reset(){ played = S.play(E, S.STORIES[storyIdx], cfg); step = 0; phase = 'pay'; answer = null; render(); }
+function cur(){ return played[step]; }
+function topReasons(res){ return res.signals.filter(function(s){ return s.pts > 0.25; }).sort(function(a,b){ return b.pts - a.pts; }).slice(0, 3); }
+function reasonText(s){ return lang === 'hi' ? (REASON_HI[s.id] || s.label) : s.label; }
+function effTier(p){ if (!p.res) return 0; var t = p.tier; if (t === 1 && answer && (answer === 'invest' || answer === 'task')) t = 2; return t; }
+
+function phone(){
+  var p = cur(), L = T[lang], st = S.STORIES[storyIdx], body = document.getElementById('phBody');
+  document.getElementById('phWho').textContent = st.who.split(',')[0];
+  if (timer) { clearInterval(timer); timer = null; }
+  var raw = p.raw, name = raw.name, init = name.replace(/[^A-Za-z]/g,'').slice(0,1).toUpperCase();
+  var head = '<div class="payee"><div class="avatar">' + esc(init) + '</div><div style="font-weight:600">' + esc(name) + '</div><div class="amt">' + inr(raw.amt) + '</div><div class="id">' + esc(raw.cp.indexOf('@') > -1 ? raw.cp : raw.cp + '@oksbi') + '</div>' + (p.e.cpType === 'valid' ? '<span class="badge">&#128077; SEBI-verified @valid</span>' : '') + '</div>';
+  if (p.e.dir === 'in') { body.innerHTML = '<div class="done"><div style="font-size:13px;color:#5d6370">' + L.received + '</div><div style="font-size:30px;font-weight:700;margin:4px 0">+' + inr(raw.amt) + '</div><div>' + esc(name) + '</div></div>'; return; }
+  var t = effTier(p), html = head;
+  if (phase === 'done-paid') html += '<div class="done">&#10003; ' + L.paid + '</div>';
+  else if (phase === 'done-stopped') html += '<div class="done">' + L.stopped + '</div>';
+  else if (phase === 'done-held') html += '<div class="done">' + L.held + '</div>';
+  else if (phase === 'pay' && t === 0) html += '<button class="paybtn" id="payGo">' + L.pay + ' ' + inr(raw.amt) + '</button>';
+  else if (t === 1 && !answer) {
+    var rem = (p.res.score >= th.t2) ? '<p style="margin:0 0 6px;color:#8a4b0f">' + L.remind + '</p>' : '';
+    html += '<div class="sheet"><h4>' + L.ask + '</h4>' + rem + '<div>' + L.what + '</div><div class="chips">' + L.chips.map(function(c){ return '<button data-a="' + c[0] + '">' + c[1] + '</button>'; }).join('') + '</div><p style="font-size:12.5px;color:#5d6370;margin:8px 0 0">' + L.why1 + '</p></div>';
+  } else if (t === 1 && answer) html += '<button class="paybtn" id="payGo">' + L.pay + ' ' + inr(raw.amt) + '</button>';
+  else if (t === 2) {
+    var title = answer === 'task' ? L.t2task : answer === 'invest' ? L.t2inv : (S.STORIES[storyIdx].kind === 'Task scam' ? L.t2task : L.t2inv);
+    if (S.STORIES[storyIdx].truth === 'genuine' && !answer) title = L.t2gen;
+    html += '<div class="sheet s2"><h4>&#9888; ' + title + '</h4><div style="font-weight:600;font-size:13px">' + L.why + '</div><ul>' + topReasons(p.res).map(function(s){ return '<li>' + esc(reasonText(s)) + '</li>'; }).join('') + '<li>' + L.valid + '</li></ul><div style="font-size:13px">' + L.coach + '</div><div class="cta"><button class="go" id="dont">' + L.dont + '</button><button id="talk">' + L.talk + '</button><button class="ghost" id="anyway" disabled>' + L.wait.replace('{s}', 30) + '</button></div></div>';
+  } else if (t === 3) {
+    html += '<div class="sheet s3"><h4>&#9940; ' + L.t3 + '</h4><p style="margin:0 0 6px">' + L.t3b + '</p><ul>' + topReasons(p.res).map(function(s){ return '<li>' + esc(reasonText(s)) + '</li>'; }).join('') + '</ul><div class="cta"><button class="stop" id="cancel">' + L.cancel + '</button><button id="call">' + L.call + '</button><button class="ghost" id="keep">' + L.keep + '</button></div></div>';
+  }
+  body.innerHTML = html;
+  var g = function(id){ return document.getElementById(id); };
+  if (g('payGo')) g('payGo').onclick = function(){ phase = 'done-paid'; render(); };
+  body.querySelectorAll('.chips button').forEach(function(b){ b.onclick = function(){ answer = b.getAttribute('data-a'); render(); }; });
+  if (g('dont')) g('dont').onclick = function(){ phase = 'done-stopped'; render(); };
+  if (g('talk')) g('talk').onclick = function(){ phase = 'done-stopped'; render(); };
+  if (g('cancel')) g('cancel').onclick = function(){ phase = 'done-stopped'; render(); };
+  if (g('call')) g('call').onclick = function(){ phase = 'done-stopped'; render(); };
+  if (g('keep')) g('keep').onclick = function(){ phase = 'done-held'; render(); };
+  if (g('anyway')) { var s = 30, a = g('anyway'); timer = setInterval(function(){ s--; if (s <= 0) { clearInterval(timer); timer = null; a.disabled = false; a.textContent = L.payAnyway; a.onclick = function(){ phase = 'done-paid'; render(); }; } else a.textContent = L.wait.replace('{s}', s); }, 1000); }
+}
+
+function panel(){
+  var p = cur(), st = S.STORIES[storyIdx], raw = p.raw;
+  var d = new Date(Date.UTC(2026, 10, 1) + (raw.t - 31 * 1440) * 60000);
+  var when = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' }) + ', ' + d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' });
+  document.getElementById('pCtx').innerHTML = '<b>' + esc(st.who) + '</b> · ' + (st.truth === 'scam' ? 'scam victim' : 'genuine') + '. ' + esc(st.intro);
+  document.getElementById('pNote').innerHTML = '<b>' + when + ':</b> ' + (p.e.dir === 'in' ? 'receives ' : 'pays ') + inr(raw.amt) + (p.e.dir === 'in' ? ' from ' : ' to ') + esc(raw.name) + '. <span class="note">' + esc(raw.note || '') + '</span>';
+  var meter = document.getElementById('pMeter'), sigs = document.getElementById('pSigs');
+  if (!p.res) { meter.style.display = 'none'; sigs.innerHTML = '<p class="note">Incoming money is not scored. The engine remembers who sent it: a later payment to a different stranger can count as the "bait" pattern.</p>'; }
+  else {
+    meter.style.display = 'block';
+    var max = 11, sc = Math.max(0, p.res.score), t = effTier(p);
+    var col = t >= 3 ? 'var(--bad)' : t === 2 ? 'var(--warn)' : t === 1 ? 'var(--s1)' : 'var(--muted)';
+    meter.innerHTML = '<div class="fill" style="width:' + Math.min(100, sc / max * 100) + '%;background:' + col + '"></div>' + [['question', th.t1], ['warning', th.t2], ['hold', th.t3]].map(function(x){ return '<div class="tick" style="left:' + (x[1] / max * 100) + '%"><span>' + x[0] + ' ' + x[1] + '</span></div>'; }).join('');
+    sigs.innerHTML = '<div style="font-weight:600;margin-bottom:4px">Score ' + p.res.score.toFixed(1) + ' &rarr; <span class="pill p' + t + '">' + ['no friction','question','full warning','hold'][t] + '</span>' + (p.tier < p.res.tier ? ' <span class="note">(stepped down by fatigue rules)</span>' : '') + (p.tier === 1 && t === 2 ? ' <span class="note">(answer sent it to a warning)</span>' : '') + '</div>' +
+      p.res.signals.map(function(s){ return '<div class="sig"><span>' + esc(s.label) + '</span><span class="pts">' + (s.pts > 0 ? '+' : '') + s.pts.toFixed(1) + '</span></div>'; }).join('');
+  }
+  document.getElementById('pSteps').textContent = 'Event ' + (step + 1) + ' of ' + played.length;
+  document.getElementById('prevBtn').disabled = step === 0;
+  document.getElementById('nextBtn').disabled = step === played.length - 1;
+}
+function render(){ phone(); panel(); }
+document.getElementById('nextBtn').onclick = function(){ if (step < played.length - 1) { step++; phase = 'pay'; answer = null; render(); } };
+document.getElementById('prevBtn').onclick = function(){ if (step > 0) { step--; phase = 'pay'; answer = null; render(); } };
+document.getElementById('resetBtn').onclick = reset;
+document.getElementById('langEn').onclick = function(){ lang = 'en'; this.setAttribute('aria-pressed', true); document.getElementById('langHi').setAttribute('aria-pressed', false); render(); };
+document.getElementById('langHi').onclick = function(){ lang = 'hi'; this.setAttribute('aria-pressed', true); document.getElementById('langEn').setAttribute('aria-pressed', false); render(); };
+reset();
+
+/* ---------- assumption sliders ---------- */
+var H = DATA.heed, ids = ['h2', 'decay', 'h3'];
+ids.forEach(function(id){ var el = document.getElementById(id); el.value = H[id]; el.oninput = recompute; });
+function ev(tiers, r, h){ var P = 1, k = 0, av = 0; for (var i = 0; i < tiers.length; i++) { var t = +tiers[i], x = 0; if (t === 1) x = h.h1; if (t === 2) { x = h.h2 * Math.pow(h.decay, k); k++; } if (t === 3) { x = h.h3 * Math.pow(h.decay, k); k++; } av += P * x * r[i]; P *= 1 - x; } return av; }
+function recompute(){
+  var h = { h1: H.h1, h2: +document.getElementById('h2').value, decay: +document.getElementById('decay').value, h3: +document.getElementById('h3').value };
+  ids.forEach(function(id){ document.getElementById('o_' + id).textContent = Math.round(h[id] * 100) + '%'; });
+  var L = 0, J = 0, A = 0;
+  DATA.traces.forEach(function(t){ L += t.L; J += ev(t.j, t.r, h); A += ev(t.m, t.r, h); });
+  document.getElementById('liveJ').textContent = (100 * J / L).toFixed(1) + '%';
+  document.getElementById('liveA').textContent = (100 * A / L).toFixed(1) + '%';
+}
+recompute();
+})();
+</script>
+</body>
+</html>

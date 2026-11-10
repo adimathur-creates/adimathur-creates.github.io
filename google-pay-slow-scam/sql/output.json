@@ -1,0 +1,120 @@
+{
+ "base": [
+  {
+   "Count": 275441
+  }
+ ],
+ "newish": [
+  {
+   "Count": 39108
+  }
+ ],
+ "check_velocity": [
+  {
+   "payments_checked": 7071,
+   "mismatches": 0
+  }
+ ],
+ "journey_shape": [
+  {
+   "archetype": "quick",
+   "victims": 60,
+   "payments_per_victim": 3.3,
+   "receiving_ids_per_victim": 2.6,
+   "median_first_payment": 1334.5,
+   "median_step_up": 1.78,
+   "median_last_payment": 2270.0,
+   "median_days_on_app": 0.3
+  },
+  {
+   "archetype": "stock",
+   "victims": 145,
+   "payments_per_victim": 8.2,
+   "receiving_ids_per_victim": 6.5,
+   "median_first_payment": 16000.0,
+   "median_step_up": 1.25,
+   "median_last_payment": 100000.0,
+   "median_days_on_app": 12.0
+  },
+  {
+   "archetype": "task",
+   "victims": 153,
+   "payments_per_victim": 6.0,
+   "receiving_ids_per_victim": 4.7,
+   "median_first_payment": 1900.0,
+   "median_step_up": 2.19,
+   "median_last_payment": 70000.0,
+   "median_days_on_app": 2.1
+  }
+ ],
+ "bait_rate": [
+  {
+   "kind": "genuine payment",
+   "payments": 1292,
+   "pct_after_stranger_credit": 30.6
+  },
+  {
+   "kind": "scam payment",
+   "payments": 2293,
+   "pct_after_stranger_credit": 79.3
+  }
+ ],
+ "score_bands": [
+  {
+   "kind": "genuine",
+   "payments": 1292,
+   "pct_question_or_above": 14.63,
+   "pct_warning_or_above": 2.17,
+   "pct_hold": 0.23
+  },
+  {
+   "kind": "scam",
+   "payments": 2293,
+   "pct_question_or_above": 84.61,
+   "pct_warning_or_above": 70.69,
+   "pct_hold": 22.2
+  }
+ ],
+ "persona_friction": [
+  {
+   "persona": "freelancer",
+   "payers": 61,
+   "raw_warnings_per_1k_month": 73.8
+  },
+  {
+   "persona": "mover",
+   "payers": 50,
+   "raw_warnings_per_1k_month": 10.0
+  },
+  {
+   "persona": "buyer",
+   "payers": 68,
+   "raw_warnings_per_1k_month": 7.4
+  },
+  {
+   "persona": "trader",
+   "payers": 71,
+   "raw_warnings_per_1k_month": 7.0
+  },
+  {
+   "persona": "student",
+   "payers": 149,
+   "raw_warnings_per_1k_month": 3.4
+  },
+  {
+   "persona": "investor",
+   "payers": 70,
+   "raw_warnings_per_1k_month": 0.0
+  },
+  {
+   "persona": "emergency",
+   "payers": 31,
+   "raw_warnings_per_1k_month": 0.0
+  },
+  {
+   "persona": "everyday",
+   "payers": 500,
+   "raw_warnings_per_1k_month": 0.0
+  }
+ ]
+}

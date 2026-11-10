@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Slow Scam · catching investment scams on Google Pay before the big transfer · Aditya Mathur</title>
+<meta name="description" content="A product case: Google's India scam protections work when the scam is live on a call. Most money is lost to investment scams that run for days with no call. A payer-side journey score, an intervention ladder, a working prototype, a simulation and a launch plan.">
+<style>
+:root{--bg:#fbfaf8;--surface:#fff;--ink:#17191d;--muted:#5d6370;--line:#e6e4df;--accent:#1d5d4b;--accent-soft:#e6f1ed;--tag:#f1efea;--warn:#8a4b0f;--warn-soft:#fbf0e3;--bad:#a12a2a;--bad-soft:#fbe9e9;--s1:#2a78d6;--s2:#eb6834;--grid:#ecebe7}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101215;--surface:#171a1f;--ink:#e9ebee;--muted:#9ba2ae;--line:#272b33;--accent:#6fcfb0;--accent-soft:#132a23;--tag:#1f232a;--warn:#f0b46e;--warn-soft:#2a2116;--bad:#f08a8a;--bad-soft:#2c1717;--s1:#3987e5;--s2:#d95926;--grid:#23262c}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent);text-underline-offset:3px}
+.wrap{max-width:880px;margin:0 auto;padding:44px 18px 80px}
+.kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.08;margin:0 0 12px;letter-spacing:-.02em}
+.lede{font-size:19px;color:var(--muted);margin:0 0 14px;max-width:720px}
+.byline{font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 16px}
+.disclaimer{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding:4px 0 4px 12px;margin:18px 0 0}
+h2{font-size:24px;line-height:1.2;margin:56px 0 10px;letter-spacing:-.01em}
+h2 .n{color:var(--muted);font-weight:500;margin-right:6px}
+h3{font-size:17px;margin:26px 0 6px}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 14px;padding-left:22px}li{margin:5px 0}
+.tldr{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:28px 0 0}
+.tldr h2{margin:0 0 10px;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tldr li{margin:8px 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 6px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px;line-height:1.1;letter-spacing:-.01em}
+.stat span{font-size:13.5px;color:var(--muted);display:block;margin-top:4px;line-height:1.35}
+table.pol{font-size:13.5px}table.pol th{font-size:11px;padding:8px 7px;white-space:normal}table.pol td{padding:8px 7px}table.pol td:first-child{min-width:150px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:10px 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--tag)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.pick td{background:var(--accent-soft)}
+tr:last-child td{border-bottom:0}
+.tablewrap{overflow-x:auto}
+.note{font-size:13.5px;color:var(--muted)}
+.callout{background:var(--accent-soft);border-radius:12px;padding:14px 16px;margin:14px 0}
+.callout.warn{background:var(--warn-soft)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h3{margin-top:0}
+.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+.rung{border-radius:12px;padding:12px;border:1px solid var(--line);background:var(--surface);font-size:14px}
+.rung b{display:block;font-size:15px;margin-bottom:4px}
+.rung .when{font-size:12.5px;color:var(--muted);display:block;margin-bottom:6px}
+.r1{border-top:4px solid var(--s1)}.r2{border-top:4px solid var(--warn)}.r3{border-top:4px solid var(--bad)}.r0{border-top:4px solid var(--line)}
+/* timeline */
+.tl{position:relative;margin:16px 0 8px;padding-left:22px;border-left:2px solid var(--line)}
+.tl .ev{position:relative;margin:0 0 14px}
+.tl .ev:before{content:"";position:absolute;left:-29px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
+.tl .ev.t1:before{border-color:var(--s1);background:var(--s1)}
+.tl .ev.t2:before{border-color:var(--warn);background:var(--warn)}
+.tl .ev.t3:before{border-color:var(--bad);background:var(--bad)}
+.tl .ev.in:before{border-style:dashed}
+.tl .when{font-size:12.5px;color:var(--muted)}
+.tl .what{font-weight:600}
+.tl .sees{font-size:14px;color:var(--muted)}
+.pill{display:inline-block;font-size:12px;border-radius:999px;padding:1px 9px;margin-left:6px;font-weight:600;vertical-align:1px}
+.p0{background:var(--tag);color:var(--muted)}.p1{background:color-mix(in srgb,var(--s1) 16%,transparent);color:var(--s1)}.p2{background:var(--warn-soft);color:var(--warn)}.p3{background:var(--bad-soft);color:var(--bad)}
+/* prototype */
+.proto{display:grid;grid-template-columns:330px 1fr;gap:20px;align-items:start;margin:14px 0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
+.tabs button,.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.phone{width:330px;border:10px solid #1b1d22;border-radius:34px;background:#f6f7f9;color:#17191d;min-height:540px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);display:flex;flex-direction:column}
+.ph-top{background:#fff;padding:14px 16px 10px;border-bottom:1px solid #e7e8ec;font-size:13px;color:#5d6370;display:flex;justify-content:space-between}
+.ph-body{padding:14px 14px 18px;flex:1;display:flex;flex-direction:column;gap:10px}
+.payee{background:#fff;border-radius:16px;padding:14px;text-align:center}
+.avatar{width:46px;height:46px;border-radius:50%;background:#dfe6f1;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#3a4a66}
+.payee .amt{font-size:34px;font-weight:700;letter-spacing:-.02em;margin:4px 0}
+.payee .id{font-size:12.5px;color:#5d6370;word-break:break-all}
+.payee .badge{display:inline-block;margin-top:6px;font-size:12px;background:#e3f4ea;color:#1e6b3c;border-radius:999px;padding:2px 9px}
+.sheet{background:#fff;border-radius:16px;padding:14px;font-size:14px}
+.sheet h4{margin:0 0 6px;font-size:16px}
+.sheet.s2{border:2px solid #c9771f}.sheet.s3{border:2px solid #b42d2d}
+.sheet ul{padding-left:18px;margin:6px 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips button{font:inherit;font-size:13px;border:1px solid #cfd3da;background:#fff;border-radius:999px;padding:5px 10px;cursor:pointer;color:#17191d}
+.chips button:hover{border-color:#1d5d4b}
+.cta{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.cta button{font:inherit;font-size:14px;border-radius:999px;padding:9px;border:1px solid #cfd3da;background:#fff;cursor:pointer;color:#17191d}
+.cta .go{background:#1d5d4b;color:#fff;border-color:#1d5d4b}
+.cta .stop{background:#b42d2d;color:#fff;border-color:#b42d2d}
+.cta .ghost{border:0;color:#5d6370;background:transparent;font-size:13px}
+.cta button:disabled{opacity:.5;cursor:not-allowed}
+.paybtn{margin-top:auto;background:#1a73e8;color:#fff;border:0;border-radius:999px;padding:12px;font:inherit;font-weight:600}
+.done{background:#fff;border-radius:16px;padding:14px;text-align:center;font-size:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.panel .ctx{font-size:14px;color:var(--muted);margin-bottom:8px}
+.sig{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.sig:last-child{border-bottom:0}
+.sig .pts{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.meter{position:relative;height:12px;background:var(--tag);border-radius:999px;margin:16px 0 26px}
+.meter .fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:var(--ink)}
+.meter .tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--muted)}
+.meter .tick span{position:absolute;top:18px;left:-34px;width:70px;text-align:center;font-size:11px;color:var(--muted);white-space:nowrap}
+.steps{font-size:13.5px;color:var(--muted);margin-top:8px}
+.lang{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);margin-top:10px}
+/* charts */
+figure{margin:16px 0 18px}
+figcaption{font-size:13.5px;color:var(--muted);margin-top:6px}
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-size:12px;font-family:inherit}
+.chart .lbl{fill:var(--ink);font-size:12.5px;font-weight:600}
+.chart .grid line{stroke:var(--grid)}
+.chart .axis{stroke:var(--muted)}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:6px 9px;border-radius:8px;opacity:0;transition:opacity .1s;z-index:10;max-width:260px}
+.sliders{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:10px 0}
+.sliders label{font-size:13.5px;color:var(--muted);display:block}
+.sliders input{width:100%}
+.sliders output{font-weight:600;color:var(--ink)}
+.live{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.live .stat b{font-size:30px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0}
+summary{cursor:pointer;font-weight:600}
+code{font-size:13.5px;background:var(--tag);padding:1px 5px;border-radius:5px}
+.src{font-size:14px}.src li{margin:4px 0}
+footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px}
+@media (max-width:760px){.stats{grid-template-columns:1fr 1fr}.grid2,.live{grid-template-columns:1fr}.ladder{grid-template-columns:1fr 1fr}.proto{grid-template-columns:1fr}.phone{margin:0 auto}.sliders{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Product case · Payments trust &amp; safety · India · November 2026</p>
+<h1>The Slow Scam</h1>
+<p class="lede">Google's newest India scam protections step in while a scam is happening live on a phone call. But most money is lost to investment scams that run for days, with no call at the moment of payment. This is how I would catch those on Google Pay, before the big transfer.</p>
+<div class="byline"><span>By <a href="https://adimathur-creates.github.io/">Aditya Mathur</a></span><span><a href="https://www.linkedin.com/in/adityaamathur">LinkedIn</a></span><span><a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/google-pay-slow-scam">Code, data and tests</a></span></div>
+<p class="disclaimer">Independent work. I don't work at Google, this is not a Google product, and I have no access to Google data. Facts about scams and Google's features come from public sources (listed at the end). Every result marked <b>simulated</b> comes from a synthetic population I built. It shows the method and the trade-offs; it is not a forecast.</p>
+
+<section class="tldr">
+<h2>In one minute</h2>
+<ul>
+<li><b>The problem.</b> Indians reported losing {{lossCr}} to cyber fraud in 2025, and about three-quarters of it went to fake investment schemes. These run for days in WhatsApp and Telegram groups. The victim pays on their own, to a different stranger's UPI ID each time, often after a small "profit" is paid to them first.</li>
+<li><b>The gap.</b> Google's 2025 protections for India look for a live scam: an unknown caller, screen sharing, a payment app opened mid-call. A slow investment scam trips none of these. Fraud lists catch the receiving IDs, but scammers change them about daily.</li>
+<li><b>The bet.</b> The receiving ID changes. The victim's pattern doesn't. Score each payment on the payer's own history (new people, rising amounts, a stranger paid you first), then respond in steps: a one-tap question, a warning that names the scam, a short hold.</li>
+<li><b>Simulated result.</b> Compared with a simple "warn on big payments to new people" rule, it protects more of what victims would have lost ({{jl_protected}}% vs {{am_protected}}%) and shows full warnings to genuine users about {{warnRatio}}x less often ({{jl_gT2}} vs {{am_gT2}} per 1,000 users a month). In the median journey, {{jl_ahead}}% of the money is still in the victim's account when the first full warning appears.</li>
+<li><b>What I would do first at Google.</b> Replay the score on six months of real Google Pay history with confirmed scam labels, before showing anything to anyone. The plan below says how, and what would make me kill it.</li>
+</ul>
+</section>
+
+<div class="stats">
+<div class="stat"><b>{{lossCr}}</b><span>reported lost to cyber fraud in India in 2025 (I4C)</span></div>
+<div class="stat"><b>~3 in 4</b><span>of those rupees went to fake investment schemes</span></div>
+<div class="stat"><b>{{jl_protected}}%</b><span>of victim losses protected, simulated (amount rule: {{am_protected}}%)</span></div>
+<div class="stat"><b>{{jl_gT2}}</b><span>full warnings per 1,000 genuine users a month, simulated (amount rule: {{am_gT2}})</span></div>
+</div>
+
+<h2><span class="n">1</span>The problem, in numbers</h2>
+<ul>
+<li><b>Big and still rising in count.</b> India's cybercrime reporting portal recorded {{lossCr}} lost and about 21.8 lakh complaints in 2025.</li>
+<li><b>Mostly investment scams.</b> Moneylife puts 76% of 2025 losses on fake investment schemes; I4C's breakdown has investment schemes at 77% and digital arrest at 8%. So the scam that gets the headlines is not where most of the money goes.</li>
+<li><b>"UPI fraud" counts miss most of it.</b> The Finance Ministry told Parliament that UPI fraud cost {{upiFraud}} from January to November 2025. That is a small slice of the total, because the victim authorises every payment themselves. To the system, it looks like a normal payment.</li>
+<li><b>Recovery is poor.</b> Moneylife reports that about three out of four rupees lost are never recovered. The money moves through chains of mule accounts within hours.</li>
+</ul>
+
+<h3>How the scam runs, from the victim's side</h3>
+<p>Bank and RBI advisories describe the same pattern again and again:</p>
+<ol>
+<li><b>The hook.</b> An ad, an SMS or a WhatsApp/Telegram group offers easy tasks ("like these videos") or stock tips with big returns.</li>
+<li><b>The bait.</b> The victim is paid a small amount first: a task "commission" or a "profit withdrawal". This builds trust. Bank advisories tell people to check where that first commission came from.</li>
+<li><b>The deposits.</b> The victim is told to pay to unlock bigger tasks or to invest. Each payment goes to a personal UPI ID, often a different one each time. The RBI advisory notes these UPI details are updated daily.</li>
+<li><b>The trap.</b> The fake app shows growing profits. To withdraw, the victim must pay a "tax", a "fee" or a "margin call". Each payment is bigger than the last.</li>
+<li><b>The end.</b> Savings are gone. Some victims move to bank transfers once UPI limits get in the way. That money is outside any UPI app's view.</li>
+</ol>
+
+<h2><span class="n">2</span>What Google already does, and where this scam slips through</h2>
+<p>Google has done a lot here. The point is not that it does too little. Its newest tools aim at one kind of moment, and this scam rarely creates that moment.</p>
+<div class="tablewrap"><table>
+<tr><th>Protection (public)</th><th>What has to happen for it to act</th><th>Why a slow investment scam slips through</th></tr>
+<tr><td>Google Pay scam warnings (41 million in 2024; over 1 million a week by late 2025)</td><td>Not public. Likely payee risk and transaction models.</td><td>Unknown from outside. This is the first thing I would want to learn (section 9).</td></tr>
+<tr><td>Screen-sharing alert in Google Pay, Paytm and Navi (Android 11+)</td><td>A call with an unknown contact, plus screen sharing, plus a financial app opened. Then a one-tap exit and a 30-second wait.</td><td>The victim pays alone, hours after chatting in a group. There is no call and no screen sharing.</td></tr>
+<tr><td>Scam Detection on calls (Gemini Nano, on device)</td><td>A live phone call. Pixel 9 and later, English only, off by default.</td><td>No call at payment time. Most Indian phones are not Pixels.</td></tr>
+<tr><td>Fraud lists: I4C Suspect Registry, DoT's Fraud Risk Indicator, RBI's MuleHunter.AI</td><td>The receiving account or number was reported and listed.</td><td>Receiving IDs change about daily. The list catches up after the money has moved. (Still useful: I use it as one signal.)</td></tr>
+<tr><td>SEBI's <code>@valid</code> UPI IDs with a green thumbs-up (since Oct 2025)</td><td>The user notices the badge is missing.</td><td>Victims are told the personal ID is normal. The app can notice the missing badge for them.</td></tr>
+</table></div>
+
+<h2><span class="n">3</span>The insight: the receiving ID changes, the victim's pattern doesn't</h2>
+<p>A payment app sees the payer's own history. That history is very different during a scam:</p>
+<div class="grid2">
+<div class="card"><h3>What a scam looks like from the payer's side</h3>
+<ul>
+<li>Several people paid for the first time in a few days</li>
+<li>A small credit from a stranger, then payments to <i>other</i> strangers</li>
+<li>Each payment bigger than the last, across different people</li>
+<li>Total paid to new people far above the person's usual month</li>
+<li>Personal UPI IDs, never an <code>@valid</code> one, for something called an "investment"</li>
+</ul></div>
+<div class="card"><h3>In the simulation (scam vs genuine payments to new people)</h3>
+<ul>
+<li>Came within 10 days of a small credit from a different stranger: <b>{{bait_scam}}%</b> of scam payments vs <b>{{bait_gen}}%</b> of genuine ones</li>
+<li>Score reached the full-warning level: <b>{{band_scam}}%</b> vs <b>{{band_gen}}%</b></li>
+<li>Typical task scam: {{task_n}} payments to {{task_ids}} different IDs, each about {{task_step}}x the last</li>
+<li>Typical stock-tips scam: {{stock_n}} payments over {{stock_days}} days, first one {{stock_first}}</li>
+</ul>
+<p class="note">From <code>sql/metrics.sql</code> on the sample data. Simulated.</p></div>
+</div>
+
+<h3>The people a bad solution would hurt</h3>
+<p>Many honest payments look like this too. I built these people into the simulation on purpose, and the results report their friction separately:</p>
+<ul>
+<li><b>Someone moving flat:</b> a token, a big deposit and a broker, all to people they have never paid.</li>
+<li><b>A shopkeeper on a personal UPI ID:</b> paid by many strangers every day, trying new suppliers.</li>
+<li><b>A freelancer:</b> paid by new clients, pays new helpers.</li>
+<li><b>A student:</b> new friends send money for splits; pays people they just met.</li>
+<li><b>Someone buying second-hand:</b> one big payment to a stranger on OLX.</li>
+<li><b>A real investor:</b> big, rising payments, but to <code>@valid</code> broker and fund IDs.</li>
+</ul>
+
+<h2><span class="n">4</span>The design</h2>
+<h3>A journey score for each payment to a person</h3>
+<p>Before a payment to a personal UPI ID goes out, add up these signals. Payments to merchants and to <code>@valid</code> IDs are not scored. Payments under ₹500 never get friction. People you have paid and been paid by before are not scored.</p>
+<div class="tablewrap"><table>
+<tr><th>Signal (what the user would be told)</th><th class="num">Points</th><th>Why</th></tr>
+<tr><td>First payment to this person</td><td class="num">1.0</td><td>Every scam payment is to someone new.</td></tr>
+<tr><td>New people paid in 7 days (2 / 3–4 / 5+), ignoring tiny ones like an auto ride</td><td class="num">0.6 / 1.4 / 2.0</td><td>Receiving IDs rotate, so victims pay many new people fast.</td></tr>
+<tr><td>A stranger sent you a small amount (up to ₹5,000) in the last 10 days, and now you pay a <i>different</i> stranger at least 1.5x that</td><td class="num">1.6</td><td>The bait. Cut to a quarter for people paid by 8+ strangers a month, like shops.</td></tr>
+<tr><td>This payment is 1.8x / 3x the biggest recent payment to a different new person</td><td class="num">0.9 / 1.3</td><td>Escalation across people. A token then a deposit to the same landlord does not count.</td></tr>
+<tr><td>Money to new people in 14 days is 0.5x / 1.5x your usual month</td><td class="num">0.7 / 1.4</td><td>Scaled to each person, so it works for a student and a business owner.</td></tr>
+<tr><td>This UPI ID was paid for the first time by 5+ / 15+ people today</td><td class="num">0.8 / 1.3</td><td>Mule IDs collect from many victims. Weak alone: busy shops look the same.</td></tr>
+<tr><td>This UPI ID is on a government fraud list</td><td class="num">3.0</td><td>Precise but late. Adds to the score instead of acting alone.</td></tr>
+<tr><td>Round amount of ₹5,000 or more</td><td class="num">0.2</td><td>A small nudge.</td></tr>
+</table></div>
+<p class="note">The weights are hand-set and readable on purpose. At Google I would start here as a baseline and compare it with a model trained on real labels. A score people can read is easier to defend to Legal, to users and to regulators.</p>
+
+<h3>A ladder of responses, not one big warning</h3>
+<p>UK research on these "authorised" scams found that generic warnings barely work: people stop reading them, and scammers coach victims to click through. What worked in a controlled study was a warning shown only for risky payments, with a clear button to cancel or wait. That cut fraud by 81% in the study, against 18% for a general warning that also lost force with repeat exposure. So the design keeps friction rare and makes each step specific.</p>
+<div class="ladder">
+<div class="rung r0"><b>0 · Nothing</b><span class="when">Score under {{t1}}</span>The payment goes through as today. This is almost every payment.</div>
+<div class="rung r1"><b>1 · Quick question</b><span class="when">Score {{t1}}+</span>"What's this payment for?" One tap. If the answer is "investment" or "a job or task", go straight to step 2. Asked once per person.</div>
+<div class="rung r2"><b>2 · Warning that names the scam</b><span class="when">Score {{t2}}+</span>Says <i>why</i> in plain words ("a stranger paid you ₹300, now you're paying a different stranger"). Main button: don't pay now. "Pay anyway" unlocks after 30 seconds.</div>
+<div class="rung r3"><b>3 · Short hold</b><span class="when">Score {{t3}}+</span>The payment waits 4 hours unless cancelled. One tap to call 1930 or someone they trust. Needs Legal and NPCI sign-off first.</div>
+</div>
+<p>Fatigue rules: one full warning per 72 hours unless the risk rises by a full point; one hold per 24 hours. Scammers will coach victims to answer "family" to the question, so later steps depend on the score, not only on the answer.</p>
+
+<h2><span class="n">5</span>Try it</h2>
+<p>Pick a person and step through their payments. The phone shows what they would see; the panel shows what the engine saw. It is the same code the simulation uses, running in your browser.</p>
+<div class="tabs" id="storyTabs" role="group" aria-label="Choose a person"></div>
+<div class="proto">
+  <div>
+    <div class="phone" aria-live="polite"><div class="ph-top"><span id="phWho">UPI payment</span><span>9:41</span></div><div class="ph-body" id="phBody"></div></div>
+    <div class="lang">Warning language: <button class="btn" id="langEn" aria-pressed="true">English</button><button class="btn" id="langHi" aria-pressed="false">हिन्दी</button></div>
+  </div>
+  <div class="panel">
+    <div class="ctx" id="pCtx"></div>
+    <div id="pNote" style="font-size:14.5px;margin-bottom:6px"></div>
+    <div class="meter" id="pMeter"></div>
+    <div id="pSigs"></div>
+    <div class="steps" id="pSteps"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" id="prevBtn">Back</button><button class="btn primary" id="nextBtn">Next event</button><button class="btn" id="resetBtn">Start over</button></div>
+  </div>
+</div>
+
+<h3>One journey, frozen: Neha's task scam</h3>
+<p class="note">Neha is invented. The timeline is her story run through the engine (step 1 assumes she answers the question honestly; coached victims are covered by the score).</p>
+{{TIMELINE}}
+
+<h2><span class="n">6</span>Does it work? A simulation</h2>
+<p>I built a fictional population of {{users}} UPI payers over 60 days (after a 30-day warm-up), with {{victims}} planted scam journeys of three types: task scams, stock-tips groups, and quick "double your money" scams. Genuine payers include every look-alike from section 3. In total the engine scored {{scored}} payments to people. Thresholds were chosen on one random seed and every number here comes from a different seed.</p>
+<p>Four policies, same people, same payments:</p>
+<div class="tablewrap">{{POLICY_TABLE}}</div>
+<p class="note">* Per 1,000 genuine users per month, counted after fatigue rules. "Protected" is the expected share of victims' total losses avoided, including later bank transfers they would never make once they stop. It uses the response assumptions you can change below. Precision is what share of users shown a full warning in a month are real victims, if 1 in 1,000 users is being scammed that month.</p>
+
+<figure class="chart">
+{{CHART_TRADEOFF}}
+<figcaption><b>The trade-off.</b> Each blue point is one threshold for the journey score (with fraud lists). Moving right shows more warnings to genuine users; moving up protects more. The two orange points are the simple rules. Simulated.</figcaption>
+</figure>
+
+<h3>What the results say</h3>
+<ul>
+<li><b>Fraud lists alone are precise but late.</b> They reach {{li_reached}}% of victims, often after the money has moved, and protect {{li_protected}}%.</li>
+<li><b>An amount rule reaches people, but buries everyone in warnings.</b> {{am_users}}% of genuine users would see a full warning every month. People learn to ignore that.</li>
+<li><b>The journey score gets more protection with far less noise</b>, and adding the lists as one signal improves it ({{jo_protected}}% → {{jl_protected}}%).</li>
+<li><b>It acts early.</b> {{jl_by3}}% of victims see a full warning by their third scam payment. In the median journey, {{jl_ahead}}% of the money is still theirs at that point.</li>
+<li><b>Its blind spot:</b> quick scams under ₹500 a payment. The "no friction under ₹500" rule lets them through (reached {{quick_reached}}% vs 100% for task and stock scams). I think that trade is right: those losses are small and friction on every small payment would hurt millions.</li>
+</ul>
+
+<h3>Who still gets friction</h3>
+<div class="tablewrap">{{PERSONA_TABLE}}</div>
+<p>The freelancer case is the worst: new clients pay them, then they pay new helpers, so it looks like bait. At Google I would give each group a friction budget and check it by state and language, not only overall.</p>
+
+<h3>Which signals matter</h3>
+<figure class="chart">
+{{CHART_ABLATION}}
+<figcaption><b>Remove one signal at a time.</b> How much protection drops (in percentage points) without it. The payer-side signals (bait, money to new people, new people per week) and the fraud lists carry the most. Simulated.</figcaption>
+</figure>
+
+<h3>Change my assumptions</h3>
+<p>The biggest unknown is how people respond to a warning. These sliders recompute protection for all {{victims}} simulated victims, for the journey score and for the amount rule.</p>
+<div class="sliders">
+<label>Stop paying after a full warning: <output id="o_h2"></output><input type="range" id="h2" min="0.05" max="0.8" step="0.05"></label>
+<label>Each repeat warning works this much as well: <output id="o_decay"></output><input type="range" id="decay" min="0.3" max="1" step="0.05"></label>
+<label>Stop paying after a hold: <output id="o_h3"></output><input type="range" id="h3" min="0.1" max="0.95" step="0.05"></label>
+</div>
+<div class="live">
+<div class="stat"><b id="liveJ"></b><span>journey score + lists: share of victim losses protected</span></div>
+<div class="stat"><b id="liveA"></b><span>amount rule: share of victim losses protected</span></div>
+</div>
+<p class="note">Defaults: 35% stop after a full warning (well below the 81% seen in the UK study, which was an online experiment), 70% for each repeat, 60% after a hold, 3% after only the question.</p>
+
+<h2><span class="n">7</span>How I would launch it and test it</h2>
+<h3>Phases</h3>
+<ol>
+<li><b>Replay (weeks 1–4).</b> Run the score over six months of Google Pay history and join it to confirmed scam reports (1930 and portal reports matched to transactions, user reports, bank disputes). Draw the real version of the trade-off chart. If the curve isn't clearly better than today's warnings, stop here.</li>
+<li><b>Shadow (2 weeks).</b> Score live payments without showing anything. Check speed, coverage and how many people would be asked.</li>
+<li><b>Question only, 1% of users.</b> Learn how people answer, how many drop off, and how often later-confirmed victims answered "family".</li>
+<li><b>Full warnings.</b> Test with two designs at once (below). Rewrite the copy until people actually stop.</li>
+<li><b>Holds.</b> Only after Legal and NPCI agree. Start with people who switch it on themselves, for example older users or families protecting a parent.</li>
+<li><b>Scale.</b> All languages, voice read-out, and share the journey signal with RBI's planned intelligence platform so that switching apps doesn't beat it.</li>
+</ol>
+
+<h3>The experiment</h3>
+<ul>
+<li><b>Primary metric:</b> confirmed scam loss per 1,000 users per month.</li>
+<li><b>Why it's hard:</b> scams are rare. To detect a 20% drop in the share of users scammed, with 80% power, you need about {{n1k}} users per group if 1 in 1,000 users is scammed in a month, and about {{n10k}} if it's 1 in 10,000. Google Pay has the scale; a small team doesn't.</li>
+<li><b>Design 1, regression discontinuity:</b> compare payments just above and just below the warning threshold. Nobody at high risk is denied protection, which matters ethically.</li>
+<li><b>Design 2, a small holdout for the new steps only:</b> today's protections stay on for everyone. Keep it short and stop early if harm shows.</li>
+<li><b>Leading signal:</b> after a full warning, did the person stop paying new people for 7 days? This arrives in days, not months.</li>
+</ul>
+
+<h3>Metrics</h3>
+<div class="grid2">
+<div class="card"><h3>Goal and drivers</h3><ul>
+<li><b>Goal:</b> ₹ lost to scams per 1,000 active users a month (confirmed)</li>
+<li>Share of confirmed scam journeys with a full warning by the 3rd payment</li>
+<li>Share who stop paying new people within 48 hours of a warning</li>
+<li>Time from scam to report (faster reports freeze more money)</li>
+</ul></div>
+<div class="card"><h3>Guardrails</h3><ul>
+<li>Full warnings per 1,000 genuine users a month: budget ≤ 6</li>
+<li>Payments completed after the question: ≥ 97%</li>
+<li>Support contacts about stopped payments</li>
+<li>Users leaving for another app after a warning</li>
+<li>Friction by group, state and language</li>
+</ul></div>
+</div>
+<div class="callout warn"><b>When I would stop or rethink:</b> fewer than 15% stop after a full warning after 4 weeks of copy changes; more than 10 full warnings per 1,000 genuine users a month at the launch threshold; payments to people drop by more than 2% for scored users; or the replay curve is not clearly better than today's warnings.</div>
+
+<h2><span class="n">8</span>Who I would need, and what each team needs from me</h2>
+<div class="tablewrap"><table>
+<tr><th>Team</th><th>What they need to decide</th><th>What I'd bring</th></tr>
+<tr><td>Engineering</td><td>Can it score inside the payment flow? Google Pay handles about {{gpayMonthly}} UPI payments a month (about {{gpayPerSec}} a second on average). The score must add under 50 ms. If scoring is down, payments go through.</td><td>A feature list that is mostly rolling counters per user, plus one streaming count per receiving ID (first-time payers in 24 hours).</td></tr>
+<tr><td>UX research and design</td><td>Copy that names the scam, in Hindi and at least eight more languages, with voice read-out. "Pay anyway" is never the main button.</td><td>Research with recent victims (through 1930 and DigiKavach partners) and with the look-alike groups, before any build.</td></tr>
+<tr><td>Legal and privacy</td><td>The legal basis under the DPDP Act and its Rules to use payment history this way; what users are told; whether a payment app may hold a payment the user started; how warnings affect liability.</td><td>A design that uses only data the app already has. It does not read messages, contacts or other apps.</td></tr>
+<tr><td>Marketing</td><td>How to explain a warning without scaring people off UPI. A tie-in with DigiKavach ("Mauka Ganwao, Paise Bachao").</td><td>The "why am I seeing this?" screen and help article.</td></tr>
+<tr><td>Policy and partnerships</td><td>Links with I4C (a pre-filled 1930 report), DoT's risk indicator, RBI's intelligence platform, SEBI's <code>@valid</code> badges, and banks for money that leaves by bank transfer.</td><td>A short proposal for what signal Google could share back, and what it would get.</td></tr>
+<tr><td>Android safety</td><td>How this fits with the in-call screen-sharing alert, so no one gets two warnings for one payment.</td><td>Rules for which warning wins.</td></tr>
+</table></div>
+
+<h2><span class="n">9</span>Risks, and what I can't know from outside</h2>
+<h3>Risks</h3>
+<ul>
+<li><b>Coached victims.</b> Scammers already tell people what to tap. That is why the score, not the answer, drives later steps.</li>
+<li><b>Moving to another app.</b> A scammer can say "use a different app". A warning still plants doubt, but the real fix is sharing the signal across the industry.</li>
+<li><b>Unfair friction.</b> Freelancers, shopkeepers and students get more of it. Each needs its own budget.</li>
+<li><b>Holding money.</b> Delaying a payment someone chose to make is a serious step. It needs a clear legal basis and an easy way out.</li>
+<li><b>Scams change.</b> Scripts adapt. The score needs regular checks against fresh labels and someone actively trying to beat it.</li>
+<li><b>My numbers are simulated.</b> The direction should hold. The size of the gain must come from real data.</li>
+</ul>
+<h3>What I'd ask in my first week</h3>
+<ul>
+<li>What triggers today's million-plus weekly warnings, and how often do people stop after one?</li>
+<li>How much investment-scam money leaves through Google Pay, compared with net banking?</li>
+<li>How good are the scam labels, and how long until a scam is reported?</li>
+<li>Is there already a count of first-time payers per receiving ID?</li>
+</ul>
+
+<h2><span class="n">10</span>Method and code</h2>
+<p>All code is in the <a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/google-pay-slow-scam">repository</a>:</p>
+<ul>
+<li><code>src/engine.js</code>: the scoring engine and the fatigue rules. The prototype above runs this file.</li>
+<li><code>src/simulate.js</code>: builds the population and compares the policies. Every rate is written down there as an assumption.</li>
+<li><code>sql/metrics.sql</code>: DuckDB queries on a sample of the payments. One query recomputes the "new people in 7 days" signal in SQL and checks it against the engine: {{sqlChecked}} payments, 0 differences.</li>
+<li><code>test/engine.test.js</code>: {{nTests}} tests, including each look-alike case.</li>
+</ul>
+<details><summary>Main assumptions in the simulation</summary>
+<ul>
+<li>Victim share oversampled to {{victimRate}} so there are enough journeys to measure. Precision is reported at realistic rates instead.</li>
+<li>Task scams: 1–3 bait credits of ₹100–800, then 4–8 payments starting at ₹800–2,500 and growing 1.6–3x each time. Stock-tips scams: first deposit ₹5,000–25,000, a ₹1,000–5,000 "profit" a few days later, then 4–11 deposits growing 1.2–2.2x, capped at ₹1 lakh each; half later move money by bank transfer (1–4x more). Quick scams: 2–5 payments from ₹199.</li>
+<li>Receiving IDs: a new one 75% of the time. They are about a day old at most; the chance one is already on a fraud list grows with age (half-life about 2 days).</li>
+<li>Innocent IDs wrongly on a list: 0.05% of payments to people.</li>
+<li>Responses: 3% stop after the question only (when answered falsely); 35% after a full warning, 70% as effective each repeat; 60% after a hold. 60% of victims answer the question honestly. 3% of genuine users answer "investment" for a payment to a person. Genuine users abandon 8% of payments after a full warning, 15% after a hold.</li>
+</ul></details>
+
+<h2>Sources</h2>
+<ol class="src">
+<li><a href="https://ianslive.in/indians-lose-over-rs-52976-crore-to-cyber-frauds-over-six-years-report--20260103154943">IANS: Indians lose over ₹52,976 crore to cyber frauds over six years (I4C data; ₹19,813 crore in 2025)</a></li>
+<li><a href="https://moneylife.in/article/housing-society-problems-and-solutions-occupancy-rights-leakage-disputes-and-agm-decisions/article/fraud-alert-india-is-losing-over-22000-crore-a-year-in-cyber-scams-and-the-worst-is-yet-to-come/80612.html">Moneylife: India is losing over ₹22,000 crore a year in cyber scams (76% to investment schemes; recovery)</a></li>
+<li><a href="https://www.dhyeyaias.com/current-affairs/daily-pre-pare/view/cheating-and-financial-fraud">Summary of I4C 2025 data (investment schemes ~77% of losses)</a></li>
+<li><a href="https://www.thequint.com/news/webqoof/wef-cybersecurity-report-flags-cyber-fraud-as-pervasive-threat">The Quint: UPI frauds ₹805 crore, Jan–Nov 2025 (Parliament reply)</a></li>
+<li><a href="https://blog.google/intl/en-in/company-news/googles-safety-charter-for-indias-ai-led-transformation/">Google India blog: Safety Charter (Google Pay, 41 million warnings in 2024)</a></li>
+<li><a href="https://blog.google/intl/en-in/company-news/protecting-vulnerable-audiences-is-at-the-heart-of-ai-safety-efforts/">Google India blog: Protecting vulnerable audiences (screen-sharing pilot, Scam Detection, DigiKavach)</a></li>
+<li><a href="https://techcrunch.com/2025/11/20/google-steps-up-ai-scam-protection-in-india-but-gaps-remain">TechCrunch: Google steps up AI scam protection in India, but gaps remain (Pixel 9, English only)</a></li>
+<li><a href="https://www.business-standard.com/industry/news/google-fraud-warning-feature-epnv-otp-replacement-india-125112001218_1.html">Business Standard: Google Pay shows over 1 million warnings a week</a></li>
+<li><a href="https://www.indiatvnews.com/technology/news/googles-new-android-safety-feature-warns-users-when-opening-banking-apps-during-unknown-calls-2025-12-08-1020795">India TV: Android in-call protection and the 30-second delay</a></li>
+<li><a href="https://www.bk.mufg.jp/global/globalnetwork/asiaoceania/pdf/RBI_advisory_on_frauds.pdf">RBI advisory on investment, part-time job and ponzi scams (UPI details updated daily; mule accounts)</a></li>
+<li><a href="https://www.axis.bank.in/fraud-awareness/prevent-frauds/investment-and-task-based-fraud">Axis Bank: investment and task-based fraud (check the receiver's name and the first commission)</a></li>
+<li><a href="https://www.business-standard.com/amp/finance/personal-finance/pay-safe-invest-smart-sebi-s-new-valid-upi-handles-protect-your-money-125100200130_1.html">Business Standard: SEBI's @valid UPI handles</a></li>
+<li><a href="https://www.policyedge.in/p/i4c-and-rbih-partner-to-use-ai-for-detecting-mule-accounts-and-financial-fraud">Policy Edge: I4C and RBIH partner on MuleHunter.AI (May 2026)</a></li>
+<li><a href="https://www.business-standard.com/industry/news/dot-launches-financial-fraud-risk-indicator-to-aid-cybercrime-detection-125052101912_1.html">Business Standard: DoT's Financial Fraud Risk Indicator</a></li>
+<li><a href="https://www.outlookbusiness.com/economy-and-policy/phonepe-google-pay-combined-upi-market-share-drops-below-80-for-first-time">Outlook Business: UPI app market share, May 2026</a> and <a href="https://startuptalky.com/upi-hits-record-23-2-billion-transactions-in-may-2026-transaction/">StartupTalky: 23.2 billion UPI transactions in May 2026</a></li>
+<li><a href="https://www.nottingham.ac.uk/cedex/documents/papers/cedex-discussion-paper-2023-08.pdf">University of Nottingham CeDEx: interventions against authorised push payment fraud (81% vs 18%)</a></li>
+<li><a href="https://www.ukfinance.org.uk/news-and-insight/blog/how-understanding-human-behaviour-key-effective-prevention-app-fraud">UK Finance: static warnings are no longer effective; fraudsters coach victims</a></li>
+<li><a href="https://www.finextra.com/pressarticle/103066/banks-scam-warnings-failing-to-stop-their-customers-taking-risks-to-make-payments">Finextra: only a third of UK adults read fraud warnings</a></li>
+<li><a href="https://www.businesstoday.in/personal-finance/banking/story/npci-to-tighten-upi-rules-peer-to-peer-collect-feature-to-end-in-october-489244-2025-08-13">Business Today: NPCI ends person-to-person collect requests (Oct 2025)</a></li>
+</ol>
+
+<footer><span>Aditya Mathur · Bengaluru</span><a href="https://adimathur-creates.github.io/">More product work</a><a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a><span>Simulation generated {{generated}} · seed {{seed}}</span></footer>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>{{ENGINE}}</script>
+<script>{{STORIES}}</script>
+<script>
+var DATA = {{DATA}};
+(function(){
+'use strict';
+var E = window.SlowScam, S = window.SlowScamStories, cfg = E.DEFAULT_CONFIG, th = cfg.thresholds;
+var inr = function(n){ return '₹' + Math.round(n).toLocaleString('en-IN'); };
+var esc = function(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+
+/* ---------- tooltips on chart marks ---------- */
+var tip = document.getElementById('tip');
+document.querySelectorAll('[data-tip]').forEach(function(el){
+  el.addEventListener('mousemove', function(ev){ tip.textContent = el.getAttribute('data-tip'); tip.style.opacity = 1; tip.style.left = (ev.clientX + 12) + 'px'; tip.style.top = (ev.clientY + 12) + 'px'; });
+  el.addEventListener('mouseleave', function(){ tip.style.opacity = 0; });
+});
+
+/* ---------- prototype ---------- */
+var lang = 'en', storyIdx = 0, step = 0, played = [], phase = 'pay', answer = null, timer = null;
+var T = {
+  en: {
+    ask: 'Quick check before you pay', what: "What's this payment for?", why1: 'We ask because this is your first payment to this person.',
+    chips: [['family','Family or friend'],['rent','Rent or deposit'],['buy','Buying something'],['invest','Investment or trading'],['task','A job or task'],['other','Something else']],
+    t2inv: 'This looks like an investment scam', t2task: 'This looks like a task-job scam', t2gen: 'This payment looks like a scam',
+    why: 'Why we think so', valid: 'Real investments go to an @valid UPI ID with a green thumbs-up. This is a personal account.',
+    coach: 'Scammers often tell people to ignore this screen.', dont: "Don't pay now", talk: 'Talk to someone I trust first', payAnyway: 'Pay anyway', wait: 'Pay anyway (wait {s}s)',
+    t3: 'We have paused this payment for 4 hours', t3b: 'If someone is pushing you to pay quickly, that is a warning sign. The payment goes out in 4 hours unless you cancel it.',
+    cancel: 'Cancel payment', call: 'Call 1930 (cyber crime helpline)', keep: 'Keep it scheduled',
+    remind: 'Reminder: we warned you about a similar payment recently', paid: 'Payment sent', stopped: 'Payment not sent. Nothing left your account.', held: 'Payment scheduled for 4 hours from now. You can still cancel it.',
+    pay: 'Pay', received: 'Money received'
+  },
+  hi: {
+    ask: 'पैसे भेजने से पहले एक सवाल', what: 'यह पैसे किसलिए भेज रहे हैं?', why1: 'हम इसलिए पूछ रहे हैं क्योंकि आप इन्हें पहली बार पैसे भेज रहे हैं।',
+    chips: [['family','परिवार या दोस्त'],['rent','किराया या डिपॉज़िट'],['buy','कुछ ख़रीद रहे हैं'],['invest','निवेश या ट्रेडिंग'],['task','कोई जॉब या टास्क'],['other','कुछ और']],
+    t2inv: 'यह निवेश वाली ठगी जैसा दिख रहा है', t2task: 'यह "टास्क जॉब" वाली ठगी जैसा दिख रहा है', t2gen: 'यह भुगतान ठगी जैसा दिख रहा है',
+    why: 'हमें ऐसा क्यों लग रहा है', valid: 'असली निवेश हमेशा @valid UPI ID पर जाता है, जिस पर हरा अंगूठा दिखता है। यह एक निजी खाता है।',
+    coach: 'ठग अक्सर कहते हैं कि इस चेतावनी को अनदेखा करें।', dont: 'अभी न भेजें', talk: 'पहले किसी भरोसेमंद से बात करें', payAnyway: 'फिर भी भेजें', wait: 'फिर भी भेजें ({s} सेकंड रुकें)',
+    t3: 'हमने यह भुगतान 4 घंटे के लिए रोक दिया है', t3b: 'अगर कोई आप पर जल्दी पैसे भेजने का दबाव डाल रहा है, तो यह ख़तरे का संकेत है। अगर आप रद्द नहीं करते, तो भुगतान 4 घंटे बाद जाएगा।',
+    cancel: 'भुगतान रद्द करें', call: '1930 पर कॉल करें (साइबर क्राइम हेल्पलाइन)', keep: 'भुगतान रहने दें',
+    remind: 'याद दिला दें: हाल ही में हमने ऐसे ही एक भुगतान पर चेतावनी दी थी', paid: 'भुगतान हो गया', stopped: 'भुगतान नहीं भेजा गया। आपके खाते से कुछ नहीं गया।', held: 'भुगतान 4 घंटे बाद जाएगा। आप अभी भी रद्द कर सकते हैं।',
+    pay: 'भेजें', received: 'पैसे मिले'
+  }
+};
+var REASON_HI = { 'new':'आप इन्हें पहली बार पैसे भेज रहे हैं', vel:'पिछले 7 दिनों में आपने कई नए लोगों को पैसे भेजे हैं', bait:'किसी अजनबी ने आपको थोड़े पैसे भेजे थे, और अब आप किसी दूसरे अजनबी को भेज रहे हैं', esc:'यह रकम पिछली बार से कहीं ज़्यादा है', cum:'नए लोगों को भेजी गई कुल रकम आपके आम महीने से बहुत ज़्यादा है', fan:'आज इस UPI ID को कई अलग-अलग लोगों ने पहली बार पैसे भेजे हैं', listed:'यह UPI ID सरकारी धोखाधड़ी सूची में है', round:'पूरी गोल रकम' };
+
+var tabs = document.getElementById('storyTabs');
+S.STORIES.forEach(function(s, i){
+  var b = document.createElement('button'); b.textContent = s.who.split(',')[0] + ' · ' + s.kind; b.setAttribute('aria-pressed', i === 0);
+  b.onclick = function(){ storyIdx = i; reset(); Array.prototype.forEach.call(tabs.children, function(c, j){ c.setAttribute('aria-pressed', j === i); }); };
+  tabs.appendChild(b);
+});
+function reset(){ played = S.play(E, S.STORIES[storyIdx], cfg); step = 0; phase = 'pay'; answer = null; render(); }
+function cur(){ return played[step]; }
+function topReasons(res){ return res.signals.filter(function(s){ return s.pts > 0.25; }).sort(function(a,b){ return b.pts - a.pts; }).slice(0, 3); }
+function reasonText(s){ return lang === 'hi' ? (REASON_HI[s.id] || s.label) : s.label; }
+function effTier(p){ if (!p.res) return 0; var t = p.tier; if (t === 1 && answer && (answer === 'invest' || answer === 'task')) t = 2; return t; }
+
+function phone(){
+  var p = cur(), L = T[lang], st = S.STORIES[storyIdx], body = document.getElementById('phBody');
+  document.getElementById('phWho').textContent = st.who.split(',')[0];
+  if (timer) { clearInterval(timer); timer = null; }
+  var raw = p.raw, name = raw.name, init = name.replace(/[^A-Za-z]/g,'').slice(0,1).toUpperCase();
+  var head = '<div class="payee"><div class="avatar">' + esc(init) + '</div><div style="font-weight:600">' + esc(name) + '</div><div class="amt">' + inr(raw.amt) + '</div><div class="id">' + esc(raw.cp.indexOf('@') > -1 ? raw.cp : raw.cp + '@oksbi') + '</div>' + (p.e.cpType === 'valid' ? '<span class="badge">&#128077; SEBI-verified @valid</span>' : '') + '</div>';
+  if (p.e.dir === 'in') { body.innerHTML = '<div class="done"><div style="font-size:13px;color:#5d6370">' + L.received + '</div><div style="font-size:30px;font-weight:700;margin:4px 0">+' + inr(raw.amt) + '</div><div>' + esc(name) + '</div></div>'; return; }
+  var t = effTier(p), html = head;
+  if (phase === 'done-paid') html += '<div class="done">&#10003; ' + L.paid + '</div>';
+  else if (phase === 'done-stopped') html += '<div class="done">' + L.stopped + '</div>';
+  else if (phase === 'done-held') html += '<div class="done">' + L.held + '</div>';
+  else if (phase === 'pay' && t === 0) html += '<button class="paybtn" id="payGo">' + L.pay + ' ' + inr(raw.amt) + '</button>';
+  else if (t === 1 && !answer) {
+    var rem = (p.res.score >= th.t2) ? '<p style="margin:0 0 6px;color:#8a4b0f">' + L.remind + '</p>' : '';
+    html += '<div class="sheet"><h4>' + L.ask + '</h4>' + rem + '<div>' + L.what + '</div><div class="chips">' + L.chips.map(function(c){ return '<button data-a="' + c[0] + '">' + c[1] + '</button>'; }).join('') + '</div><p style="font-size:12.5px;color:#5d6370;margin:8px 0 0">' + L.why1 + '</p></div>';
+  } else if (t === 1 && answer) html += '<button class="paybtn" id="payGo">' + L.pay + ' ' + inr(raw.amt) + '</button>';
+  else if (t === 2) {
+    var title = answer === 'task' ? L.t2task : answer === 'invest' ? L.t2inv : (S.STORIES[storyIdx].kind === 'Task scam' ? L.t2task : L.t2inv);
+    if (S.STORIES[storyIdx].truth === 'genuine' && !answer) title = L.t2gen;
+    html += '<div class="sheet s2"><h4>&#9888; ' + title + '</h4><div style="font-weight:600;font-size:13px">' + L.why + '</div><ul>' + topReasons(p.res).map(function(s){ return '<li>' + esc(reasonText(s)) + '</li>'; }).join('') + '<li>' + L.valid + '</li></ul><div style="font-size:13px">' + L.coach + '</div><div class="cta"><button class="go" id="dont">' + L.dont + '</button><button id="talk">' + L.talk + '</button><button class="ghost" id="anyway" disabled>' + L.wait.replace('{s}', 30) + '</button></div></div>';
+  } else if (t === 3) {
+    html += '<div class="sheet s3"><h4>&#9940; ' + L.t3 + '</h4><p style="margin:0 0 6px">' + L.t3b + '</p><ul>' + topReasons(p.res).map(function(s){ return '<li>' + esc(reasonText(s)) + '</li>'; }).join('') + '</ul><div class="cta"><button class="stop" id="cancel">' + L.cancel + '</button><button id="call">' + L.call + '</button><button class="ghost" id="keep">' + L.keep + '</button></div></div>';
+  }
+  body.innerHTML = html;
+  var g = function(id){ return document.getElementById(id); };
+  if (g('payGo')) g('payGo').onclick = function(){ phase = 'done-paid'; render(); };
+  body.querySelectorAll('.chips button').forEach(function(b){ b.onclick = function(){ answer = b.getAttribute('data-a'); render(); }; });
+  if (g('dont')) g('dont').onclick = function(){ phase = 'done-stopped'; render(); };
+  if (g('talk')) g('talk').onclick = function(){ phase = 'done-stopped'; render(); };
+  if (g('cancel')) g('cancel').onclick = function(){ phase = 'done-stopped'; render(); };
+  if (g('call')) g('call').onclick = function(){ phase = 'done-stopped'; render(); };
+  if (g('keep')) g('keep').onclick = function(){ phase = 'done-held'; render(); };
+  if (g('anyway')) { var s = 30, a = g('anyway'); timer = setInterval(function(){ s--; if (s <= 0) { clearInterval(timer); timer = null; a.disabled = false; a.textContent = L.payAnyway; a.onclick = function(){ phase = 'done-paid'; render(); }; } else a.textContent = L.wait.replace('{s}', s); }, 1000); }
+}
+
+function panel(){
+  var p = cur(), st = S.STORIES[storyIdx], raw = p.raw;
+  var d = new Date(Date.UTC(2026, 10, 1) + (raw.t - 31 * 1440) * 60000);
+  var when = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' }) + ', ' + d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' });
+  document.getElementById('pCtx').innerHTML = '<b>' + esc(st.who) + '</b> · ' + (st.truth === 'scam' ? 'scam victim' : 'genuine') + '. ' + esc(st.intro);
+  document.getElementById('pNote').innerHTML = '<b>' + when + ':</b> ' + (p.e.dir === 'in' ? 'receives ' : 'pays ') + inr(raw.amt) + (p.e.dir === 'in' ? ' from ' : ' to ') + esc(raw.name) + '. <span class="note">' + esc(raw.note || '') + '</span>';
+  var meter = document.getElementById('pMeter'), sigs = document.getElementById('pSigs');
+  if (!p.res) { meter.style.display = 'none'; sigs.innerHTML = '<p class="note">Incoming money is not scored. The engine remembers who sent it: a later payment to a different stranger can count as the "bait" pattern.</p>'; }
+  else {
+    meter.style.display = 'block';
+    var max = 11, sc = Math.max(0, p.res.score), t = effTier(p);
+    var col = t >= 3 ? 'var(--bad)' : t === 2 ? 'var(--warn)' : t === 1 ? 'var(--s1)' : 'var(--muted)';
+    meter.innerHTML = '<div class="fill" style="width:' + Math.min(100, sc / max * 100) + '%;background:' + col + '"></div>' + [['question', th.t1], ['warning', th.t2], ['hold', th.t3]].map(function(x){ return '<div class="tick" style="left:' + (x[1] / max * 100) + '%"><span>' + x[0] + ' ' + x[1] + '</span></div>'; }).join('');
+    sigs.innerHTML = '<div style="font-weight:600;margin-bottom:4px">Score ' + p.res.score.toFixed(1) + ' &rarr; <span class="pill p' + t + '">' + ['no friction','question','full warning','hold'][t] + '</span>' + (p.tier < p.res.tier ? ' <span class="note">(stepped down by fatigue rules)</span>' : '') + (p.tier === 1 && t === 2 ? ' <span class="note">(answer sent it to a warning)</span>' : '') + '</div>' +
+      p.res.signals.map(function(s){ return '<div class="sig"><span>' + esc(s.label) + '</span><span class="pts">' + (s.pts > 0 ? '+' : '') + s.pts.toFixed(1) + '</span></div>'; }).join('');
+  }
+  document.getElementById('pSteps').textContent = 'Event ' + (step + 1) + ' of ' + played.length;
+  document.getElementById('prevBtn').disabled = step === 0;
+  document.getElementById('nextBtn').disabled = step === played.length - 1;
+}
+function render(){ phone(); panel(); }
+document.getElementById('nextBtn').onclick = function(){ if (step < played.length - 1) { step++; phase = 'pay'; answer = null; render(); } };
+document.getElementById('prevBtn').onclick = function(){ if (step > 0) { step--; phase = 'pay'; answer = null; render(); } };
+document.getElementById('resetBtn').onclick = reset;
+document.getElementById('langEn').onclick = function(){ lang = 'en'; this.setAttribute('aria-pressed', true); document.getElementById('langHi').setAttribute('aria-pressed', false); render(); };
+document.getElementById('langHi').onclick = function(){ lang = 'hi'; this.setAttribute('aria-pressed', true); document.getElementById('langEn').setAttribute('aria-pressed', false); render(); };
+reset();
+
+/* ---------- assumption sliders ---------- */
+var H = DATA.heed, ids = ['h2', 'decay', 'h3'];
+ids.forEach(function(id){ var el = document.getElementById(id); el.value = H[id]; el.oninput = recompute; });
+function ev(tiers, r, h){ var P = 1, k = 0, av = 0; for (var i = 0; i < tiers.length; i++) { var t = +tiers[i], x = 0; if (t === 1) x = h.h1; if (t === 2) { x = h.h2 * Math.pow(h.decay, k); k++; } if (t === 3) { x = h.h3 * Math.pow(h.decay, k); k++; } av += P * x * r[i]; P *= 1 - x; } return av; }
+function recompute(){
+  var h = { h1: H.h1, h2: +document.getElementById('h2').value, decay: +document.getElementById('decay').value, h3: +document.getElementById('h3').value };
+  ids.forEach(function(id){ document.getElementById('o_' + id).textContent = Math.round(h[id] * 100) + '%'; });
+  var L = 0, J = 0, A = 0;
+  DATA.traces.forEach(function(t){ L += t.L; J += ev(t.j, t.r, h); A += ev(t.m, t.r, h); });
+  document.getElementById('liveJ').textContent = (100 * J / L).toFixed(1) + '%';
+  document.getElementById('liveA').textContent = (100 * A / L).toFixed(1) + '%';
+}
+recompute();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+== base ==
+ Count
+275441
+
+== newish ==
+ Count
+ 39108
+
+== check_velocity ==
+ payments_checked  mismatches
+             7071           0
+
+== journey_shape ==
+archetype  victims  payments_per_victim  receiving_ids_per_victim  median_first_payment  median_step_up  median_last_payment  median_days_on_app
+    quick       60                  3.3                       2.6                1334.5            1.78               2270.0                 0.3
+    stock      145                  8.2                       6.5               16000.0            1.25             100000.0                12.0
+     task      153                  6.0                       4.7                1900.0            2.19              70000.0                 2.1
+
+== bait_rate ==
+           kind  payments  pct_after_stranger_credit
+genuine payment      1292                       30.6
+   scam payment      2293                       79.3
+
+== score_bands ==
+   kind  payments  pct_question_or_above  pct_warning_or_above  pct_hold
+genuine      1292                  14.63                  2.17      0.23
+   scam      2293                  84.61                 70.69     22.20
+
+== persona_friction ==
+   persona  payers  raw_warnings_per_1k_month
+freelancer      61                       73.8
+     mover      50                       10.0
+     buyer      68                        7.4
+    trader      71                        7.0
+   student     149                        3.4
+  investor      70                        0.0
+ emergency      31                        0.0
+  everyday     500                        0.0
