@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Complete on first submit · a first program increment for real-time prior authorization · Aditya Mathur</title>
+<meta name="description" content="Real-time prior authorization only works when a request arrives complete. A backlog, user stories with acceptance criteria, process flows, personas, a working prototype and a release plan for the 1 January 2027 Prior Authorization API, written as an Associate Technical Product Manager would.">
+<style>
+:root{--bg:#fafaf8;--surface:#fff;--ink:#16191d;--ink-soft:#3b414b;--muted:#5d6370;--line:#e4e3de;--accent:#185a7d;--accent-soft:#e7f0f5;--tag:#f0efea;--good:#1f6b45;--good-soft:#e5f3eb;--bad:#a5332a;--bad-soft:#fbeae8;--warn:#8a5a10;--warn-soft:#fbf1df;--s1:#2a78d6;--s2:#eb6834;--grid:#ebeae6;--lane1:#f6f5f1;--lane2:#fbfaf7}
+@media (prefers-color-scheme:dark){:root{--bg:#101215;--surface:#171a1f;--ink:#e9ebee;--ink-soft:#c3c8d0;--muted:#9aa1ad;--line:#2a2e36;--accent:#7cc0e6;--accent-soft:#16242d;--tag:#1f232a;--good:#6fd09c;--good-soft:#142a1e;--bad:#f09186;--bad-soft:#2d1816;--warn:#f0b86e;--warn-soft:#2a2214;--s1:#3987e5;--s2:#d95926;--grid:#24272d;--lane1:#14171b;--lane2:#181b20}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent);text-underline-offset:3px}
+.wrap{max-width:980px;margin:0 auto;padding:44px 18px 80px}
+.kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.08;margin:0 0 12px;letter-spacing:-.02em}
+.lede{font-size:19px;color:var(--muted);margin:0 0 14px;max-width:760px}
+.byline{font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 16px}
+.disclaimer{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding:4px 0 4px 12px;margin:18px 0 0}
+h2{font-size:24px;line-height:1.2;margin:56px 0 10px;letter-spacing:-.01em}
+h2 .n{color:var(--muted);font-weight:500;margin-right:6px}
+h3{font-size:17px;margin:26px 0 6px}
+p{margin:0 0 12px}ul,ol{margin:0 0 14px;padding-left:22px}li{margin:5px 0}
+.tldr{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:28px 0 0}
+.tldr h2{margin:0 0 10px;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 6px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px;line-height:1.1}
+.stat span{font-size:13.5px;color:var(--muted);display:block;margin-top:4px;line-height:1.35}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0 14px;background:var(--surface);border:1px solid var(--line)}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--tag)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.cut td{background:var(--warn-soft)}
+.tablewrap{overflow-x:auto}
+table.journey{font-size:13px}table.journey td{min-width:110px}
+tr.j-pain td{background:var(--bad-soft)}tr.j-target td{background:var(--good-soft)}
+.note{font-size:13.5px;color:var(--muted);font-weight:400}
+.callout{background:var(--accent-soft);border-radius:12px;padding:14px 16px;margin:14px 0}
+.callout.warn{background:var(--warn-soft)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h3{margin-top:0}.quote{font-style:italic;color:var(--ink-soft);margin:0}
+figure{margin:16px 0 18px}figcaption{font-size:13.5px;color:var(--muted);margin-top:6px}
+.chart svg,.flow svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-size:12px;font-family:inherit}
+.flow{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.flow text{font-family:inherit}.flow .lane{fill:var(--ink);font-size:13px;font-weight:600}.flow .lanesub{fill:var(--muted);font-size:11px}
+.flow .node{fill:var(--ink);font-size:12.5px}.flow .elabel{fill:var(--muted);font-size:11.5px;font-style:italic}
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 13px;margin:8px 0}
+summary{cursor:pointer;font-size:14.5px}summary .sid{font-weight:700;margin-right:4px}summary .pts{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.ac p{font-size:14px;background:var(--tag);border-radius:8px;padding:8px 10px;margin:8px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.55}
+code{font-size:13.5px;background:var(--tag);padding:1px 5px;border-radius:5px}
+.proto{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;margin:12px 0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+.tabs button,.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.ehr{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ehr-head{background:var(--tag);padding:10px 14px;font-size:13.5px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ehr-body{padding:14px}
+.crd{border-radius:10px;padding:9px 12px;font-size:14px;margin-bottom:12px;background:var(--warn-soft)}
+.q{display:grid;grid-template-columns:1fr 210px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.q:last-child{border-bottom:0}.q .src{font-size:12px;color:var(--muted)}.q .src.chart{color:var(--good)}.q .src.miss{color:var(--bad)}
+.q input,.q select{font:inherit;font-size:14px;padding:5px 7px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);width:100%}
+.q .filled{font-weight:600}
+.q.hidden{opacity:.45}
+.toggle{display:flex;gap:8px;align-items:center;font-size:14px;margin:10px 0}
+.result{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14.5px}
+.result.ok{background:var(--good-soft)}.result.pend{background:var(--bad-soft)}.result.review{background:var(--accent-soft)}.result.hold{background:var(--warn-soft)}
+pre.json{background:var(--tag);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.45;max-height:520px;overflow:auto;margin:0;white-space:pre-wrap}
+.calc{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:10px 0}
+.calc label{font-size:13.5px;color:var(--muted);display:block}.calc input{width:100%}.calc output{font-weight:600;color:var(--ink)}
+.funnel{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.fbar{display:flex;align-items:center;gap:10px;font-size:14px}.fbar .b{height:26px;border-radius:6px;background:var(--s1);min-width:2px;transition:width .2s}.fbar .t{white-space:nowrap}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:6px 9px;border-radius:8px;opacity:0;z-index:10;max-width:260px}
+.src-list{font-size:14px}.src-list li{margin:4px 0}
+footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px}
+@media (max-width:820px){.stats{grid-template-columns:1fr 1fr}.grid2,.grid4,.proto,.calc{grid-template-columns:1fr}.q{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Product case · Prior authorization · US healthcare · November 2026</p>
+<h1>Complete on first submit</h1>
+<p class="lede">Health plans have promised real-time prior authorization by 2027. That promise only counts requests that arrive complete. This is the first program increment I would run as an Associate Technical Product Manager to get there for one service, lumbar spine MRI, before the 1 January 2027 Prior Authorization API deadline.</p>
+<div class="byline"><span>By <a href="https://adimathur-creates.github.io/">Aditya Mathur</a></span><span><a href="https://www.linkedin.com/in/adityaamathur">LinkedIn</a></span><span><a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/optum-complete-first-submit">Code, backlog files and tests</a></span></div>
+<p class="disclaimer">Independent work. I don't work at Optum or UnitedHealthcare, and this is not their product, plan or policy. Facts come from public sources listed at the end. The clinical rules are illustrative, based on the public ACR Appropriateness Criteria, not any health plan's medical policy. Patients and the 1,000-request sample are synthetic.</p>
+
+<section class="tldr">
+<h2>In one minute</h2>
+<ul>
+<li><b>The deadline.</b> From 1 January 2027, Medicare Advantage, Medicaid, CHIP and federal-exchange plans must run a FHIR Prior Authorization API that lets providers check requirements, submit, and track decisions.</li>
+<li><b>The promise.</b> UnitedHealthcare and about 50 other insurers pledged that at least 80% of electronic prior-auth approvals will be answered in real time by 2027. The pledge only covers requests sent electronically <i>with all the clinical documentation needed</i>.</li>
+<li><b>The gap.</b> Completeness is the bottleneck. In my synthetic sample, pre-filling from the chart alone completed {{completeA}}% of requests. Asking for only the missing items before submit raised that to {{completeB}}%.</li>
+<li><b>Two findings that shaped the backlog.</b> "No red flags" can never be pre-filled: a blank chart isn't a clinician saying "none", so it blocked {{topPct}}% of incomplete requests. After that fix, the 30-day office-note rule was the top remaining blocker ({{topBPct}}%). So one story adds a one-tap confirmation, and one spike challenges the rule.</li>
+<li><b>What is here.</b> Personas, a journey map, today-vs-target process flows, a working prototype, {{nStories}} user stories with Given/When/Then criteria, WSJF priorities, a sprint plan with a cut line for 1 January, OKRs, risks, and a backlog you can import into Rally or GitHub.</li>
+</ul>
+</section>
+
+<div class="stats">
+<div class="stat"><b>1 Jan 2027</b><span>Prior Authorization API deadline for impacted payers (CMS-0057-F)</span></div>
+<div class="stat"><b>80%</b><span>of complete electronic approvals to be real-time by 2027 (industry pledge)</span></div>
+<div class="stat"><b>40%</b><span>of medical prior authorizations were electronic in the 2025 CAQH Index</span></div>
+<div class="stat"><b>13 hrs</b><span>a week providers and staff spend on prior auth (Optum)</span></div>
+</div>
+
+<h2><span class="n">1</span>The problem, and why it is this team's problem now</h2>
+<ul>
+<li><b>Rules with dates.</b> The CMS Interoperability and Prior Authorization rule (CMS-0057-F) already requires decisions within 72 hours for urgent and 7 calendar days for standard requests, and a specific reason for every denial. Payers posted their first public prior-auth metrics on 31 March 2026. The FHIR API deadline, 1 January 2027, is the one most teams are least ready for.</li>
+<li><b>A promise with a condition.</b> AHIP is clear that the 80% target applies only when requests arrive electronically with all needed documentation. It does not mean 80% of all requests are approved instantly.</li>
+<li><b>Most requests aren't even electronic.</b> The 2025 CAQH Index puts electronic prior authorization at 40%, up from 31% in 2023.</li>
+<li><b>Incomplete requests cost days.</b> When documentation is missing, plans send a letter listing what is needed, typically within 3 business days, and the clock restarts on the provider's side. In Medicare Advantage, most appealed denials (81.7% in 2023) were overturned. KFF notes this may mean the first request lacked documentation.</li>
+<li><b>Most requests already get approved.</b> UnitedHealthcare says prior auth applies to about 2% of its medical services, and about 92% of requests are approved, in under 24 hours on average. So the friction sits in the incomplete requests, not in the typical one.</li>
+</ul>
+
+<h3>Where Optum already plays, and where this backlog fits</h3>
+<p>In February 2026 Optum launched two AI products for this exact problem. <b>Digital Auth Complete</b> (with Humata Health) sits in the EHR: it works out when prior auth is needed, gathers documentation and submits. <b>InterQual Auth Accelerator</b> helps payer reviewers check documentation against InterQual criteria, and Optum says it does not and will not automate denials. This case doesn't compete with either. It shows how I would break one slice of that work, for one service, into a backlog an engineering team can ship by 1 January, using the open HL7 Da Vinci standards (CRD to check coverage, DTR to pre-fill documentation, PAS to submit).</p>
+
+<h2><span class="n">2</span>Who it is for</h2>
+<div class="grid4">{{PERSONAS}}</div>
+<h3>Maria's journey, today and target</h3>
+<div class="tablewrap">{{JOURNEY}}</div>
+
+<h2><span class="n">3</span>The process, today and target</h2>
+<figure class="flow">{{TODAY}}</figure>
+<figcaption><b>Today.</b> The coordinator assembles the request by hand. If anything is missing, a pend letter starts a loop of chasing and resubmitting. That loop is where most of the delay sits.</figcaption>
+<figure class="flow">{{TARGET}}</figure>
+<figcaption><b>Target.</b> Coverage is checked in the order. The plan's questions arrive pre-filled from the chart. The clinician confirms red flags with one tap, the coordinator fills only what is missing, and the request goes through the API. Complete, clear requests are approved in real time. Anything else goes to a clinician, with a specific reason. Nothing is denied automatically.</figcaption>
+
+<h2><span class="n">4</span>Try it</h2>
+<p>Pick a patient. The left side is the order screen in the EHR; the right side is what the health plan receives. Switch "Ask before submit" off to see today's behavior.</p>
+<div class="tabs" id="ptTabs" role="group" aria-label="Choose a patient"></div>
+<div class="proto">
+  <div class="ehr">
+    <div class="ehr-head"><span id="ptName"></span><span>Order: MRI lumbar spine w/o contrast · CPT 72148</span></div>
+    <div class="ehr-body">
+      <p id="ptStory" class="note" style="margin-bottom:10px"></p>
+      <div class="crd" id="crd"></div>
+      <div id="qs"></div>
+      <div class="toggle"><input type="checkbox" id="gate" checked><label for="gate"><b>Ask before submit</b> (hold the request until required items are answered)</label></div>
+      <button class="btn primary" id="submit">Submit prior auth</button> <button class="btn" id="reset">Start over</button>
+      <div id="result"></div>
+    </div>
+  </div>
+  <div>
+    <div class="note" style="margin-bottom:6px">What the plan receives (simplified FHIR QuestionnaireResponse)</div>
+    <pre class="json" id="json"></pre>
+  </div>
+</div>
+
+<h2><span class="n">5</span>Evidence for the order of work</h2>
+<p>I simulated {{n}} lumbar MRI requests with realistic gaps in chart data, and ran them through the same rules in two ways. Every rate is an assumption, written down in <code>src/sample.js</code>; what carries over is the method.</p>
+<div class="grid2">
+<div class="card"><h3>Pre-fill only</h3><p><b>{{completeA}}%</b> complete on first submit. Everything else would be pended.</p></div>
+<div class="card"><h3>Pre-fill, then ask before submit</h3><p><b>{{completeB}}%</b> complete: {{autoB}}% approved in real time, {{reviewB}}% sent to a clinician, {{incB}}% still missing something. The rules auto-approved {{falseAuto}} requests whose true story did not meet them.</p></div>
+</div>
+<figure class="chart">{{PARETO}}<figcaption><b>What is missing, before and after asking.</b> "Red flags confirmed" dominates when you only pre-fill, because absence in a chart cannot be read as "none". After asking, the recent-note rule and the neuro exam are what is left. Synthetic data.</figcaption></figure>
+<p><b>What I would do with this:</b></p>
+<ul>
+<li>Put the one-tap red-flag confirmation (S3.2) and "never assume none" (S2.3) in the first two sprints. They unlock most of the gain for very little work.</li>
+<li>Take the recent-note rule back to the business as a question, not a given (spike S7.1). If structured answers already prove the case, does a reviewer still need the note? That is the "re-evaluate requirements" part of the job.</li>
+</ul>
+
+<h3>Why completeness, not the pledge number, is the metric to manage</h3>
+<p>The pledge measures real-time answers among requests that are already complete and electronic. Patients feel the whole funnel. Move the sliders.</p>
+<div class="calc">
+<label>Requests sent electronically: <output id="o_e"></output><input type="range" id="e" min="10" max="100" step="5" value="40"></label>
+<label>Complete on first submit: <output id="o_c"></output><input type="range" id="c" min="10" max="100" step="5" value="55"></label>
+<label>Clearly meet the rules (auto-approvable): <output id="o_m"></output><input type="range" id="m" min="10" max="100" step="5" value="55"></label>
+</div>
+<div class="funnel" id="funnel"></div>
+<p class="note" id="funnelNote"></p>
+
+<h2><span class="n">6</span>Goals</h2>
+<div class="grid2">{{OKRS}}</div>
+<div class="card"><h3>Guardrails</h3>{{GUARDRAILS}}</div>
+
+<h2><span class="n">7</span>The backlog</h2>
+<h3>Features, ranked by WSJF</h3>
+<p>Weighted shortest job first: (business value + time criticality + risk reduction) ÷ size, on a Fibonacci scale. WSJF ignores dependencies, so the sprint plan does not follow it blindly: F2 (pre-fill) has to land before F3 (ask what is missing) can work.</p>
+<div class="tablewrap">{{WSJF}}</div>
+<h3>User stories and acceptance criteria</h3>
+<p class="note">{{nStories}} stories, {{totalPts}} points in total, {{mustPts}} of them must-have for 1 January. Click a story to see its criteria.</p>
+{{STORIES}}
+<div class="grid2">
+<div class="card"><h3>Definition of Ready</h3>{{DOR}}</div>
+<div class="card"><h3>Definition of Done</h3>{{DOD}}</div>
+</div>
+<div class="card" style="margin-top:14px"><h3>Non-functional requirements</h3>{{NFRS}}</div>
+
+<h2><span class="n">8</span>Release plan to 1 January 2027</h2>
+<p>One team, two-week sprints, about 26 points a sprint, less over the holidays. This is the last increment before the deadline. In a real program the API work would have started much earlier; this shows how I would cut the final stretch.</p>
+<div class="tablewrap">{{SPRINTS}}</div>
+<div class="grid2">
+<div><h3>Dependencies</h3><div class="tablewrap">{{DEPS}}</div></div>
+<div><h3>Risks (ROAM)</h3><div class="tablewrap">{{RISKS}}</div></div>
+</div>
+<h3>How I would run backlog grooming (60 minutes)</h3>
+{{GROOMING}}
+<div class="callout warn"><b>What I'd ask in week one:</b> the real first-pass complete rate by service; which EHR partners can launch the questionnaire app today; who signs off clinical rules and how long it takes; and how pend reasons are coded now, so the dashboard can be built from day one.</div>
+
+<h2><span class="n">9</span>Files</h2>
+<ul>
+<li><a href="downloads/rally-backlog.csv">Backlog as CSV</a>: name, description, acceptance criteria, estimate, feature, iteration. Map the columns in Rally's importer.</li>
+<li><a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/optum-complete-first-submit/downloads/github-issues">The same stories as GitHub issue files</a>, with Gherkin criteria and the Definition of Done as a checklist.</li>
+<li><a href="downloads/questionnaire-lumbar-mri.json">The questionnaire as FHIR-style JSON</a>.</li>
+<li><a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/optum-complete-first-submit">Code</a>: <code>src/pa.js</code> (pre-fill and rules, the same file the prototype runs), <code>src/backlog.js</code> (one source for this page, the CSV and the issues), and {{nTests}} tests. The tests check the clinical rules and also the backlog: every story has criteria, and every sprint fits its capacity.</li>
+</ul>
+
+<h2>Sources</h2>
+<ol class="src-list">
+<li><a href="https://www.beckerspayer.com/?p=24162">Becker's Payer: API provisions apply from 1 January 2027; specific reasons for denials</a></li>
+<li><a href="https://connextglobal.com/cms-0057-f-electronic-prior-authorization-rcm-teams/">Connext: first public metrics 31 March 2026; the FHIR API deadline most teams are underprepared for</a></li>
+<li><a href="https://www.ensemblehp.com/?p=12621">Ensemble: 72 hours urgent, 7 calendar days standard</a></li>
+<li><a href="https://www.tegria.com/resources/thought-leadership/your-guide-to-cms-0057-f-compliance/">Tegria: who the rule covers; prior-auth status in the Patient Access API</a></li>
+<li><a href="https://www.ajmc.com/view/faq-prior-authorization-reform-will-changes-go-far-enough-by-2027-">AJMC: the 80% target applies only to complete electronic requests; volume down 11%; drugs proposal (Aug 2026)</a></li>
+<li><a href="https://www.healio.com/news/primary-care/20250623/hhs-announces-industry-pledge-to-reduce-and-simplify-prior-authorization">Healio: HHS announces the industry pledge, including UnitedHealthcare</a></li>
+<li><a href="https://www.ajmc.com/view/caqh-index-finds-20-billion-in-cost-savings-opportunities">AJMC on the 2025 CAQH Index: electronic prior auth at 40%</a></li>
+<li><a href="https://www.optum.com/en/newsroom/health-tech/optum-is-advancing-ai-powered-digital-prior-authorization.html">Optum newsroom: Digital Auth Complete, InterQual Auth Accelerator, 13 hours a week (Feb 2026)</a></li>
+<li><a href="https://www.beckershospitalreview.com/healthcare-information-technology/optum-rolls-out-ai-powered-prior-authorization-tools-for-payers-providers/">Becker's: "We do not and will not automate denials"</a></li>
+<li><a href="https://www.businesswire.com/news/home/20260505232091/en/">UnitedHealthcare via Business Wire: prior auth on about 2% of services, about 92% approved in under 24 hours</a></li>
+<li><a href="https://www.kff.org/f63a430">KFF: Medicare Advantage appeals, 81.7% overturned in 2023</a></li>
+<li><a href="https://www.uhcprovider.com/en/health-plans-by-state/texas-health-plans/tx-comm-plan-home/tx-cp-prior-auth/tx-pa-timelines.html">UHC provider site (Texas): letter listing missing clinical information within 3 business days</a></li>
+<li><a href="https://hl7.org/fhir/us/davinci-dtr/usecases.html">HL7 Da Vinci DTR: pre-fill from the EHR, prompt for what is missing</a></li>
+<li><a href="https://build.fhir.org/ig/HL7/davinci-dtr/en/security.html">HL7 Da Vinci DTR security: HIPAA minimum necessary for payer rules</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/34794594/">ACR Appropriateness Criteria, Low Back Pain (2021 update)</a></li>
+<li><a href="https://distilinfo.com/?p=8038">WEDI survey coverage: payers further along than providers</a></li>
+</ol>
+
+<footer><span>Aditya Mathur · Bengaluru</span><a href="https://adimathur-creates.github.io/">More product work</a><a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a><span>Sample generated {{generated}}</span></footer>
+</div>
+<div class="tip" id="tip"></div>
+<script>{{PA_JS}}</script>
+<script>{{PATIENTS_JS}}</script>
+<script>
+(function(){
+'use strict';
+var PAx = window.PA, PTS = window.PATIENTS.PATIENTS, TODAY = window.PATIENTS.TODAY;
+var esc = function(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+var tip = document.getElementById('tip');
+document.querySelectorAll('[data-tip]').forEach(function(el){
+  el.addEventListener('mousemove', function(ev){ tip.textContent = el.getAttribute('data-tip'); tip.style.opacity = 1; tip.style.left = (ev.clientX + 12) + 'px'; tip.style.top = (ev.clientY + 12) + 'px'; });
+  el.addEventListener('mouseleave', function(){ tip.style.opacity = 0; });
+});
+
+var OPTIONS = {
+  dx: ['', 'Low back pain', 'Low back pain with radiculopathy'],
+  redFlags: ['', 'None', 'History of cancer', 'Fever (possible infection)', 'Lumbar fracture', 'Cauda equina syndrome'],
+  neuroExam: ['', 'Normal', 'Mild deficit', 'Progressive deficit']
+};
+var cur = 0, manual = {}, submitted = null;
+var tabs = document.getElementById('ptTabs');
+PTS.forEach(function(p, i){ var b = document.createElement('button'); b.textContent = p.name; b.setAttribute('aria-pressed', i === 0); b.onclick = function(){ cur = i; manual = {}; submitted = null; Array.prototype.forEach.call(tabs.children, function(c, j){ c.setAttribute('aria-pressed', j === i); }); render(); }; tabs.appendChild(b); });
+
+function answers(){ return PAx.merge(PAx.prepopulate(PTS[cur].bundle, TODAY), manual); }
+function input(q, a){
+  var id = 'in_' + q.linkId, v = manual[q.linkId];
+  if (OPTIONS[q.linkId]) return '<select id="' + id + '">' + OPTIONS[q.linkId].map(function(o){ return '<option' + (v === o ? ' selected' : '') + ' value="' + esc(o) + '">' + (o || 'Choose…') + '</option>'; }).join('') + '</select>';
+  if (q.type === 'integer') return '<input type="number" min="0" max="200" id="' + id + '" placeholder="weeks" value="' + (v !== undefined ? v : '') + '">';
+  if (q.type === 'boolean') return '<label style="font-size:13.5px"><input type="checkbox" id="' + id + '"' + (v ? ' checked' : '') + ' style="width:auto"> Attach note</label>';
+  return '';
+}
+function render(){
+  var p = PTS[cur], pre = PAx.prepopulate(p.bundle, TODAY), A = answers(), req = PAx.requiredItems(A).map(function(q){ return q.linkId; });
+  document.getElementById('ptName').textContent = p.name + ' · ' + (p.urgency === 'urgent' ? 'urgent request' : 'standard request');
+  document.getElementById('ptStory').textContent = p.story;
+  document.getElementById('crd').innerHTML = '<b>Coverage check (in the order):</b> prior auth required for CPT 72148 for this member. Documentation needed: ' + PAx.QUESTIONNAIRE.item.filter(function(q){ return q.required; }).length + ' questions. <span class="note">Checked in about 1 second.</span>';
+  document.getElementById('qs').innerHTML = PAx.QUESTIONNAIRE.item.map(function(q){
+    var a = pre[q.linkId], hidden = q.required && req.indexOf(q.linkId) < 0;
+    var left = '<div>' + esc(q.text) + (q.required ? '' : ' <span class="note">(optional)</span>') + '<div class="src ' + (a ? 'chart' : (hidden ? '' : 'miss')) + '">' + (a ? 'From chart: ' + esc(a.evidence) : hidden ? 'Not needed: a red flag already justifies the scan' : 'Not in the chart as data') + '</div></div>';
+    var right = a ? '<div class="filled">' + esc(a.value === true ? 'Yes' : a.value === false ? 'No' : a.value) + '</div>' : hidden ? '<div class="note">Skipped</div>' : input(q, a);
+    return '<div class="q' + (hidden ? ' hidden' : '') + '">' + left + right + '</div>';
+  }).join('');
+  PAx.QUESTIONNAIRE.item.forEach(function(q){
+    var el = document.getElementById('in_' + q.linkId); if (!el) return;
+    el.onchange = function(){ var v = q.type === 'boolean' ? (el.checked || undefined) : q.type === 'integer' ? (el.value === '' ? undefined : Number(el.value)) : (el.value || undefined); if (v === undefined) delete manual[q.linkId]; else manual[q.linkId] = v; submitted = null; render(); };
+  });
+  var ev = PAx.evaluate(A), gate = document.getElementById('gate').checked;
+  document.getElementById('submit').textContent = (gate && !ev.complete) ? 'Submit (' + ev.missing.length + ' item' + (ev.missing.length > 1 ? 's' : '') + ' missing)' : 'Submit prior auth';
+  var r = document.getElementById('result');
+  if (!submitted) r.innerHTML = '';
+  else if (submitted === 'held') r.innerHTML = '<div class="result hold"><b>Held before sending.</b> Answer these first:<ul>' + ev.missing.map(function(m){ return '<li>' + esc(m.text) + ' <span class="note">' + esc(m.why) + '</span></li>'; }).join('') + '</ul></div>';
+  else if (submitted === 'sent') {
+    var due = new Date(PAx.decisionDue(TODAY + 'T10:00:00Z', p.urgency));
+    var dueTxt = due.toUTCString().slice(0, 16) + (p.urgency === 'urgent' ? ' (72 hours)' : ' (7 calendar days)');
+    if (ev.route === 'auto-approve') r.innerHTML = '<div class="result ok"><b>Approved in real time.</b> Tracking ID PA-' + (100000 + cur * 7919) + '. Rules met:<ul>' + ev.reasons.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul><span class="note">Illustrative rules, not a real policy.</span></div>';
+    else if (ev.route === 'clinical-review') r.innerHTML = '<div class="result review"><b>Sent to a clinician for review</b>, never denied automatically. Decision due by ' + dueTxt + '.<ul>' + ev.reasons.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    else r.innerHTML = '<div class="result pend"><b>Pended: more information needed.</b> This is today\'s loop: a letter, days of waiting, then a resubmission.<p style="margin:8px 0 0"><i>' + esc(PAx.pendNotice(ev.missing)) + '</i></p></div>';
+  }
+  var qr = { resourceType: 'QuestionnaireResponse', questionnaire: 'Questionnaire/' + PAx.QUESTIONNAIRE.id, status: ev.complete ? 'completed' : 'in-progress', subject: { display: p.name + ' (synthetic)' }, item: Object.keys(A).map(function(k){ return { linkId: k, answer: [{ value: A[k].value }], source: A[k].source, evidence: A[k].evidence }; }) };
+  document.getElementById('json').textContent = JSON.stringify(qr, null, 2);
+}
+document.getElementById('submit').onclick = function(){ var ev = PAx.evaluate(answers()); submitted = (document.getElementById('gate').checked && !ev.complete) ? 'held' : 'sent'; render(); };
+document.getElementById('reset').onclick = function(){ manual = {}; submitted = null; render(); };
+document.getElementById('gate').onchange = function(){ submitted = null; render(); };
+render();
+
+function funnel(){
+  var e = +document.getElementById('e').value, c = +document.getElementById('c').value, m = +document.getElementById('m').value;
+  document.getElementById('o_e').textContent = e + '%'; document.getElementById('o_c').textContent = c + '%'; document.getElementById('o_m').textContent = m + '%';
+  var n0 = 1000, n1 = Math.round(n0 * e / 100), n2 = Math.round(n1 * c / 100), n3 = Math.round(n2 * m / 100);
+  var rows = [['All requests', n0], ['Sent electronically', n1], ['Complete on first submit', n2], ['Approved in real time', n3]];
+  document.getElementById('funnel').innerHTML = rows.map(function(r){ return '<div class="fbar"><div class="b" style="width:' + (r[1] / n0 * 70) + '%"></div><span class="t"><b>' + r[1] + '</b> ' + r[0] + '</span></div>'; }).join('');
+  document.getElementById('funnelNote').textContent = 'Out of 1,000 requests, ' + n3 + ' get a real-time answer (' + (n3 / 10).toFixed(1) + '%). A plan can approve every complete, clearly eligible request instantly and still leave most patients waiting. Raising completeness from ' + c + '% moves the patient-facing number more than any change to the approval step.';
+}
+['e', 'c', 'm'].forEach(function(id){ document.getElementById(id).oninput = funnel; });
+funnel();
+})();
+</script>
+</body>
+</html>

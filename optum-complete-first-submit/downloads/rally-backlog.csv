@@ -1,0 +1,84 @@
+Name,Description,Acceptance Criteria,Plan Estimate,Feature,Iteration,Schedule State,Tags
+"S1.1 see whether a lumbar MRI order needs prior auth, and what documentation is required, while the order is still open","As a prior-auth coordinator, I want to see whether a lumbar MRI order needs prior auth, and what documentation is required, while the order is still open, so that I don't check a portal later.","Given a clinician signs an order for CPT 72148 for a member of a plan in scope
+When the order is signed
+Then the order shows ""Prior auth required: documentation needed"" within 2 seconds at the 95th percentile
+And the card links to the questionnaire
+
+Given the coverage service is down
+When the order is signed
+Then the order shows ""Could not check: use the portal"" and the order is never blocked","5","F1 Coverage check at order","Sprint 1","Defined","must-have;prior-auth;lumbar-mri"
+"S1.2 a clear ""No prior auth needed"" result with a reference number","As a coordinator, I want a clear ""No prior auth needed"" result with a reference number, so that I can schedule straight away.","Given the service does not need prior auth for this member
+When the order is signed
+Then the card says ""No prior auth needed"" with a reference number and date
+And the reference is saved on the order","3","F1 Coverage check at order","Sprint 1","Defined","must-have;prior-auth;lumbar-mri"
+"S2.1 the plan's questions pre-filled from the chart","As a coordinator, I want the plan's questions pre-filled from the chart, so that I don't re-type what is already there.","Given the chart has a back-pain diagnosis with an onset date, coded PT visits or an NSAID prescription
+When the questionnaire opens
+Then diagnosis, weeks of pain and weeks of conservative care are filled in
+And each filled answer is marked ""from chart""
+
+Given a value is not in the chart as data
+When the questionnaire opens
+Then that question is left blank, never guessed","8","F2 Pre-filled documentation questionnaire","Sprint 1","Defined","must-have;prior-auth;lumbar-mri"
+"S2.2 each pre-filled answer to show where it came from","As a nurse reviewer, I want each pre-filled answer to show where it came from, so that I can trust it without opening every document.","Given an answer was pre-filled
+When the reviewer opens the request
+Then the answer shows its source, for example ""PT visit 10 Sep 2026"" or ""Ibuprofen 3 Sep to 29 Oct""","3","F2 Pre-filled documentation questionnaire","Sprint 3","Defined","prior-auth;lumbar-mri"
+"S2.3 ""no red flags"" to be something I confirm, not something the system assumes from a blank chart","As an ordering clinician, I want ""no red flags"" to be something I confirm, not something the system assumes from a blank chart, so that the request is accurate.","Given no red-flag condition is coded in the chart
+When the questionnaire opens
+Then the red-flag question is left for the clinician, not filled as ""none""
+
+Given a red-flag condition is coded (for example history of cancer)
+When the questionnaire opens
+Then the red-flag answer is filled with that condition and marked ""from chart""","3","F2 Pre-filled documentation questionnaire","Sprint 1","Defined","must-have;prior-auth;lumbar-mri"
+"S2.4 the plan to read only the parts of my record it needs","As a member, I want the plan to read only the parts of my record it needs, so that my privacy is respected.","Given the questionnaire rules run
+When they query the chart
+Then they request only the resource types the questions need (HIPAA minimum necessary)
+And every query is written to an audit log with user, time and purpose","3","F2 Pre-filled documentation questionnaire","Sprint 1","Defined","must-have;prior-auth;lumbar-mri"
+"S3.1 a short list of only the unanswered required questions","As a coordinator, I want a short list of only the unanswered required questions, so that I can finish the request in one sitting.","Given required questions are unanswered
+When I press Submit
+Then submit is held and the missing items are listed with a one-line reason each
+And answering them enables Submit
+
+Given all required questions are answered
+When I press Submit
+Then the request is sent with no extra screen","5","F3 Ask only what is missing, before submit","Sprint 2","Defined","must-have;prior-auth;lumbar-mri"
+"S3.2 confirm red flags with one tap inside the order","As a clinician, I want to confirm red flags with one tap inside the order, so that I am not pulled back days later.","Given the red-flag question is unanswered
+When the clinician signs the order
+Then a one-tap prompt offers ""None"" or the listed red flags
+And the answer records who confirmed it and when","3","F3 Ask only what is missing, before submit","Sprint 2","Defined","must-have;prior-auth;lumbar-mri"
+"S3.3 I don't want to be asked about weeks of pain or treatment when a red flag already justifies the scan.","As a coordinator, I don't want to be asked about weeks of pain or treatment when a red flag already justifies the scan.","Given a red flag is answered
+When the questionnaire updates
+Then the weeks-of-pain and weeks-of-treatment questions are hidden and not required","2","F3 Ask only what is missing, before submit","Sprint 1","Defined","must-have;prior-auth;lumbar-mri"
+"S3.4 save a half-finished request and come back to it","As a coordinator, I want to save a half-finished request and come back to it, so that I can wait for a missing note.","Given a request has unanswered items
+When I choose Save draft
+Then the draft and its answers are kept for 14 days and listed in my queue","3","F3 Ask only what is missing, before submit","After go-live","Defined","prior-auth;lumbar-mri"
+"S4.1 submit the completed request electronically and get a tracking ID","As a coordinator, I want to submit the completed request electronically and get a tracking ID, so that I never fax.","Given a complete request
+When I press Submit
+Then it is sent through the Prior Authorization API and a tracking ID comes back within 5 seconds
+And a failed send is retried and shown clearly, never silently dropped","8","F4 Submit and track through the Prior Authorization API","Sprint 2","Defined","must-have;prior-auth;lumbar-mri"
+"S4.2 coordinator or clinician, I want to see the request status and the date a decision is due","As a member, coordinator or clinician, I want to see the request status and the date a decision is due, so that nobody has to call to ask.","Given a request is submitted as urgent
+When anyone with access views it
+Then it shows status and a decision due within 72 hours
+
+Given a request is submitted as standard
+When anyone with access views it
+Then it shows a decision due within 7 calendar days
+And status is also available to the member through the patient access API","5","F4 Submit and track through the Prior Authorization API","Sprint 2","Defined","must-have;prior-auth;lumbar-mri"
+"S4.3 complete requests that clearly meet the rules approved in real time, and everything else sent to a clinician","As a health plan, I want complete requests that clearly meet the rules approved in real time, and everything else sent to a clinician, so that we are fast and never auto-deny.","Given a complete request meets the rules
+When it is received
+Then it is approved within seconds with the rules that were met listed
+
+Given a complete request does not meet the rules
+When it is received
+Then it goes to the clinician review queue and is never denied automatically","5","F4 Submit and track through the Prior Authorization API","Sprint 3","Defined","must-have;prior-auth;lumbar-mri"
+"S5.1 a pend notice that lists exactly what is missing and how to send it","As a coordinator, I want a pend notice that lists exactly what is missing and how to send it, so that I fix it in one try.","Given a request is pended for missing information
+When the notice is sent
+Then it names each missing item, for example ""office note from the last 30 days"", and links to upload it","3","F5 Specific reasons and what to send","Sprint 2","Defined","must-have;prior-auth;lumbar-mri"
+"S5.2 a denial to state the specific reason and the appeal steps","As a clinician, I want a denial to state the specific reason and the appeal steps, so that I know what to do next.","Given a clinician reviewer denies a request
+When the decision is sent
+Then it includes the specific reason, the criteria used, and how to appeal or request a peer-to-peer review","3","F5 Specific reasons and what to send","Sprint 3","Defined","must-have;prior-auth;lumbar-mri"
+"S6.1 As the product team, we want a weekly view of first-pass complete rate, real-time decision rate and top missing items","As the product team, we want a weekly view of first-pass complete rate, real-time decision rate and top missing items, so that we know what to fix next.","Given a week of requests
+When the dashboard refreshes
+Then it shows the three numbers by plan and service, with the top 5 missing items","5","F6 Completeness and real-time dashboard","After go-live","Defined","prior-auth;lumbar-mri"
+"S7.1 As the product team, we want to test with clinical policy whether structured answers can replace the 30-day note for low-risk requests","As the product team, we want to test with clinical policy whether structured answers can replace the 30-day note for low-risk requests, so that we remove the biggest remaining cause of pends.","Given a sample of 100 past pended requests
+When clinical policy reviews them with and without the note
+Then we record how often the note changed the decision, and decide keep, relax or drop","2","F7 Challenge the 30-day note rule","Sprint 2 (spike)","Defined","prior-auth;lumbar-mri"

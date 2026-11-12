@@ -1,0 +1,112 @@
+{
+ "meta": {
+  "seed": 2026,
+  "n": 1000,
+  "assumptions": {
+   "dxCoded": 0.97,
+   "onsetStructured": 0.6,
+   "longPain": 0.65,
+   "careIfLong": 0.75,
+   "careStructured": 0.55,
+   "redFlag": 0.07,
+   "redFlagCoded": 0.75,
+   "neuroStructured": 0.45,
+   "noteInWindow": 0.8,
+   "noteAttached": 0.8,
+   "canAnswer": {
+    "dx": 0.98,
+    "symptomWeeks": 0.92,
+    "conservativeWeeks": 0.85,
+    "redFlags": 0.97,
+    "neuroExam": 0.75,
+    "recentNote": 0.7
+   }
+  },
+  "generated": "2026-11-12"
+ },
+ "completeA": 1.8,
+ "completeB": 55.5,
+ "routesA": {
+  "autoApprove": 1.8,
+  "clinicalReview": 0,
+  "incomplete": 98.2
+ },
+ "routesB": {
+  "autoApprove": 31.4,
+  "clinicalReview": 24.1,
+  "incomplete": 44.5
+ },
+ "fullyFromChart": 0.2,
+ "pareto": [
+  {
+   "linkId": "redFlags",
+   "text": "Any red flags? (cancer history, fever, fracture risk, cauda equina, progressive weakness)",
+   "requests": 945,
+   "pctOfIncomplete": 96.2
+  },
+  {
+   "linkId": "neuroExam",
+   "text": "Neurological exam result",
+   "requests": 528,
+   "pctOfIncomplete": 53.8
+  },
+  {
+   "linkId": "conservativeWeeks",
+   "text": "Weeks of conservative care tried (physical therapy, anti-inflammatories, home exercise)",
+   "requests": 465,
+   "pctOfIncomplete": 47.4
+  },
+  {
+   "linkId": "symptomWeeks",
+   "text": "How many weeks has the back pain lasted?",
+   "requests": 425,
+   "pctOfIncomplete": 43.3
+  },
+  {
+   "linkId": "recentNote",
+   "text": "Office visit note from the last 30 days attached",
+   "requests": 351,
+   "pctOfIncomplete": 35.7
+  },
+  {
+   "linkId": "dx",
+   "text": "Primary diagnosis",
+   "requests": 32,
+   "pctOfIncomplete": 3.3
+  }
+ ],
+ "paretoB": [
+  {
+   "linkId": "recentNote",
+   "requests": 237,
+   "pctOfIncomplete": 53.3
+  },
+  {
+   "linkId": "neuroExam",
+   "requests": 142,
+   "pctOfIncomplete": 31.9
+  },
+  {
+   "linkId": "conservativeWeeks",
+   "requests": 79,
+   "pctOfIncomplete": 17.8
+  },
+  {
+   "linkId": "symptomWeeks",
+   "requests": 41,
+   "pctOfIncomplete": 9.2
+  },
+  {
+   "linkId": "redFlags",
+   "requests": 33,
+   "pctOfIncomplete": 7.4
+  },
+  {
+   "linkId": "dx",
+   "requests": 1,
+   "pctOfIncomplete": 0.2
+  }
+ ],
+ "falseAutoApprovals": 0,
+ "meetsButReview": 0
+}

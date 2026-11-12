@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Complete on first submit · a first program increment for real-time prior authorization · Aditya Mathur</title>
+<meta name="description" content="Real-time prior authorization only works when a request arrives complete. A backlog, user stories with acceptance criteria, process flows, personas, a working prototype and a release plan for the 1 January 2027 Prior Authorization API, written as an Associate Technical Product Manager would.">
+<style>
+:root{--bg:#fafaf8;--surface:#fff;--ink:#16191d;--ink-soft:#3b414b;--muted:#5d6370;--line:#e4e3de;--accent:#185a7d;--accent-soft:#e7f0f5;--tag:#f0efea;--good:#1f6b45;--good-soft:#e5f3eb;--bad:#a5332a;--bad-soft:#fbeae8;--warn:#8a5a10;--warn-soft:#fbf1df;--s1:#2a78d6;--s2:#eb6834;--grid:#ebeae6;--lane1:#f6f5f1;--lane2:#fbfaf7}
+@media (prefers-color-scheme:dark){:root{--bg:#101215;--surface:#171a1f;--ink:#e9ebee;--ink-soft:#c3c8d0;--muted:#9aa1ad;--line:#2a2e36;--accent:#7cc0e6;--accent-soft:#16242d;--tag:#1f232a;--good:#6fd09c;--good-soft:#142a1e;--bad:#f09186;--bad-soft:#2d1816;--warn:#f0b86e;--warn-soft:#2a2214;--s1:#3987e5;--s2:#d95926;--grid:#24272d;--lane1:#14171b;--lane2:#181b20}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent);text-underline-offset:3px}
+.wrap{max-width:980px;margin:0 auto;padding:44px 18px 80px}
+.kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.08;margin:0 0 12px;letter-spacing:-.02em}
+.lede{font-size:19px;color:var(--muted);margin:0 0 14px;max-width:760px}
+.byline{font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 16px}
+.disclaimer{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding:4px 0 4px 12px;margin:18px 0 0}
+h2{font-size:24px;line-height:1.2;margin:56px 0 10px;letter-spacing:-.01em}
+h2 .n{color:var(--muted);font-weight:500;margin-right:6px}
+h3{font-size:17px;margin:26px 0 6px}
+p{margin:0 0 12px}ul,ol{margin:0 0 14px;padding-left:22px}li{margin:5px 0}
+.tldr{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:28px 0 0}
+.tldr h2{margin:0 0 10px;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 6px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px;line-height:1.1}
+.stat span{font-size:13.5px;color:var(--muted);display:block;margin-top:4px;line-height:1.35}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0 14px;background:var(--surface);border:1px solid var(--line)}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--tag)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.cut td{background:var(--warn-soft)}
+.tablewrap{overflow-x:auto}
+table.journey{font-size:13px}table.journey td{min-width:110px}
+tr.j-pain td{background:var(--bad-soft)}tr.j-target td{background:var(--good-soft)}
+.note{font-size:13.5px;color:var(--muted);font-weight:400}
+.callout{background:var(--accent-soft);border-radius:12px;padding:14px 16px;margin:14px 0}
+.callout.warn{background:var(--warn-soft)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h3{margin-top:0}.quote{font-style:italic;color:var(--ink-soft);margin:0}
+figure{margin:16px 0 18px}figcaption{font-size:13.5px;color:var(--muted);margin-top:6px}
+.chart svg,.flow svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-size:12px;font-family:inherit}
+.flow{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.flow text{font-family:inherit}.flow .lane{fill:var(--ink);font-size:13px;font-weight:600}.flow .lanesub{fill:var(--muted);font-size:11px}
+.flow .node{fill:var(--ink);font-size:12.5px}.flow .elabel{fill:var(--muted);font-size:11.5px;font-style:italic}
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 13px;margin:8px 0}
+summary{cursor:pointer;font-size:14.5px}summary .sid{font-weight:700;margin-right:4px}summary .pts{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.ac p{font-size:14px;background:var(--tag);border-radius:8px;padding:8px 10px;margin:8px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.55}
+code{font-size:13.5px;background:var(--tag);padding:1px 5px;border-radius:5px}
+.proto{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;margin:12px 0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+.tabs button,.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.ehr{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ehr-head{background:var(--tag);padding:10px 14px;font-size:13.5px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ehr-body{padding:14px}
+.crd{border-radius:10px;padding:9px 12px;font-size:14px;margin-bottom:12px;background:var(--warn-soft)}
+.q{display:grid;grid-template-columns:1fr 210px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.q:last-child{border-bottom:0}.q .src{font-size:12px;color:var(--muted)}.q .src.chart{color:var(--good)}.q .src.miss{color:var(--bad)}
+.q input,.q select{font:inherit;font-size:14px;padding:5px 7px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);width:100%}
+.q .filled{font-weight:600}
+.q.hidden{opacity:.45}
+.toggle{display:flex;gap:8px;align-items:center;font-size:14px;margin:10px 0}
+.result{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14.5px}
+.result.ok{background:var(--good-soft)}.result.pend{background:var(--bad-soft)}.result.review{background:var(--accent-soft)}.result.hold{background:var(--warn-soft)}
+pre.json{background:var(--tag);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.45;max-height:520px;overflow:auto;margin:0;white-space:pre-wrap}
+.calc{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:10px 0}
+.calc label{font-size:13.5px;color:var(--muted);display:block}.calc input{width:100%}.calc output{font-weight:600;color:var(--ink)}
+.funnel{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.fbar{display:flex;align-items:center;gap:10px;font-size:14px}.fbar .b{height:26px;border-radius:6px;background:var(--s1);min-width:2px;transition:width .2s}.fbar .t{white-space:nowrap}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:6px 9px;border-radius:8px;opacity:0;z-index:10;max-width:260px}
+.src-list{font-size:14px}.src-list li{margin:4px 0}
+footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px}
+@media (max-width:820px){.stats{grid-template-columns:1fr 1fr}.grid2,.grid4,.proto,.calc{grid-template-columns:1fr}.q{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Product case · Prior authorization · US healthcare · November 2026</p>
+<h1>Complete on first submit</h1>
+<p class="lede">Health plans have promised real-time prior authorization by 2027. That promise only counts requests that arrive complete. This is the first program increment I would run as an Associate Technical Product Manager to get there for one service, lumbar spine MRI, before the 1 January 2027 Prior Authorization API deadline.</p>
+<div class="byline"><span>By <a href="https://adimathur-creates.github.io/">Aditya Mathur</a></span><span><a href="https://www.linkedin.com/in/adityaamathur">LinkedIn</a></span><span><a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/optum-complete-first-submit">Code, backlog files and tests</a></span></div>
+<p class="disclaimer">Independent work. I don't work at Optum or UnitedHealthcare, and this is not their product, plan or policy. Facts come from public sources listed at the end. The clinical rules are illustrative, based on the public ACR Appropriateness Criteria, not any health plan's medical policy. Patients and the 1,000-request sample are synthetic.</p>
+
+<section class="tldr">
+<h2>In one minute</h2>
+<ul>
+<li><b>The deadline.</b> From 1 January 2027, Medicare Advantage, Medicaid, CHIP and federal-exchange plans must run a FHIR Prior Authorization API that lets providers check requirements, submit, and track decisions.</li>
+<li><b>The promise.</b> UnitedHealthcare and about 50 other insurers pledged that at least 80% of electronic prior-auth approvals will be answered in real time by 2027. The pledge only covers requests sent electronically <i>with all the clinical documentation needed</i>.</li>
+<li><b>The gap.</b> Completeness is the bottleneck. In my synthetic sample, pre-filling from the chart alone completed 1.8% of requests. Asking for only the missing items before submit raised that to 55.5%.</li>
+<li><b>Two findings that shaped the backlog.</b> "No red flags" can never be pre-filled: a blank chart isn't a clinician saying "none", so it blocked 96.2% of incomplete requests. After that fix, the 30-day office-note rule was the top remaining blocker (53.3%). So one story adds a one-tap confirmation, and one spike challenges the rule.</li>
+<li><b>What is here.</b> Personas, a journey map, today-vs-target process flows, a working prototype, 17 user stories with Given/When/Then criteria, WSJF priorities, a sprint plan with a cut line for 1 January, OKRs, risks, and a backlog you can import into Rally or GitHub.</li>
+</ul>
+</section>
+
+<div class="stats">
+<div class="stat"><b>1 Jan 2027</b><span>Prior Authorization API deadline for impacted payers (CMS-0057-F)</span></div>
+<div class="stat"><b>80%</b><span>of complete electronic approvals to be real-time by 2027 (industry pledge)</span></div>
+<div class="stat"><b>40%</b><span>of medical prior authorizations were electronic in the 2025 CAQH Index</span></div>
+<div class="stat"><b>13 hrs</b><span>a week providers and staff spend on prior auth (Optum)</span></div>
+</div>
+
+<h2><span class="n">1</span>The problem, and why it is this team's problem now</h2>
+<ul>
+<li><b>Rules with dates.</b> The CMS Interoperability and Prior Authorization rule (CMS-0057-F) already requires decisions within 72 hours for urgent and 7 calendar days for standard requests, and a specific reason for every denial. Payers posted their first public prior-auth metrics on 31 March 2026. The FHIR API deadline, 1 January 2027, is the one most teams are least ready for.</li>
+<li><b>A promise with a condition.</b> AHIP is clear that the 80% target applies only when requests arrive electronically with all needed documentation. It does not mean 80% of all requests are approved instantly.</li>
+<li><b>Most requests aren't even electronic.</b> The 2025 CAQH Index puts electronic prior authorization at 40%, up from 31% in 2023.</li>
+<li><b>Incomplete requests cost days.</b> When documentation is missing, plans send a letter listing what is needed, typically within 3 business days, and the clock restarts on the provider's side. In Medicare Advantage, most appealed denials (81.7% in 2023) were overturned. KFF notes this may mean the first request lacked documentation.</li>
+<li><b>Most requests already get approved.</b> UnitedHealthcare says prior auth applies to about 2% of its medical services, and about 92% of requests are approved, in under 24 hours on average. So the friction sits in the incomplete requests, not in the typical one.</li>
+</ul>
+
+<h3>Where Optum already plays, and where this backlog fits</h3>
+<p>In February 2026 Optum launched two AI products for this exact problem. <b>Digital Auth Complete</b> (with Humata Health) sits in the EHR: it works out when prior auth is needed, gathers documentation and submits. <b>InterQual Auth Accelerator</b> helps payer reviewers check documentation against InterQual criteria, and Optum says it does not and will not automate denials. This case doesn't compete with either. It shows how I would break one slice of that work, for one service, into a backlog an engineering team can ship by 1 January, using the open HL7 Da Vinci standards (CRD to check coverage, DTR to pre-fill documentation, PAS to submit).</p>
+
+<h2><span class="n">2</span>Who it is for</h2>
+<div class="grid4"><div class="card"><h3>Maria Lopez, 41</h3><p class="note">Prior-auth coordinator, 12-doctor orthopedics practice, Ohio</p><p><b>Wants:</b> Get the scan scheduled this week without chasing anyone.</p><ul><li>Checks a different portal or fax number for each health plan</li><li>Learns something was missing only when a pend letter arrives days later</li><li>Re-types what is already in the chart</li></ul><p class="quote">&quot;Just tell me what you need before I hit submit.&quot;</p></div><div class="card"><h3>Dr. Arun Patel, 52</h3><p class="note">Orthopedic surgeon (the ordering clinician)</p><p><b>Wants:</b> Order the right test and move on to the next patient.</p><ul><li>Gets pulled back days later to answer one question</li><li>Free-text notes that a reviewer cannot find</li></ul><p class="quote">&quot;If you need me to confirm something, ask me while I am in the order.&quot;</p></div><div class="card"><h3>Karen Brooks, RN, 38</h3><p class="note">Utilization management nurse reviewer at a health plan</p><p><b>Wants:</b> Decide quickly and consistently, on a complete packet.</p><ul><li>Half her queue is waiting on missing documents</li><li>Has to hunt through PDFs for one answer</li><li>Decision clock keeps running while she waits</li></ul><p class="quote">&quot;A complete request is a fast request.&quot;</p></div><div class="card"><h3>Dana R., 47</h3><p class="note">Member (the patient)</p><p><b>Wants:</b> Know if and when the MRI is approved.</p><ul><li>Cannot see status; calls the clinic and the plan</li><li>Pain continues while paperwork moves</li></ul><p class="quote">&quot;Is it approved or not?&quot;</p></div></div>
+<h3>Maria's journey, today and target</h3>
+<div class="tablewrap"><table class="journey"><tr><th></th><th>Order placed</th><th>Is prior auth needed?</th><th>Gather documents</th><th>Submit</th><th>Wait</th><th>Decision</th><th>Schedule</th></tr><tr class="j-today"><td><b>Today</b></td><td>Clinician orders in the EHR</td><td>Coordinator checks the plan's list or portal</td><td>Copies notes, hunts for PT dates</td><td>Portal upload or fax</td><td>Pend letter if anything is missing; 3 business days to hear</td><td>Approval, or denial with a vague reason</td><td>Calls the patient, sometimes a week later</td></tr><tr class="j-pain"><td><b>Pain</b></td><td>None yet</td><td>Different rules per plan</td><td>Re-typing; unsure what counts</td><td>No check before sending</td><td>Biggest delay: the &quot;send more info&quot; loop</td><td>Hard to know what to fix</td><td>Patient waited in pain</td></tr><tr class="j-target"><td><b>Target</b></td><td>Same</td><td>Answer inside the order in seconds (coverage check)</td><td>Questionnaire pre-filled from the chart</td><td>Checklist: only the missing items, then submit</td><td>Status and due date visible to all three</td><td>Real-time approval when complete and clear; specific reason otherwise</td><td>Scheduled in the same visit</td></tr><tr class="j-measure"><td><b>Measure</b></td><td></td><td>Coverage check response time</td><td>Share of answers pre-filled</td><td>First-pass complete rate</td><td>Days in pend</td><td>Real-time decision rate</td><td>Order-to-scan days</td></tr></table></div>
+
+<h2><span class="n">3</span>The process, today and target</h2>
+<figure class="flow"><svg viewBox="0 0 980 398" role="img" aria-label="Today: prior auth for a lumbar MRI"><defs><marker id="ah34" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--muted)"/></marker></defs><rect x="0" y="8" width="980" height="96" fill="var(--lane1)"/><text x="10" y="50" class="lane">Clinician</text><text x="10" y="66" class="lanesub">(in the EHR)</text><rect x="0" y="104" width="980" height="96" fill="var(--lane2)"/><text x="10" y="146" class="lane">Prior-auth coordinator</text><rect x="0" y="200" width="980" height="96" fill="var(--lane1)"/><text x="10" y="242" class="lane">Health plan systems</text><rect x="0" y="296" width="980" height="96" fill="var(--lane2)"/><text x="10" y="338" class="lane">Clinical reviewer</text><text x="10" y="354" class="lanesub">(nurse / doctor)</text><line x1="124" x2="124" y1="8" y2="392" stroke="var(--line)"/><path d="M267,56 L345,56 L345,127" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah34)"/><path d="M407,152 L423,152" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah34)"/><path d="M547,152 L563,152" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah34)"/><path d="M625,177 L625,216" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah34)"/><path d="M680,248 L738,248" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah34)"/><text x="690" y="238" class="elabel">No</text><path d="M800,223 L800,177" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah34)"/><text x="808" y="193" class="elabel">up to 3 business days</text><path d="M800,127 L800,120 L625,120 L625,127" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ah34)"/><text x="700" y="116" class="elabel">loop</text><path d="M625,280 L625,319" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah34)"/><text x="640" y="290" class="elabel">Yes</text><path d="M687,344 L738,344" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah34)"/><rect x="143" y="31" width="124" height="50" rx="8" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1.4"/><text x="205" y="60" text-anchor="middle" class="node">Signs MRI order</text><rect x="283" y="127" width="124" height="50" rx="8" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1.4"/><text x="345" y="149" text-anchor="middle" class="node">Checks the plan's</text><text x="345" y="163" text-anchor="middle" class="node">list or portal</text><rect x="423" y="127" width="124" height="50" rx="8" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1.4"/><text x="485" y="149" text-anchor="middle" class="node">Copies notes,</text><text x="485" y="163" text-anchor="middle" class="node">fills the form</text><rect x="563" y="127" width="124" height="50" rx="8" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1.4"/><text x="625" y="156" text-anchor="middle" class="node">Uploads or faxes</text><polygon points="625,216 680,248 625,280 570,248" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1.4"/><text x="625" y="252" text-anchor="middle" class="node">Complete?</text><rect x="738" y="223" width="124" height="50" rx="8" fill="var(--bad-soft)" stroke="var(--bad)" stroke-width="1.4"/><text x="800" y="245" text-anchor="middle" class="node">Pend letter:</text><text x="800" y="259" text-anchor="middle" class="node">&quot;send more info&quot;</text><rect x="738" y="127" width="124" height="50" rx="8" fill="var(--bad-soft)" stroke="var(--bad)" stroke-width="1.4"/><text x="800" y="149" text-anchor="middle" class="node">Chases clinician,</text><text x="800" y="163" text-anchor="middle" class="node">resubmits</text><rect x="563" y="319" width="124" height="50" rx="8" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1.4"/><text x="625" y="341" text-anchor="middle" class="node">Reviews the</text><text x="625" y="355" text-anchor="middle" class="node">packet by hand</text><rect x="738" y="319" width="124" height="50" rx="8" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1.4"/><text x="800" y="341" text-anchor="middle" class="node">Decision; reason</text><text x="800" y="355" text-anchor="middle" class="node">often unclear</text></svg></figure>
+<figcaption><b>Today.</b> The coordinator assembles the request by hand. If anything is missing, a pend letter starts a loop of chasing and resubmitting. That loop is where most of the delay sits.</figcaption>
+<figure class="flow"><svg viewBox="0 0 980 398" role="img" aria-label="Target: complete on first submit"><defs><marker id="ah32" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--muted)"/></marker></defs><rect x="0" y="8" width="980" height="96" fill="var(--lane1)"/><text x="10" y="50" class="lane">Clinician</text><text x="10" y="66" class="lanesub">(in the EHR)</text><rect x="0" y="104" width="980" height="96" fill="var(--lane2)"/><text x="10" y="146" class="lane">Prior-auth coordinator</text><rect x="0" y="200" width="980" height="96" fill="var(--lane1)"/><text x="10" y="242" class="lane">Health plan systems</text><rect x="0" y="296" width="980" height="96" fill="var(--lane2)"/><text x="10" y="338" class="lane">Clinical reviewer</text><text x="10" y="354" class="lanesub">(nurse / doctor)</text><line x1="124" x2="124" y1="8" y2="392" stroke="var(--line)"/><path d="M267,56 L345,56 L345,223" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah32)"/><path d="M420,248 L485,248 L485,177" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah32)"/><path d="M485,127 L485,81" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah32)"/><text x="492" y="100" class="elabel">if not in chart</text><path d="M547,56 L625,56 L625,127" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah32)"/><path d="M547,152 L563,152" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah32)"/><path d="M687,152 L703,152" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah32)"/><path d="M765,177 L765,216" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah32)"/><path d="M840,248 L865,248" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah32)"/><text x="841" y="241" class="elabel">Yes</text><path d="M765,280 L765,344 L830,344" fill="none" stroke="var(--muted)" stroke-width="1.5"  marker-end="url(#ah32)"/><text x="560" y="362" class="elabel">Unclear or no: never auto-deny</text><rect x="143" y="31" width="124" height="50" rx="8" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1.4"/><text x="205" y="60" text-anchor="middle" class="node">Signs MRI order</text><rect x="270" y="223" width="150" height="50" rx="8" fill="var(--good-soft)" stroke="var(--good)" stroke-width="1.4"/><text x="345" y="245" text-anchor="middle" class="node">Coverage check:</text><text x="345" y="259" text-anchor="middle" class="node">PA needed? (seconds)</text><rect x="423" y="127" width="124" height="50" rx="8" fill="var(--good-soft)" stroke="var(--good)" stroke-width="1.4"/><text x="485" y="149" text-anchor="middle" class="node">Questions pre-filled</text><text x="485" y="163" text-anchor="middle" class="node">from the chart</text><rect x="423" y="31" width="124" height="50" rx="8" fill="var(--good-soft)" stroke="var(--good)" stroke-width="1.4"/><text x="485" y="53" text-anchor="middle" class="node">One tap: confirm</text><text x="485" y="67" text-anchor="middle" class="node">red flags</text><rect x="563" y="127" width="124" height="50" rx="8" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1.4"/><text x="625" y="149" text-anchor="middle" class="node">Checklist of only</text><text x="625" y="163" text-anchor="middle" class="node">what is missing</text><rect x="703" y="127" width="124" height="50" rx="8" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1.4"/><text x="765" y="149" text-anchor="middle" class="node">Submit through</text><text x="765" y="163" text-anchor="middle" class="node">the PA API</text><polygon points="765,216 840,248 765,280 690,248" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1.4"/><text x="765" y="245" text-anchor="middle" class="node">Complete and</text><text x="765" y="259" text-anchor="middle" class="node">meets rules?</text><rect x="865" y="223" width="100" height="50" rx="8" fill="var(--good-soft)" stroke="var(--good)" stroke-width="1.4"/><text x="915" y="245" text-anchor="middle" class="node">Approved in</text><text x="915" y="259" text-anchor="middle" class="node">real time</text><rect x="830" y="319" width="140" height="50" rx="8" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1.4"/><text x="900" y="341" text-anchor="middle" class="node">Clinician decides;</text><text x="900" y="355" text-anchor="middle" class="node">specific reason</text></svg></figure>
+<figcaption><b>Target.</b> Coverage is checked in the order. The plan's questions arrive pre-filled from the chart. The clinician confirms red flags with one tap, the coordinator fills only what is missing, and the request goes through the API. Complete, clear requests are approved in real time. Anything else goes to a clinician, with a specific reason. Nothing is denied automatically.</figcaption>
+
+<h2><span class="n">4</span>Try it</h2>
+<p>Pick a patient. The left side is the order screen in the EHR; the right side is what the health plan receives. Switch "Ask before submit" off to see today's behavior.</p>
+<div class="tabs" id="ptTabs" role="group" aria-label="Choose a patient"></div>
+<div class="proto">
+  <div class="ehr">
+    <div class="ehr-head"><span id="ptName"></span><span>Order: MRI lumbar spine w/o contrast · CPT 72148</span></div>
+    <div class="ehr-body">
+      <p id="ptStory" class="note" style="margin-bottom:10px"></p>
+      <div class="crd" id="crd"></div>
+      <div id="qs"></div>
+      <div class="toggle"><input type="checkbox" id="gate" checked><label for="gate"><b>Ask before submit</b> (hold the request until required items are answered)</label></div>
+      <button class="btn primary" id="submit">Submit prior auth</button> <button class="btn" id="reset">Start over</button>
+      <div id="result"></div>
+    </div>
+  </div>
+  <div>
+    <div class="note" style="margin-bottom:6px">What the plan receives (simplified FHIR QuestionnaireResponse)</div>
+    <pre class="json" id="json"></pre>
+  </div>
+</div>
+
+<h2><span class="n">5</span>Evidence for the order of work</h2>
+<p>I simulated 1,000 lumbar MRI requests with realistic gaps in chart data, and ran them through the same rules in two ways. Every rate is an assumption, written down in <code>src/sample.js</code>; what carries over is the method.</p>
+<div class="grid2">
+<div class="card"><h3>Pre-fill only</h3><p><b>1.8%</b> complete on first submit. Everything else would be pended.</p></div>
+<div class="card"><h3>Pre-fill, then ask before submit</h3><p><b>55.5%</b> complete: 31.4% approved in real time, 24.1% sent to a clinician, 44.5% still missing something. The rules auto-approved 0 requests whose true story did not meet them.</p></div>
+</div>
+<figure class="chart"><svg viewBox="0 0 760 350" role="img" aria-label="Requests missing each item, before and after asking"><g transform="translate(210 8)"><rect width="10" height="10" rx="2" fill="var(--s1)"/><text x="16" y="9">Pre-fill only</text><rect x="120" width="10" height="10" rx="2" fill="var(--s2)"/><text x="136" y="9">After asking before submit</text></g><line x1="210" x2="210" y1="30" y2="310" stroke="var(--grid)"/><text x="210" y="326" text-anchor="middle">0</text><line x1="330" x2="330" y1="30" y2="310" stroke="var(--grid)"/><text x="330" y="326" text-anchor="middle">250</text><line x1="450" x2="450" y1="30" y2="310" stroke="var(--grid)"/><text x="450" y="326" text-anchor="middle">500</text><line x1="570" x2="570" y1="30" y2="310" stroke="var(--grid)"/><text x="570" y="326" text-anchor="middle">750</text><line x1="690" x2="690" y1="30" y2="310" stroke="var(--grid)"/><text x="690" y="326" text-anchor="middle">1000</text><text x="200" y="52" text-anchor="end" style="fill:var(--ink)">Red flags confirmed</text><rect x="210" y="36" width="453.5999999999999" height="14" rx="4" fill="var(--s1)" data-tip="Red flags confirmed: missing in 945 of 1000 requests with pre-fill only"/><text x="669.5999999999999" y="47">945</text><rect x="210" y="52" width="15.840000000000003" height="14" rx="4" fill="var(--s2)" data-tip="Red flags confirmed: still missing in 33 of 1000 requests after asking"/><text x="231.84" y="63">33</text><text x="200" y="98" text-anchor="end" style="fill:var(--ink)">Neurological exam result</text><rect x="210" y="82" width="253.44" height="14" rx="4" fill="var(--s1)" data-tip="Neurological exam result: missing in 528 of 1000 requests with pre-fill only"/><text x="469.44" y="93">528</text><rect x="210" y="98" width="68.15999999999997" height="14" rx="4" fill="var(--s2)" data-tip="Neurological exam result: still missing in 142 of 1000 requests after asking"/><text x="284.15999999999997" y="109">142</text><text x="200" y="144" text-anchor="end" style="fill:var(--ink)">Weeks of conservative care</text><rect x="210" y="128" width="223.20000000000005" height="14" rx="4" fill="var(--s1)" data-tip="Weeks of conservative care: missing in 465 of 1000 requests with pre-fill only"/><text x="439.20000000000005" y="139">465</text><rect x="210" y="144" width="37.920000000000016" height="14" rx="4" fill="var(--s2)" data-tip="Weeks of conservative care: still missing in 79 of 1000 requests after asking"/><text x="253.92000000000002" y="155">79</text><text x="200" y="190" text-anchor="end" style="fill:var(--ink)">Weeks of pain</text><rect x="210" y="174" width="204" height="14" rx="4" fill="var(--s1)" data-tip="Weeks of pain: missing in 425 of 1000 requests with pre-fill only"/><text x="420" y="185">425</text><rect x="210" y="190" width="19.680000000000007" height="14" rx="4" fill="var(--s2)" data-tip="Weeks of pain: still missing in 41 of 1000 requests after asking"/><text x="235.68" y="201">41</text><text x="200" y="236" text-anchor="end" style="fill:var(--ink)">Office note from last 30 days</text><rect x="210" y="220" width="168.48000000000002" height="14" rx="4" fill="var(--s1)" data-tip="Office note from last 30 days: missing in 351 of 1000 requests with pre-fill only"/><text x="384.48" y="231">351</text><rect x="210" y="236" width="113.75999999999999" height="14" rx="4" fill="var(--s2)" data-tip="Office note from last 30 days: still missing in 237 of 1000 requests after asking"/><text x="329.76" y="247">237</text><text x="200" y="282" text-anchor="end" style="fill:var(--ink)">Diagnosis</text><rect x="210" y="266" width="15.360000000000014" height="14" rx="4" fill="var(--s1)" data-tip="Diagnosis: missing in 32 of 1000 requests with pre-fill only"/><text x="231.36" y="277">32</text><rect x="210" y="282" width="2" height="14" rx="4" fill="var(--s2)" data-tip="Diagnosis: still missing in 1 of 1000 requests after asking"/><text x="216.48" y="293">1</text><text x="485" y="350" text-anchor="middle" style="font-size:11px">Requests missing this item (out of 1,000 synthetic requests)</text></svg><figcaption><b>What is missing, before and after asking.</b> "Red flags confirmed" dominates when you only pre-fill, because absence in a chart cannot be read as "none". After asking, the recent-note rule and the neuro exam are what is left. Synthetic data.</figcaption></figure>
+<p><b>What I would do with this:</b></p>
+<ul>
+<li>Put the one-tap red-flag confirmation (S3.2) and "never assume none" (S2.3) in the first two sprints. They unlock most of the gain for very little work.</li>
+<li>Take the recent-note rule back to the business as a question, not a given (spike S7.1). If structured answers already prove the case, does a reviewer still need the note? That is the "re-evaluate requirements" part of the job.</li>
+</ul>
+
+<h3>Why completeness, not the pledge number, is the metric to manage</h3>
+<p>The pledge measures real-time answers among requests that are already complete and electronic. Patients feel the whole funnel. Move the sliders.</p>
+<div class="calc">
+<label>Requests sent electronically: <output id="o_e"></output><input type="range" id="e" min="10" max="100" step="5" value="40"></label>
+<label>Complete on first submit: <output id="o_c"></output><input type="range" id="c" min="10" max="100" step="5" value="55"></label>
+<label>Clearly meet the rules (auto-approvable): <output id="o_m"></output><input type="range" id="m" min="10" max="100" step="5" value="55"></label>
+</div>
+<div class="funnel" id="funnel"></div>
+<p class="note" id="funnelNote"></p>
+
+<h2><span class="n">6</span>Goals</h2>
+<div class="grid2"><div class="card"><h3>Prior auth for lumbar MRI is decided at the speed of care</h3><ul><li>First-pass complete rate up 20 points from the week-1 baseline by 31 Mar 2027</li><li>At least 80% of complete electronic requests that meet the rules are approved in real time (the industry pledge definition)</li><li>Median days lost to &quot;send more information&quot; loops down 50% for the pilot service</li></ul></div><div class="card"><h3>Compliant and auditable from 1 Jan 2027</h3><ul><li>Prior Authorization API live for the pilot service on 1 Jan 2027</li><li>100% of pended or denied requests carry a specific reason and what to send</li><li>Zero decisions past 72 hours (urgent) or 7 calendar days (standard)</li></ul></div></div>
+<div class="card"><h3>Guardrails</h3><ul><li>No automated denials: anything that does not clearly meet the rules goes to a clinician</li><li>Clinician audit of a 5% sample of auto-approvals agrees at least 98% of the time</li><li>Questions asked per request do not go up (pre-fill must remove work, not add it)</li></ul></div>
+
+<h2><span class="n">7</span>The backlog</h2>
+<h3>Features, ranked by WSJF</h3>
+<p>Weighted shortest job first: (business value + time criticality + risk reduction) ÷ size, on a Fibonacci scale. WSJF ignores dependencies, so the sprint plan does not follow it blindly: F2 (pre-fill) has to land before F3 (ask what is missing) can work.</p>
+<div class="tablewrap"><table><tr><th>Feature</th><th>What it does</th><th class="num">Value</th><th class="num">Time crit.</th><th class="num">Risk red.</th><th class="num">Size</th><th class="num">WSJF</th></tr><tr><td><b>F7</b> Challenge the 30-day note rule</td><td>With clinical policy, test whether structured answers can replace a recent note for low-risk requests.</td><td class="num">8</td><td class="num">2</td><td class="num">8</td><td class="num">2</td><td class="num"><b>9</b></td></tr><tr><td><b>F5</b> Specific reasons and what to send</td><td>Every pend or denial lists the exact missing items or reason, plus next steps.</td><td class="num">8</td><td class="num">13</td><td class="num">5</td><td class="num">3</td><td class="num"><b>8.7</b></td></tr><tr><td><b>F3</b> Ask only what is missing, before submit</td><td>Checklist of unanswered items, one-tap clinician confirmation for red flags, skip questions that do not apply.</td><td class="num">13</td><td class="num">8</td><td class="num">13</td><td class="num">5</td><td class="num"><b>6.8</b></td></tr><tr><td><b>F1</b> Coverage check at order</td><td>When an order is placed, say in seconds whether prior auth is needed and what documentation is required (Da Vinci CRD).</td><td class="num">8</td><td class="num">13</td><td class="num">8</td><td class="num">8</td><td class="num"><b>3.6</b></td></tr><tr><td><b>F4</b> Submit and track through the Prior Authorization API</td><td>Send the request (Da Vinci PAS), show status and the 72-hour / 7-day due date, approve in real time when complete and clear.</td><td class="num">8</td><td class="num">13</td><td class="num">5</td><td class="num">8</td><td class="num"><b>3.3</b></td></tr><tr><td><b>F6</b> Completeness and real-time dashboard</td><td>First-pass complete rate, real-time decision rate, top missing items. Feeds public reporting.</td><td class="num">5</td><td class="num">3</td><td class="num">8</td><td class="num">5</td><td class="num"><b>3.2</b></td></tr><tr><td><b>F2</b> Pre-filled documentation questionnaire</td><td>Fetch the plan's questions and fill them from the chart (Da Vinci DTR).</td><td class="num">13</td><td class="num">13</td><td class="num">8</td><td class="num">13</td><td class="num"><b>2.6</b></td></tr></table></div>
+<h3>User stories and acceptance criteria</h3>
+<p class="note">17 stories, 69 points in total, 56 of them must-have for 1 January. Click a story to see its criteria.</p>
+<h3>F1 · Coverage check at order <span class="note">WSJF 3.6</span></h3><details><summary><span class="sid">S1.1</span> As a prior-auth coordinator, I want to see whether a lumbar MRI order needs prior auth, and what documentation is required, while the order is still open, so that I don't check a portal later. <span class="pts">5 pts · Sprint 1 · must</span></summary><div class="ac"><p><b>Given</b> a clinician signs an order for CPT 72148 for a member of a plan in scope<br><b>When</b> the order is signed<br><b>Then</b> the order shows &quot;Prior auth required: documentation needed&quot; within 2 seconds at the 95th percentile<br><b>And</b> the card links to the questionnaire</p><p><b>Given</b> the coverage service is down<br><b>When</b> the order is signed<br><b>Then</b> the order shows &quot;Could not check: use the portal&quot; and the order is never blocked</p></div></details><details><summary><span class="sid">S1.2</span> As a coordinator, I want a clear &quot;No prior auth needed&quot; result with a reference number, so that I can schedule straight away. <span class="pts">3 pts · Sprint 1 · must</span></summary><div class="ac"><p><b>Given</b> the service does not need prior auth for this member<br><b>When</b> the order is signed<br><b>Then</b> the card says &quot;No prior auth needed&quot; with a reference number and date<br><b>And</b> the reference is saved on the order</p></div></details><h3>F2 · Pre-filled documentation questionnaire <span class="note">WSJF 2.6</span></h3><details><summary><span class="sid">S2.1</span> As a coordinator, I want the plan's questions pre-filled from the chart, so that I don't re-type what is already there. <span class="pts">8 pts · Sprint 1 · must</span></summary><div class="ac"><p><b>Given</b> the chart has a back-pain diagnosis with an onset date, coded PT visits or an NSAID prescription<br><b>When</b> the questionnaire opens<br><b>Then</b> diagnosis, weeks of pain and weeks of conservative care are filled in<br><b>And</b> each filled answer is marked &quot;from chart&quot;</p><p><b>Given</b> a value is not in the chart as data<br><b>When</b> the questionnaire opens<br><b>Then</b> that question is left blank, never guessed</p></div></details><details><summary><span class="sid">S2.2</span> As a nurse reviewer, I want each pre-filled answer to show where it came from, so that I can trust it without opening every document. <span class="pts">3 pts · Sprint 3</span></summary><div class="ac"><p><b>Given</b> an answer was pre-filled<br><b>When</b> the reviewer opens the request<br><b>Then</b> the answer shows its source, for example &quot;PT visit 10 Sep 2026&quot; or &quot;Ibuprofen 3 Sep to 29 Oct&quot;</p></div></details><details><summary><span class="sid">S2.3</span> As an ordering clinician, I want &quot;no red flags&quot; to be something I confirm, not something the system assumes from a blank chart, so that the request is accurate. <span class="pts">3 pts · Sprint 1 · must</span></summary><div class="ac"><p><b>Given</b> no red-flag condition is coded in the chart<br><b>When</b> the questionnaire opens<br><b>Then</b> the red-flag question is left for the clinician, not filled as &quot;none&quot;</p><p><b>Given</b> a red-flag condition is coded (for example history of cancer)<br><b>When</b> the questionnaire opens<br><b>Then</b> the red-flag answer is filled with that condition and marked &quot;from chart&quot;</p></div></details><details><summary><span class="sid">S2.4</span> As a member, I want the plan to read only the parts of my record it needs, so that my privacy is respected. <span class="pts">3 pts · Sprint 1 · must</span></summary><div class="ac"><p><b>Given</b> the questionnaire rules run<br><b>When</b> they query the chart<br><b>Then</b> they request only the resource types the questions need (HIPAA minimum necessary)<br><b>And</b> every query is written to an audit log with user, time and purpose</p></div></details><h3>F3 · Ask only what is missing, before submit <span class="note">WSJF 6.8</span></h3><details><summary><span class="sid">S3.1</span> As a coordinator, I want a short list of only the unanswered required questions, so that I can finish the request in one sitting. <span class="pts">5 pts · Sprint 2 · must</span></summary><div class="ac"><p><b>Given</b> required questions are unanswered<br><b>When</b> I press Submit<br><b>Then</b> submit is held and the missing items are listed with a one-line reason each<br><b>And</b> answering them enables Submit</p><p><b>Given</b> all required questions are answered<br><b>When</b> I press Submit<br><b>Then</b> the request is sent with no extra screen</p></div></details><details><summary><span class="sid">S3.2</span> As a clinician, I want to confirm red flags with one tap inside the order, so that I am not pulled back days later. <span class="pts">3 pts · Sprint 2 · must</span></summary><div class="ac"><p><b>Given</b> the red-flag question is unanswered<br><b>When</b> the clinician signs the order<br><b>Then</b> a one-tap prompt offers &quot;None&quot; or the listed red flags<br><b>And</b> the answer records who confirmed it and when</p></div></details><details><summary><span class="sid">S3.3</span> As a coordinator, I don't want to be asked about weeks of pain or treatment when a red flag already justifies the scan. <span class="pts">2 pts · Sprint 1 · must</span></summary><div class="ac"><p><b>Given</b> a red flag is answered<br><b>When</b> the questionnaire updates<br><b>Then</b> the weeks-of-pain and weeks-of-treatment questions are hidden and not required</p></div></details><details><summary><span class="sid">S3.4</span> As a coordinator, I want to save a half-finished request and come back to it, so that I can wait for a missing note. <span class="pts">3 pts · After go-live</span></summary><div class="ac"><p><b>Given</b> a request has unanswered items<br><b>When</b> I choose Save draft<br><b>Then</b> the draft and its answers are kept for 14 days and listed in my queue</p></div></details><h3>F4 · Submit and track through the Prior Authorization API <span class="note">WSJF 3.3</span></h3><details><summary><span class="sid">S4.1</span> As a coordinator, I want to submit the completed request electronically and get a tracking ID, so that I never fax. <span class="pts">8 pts · Sprint 2 · must</span></summary><div class="ac"><p><b>Given</b> a complete request<br><b>When</b> I press Submit<br><b>Then</b> it is sent through the Prior Authorization API and a tracking ID comes back within 5 seconds<br><b>And</b> a failed send is retried and shown clearly, never silently dropped</p></div></details><details><summary><span class="sid">S4.2</span> As a member, coordinator or clinician, I want to see the request status and the date a decision is due, so that nobody has to call to ask. <span class="pts">5 pts · Sprint 2 · must</span></summary><div class="ac"><p><b>Given</b> a request is submitted as urgent<br><b>When</b> anyone with access views it<br><b>Then</b> it shows status and a decision due within 72 hours</p><p><b>Given</b> a request is submitted as standard<br><b>When</b> anyone with access views it<br><b>Then</b> it shows a decision due within 7 calendar days<br><b>And</b> status is also available to the member through the patient access API</p></div></details><details><summary><span class="sid">S4.3</span> As a health plan, I want complete requests that clearly meet the rules approved in real time, and everything else sent to a clinician, so that we are fast and never auto-deny. <span class="pts">5 pts · Sprint 3 · must</span></summary><div class="ac"><p><b>Given</b> a complete request meets the rules<br><b>When</b> it is received<br><b>Then</b> it is approved within seconds with the rules that were met listed</p><p><b>Given</b> a complete request does not meet the rules<br><b>When</b> it is received<br><b>Then</b> it goes to the clinician review queue and is never denied automatically</p></div></details><h3>F5 · Specific reasons and what to send <span class="note">WSJF 8.7</span></h3><details><summary><span class="sid">S5.1</span> As a coordinator, I want a pend notice that lists exactly what is missing and how to send it, so that I fix it in one try. <span class="pts">3 pts · Sprint 2 · must</span></summary><div class="ac"><p><b>Given</b> a request is pended for missing information<br><b>When</b> the notice is sent<br><b>Then</b> it names each missing item, for example &quot;office note from the last 30 days&quot;, and links to upload it</p></div></details><details><summary><span class="sid">S5.2</span> As a clinician, I want a denial to state the specific reason and the appeal steps, so that I know what to do next. <span class="pts">3 pts · Sprint 3 · must</span></summary><div class="ac"><p><b>Given</b> a clinician reviewer denies a request<br><b>When</b> the decision is sent<br><b>Then</b> it includes the specific reason, the criteria used, and how to appeal or request a peer-to-peer review</p></div></details><h3>F6 · Completeness and real-time dashboard <span class="note">WSJF 3.2</span></h3><details><summary><span class="sid">S6.1</span> As the product team, we want a weekly view of first-pass complete rate, real-time decision rate and top missing items, so that we know what to fix next. <span class="pts">5 pts · After go-live</span></summary><div class="ac"><p><b>Given</b> a week of requests<br><b>When</b> the dashboard refreshes<br><b>Then</b> it shows the three numbers by plan and service, with the top 5 missing items</p></div></details><h3>F7 · Challenge the 30-day note rule <span class="note">WSJF 9</span></h3><details><summary><span class="sid">S7.1</span> As the product team, we want to test with clinical policy whether structured answers can replace the 30-day note for low-risk requests, so that we remove the biggest remaining cause of pends. <span class="pts">2 pts · Sprint 2 (spike)</span></summary><div class="ac"><p><b>Given</b> a sample of 100 past pended requests<br><b>When</b> clinical policy reviews them with and without the note<br><b>Then</b> we record how often the note changed the decision, and decide keep, relax or drop</p></div></details>
+<div class="grid2">
+<div class="card"><h3>Definition of Ready</h3><ul><li>Written as a user story with a named persona</li><li>Acceptance criteria in Given / When / Then</li><li>Estimated by the team</li><li>Dependencies named and either cleared or scheduled</li><li>Test data exists (synthetic patients)</li><li>Clinical or policy sign-off where a rule is involved</li></ul></div>
+<div class="card"><h3>Definition of Done</h3><ul><li>All acceptance criteria pass in a test environment</li><li>Automated tests added and green</li><li>Peer review done; no new security findings</li><li>Audit logging in place for any read of patient data</li><li>Accessibility checked (WCAG 2.1 AA) for any screen</li><li>Product owner accepted it in the sprint review</li><li>Help text and release note updated</li></ul></div>
+</div>
+<div class="card" style="margin-top:14px"><h3>Non-functional requirements</h3><ul><li>Coverage check: under 2 seconds at the 95th percentile</li><li>Orders are never blocked if a service is down (fail open to the portal)</li><li>HIPAA minimum necessary: rules read only what the questions need</li><li>Every decision and every chart query is auditable</li><li>Decision clocks: 72 hours urgent, 7 calendar days standard</li><li>No automated denials</li></ul></div>
+
+<h2><span class="n">8</span>Release plan to 1 January 2027</h2>
+<p>One team, two-week sprints, about 26 points a sprint, less over the holidays. This is the last increment before the deadline. In a real program the API work would have started much earlier; this shows how I would cut the final stretch.</p>
+<div class="tablewrap"><table><tr><th>Sprint</th><th>Dates</th><th class="num">Capacity</th><th>Stories</th><th class="num">Planned</th><th>Note</th></tr><tr><td><b>Sprint 1</b></td><td>16–27 Nov 2026</td><td class="num">26</td><td>S1.1, S1.2, S2.1, S2.3, S2.4, S3.3</td><td class="num">24</td><td>US stakeholders are off on 26 Nov (Thanksgiving): book reviews for 24–25 Nov.</td></tr><tr><td><b>Sprint 2</b></td><td>30 Nov – 11 Dec 2026</td><td class="num">26</td><td>S3.1, S3.2, S4.1, S4.2, S5.1</td><td class="num">24</td><td>Spike S7.1 runs with clinical policy; no engineering points.</td></tr><tr><td><b>Sprint 3</b></td><td>14–24 Dec 2026</td><td class="num">16</td><td>S2.2, S4.3, S5.2</td><td class="num">11</td><td>Holiday leave: about 60% capacity. Keep a buffer for fixes.</td></tr><tr><td><b>Go-live readiness</b></td><td>28–31 Dec 2026</td><td class="num">0</td><td>–</td><td class="num">0</td><td>Code freeze, end-to-end test with a partner EHR, rollback plan.</td></tr><tr class="cut"><td colspan="6"><b>Cut line for 1 Jan 2027.</b> Below it, after go-live: S3.4 (3), S6.1 (5). Spike S7.1 runs in Sprint 2 with clinical policy.</td></tr></table></div>
+<div class="grid2">
+<div><h3>Dependencies</h3><div class="tablewrap"><table><tr><th>Dependency</th><th>Owner</th><th>Needed by</th><th>Status</th></tr><tr><td>EHR partner supports launching the questionnaire app (SMART on FHIR)</td><td>Partnerships / EHR vendor</td><td>Sprint 1</td><td>At risk</td></tr><tr><td>Clinical policy signs off the lumbar MRI rules</td><td>Clinical policy team</td><td>Sprint 1</td><td>Scheduled</td></tr><tr><td>Clinician review queue accepts API requests</td><td>Utilization management platform team</td><td>Sprint 3</td><td>Scheduled</td></tr><tr><td>Synthetic test patients and a FHIR test server</td><td>QA / platform</td><td>Sprint 1</td><td>Ready</td></tr><tr><td>Security and privacy review</td><td>Information security</td><td>Sprint 2</td><td>Scheduled</td></tr></table></div></div>
+<div><h3>Risks (ROAM)</h3><div class="tablewrap"><table><tr><th>Risk</th><th>ROAM</th><th>Plan</th></tr><tr><td>Provider EHRs are not ready to use the API by 1 Jan</td><td>Owned</td><td>Keep the portal and fax path working; track adoption by practice.</td></tr><tr><td>Clinical policy sign-off slips</td><td>Mitigated</td><td>Pilot one service (lumbar MRI) with public, well-known criteria first.</td></tr><tr><td>Questionnaire adds work instead of removing it</td><td>Mitigated</td><td>Pre-fill, skip questions that do not apply, guardrail on questions asked per request.</td></tr><tr><td>A rules error auto-approves the wrong case</td><td>Mitigated</td><td>Rules test suite, clinician audit of a 5% sample, kill switch per rule.</td></tr><tr><td>Holiday capacity in Sprint 3</td><td>Accepted</td><td>Cut line below: dashboard and drafts move after go-live.</td></tr></table></div></div>
+</div>
+<h3>How I would run backlog grooming (60 minutes)</h3>
+<ol><li>Review last sprint's top missing items from the dashboard (5 min)</li><li>Walk the next 8–10 stories: does each meet the Definition of Ready? (25 min)</li><li>Estimate together; split anything over 8 points (15 min)</li><li>Re-rank against WSJF and dependencies; agree the cut line (10 min)</li><li>Name impediments and owners (5 min)</li></ol>
+<div class="callout warn"><b>What I'd ask in week one:</b> the real first-pass complete rate by service; which EHR partners can launch the questionnaire app today; who signs off clinical rules and how long it takes; and how pend reasons are coded now, so the dashboard can be built from day one.</div>
+
+<h2><span class="n">9</span>Files</h2>
+<ul>
+<li><a href="downloads/rally-backlog.csv">Backlog as CSV</a>: name, description, acceptance criteria, estimate, feature, iteration. Map the columns in Rally's importer.</li>
+<li><a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/optum-complete-first-submit/downloads/github-issues">The same stories as GitHub issue files</a>, with Gherkin criteria and the Definition of Done as a checklist.</li>
+<li><a href="downloads/questionnaire-lumbar-mri.json">The questionnaire as FHIR-style JSON</a>.</li>
+<li><a href="https://github.com/adimathur-creates/adimathur-creates.github.io/tree/main/optum-complete-first-submit">Code</a>: <code>src/pa.js</code> (pre-fill and rules, the same file the prototype runs), <code>src/backlog.js</code> (one source for this page, the CSV and the issues), and 15 tests. The tests check the clinical rules and also the backlog: every story has criteria, and every sprint fits its capacity.</li>
+</ul>
+
+<h2>Sources</h2>
+<ol class="src-list">
+<li><a href="https://www.beckerspayer.com/?p=24162">Becker's Payer: API provisions apply from 1 January 2027; specific reasons for denials</a></li>
+<li><a href="https://connextglobal.com/cms-0057-f-electronic-prior-authorization-rcm-teams/">Connext: first public metrics 31 March 2026; the FHIR API deadline most teams are underprepared for</a></li>
+<li><a href="https://www.ensemblehp.com/?p=12621">Ensemble: 72 hours urgent, 7 calendar days standard</a></li>
+<li><a href="https://www.tegria.com/resources/thought-leadership/your-guide-to-cms-0057-f-compliance/">Tegria: who the rule covers; prior-auth status in the Patient Access API</a></li>
+<li><a href="https://www.ajmc.com/view/faq-prior-authorization-reform-will-changes-go-far-enough-by-2027-">AJMC: the 80% target applies only to complete electronic requests; volume down 11%; drugs proposal (Aug 2026)</a></li>
+<li><a href="https://www.healio.com/news/primary-care/20250623/hhs-announces-industry-pledge-to-reduce-and-simplify-prior-authorization">Healio: HHS announces the industry pledge, including UnitedHealthcare</a></li>
+<li><a href="https://www.ajmc.com/view/caqh-index-finds-20-billion-in-cost-savings-opportunities">AJMC on the 2025 CAQH Index: electronic prior auth at 40%</a></li>
+<li><a href="https://www.optum.com/en/newsroom/health-tech/optum-is-advancing-ai-powered-digital-prior-authorization.html">Optum newsroom: Digital Auth Complete, InterQual Auth Accelerator, 13 hours a week (Feb 2026)</a></li>
+<li><a href="https://www.beckershospitalreview.com/healthcare-information-technology/optum-rolls-out-ai-powered-prior-authorization-tools-for-payers-providers/">Becker's: "We do not and will not automate denials"</a></li>
+<li><a href="https://www.businesswire.com/news/home/20260505232091/en/">UnitedHealthcare via Business Wire: prior auth on about 2% of services, about 92% approved in under 24 hours</a></li>
+<li><a href="https://www.kff.org/f63a430">KFF: Medicare Advantage appeals, 81.7% overturned in 2023</a></li>
+<li><a href="https://www.uhcprovider.com/en/health-plans-by-state/texas-health-plans/tx-comm-plan-home/tx-cp-prior-auth/tx-pa-timelines.html">UHC provider site (Texas): letter listing missing clinical information within 3 business days</a></li>
+<li><a href="https://hl7.org/fhir/us/davinci-dtr/usecases.html">HL7 Da Vinci DTR: pre-fill from the EHR, prompt for what is missing</a></li>
+<li><a href="https://build.fhir.org/ig/HL7/davinci-dtr/en/security.html">HL7 Da Vinci DTR security: HIPAA minimum necessary for payer rules</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/34794594/">ACR Appropriateness Criteria, Low Back Pain (2021 update)</a></li>
+<li><a href="https://distilinfo.com/?p=8038">WEDI survey coverage: payers further along than providers</a></li>
+</ol>
+
+<footer><span>Aditya Mathur · Bengaluru</span><a href="https://adimathur-creates.github.io/">More product work</a><a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a><span>Sample generated 2026-11-12</span></footer>
+</div>
+<div class="tip" id="tip"></div>
+<script>/*
+ * Complete on first submit: documentation rules for one prior-authorization service.
+ *
+ * A small, readable stand-in for what Da Vinci DTR does: take the payer's questionnaire,
+ * pre-fill it from the patient's chart (FHIR-shaped data), list what is still missing,
+ * and route the request. Illustrative criteria only, based on the public ACR
+ * Appropriateness Criteria for low back pain. NOT any payer's real medical policy.
+ *
+ * Works in the browser (window.PA) and in Node (module.exports).
+ */
+(function (root) {
+  'use strict';
+  var DAY = 86400000;
+
+  var SERVICE = { cpt: '72148', display: 'MRI lumbar spine without contrast' };
+
+  // Value sets (small, illustrative)
+  var LBP = /^M54\.(5|50|59)/, RADIC = /^M54\.1[67]/;
+  var RED_FLAG_CODES = {
+    'Z85': 'History of cancer', 'C79.51': 'Cancer spread to bone', 'R50.9': 'Fever (possible infection)',
+    'G83.4': 'Cauda equina syndrome', 'S32.0': 'Lumbar fracture', 'M81.0': 'Osteoporosis (fracture risk)'
+  };
+  var PT_CODES = ['97110', '97112', '97140', '97161', '97162', '97163'];
+
+  var QUESTIONNAIRE = {
+    resourceType: 'Questionnaire', id: 'lumbar-mri-illustrative', status: 'draft',
+    title: 'Lumbar spine MRI (CPT 72148): documentation (illustrative)',
+    item: [
+      { linkId: 'dx', text: 'Primary diagnosis', type: 'choice', required: true, fromChart: 'Condition (ICD-10 M54.5x / M54.16-17)' },
+      { linkId: 'symptomWeeks', text: 'How many weeks has the back pain lasted?', type: 'integer', required: true, onlyIfNoRedFlag: true, fromChart: 'Condition.onsetDateTime' },
+      { linkId: 'conservativeWeeks', text: 'Weeks of conservative care tried (physical therapy, anti-inflammatories, home exercise)', type: 'integer', required: true, onlyIfNoRedFlag: true, fromChart: 'Procedure (PT CPT 97110 etc.), MedicationRequest (NSAID)' },
+      { linkId: 'redFlags', text: 'Any red flags? (cancer history, fever, fracture risk, cauda equina, progressive weakness)', type: 'choice', required: true, fromChart: 'Condition codes; "none" must be confirmed by a clinician' },
+      { linkId: 'neuroExam', text: 'Neurological exam result', type: 'choice', required: true, fromChart: 'Observation (neuro exam)' },
+      { linkId: 'recentNote', text: 'Office visit note from the last 30 days attached', type: 'boolean', required: true, fromChart: 'DocumentReference (date within 30 days)' },
+      { linkId: 'priorImaging', text: 'Lumbar imaging in the last 12 months', type: 'boolean', required: false, fromChart: 'ImagingStudy' }
+    ]
+  };
+
+  var WHY = {
+    dx: 'Payers check the order matches a covered diagnosis.',
+    symptomWeeks: 'Most uncomplicated back pain gets better within 6 weeks, so imaging is usually considered after that.',
+    conservativeWeeks: 'Imaging is usually considered after about 6 weeks of treatment that did not help.',
+    redFlags: 'A red flag can justify imaging right away. A blank chart is not the same as "no red flags", so a clinician confirms it.',
+    neuroExam: 'Severe or progressive weakness changes the urgency.',
+    recentNote: 'The reviewer needs the latest clinical note.',
+    priorImaging: 'Helps avoid repeat scans. Optional.'
+  };
+
+  function weeksBetween(a, b) { return Math.floor((b - a) / (7 * DAY)); }
+
+  /* Pre-fill answers from a FHIR-shaped bundle: {entry:[{resourceType,...}]}. */
+  function prepopulate(bundle, today) {
+    today = today ? new Date(today).getTime() : Date.now();
+    var res = bundle.entry || [];
+    var by = function (t) { return res.filter(function (r) { return r.resourceType === t; }); };
+    var A = {};
+    function set(id, value, evidence) { A[id] = { value: value, source: 'chart', evidence: evidence }; }
+
+    var conds = by('Condition');
+    var back = conds.filter(function (c) { return LBP.test(c.code) || RADIC.test(c.code); });
+    if (back.length) {
+      var radic = back.some(function (c) { return RADIC.test(c.code); });
+      set('dx', radic ? 'Low back pain with radiculopathy' : 'Low back pain', back.map(function (c) { return c.code; }).join(', '));
+      var onsets = back.map(function (c) { return c.onset ? new Date(c.onset).getTime() : null; }).filter(Boolean);
+      if (onsets.length) set('symptomWeeks', weeksBetween(Math.min.apply(null, onsets), today), 'Onset recorded ' + new Date(Math.min.apply(null, onsets)).toISOString().slice(0, 10));
+    }
+
+    var care = [];
+    by('Procedure').forEach(function (p) { if (PT_CODES.indexOf(p.code) > -1 && p.date) care.push({ t: new Date(p.date).getTime(), what: 'PT' }); });
+    by('MedicationRequest').forEach(function (m) {
+      if (m.class === 'NSAID' && m.start) { care.push({ t: new Date(m.start).getTime(), what: 'NSAID' }); care.push({ t: new Date(m.end || today).getTime(), what: 'NSAID' }); }
+    });
+    if (care.length) {
+      var ts = care.map(function (c) { return c.t; });
+      var kinds = care.map(function (c) { return c.what; }).filter(function (v, i, a) { return a.indexOf(v) === i; });
+      set('conservativeWeeks', weeksBetween(Math.min.apply(null, ts), Math.max.apply(null, ts)), kinds.join(' + ') + ' documented');
+    }
+
+    var flags = [];
+    conds.forEach(function (c) { Object.keys(RED_FLAG_CODES).forEach(function (k) { if (c.code.indexOf(k) === 0) flags.push(RED_FLAG_CODES[k]); }); });
+    var neuro = by('Observation').filter(function (o) { return o.code === 'neuro-exam'; }).sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); })[0];
+    if (neuro) {
+      set('neuroExam', neuro.value, 'Exam on ' + neuro.date);
+      if (neuro.value === 'Progressive deficit') flags.push('Progressive neurological deficit');
+    }
+    if (flags.length) set('redFlags', flags.join('; '), 'Coded in chart');
+    // No red flag in the chart is NOT recorded as "none": a clinician must confirm (left missing on purpose).
+
+    var notes = by('DocumentReference').filter(function (d) { return d.type === 'office-note' && (today - new Date(d.date).getTime()) <= 30 * DAY; });
+    if (notes.length) set('recentNote', true, 'Note dated ' + notes[0].date);
+
+    var img = by('ImagingStudy').filter(function (s) { return s.bodySite === 'lumbar' && (today - new Date(s.date).getTime()) <= 365 * DAY; });
+    set('priorImaging', img.length > 0, img.length ? 'Imaging on ' + img[0].date : 'None found in chart');
+    return A;
+  }
+
+  /* Merge manual answers (coordinator / clinician entries) over pre-filled ones. */
+  function merge(prefilled, manual) {
+    var out = {};
+    Object.keys(prefilled || {}).forEach(function (k) { out[k] = prefilled[k]; });
+    Object.keys(manual || {}).forEach(function (k) {
+      if (manual[k] !== undefined && manual[k] !== null && manual[k] !== '') out[k] = { value: manual[k], source: 'entered', evidence: 'Entered before submit' };
+    });
+    return out;
+  }
+
+  /*
+   * Evaluate a set of answers.
+   * route: 'auto-approve' | 'clinical-review' | 'incomplete'
+   * We never auto-deny: anything complete that does not clearly meet the rules goes to a clinician.
+   */
+  function hasRedFlag(answers) {
+    var rf = answers.redFlags && answers.redFlags.value, ne = answers.neuroExam && answers.neuroExam.value;
+    return (rf !== undefined && rf !== '' && rf !== 'None') || ne === 'Progressive deficit';
+  }
+
+  /* Which questions must be answered, given what is known so far (like FHIR enableWhen). */
+  function requiredItems(answers) {
+    var rf = hasRedFlag(answers || {});
+    return QUESTIONNAIRE.item.filter(function (q) { return q.required && !(q.onlyIfNoRedFlag && rf); });
+  }
+
+  function evaluate(answers) {
+    var missing = requiredItems(answers).filter(function (q) { return !(answers[q.linkId] && answers[q.linkId].value !== undefined && answers[q.linkId].value !== ''); })
+      .map(function (q) { return { linkId: q.linkId, text: q.text, why: WHY[q.linkId] }; });
+    if (missing.length) return { complete: false, missing: missing, meets: null, route: 'incomplete', reasons: [] };
+    var v = function (k) { return answers[k].value; };
+    var reasons = [];
+    var redFlag = hasRedFlag(answers);
+    if (redFlag) reasons.push('Red flag documented: ' + (v('redFlags') !== 'None' ? v('redFlags') : 'progressive neurological deficit'));
+    var sixSix = !redFlag && Number(v('symptomWeeks')) >= 6 && Number(v('conservativeWeeks')) >= 6;
+    if (sixSix) reasons.push('Pain for ' + v('symptomWeeks') + ' weeks after ' + v('conservativeWeeks') + ' weeks of conservative care');
+    var meets = redFlag || sixSix;
+    if (!meets) {
+      if (Number(v('symptomWeeks')) < 6) reasons.push('Pain for ' + v('symptomWeeks') + ' weeks, under the usual 6');
+      if (Number(v('conservativeWeeks')) < 6) reasons.push(v('conservativeWeeks') + ' weeks of conservative care, under the usual 6');
+    }
+    return { complete: true, missing: [], meets: meets, route: meets ? 'auto-approve' : 'clinical-review', reasons: reasons };
+  }
+
+  /* CMS-0057-F decision windows for Medicare Advantage / Medicaid / CHIP (from 2026): 72 hours urgent, 7 calendar days standard. */
+  function decisionDue(submittedISO, urgency) {
+    var t = new Date(submittedISO).getTime();
+    return new Date(t + (urgency === 'urgent' ? 72 * 3600000 : 7 * DAY)).toISOString();
+  }
+
+  /* The "specific reason" text a provider gets when a request is pended for missing documentation. */
+  function pendNotice(missing) {
+    return 'More information needed for ' + SERVICE.display + ' (CPT ' + SERVICE.cpt + '). Please send: ' +
+      missing.map(function (m) { return m.text.replace(/\?$/, ''); }).join('; ') + '.';
+  }
+
+  var api = { SERVICE: SERVICE, QUESTIONNAIRE: QUESTIONNAIRE, WHY: WHY, RED_FLAG_CODES: RED_FLAG_CODES, PT_CODES: PT_CODES,
+    prepopulate: prepopulate, merge: merge, evaluate: evaluate, requiredItems: requiredItems, hasRedFlag: hasRedFlag, decisionDue: decisionDue, pendNotice: pendNotice };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.PA = api;
+})(typeof window !== 'undefined' ? window : this);
+</script>
+<script>/* Four invented patients for the prototype. Today = 12 Nov 2026. FHIR-shaped, simplified. */
+(function (root) {
+  'use strict';
+  var TODAY = '2026-11-12';
+  var PATIENTS = [
+    {
+      id: 'dana', name: 'Dana R., 47', story: 'Ten weeks of back pain down the left leg. Eight weeks of physical therapy and ibuprofen have not helped. Everything is in the chart except one thing.',
+      urgency: 'standard',
+      bundle: { entry: [
+        { resourceType: 'Condition', code: 'M54.16', display: 'Radiculopathy, lumbar', onset: '2026-08-31' },
+        { resourceType: 'Procedure', code: '97161', display: 'PT evaluation', date: '2026-09-10' },
+        { resourceType: 'Procedure', code: '97110', display: 'Therapeutic exercise', date: '2026-11-05' },
+        { resourceType: 'MedicationRequest', class: 'NSAID', display: 'Ibuprofen 600 mg', start: '2026-09-03', end: '2026-10-29' },
+        { resourceType: 'Observation', code: 'neuro-exam', value: 'Normal', date: '2026-10-31' },
+        { resourceType: 'DocumentReference', type: 'office-note', date: '2026-10-31' }
+      ] }
+    },
+    {
+      id: 'luis', name: 'Luis M., 52', story: 'Long-standing back pain, but the onset date was never coded, physical therapy is only mentioned in free text, and the last note is six weeks old. Today, this is the request that gets pended.',
+      urgency: 'standard',
+      bundle: { entry: [
+        { resourceType: 'Condition', code: 'M54.50', display: 'Low back pain, unspecified' },
+        { resourceType: 'MedicationRequest', class: 'NSAID', display: 'Naproxen 500 mg', start: '2026-09-20', end: '2026-10-20' },
+        { resourceType: 'DocumentReference', type: 'office-note', date: '2026-09-30' }
+      ] }
+    },
+    {
+      id: 'grace', name: 'Grace T., 68', story: 'Three weeks of new back pain, with a history of breast cancer coded in the chart. A red flag, so imaging is appropriate now.',
+      urgency: 'urgent',
+      bundle: { entry: [
+        { resourceType: 'Condition', code: 'M54.50', display: 'Low back pain, unspecified', onset: '2026-10-22' },
+        { resourceType: 'Condition', code: 'Z85.3', display: 'Personal history of breast cancer' },
+        { resourceType: 'Observation', code: 'neuro-exam', value: 'Normal', date: '2026-11-11' },
+        { resourceType: 'DocumentReference', type: 'office-note', date: '2026-11-11' }
+      ] }
+    },
+    {
+      id: 'sam', name: 'Sam K., 35', story: 'Three weeks of back pain after moving house, no treatment tried yet. The request is complete but does not meet the usual rules. It goes to a clinician, not to an automatic denial.',
+      urgency: 'standard',
+      bundle: { entry: [
+        { resourceType: 'Condition', code: 'M54.50', display: 'Low back pain, unspecified', onset: '2026-10-20' },
+        { resourceType: 'Observation', code: 'neuro-exam', value: 'Normal', date: '2026-11-10' },
+        { resourceType: 'DocumentReference', type: 'office-note', date: '2026-11-10' }
+      ] }
+    }
+  ];
+  var api = { TODAY: TODAY, PATIENTS: PATIENTS };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.PATIENTS = api;
+})(typeof window !== 'undefined' ? window : this);
+</script>
+<script>
+(function(){
+'use strict';
+var PAx = window.PA, PTS = window.PATIENTS.PATIENTS, TODAY = window.PATIENTS.TODAY;
+var esc = function(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+var tip = document.getElementById('tip');
+document.querySelectorAll('[data-tip]').forEach(function(el){
+  el.addEventListener('mousemove', function(ev){ tip.textContent = el.getAttribute('data-tip'); tip.style.opacity = 1; tip.style.left = (ev.clientX + 12) + 'px'; tip.style.top = (ev.clientY + 12) + 'px'; });
+  el.addEventListener('mouseleave', function(){ tip.style.opacity = 0; });
+});
+
+var OPTIONS = {
+  dx: ['', 'Low back pain', 'Low back pain with radiculopathy'],
+  redFlags: ['', 'None', 'History of cancer', 'Fever (possible infection)', 'Lumbar fracture', 'Cauda equina syndrome'],
+  neuroExam: ['', 'Normal', 'Mild deficit', 'Progressive deficit']
+};
+var cur = 0, manual = {}, submitted = null;
+var tabs = document.getElementById('ptTabs');
+PTS.forEach(function(p, i){ var b = document.createElement('button'); b.textContent = p.name; b.setAttribute('aria-pressed', i === 0); b.onclick = function(){ cur = i; manual = {}; submitted = null; Array.prototype.forEach.call(tabs.children, function(c, j){ c.setAttribute('aria-pressed', j === i); }); render(); }; tabs.appendChild(b); });
+
+function answers(){ return PAx.merge(PAx.prepopulate(PTS[cur].bundle, TODAY), manual); }
+function input(q, a){
+  var id = 'in_' + q.linkId, v = manual[q.linkId];
+  if (OPTIONS[q.linkId]) return '<select id="' + id + '">' + OPTIONS[q.linkId].map(function(o){ return '<option' + (v === o ? ' selected' : '') + ' value="' + esc(o) + '">' + (o || 'Choose…') + '</option>'; }).join('') + '</select>';
+  if (q.type === 'integer') return '<input type="number" min="0" max="200" id="' + id + '" placeholder="weeks" value="' + (v !== undefined ? v : '') + '">';
+  if (q.type === 'boolean') return '<label style="font-size:13.5px"><input type="checkbox" id="' + id + '"' + (v ? ' checked' : '') + ' style="width:auto"> Attach note</label>';
+  return '';
+}
+function render(){
+  var p = PTS[cur], pre = PAx.prepopulate(p.bundle, TODAY), A = answers(), req = PAx.requiredItems(A).map(function(q){ return q.linkId; });
+  document.getElementById('ptName').textContent = p.name + ' · ' + (p.urgency === 'urgent' ? 'urgent request' : 'standard request');
+  document.getElementById('ptStory').textContent = p.story;
+  document.getElementById('crd').innerHTML = '<b>Coverage check (in the order):</b> prior auth required for CPT 72148 for this member. Documentation needed: ' + PAx.QUESTIONNAIRE.item.filter(function(q){ return q.required; }).length + ' questions. <span class="note">Checked in about 1 second.</span>';
+  document.getElementById('qs').innerHTML = PAx.QUESTIONNAIRE.item.map(function(q){
+    var a = pre[q.linkId], hidden = q.required && req.indexOf(q.linkId) < 0;
+    var left = '<div>' + esc(q.text) + (q.required ? '' : ' <span class="note">(optional)</span>') + '<div class="src ' + (a ? 'chart' : (hidden ? '' : 'miss')) + '">' + (a ? 'From chart: ' + esc(a.evidence) : hidden ? 'Not needed: a red flag already justifies the scan' : 'Not in the chart as data') + '</div></div>';
+    var right = a ? '<div class="filled">' + esc(a.value === true ? 'Yes' : a.value === false ? 'No' : a.value) + '</div>' : hidden ? '<div class="note">Skipped</div>' : input(q, a);
+    return '<div class="q' + (hidden ? ' hidden' : '') + '">' + left + right + '</div>';
+  }).join('');
+  PAx.QUESTIONNAIRE.item.forEach(function(q){
+    var el = document.getElementById('in_' + q.linkId); if (!el) return;
+    el.onchange = function(){ var v = q.type === 'boolean' ? (el.checked || undefined) : q.type === 'integer' ? (el.value === '' ? undefined : Number(el.value)) : (el.value || undefined); if (v === undefined) delete manual[q.linkId]; else manual[q.linkId] = v; submitted = null; render(); };
+  });
+  var ev = PAx.evaluate(A), gate = document.getElementById('gate').checked;
+  document.getElementById('submit').textContent = (gate && !ev.complete) ? 'Submit (' + ev.missing.length + ' item' + (ev.missing.length > 1 ? 's' : '') + ' missing)' : 'Submit prior auth';
+  var r = document.getElementById('result');
+  if (!submitted) r.innerHTML = '';
+  else if (submitted === 'held') r.innerHTML = '<div class="result hold"><b>Held before sending.</b> Answer these first:<ul>' + ev.missing.map(function(m){ return '<li>' + esc(m.text) + ' <span class="note">' + esc(m.why) + '</span></li>'; }).join('') + '</ul></div>';
+  else if (submitted === 'sent') {
+    var due = new Date(PAx.decisionDue(TODAY + 'T10:00:00Z', p.urgency));
+    var dueTxt = due.toUTCString().slice(0, 16) + (p.urgency === 'urgent' ? ' (72 hours)' : ' (7 calendar days)');
+    if (ev.route === 'auto-approve') r.innerHTML = '<div class="result ok"><b>Approved in real time.</b> Tracking ID PA-' + (100000 + cur * 7919) + '. Rules met:<ul>' + ev.reasons.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul><span class="note">Illustrative rules, not a real policy.</span></div>';
+    else if (ev.route === 'clinical-review') r.innerHTML = '<div class="result review"><b>Sent to a clinician for review</b>, never denied automatically. Decision due by ' + dueTxt + '.<ul>' + ev.reasons.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    else r.innerHTML = '<div class="result pend"><b>Pended: more information needed.</b> This is today\'s loop: a letter, days of waiting, then a resubmission.<p style="margin:8px 0 0"><i>' + esc(PAx.pendNotice(ev.missing)) + '</i></p></div>';
+  }
+  var qr = { resourceType: 'QuestionnaireResponse', questionnaire: 'Questionnaire/' + PAx.QUESTIONNAIRE.id, status: ev.complete ? 'completed' : 'in-progress', subject: { display: p.name + ' (synthetic)' }, item: Object.keys(A).map(function(k){ return { linkId: k, answer: [{ value: A[k].value }], source: A[k].source, evidence: A[k].evidence }; }) };
+  document.getElementById('json').textContent = JSON.stringify(qr, null, 2);
+}
+document.getElementById('submit').onclick = function(){ var ev = PAx.evaluate(answers()); submitted = (document.getElementById('gate').checked && !ev.complete) ? 'held' : 'sent'; render(); };
+document.getElementById('reset').onclick = function(){ manual = {}; submitted = null; render(); };
+document.getElementById('gate').onchange = function(){ submitted = null; render(); };
+render();
+
+function funnel(){
+  var e = +document.getElementById('e').value, c = +document.getElementById('c').value, m = +document.getElementById('m').value;
+  document.getElementById('o_e').textContent = e + '%'; document.getElementById('o_c').textContent = c + '%'; document.getElementById('o_m').textContent = m + '%';
+  var n0 = 1000, n1 = Math.round(n0 * e / 100), n2 = Math.round(n1 * c / 100), n3 = Math.round(n2 * m / 100);
+  var rows = [['All requests', n0], ['Sent electronically', n1], ['Complete on first submit', n2], ['Approved in real time', n3]];
+  document.getElementById('funnel').innerHTML = rows.map(function(r){ return '<div class="fbar"><div class="b" style="width:' + (r[1] / n0 * 70) + '%"></div><span class="t"><b>' + r[1] + '</b> ' + r[0] + '</span></div>'; }).join('');
+  document.getElementById('funnelNote').textContent = 'Out of 1,000 requests, ' + n3 + ' get a real-time answer (' + (n3 / 10).toFixed(1) + '%). A plan can approve every complete, clearly eligible request instantly and still leave most patients waiting. Raising completeness from ' + c + '% moves the patient-facing number more than any change to the approval step.';
+}
+['e', 'c', 'm'].forEach(function(id){ document.getElementById(id).oninput = funnel; });
+funnel();
+})();
+</script>
+</body>
+</html>

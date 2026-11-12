@@ -1,0 +1,59 @@
+{
+  "resourceType": "Questionnaire",
+  "id": "lumbar-mri-illustrative",
+  "status": "draft",
+  "title": "Lumbar spine MRI (CPT 72148): documentation (illustrative)",
+  "item": [
+    {
+      "linkId": "dx",
+      "text": "Primary diagnosis",
+      "type": "choice",
+      "required": true,
+      "fromChart": "Condition (ICD-10 M54.5x / M54.16-17)"
+    },
+    {
+      "linkId": "symptomWeeks",
+      "text": "How many weeks has the back pain lasted?",
+      "type": "integer",
+      "required": true,
+      "onlyIfNoRedFlag": true,
+      "fromChart": "Condition.onsetDateTime"
+    },
+    {
+      "linkId": "conservativeWeeks",
+      "text": "Weeks of conservative care tried (physical therapy, anti-inflammatories, home exercise)",
+      "type": "integer",
+      "required": true,
+      "onlyIfNoRedFlag": true,
+      "fromChart": "Procedure (PT CPT 97110 etc.), MedicationRequest (NSAID)"
+    },
+    {
+      "linkId": "redFlags",
+      "text": "Any red flags? (cancer history, fever, fracture risk, cauda equina, progressive weakness)",
+      "type": "choice",
+      "required": true,
+      "fromChart": "Condition codes; \"none\" must be confirmed by a clinician"
+    },
+    {
+      "linkId": "neuroExam",
+      "text": "Neurological exam result",
+      "type": "choice",
+      "required": true,
+      "fromChart": "Observation (neuro exam)"
+    },
+    {
+      "linkId": "recentNote",
+      "text": "Office visit note from the last 30 days attached",
+      "type": "boolean",
+      "required": true,
+      "fromChart": "DocumentReference (date within 30 days)"
+    },
+    {
+      "linkId": "priorImaging",
+      "text": "Lumbar imaging in the last 12 months",
+      "type": "boolean",
+      "required": false,
+      "fromChart": "ImagingStudy"
+    }
+  ]
+}
