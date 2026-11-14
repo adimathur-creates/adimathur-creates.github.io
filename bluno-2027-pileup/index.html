@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A realisation clock for Indian exporters under the FEMA rules from 1 October 2026, and the bank-partnership plan built on it. Independent work on synthetic data.">
+</head><body>
+<title>The 2027 Pile-up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* One 860px column: a memo to a founder with a working tool in the middle. */
+:root{
+  --paper:#F6F5F1; --panel:#FFFFFF; --ink:#15171B; --muted:#5C6068; --rule:#E0DED6; --soft:#EFEDE7;
+  --rec:#2a78d6; --lost:#eb6834; --neutral:#9A9C95; --good:#1F7A4D; --good-soft:#E3F1E8; --warn-soft:#FBEEE2; --chase-soft:#E5EEFA;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"Public Sans","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023;
+  --rec:#3987e5; --lost:#d95926; --neutral:#6E706B; --good:#6CCB97; --good-soft:#15291F; --warn-soft:#33241A; --chase-soft:#17243A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023;
+  --rec:#3987e5; --lost:#d95926; --neutral:#6E706B; --good:#6CCB97; --good-soft:#15291F; --warn-soft:#33241A; --chase-soft:#17243A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;margin:0;padding-inline:16px;padding-block:28px 72px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2{font-family:var(--f-display);line-height:1.06;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.6rem,9vw,4.6rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.45rem,4.4vw,2rem);font-weight:600}
+h3{font-size:1.02rem;margin:0}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow,.k,.sec{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec{color:var(--rec)}
+.dek{font-size:1.14rem;max-width:68ch}
+.by{font-size:.9rem;color:var(--muted)}
+a{color:var(--rec)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:6px}
+.note strong{color:var(--ink)}
+.exec{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--rec);border-radius:6px;padding:18px 20px}
+.exec ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:9px}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.clock{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.clock b{font-family:var(--f-display);font-size:3rem;line-height:1;color:var(--lost)}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+input[type=text],input[type=date],input[type=number],select{font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);color:var(--ink);min-width:0}
+button,.btn{font:inherit;font-size:.86rem;font-weight:600;padding:8px 12px;border-radius:4px;border:1px solid var(--rule);background:var(--soft);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+button.primary{background:var(--rec);border-color:var(--rec);color:#fff}
+button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.file{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+.file input{font-size:.8rem;max-width:100%}
+.status{font-size:.86rem;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi .v{font-family:var(--f-display);font-size:1.75rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:4px 12px;align-items:center;font-size:.88rem}
+.bar .lab{display:flex;justify-content:space-between;gap:10px}
+.bar .lab span:last-child{color:var(--muted);white-space:nowrap}
+.bar .track{grid-column:1/2;height:10px;background:var(--soft);border-radius:2px;overflow:hidden}
+.bar .fill{height:100%;border-radius:2px}
+.bar .val{grid-column:2;grid-row:1/3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+#panel table{min-width:680px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--soft);white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.t-good{background:var(--good-soft);color:var(--good)}
+.t-warn{background:var(--warn-soft);color:var(--lost)}
+.t-chase{background:var(--chase-soft);color:var(--rec)}
+.t-lost{background:var(--warn-soft);color:var(--lost)}
+.t-neutral{background:var(--soft);color:var(--muted)}
+.mono{font-family:var(--f-mono);font-size:.8rem}
+details.msg{border:1px solid var(--rule);border-radius:6px;background:var(--paper)}
+details.msg summary{cursor:pointer;padding:10px 12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+details.msg summary span:last-child{color:var(--muted);font-size:.86rem}
+details.msg pre{margin:0;padding:12px;white-space:pre-wrap;font-family:var(--f-mono);font-size:.78rem;border-top:1px solid var(--rule)}
+details.msg .acts{padding:0 12px 12px;display:flex;gap:8px}
+.list{display:flex;flex-direction:column;gap:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.card h3{font-size:.98rem}
+.card p,.card li{font-size:.92rem;color:var(--muted)}
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px}
+.steps li::before{content:counter(s);font-family:var(--f-mono);font-size:.8rem;width:26px;height:26px;border-radius:50%;background:var(--soft);display:grid;place-items:center}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.84rem}
+.flow span{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:6px 9px}
+.flow em{font-style:normal;color:var(--muted)}
+footer{font-size:.84rem;color:var(--muted);display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--rule);padding-top:18px}
+.controls input[type=number]{width:120px}
+#everyday{width:160px}
+.kpis{grid-template-columns:repeat(3,1fr)}
+td .pill{white-space:normal}
+ul.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:.84rem}
+ul.tl li{padding-left:12px;border-left:3px solid var(--rule);color:var(--muted)}
+ul.tl li.e-decline{border-color:var(--lost);color:var(--ink)}
+ul.tl li.e-topup{border-color:var(--rec)}
+ul.tl li.e-ok{border-color:var(--good)}
+.rules td:first-child{color:var(--muted)}
+@media (max-width:700px){.kpis{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.clock b{font-size:2.4rem}}
+.calc{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.calc label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+.calc input{width:100%}
+.funnel{display:flex;flex-direction:column;gap:6px}
+.frow{display:grid;grid-template-columns:160px 1fr 70px;gap:10px;align-items:center;font-size:.88rem}
+.frow .track{height:12px;background:var(--soft);border-radius:2px;overflow:hidden}
+.frow .fill{height:100%;background:var(--rec)}
+.frow b{text-align:right;font-variant-numeric:tabular-nums}
+.timeline{display:flex;flex-direction:column;gap:0;border-left:2px solid var(--rule);margin-left:6px}
+.timeline .t{position:relative;padding:0 0 14px 18px}
+.timeline .t::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--panel);border:2px solid var(--rec)}
+.timeline .w{font-family:var(--f-mono);font-size:.72rem;color:var(--rec);letter-spacing:.04em;text-transform:uppercase}
+@media (max-width:700px){.calc{grid-template-columns:1fr 1fr}.frow{grid-template-columns:110px 1fr 56px}}
+:root{--c1:#eb6834;--c2:#2a78d6;--c3:#7a5bd1}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--c1:#d95926;--c2:#3987e5;--c3:#9479e0}}
+:root[data-theme="dark"]{--c1:#d95926;--c2:#3987e5;--c3:#9479e0}
+.cal{display:grid;grid-template-columns:repeat(14,1fr);gap:6px;align-items:end;height:200px;padding-top:8px}
+.cal .col{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.cal .stack{width:100%;max-width:34px;height:150px;display:flex;flex-direction:column-reverse;border-bottom:1px solid var(--rule)}
+.cal .stack span{display:block;width:100%}
+.cal b{font-size:.74rem;font-variant-numeric:tabular-nums}
+.cal i{font-style:normal;font-size:.68rem;color:var(--muted);white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.78rem;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+tr.pick{cursor:pointer} tr.pick:hover td{background:var(--soft)}
+pre.report{white-space:pre-wrap;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:14px;margin:0}
+@media (max-width:700px){.cal{gap:3px;height:180px}.cal i{font-size:.6rem}.cal b{font-size:.64rem}}
+</style>
+
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:16px">
+  <p class="eyebrow">For Bluno · Founding Core Team, Strategic Initiatives &amp; Growth · independent work on synthetic data</p>
+  <h1>The 2027 pile-up</h1>
+  <p class="dek">RBI’s new export rules took effect on 1 October 2026. Every open export bill in India now sits under one of several deadline rules, depending on when it shipped. The transition creates a quiet few months, then two sets of deadlines land together from March to August 2027. An exporter who misses one by more than a year can only ship against full advance or an LC, and banks must now monitor every bill continuously. I built the clock that sorts a book of bills into what to do now, and the plan that turns it into Bluno’s next bank partnerships.</p>
+  <p class="by">Aditya Mathur · <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a> · built with Claude Code; every number in the summary is computed live from the sample book</p>
+</header>
+
+<section>
+  <div class="exec">
+    <p class="k" style="margin-bottom:10px">The short version, for the sample book</p>
+    <ol id="exec"></ol>
+  </div>
+</section>
+
+<section>
+  <p class="sec">1 · What changed</p>
+  <h2>Four deadline rules on one book, and the bank is now on the hook</h2>
+  <div class="tablewrap"><table><thead><tr><th>Bill exported</th><th>Money must arrive within</th><th>Clock starts at</th></tr></thead><tbody>
+    <tr><td>Up to 13 Nov 2025</td><td>9 months</td><td>Export</td></tr>
+    <tr><td>14 Nov 2025 – 4 Jun 2026</td><td><b>15 months</b></td><td>Export</td></tr>
+    <tr><td>5 Jun – 30 Sep 2026</td><td>9 months</td><td>Export</td></tr>
+    <tr><td>From 1 Oct 2026</td><td>9 months (12 if invoiced or settled in rupees)</td><td>Shipment for goods, invoice for services and software, sale for overseas-warehouse goods</td></tr>
+  </tbody></table></div>
+  <div class="two">
+    <div class="card"><h3>For exporters</h3><p>Proceeds unpaid more than a year past the due date mean every future export needs full advance or an irrevocable LC. Bills up to ₹10 lakh can now be closed on a declaration. Software no longer uses SOFTEX: services file an EDF within 30 days of the invoice month ending.</p></div>
+    <div class="card"><h3>For banks</h3><p>Authorised dealer banks must run continuous monitoring of every bill’s realisation and upload documents to EDPMS within 5 working days. They now decide extensions, reductions, set-offs and third-party payments themselves, under published policies, and may not charge penalties for delays.</p></div>
+  </div>
+  <p class="by">From secondary summaries of the RBI notifications (January 2026 regulations; June and September 2026 amendments). The treatment of bills shipped before 1 October 2026 is not spelled out in one place: the tool follows the date bands above and flags every such bill for confirmation with the bank. Not legal advice.</p>
+</section>
+
+<section id="tool">
+  <p class="sec">2 · The working tool</p>
+  <h2>A bank’s book of export bills in, what to do this week out</h2>
+  <p>It loads with a fictional bank’s book of 697 bills from 30 SME exporters. Upload any exporter’s or bank’s outstanding-bills export in the same shape; it runs in the browser and nothing is uploaded.</p>
+  <div class="sheet">
+    <div class="controls">
+      <button class="primary" id="loadSample">Load sample book</button>
+      <label class="file">Bills (CSV)<input type="file" id="file" accept=".csv,text/csv"></label>
+      <label>As of<input type="date" id="asof"></label>
+    </div>
+    <p class="status" id="status"></p>
+    <div class="kpis" id="kpis"></div>
+    <div><p class="k" style="margin-bottom:6px">Open bills by the month they fall due</p><div id="cal"></div></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="panel"></div>
+    <div class="controls"><button id="dl">Download action list (CSV)</button><a class="btn" id="tpl" download="export_bills_template.csv">CSV template</a></div>
+  </div>
+  <p class="note"><strong>Checked, honestly.</strong> 33 automated tests cover every rule boundary: the transition dates, rupee settlement, the different start points for services and warehouse goods, month-end dates, the ₹10 lakh line, the one-year cliff, bank extensions, services EDF dates, and messy bank exports. The book is synthetic. Months after mid-2027 look thin partly because the sample has no exports after November 2026; the March–August stacking comes from the rules themselves.</p>
+</section>
+
+<section>
+  <p class="sec">3 · The growth play</p>
+  <h2>Sell the 2027 wave to banks before it arrives</h2>
+  <ol class="steps">
+    <li><div><h3>Bank partnerships: “Your 2027 peak, handled”</h3><p class="by">Banks must now monitor every bill continuously. Bluno offers the trade desk a portfolio view like the one above, plus the exporter-side work that clears it: extension requests with reasons, declaration batches for small bills, and eBRC follow-through. Lead with banks that have large SME export books in Bluno’s hubs, and the pitch has a date on it.</p></div></li>
+    <li><div><h3>Exporter acquisition: a free realisation check</h3><p class="by">An exporter uploads their outstanding-bills report and gets this action list in a minute. It shows the cliff, the extensions to ask for and the bills to declare. The free check is the hook, and the subscription is what they need for the next nine months.</p></div></li>
+    <li><div><h3>Distribution through people exporters already trust</h3><p class="by">Export promotion councils, CA firms that file for exporters, and freight forwarders who already hold the shipping data. Each can run the check for their clients, with Bluno as the system that does the work.</p></div></li>
+    <li><div><h3>Timing</h3><p class="by">December to February is the window: banks are planning for the new rules, and almost nothing is due yet. By March the desks are firefighting and won’t take meetings.</p></div></li>
+  </ol>
+  <div class="tablewrap"><table><thead><tr><th></th><th>First 30 days</th><th>Days 31–60</th><th>Days 61–90</th></tr></thead><tbody>
+    <tr><td>Banks</td><td>Map the 10 banks with the largest SME export books in Bluno’s hubs; run the check on one partner’s anonymised book</td><td>Pilot with one bank desk: weekly cliff list and a declaration batch</td><td>Case study from the pilot; two more banks in pipeline</td></tr>
+    <tr><td>Exporters</td><td>Launch the free check with one export promotion council</td><td>Webinar with that council on the 2027 deadlines</td><td>Conversion from check to subscription measured and tuned</td></tr>
+    <tr><td>Founder</td><td colspan="3">A weekly one-page update: pipeline, pilots, what slipped and why.</td></tr>
+  </tbody></table></div>
+</section>
+
+<section>
+  <p class="sec">4 · How we would know</p>
+  <div class="two">
+    <div class="card"><h3>Partnerships</h3><p>Banks signed, and the share of each partner’s export book monitored through Bluno.</p></div>
+    <div class="card"><h3>Exporter growth</h3><p>Free checks run, the share that convert to paid, and exporters onboarded per bank partner.</p></div>
+    <div class="card"><h3>Outcome</h3><p>Bills cleared before their due date, and exporters kept off the advance-or-LC restriction. That number is the case study the next bank wants to see.</p></div>
+    <div class="card"><h3>Speed</h3><p>Time to close a declaration batch and to get an extension approved, before and after Bluno.</p></div>
+  </div>
+</section>
+
+<section>
+  <p class="sec">5 · What I don’t know</p>
+  <ul class="plain">
+    <li>How much of this Bluno already does. It likely handles EDPMS reconciliation and eBRCs today; the new parts here are the transition clock, the cliff list and the bank-side portfolio view.</li>
+    <li>How each bank reads the transition for pre-October bills, and whether the one-year rule applies to them. Banks publish their own policies now, so this may differ by partner.</li>
+    <li>Bluno’s current bank partners and their commercial terms, which decide whether the bank or the exporter pays.</li>
+  </ul>
+</section>
+
+<footer>
+  <p><strong>Sources and honesty notes.</strong> Rules from secondary summaries of the RBI notifications: KPMG Flash News and LKS (via Mondaq) on the January 2026 regulations; TaxGuru, TaxUpdate.in and CorpLawUpdates on the June and September 2026 amendments and the 1 October changes; trad.co.in on bank obligations and eBRC. Check against the RBI texts and your bank’s published policy before relying on any date. Bluno’s description from its public listings (G2, Crunchbase, bluno.in). Exporters, bills and amounts are invented; FX rates are round illustrative numbers. Not affiliated with Bluno. Not legal advice.</p>
+  <p>Aditya Mathur · <a href="https://adimathur-creates.github.io/">More work</a></p>
+</footer>
+</div>
+<script>
+// BD: a fictional bank's book of SME export bills, Jan 2025 to Nov 2026. Exporters, bills and amounts are invented.
+var BD = (function () {
+  'use strict';
+  function rng(seed) { var s = seed >>> 0; return function () { s = (s + 0x6D2B79F5) >>> 0; var t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  var NAMES = ['Tirupur Knitline', 'Moradabad Brassworks', 'Kochi Spice Traders', 'Surat Weave Co', 'Rajkot Castings', 'Jaipur Block Prints', 'Ludhiana Hosiery Hub', 'Panipat Home Textiles', 'Coimbatore Pump Works', 'Kanpur Leather Craft',
+    'Aligarh Lock Systems', 'Bhiwandi Fabrics', 'Nashik Grape Exports', 'Agra Footwear Studio', 'Vizag Marine Foods', 'Pune Code Labs', 'Hyderabad Data Services', 'Bengaluru SaaS Works', 'Chennai Auto Parts', 'Mysuru Silk House',
+    'Karur Linen Mills', 'Sivakasi Print Solutions', 'Firozabad Glassware', 'Saharanpur Woodcraft', 'Belgaum Foundry Co', 'Erode Cotton Traders', 'Mangaluru Cashew Co', 'Indore Agro Foods', 'Noida Design Studio', 'Gurugram Analytics'];
+  var SERVICE = { 'Pune Code Labs': 'software', 'Hyderabad Data Services': 'services', 'Bengaluru SaaS Works': 'software', 'Noida Design Studio': 'services', 'Gurugram Analytics': 'services' };
+  var FX = { USD: 88.5, EUR: 102, GBP: 117, AED: 24.1, INR: 1 };
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function iso(ms) { var d = new Date(ms); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); }
+
+  function generate(seed) {
+    var r = rng(seed || 26), bills = [];
+    var START = Date.UTC(2025, 0, 6), END = Date.UTC(2026, 10, 12), ASOF = Date.UTC(2026, 10, 15);
+    function pick(a) { return a[Math.floor(r() * a.length)]; }
+    NAMES.forEach(function (name, ei) {
+      var iec = String(1000000000 + Math.floor(r() * 8999999999)).slice(0, 10);
+      var kind = SERVICE[name] || 'goods', nBills = 12 + Math.floor(r() * 22);
+      var payer = r(); // how reliable this exporter's buyers are
+      var cur = kind === 'goods' ? pick(['USD', 'USD', 'USD', 'EUR', 'GBP', 'AED', 'INR']) : pick(['USD', 'USD', 'GBP', 'EUR']);
+      for (var i = 0; i < nBills; i++) {
+        var ms = START + Math.floor(r() * (END - START) / 864e5) * 864e5;
+        var type = kind === 'goods' ? (r() < 0.08 ? 'warehouse' : 'goods') : kind;
+        var inrVal = Math.exp(Math.log(2e5) + r() * Math.log(6e7 / 2e5)); // Rs 2 lakh to Rs 6 crore, log-uniform
+        var value = Math.round(inrVal / FX[cur] / 10) * 10;
+        var age = (ASOF - ms) / 864e5, realised = 0, ext = '';
+        var p = r();
+        var paidProb = Math.min(0.97, (age / 200) * (0.55 + payer * 0.5));
+        if (p < paidProb) realised = r() < 0.18 ? Math.round(value * (1 - (0.002 + r() * 0.015)) * 100) / 100 : value;     // full, or short by bank charges
+        else if (p < paidProb + 0.08) realised = Math.round(value * (0.3 + r() * 0.5));                                  // part paid
+        var sale = '';
+        if (type === 'warehouse' && r() < 0.75) sale = iso(Math.min(ASOF - 864e5, ms + (20 + Math.floor(r() * 120)) * 864e5));
+        if (realised < value && r() < 0.15) ext = iso(ms + (300 + Math.floor(r() * 200)) * 864e5);
+        bills.push({ exporter: name, iec: iec, bill: (type === 'goods' || type === 'warehouse' ? 'SB' : 'INV') + '-' + (ei + 1) + '-' + (1000 + i), type: type, date: iso(ms), saleDate: sale,
+          currency: cur, value: value, realised: realised, fx: FX[cur], inrSettled: cur === 'INR' ? 'yes' : '', extendedTo: ext, edfFiled: type === 'software' || type === 'services' ? (r() < 0.8 ? 'yes' : 'no') : '' });
+      }
+    });
+    bills.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    return { bank: 'Fictional bank SME export book', asOf: iso(ASOF), bills: bills };
+  }
+  var COLS = ['Exporter', 'IEC', 'Bill no', 'Type', 'Shipment date', 'Sale date', 'Currency', 'Invoice value', 'Realised', 'FX rate', 'INR settled', 'Extended to', 'EDF filed'];
+  var KEYS = ['exporter', 'iec', 'bill', 'type', 'date', 'saleDate', 'currency', 'value', 'realised', 'fx', 'inrSettled', 'extendedTo', 'edfFiled'];
+  function toCSV(bills) {
+    return COLS.join(',') + '\n' + bills.map(function (b) { return KEYS.map(function (k) { var v = String(b[k] === undefined ? '' : b[k]); return /[",\n]/.test(v) ? '"' + v + '"' : v; }).join(','); }).join('\n') + '\n';
+  }
+  return { generate: generate, toCSV: toCSV, COLS: COLS };
+})();
+
+
+// RC: realisation clock for Indian exporters under the FEMA export rules in force from 1 October 2026,
+// with the transition rules for bills shipped earlier. Pure functions, no network; browser and Node.
+// Rules follow secondary summaries of RBI notifications (see page footer). Every rule is a constant here so it can be corrected in one place.
+var RC = (function () {
+  'use strict';
+
+  var RULES = {
+    newRegimeFrom: '2026-10-01',     // FEMA (Export and Import of Goods and Services) Regulations, 2026
+    // Transition for exports before 1 Oct 2026 under the 2015 Regulations, by date of export.
+    legacy: [
+      { upto: '2025-11-13', months: 9, label: '2015 rules (9 months)' },
+      { upto: '2026-06-04', months: 15, label: '2015 rules, Nov 2025 amendment (15 months)' },
+      { upto: '2026-09-30', months: 9, label: '2015 rules, June 2026 amendment (9 months)' }
+    ],
+    months2026: 9,                   // after the 22 Sep 2026 amendment
+    monthsINR2026: 12,               // invoiced and/or settled in INR, 2026 rules only
+    declareLimitINR: 1000000,        // Rs 10 lakh per shipping bill / invoice: closure or reduction on exporter declaration
+    cliffDays: 365,                  // unrealised > 1 year past due: further exports only against full advance or irrevocable LC
+    extendWindow: 30,                // ask the bank for an extension at least this many days before the due date
+    edfDays: 30                      // services EDF: within 30 days from the end of the invoice month (2026 rules)
+  };
+
+  // ---------- dates ----------
+  function parseDate(s) {
+    s = String(s || '').trim(); var m;
+    if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    if ((m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/))) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+    var MON = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
+    if ((m = s.match(/^(\d{1,2})[\s\-]([A-Za-z]{3})[A-Za-z]*[\s\-](\d{2,4})$/)) && MON[m[2].toUpperCase()] !== undefined) { var y = +m[3]; if (y < 100) y += 2000; return new Date(Date.UTC(y, MON[m[2].toUpperCase()], +m[1])); }
+    return null;
+  }
+  function iso(d) { return d ? d.toISOString().slice(0, 10) : ''; }
+  function addDays(d, n) { return new Date(d.getTime() + n * 864e5); }
+  function days(a, b) { return Math.round((b - a) / 864e5); }
+  function addMonths(d, n) {
+    var y = d.getUTCFullYear(), m = d.getUTCMonth() + n, dom = d.getUTCDate();
+    var last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    return new Date(Date.UTC(y, m, Math.min(dom, last)));
+  }
+  function endOfMonth(d) { return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)); }
+
+  // ---------- CSV ----------
+  function parseCSV(text) {
+    var rows = [], row = [], f = '', q = false, t = String(text || '').replace(/^﻿/, '');
+    for (var i = 0; i < t.length; i++) {
+      var c = t[i];
+      if (q) { if (c === '"') { if (t[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true; else if (c === ',') { row.push(f); f = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+      else f += c;
+    }
+    if (f !== '' || row.length) { row.push(f); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (x) { return String(x).trim() !== ''; }); });
+  }
+  function num(s) { var v = parseFloat(String(s === undefined ? '' : s).replace(/[₹$,\s]|INR|USD|EUR|GBP|AED/gi, '')); return isNaN(v) ? 0 : v; }
+  var COLS = {
+    exporter: ['exporter', 'exporter name', 'customer', 'iec name', 'client'],
+    iec: ['iec', 'iec code'],
+    bill: ['bill', 'shipping bill', 'shipping bill no', 'sb no', 'invoice', 'invoice no', 'reference', 'bill no'],
+    type: ['type', 'export type', 'category'],
+    date: ['shipment date', 'shipping bill date', 'sb date', 'invoice date', 'date', 'export date'],
+    saleDate: ['sale date', 'warehouse sale date'],
+    currency: ['currency', 'invoice currency'],
+    value: ['invoice value', 'value', 'fob value', 'amount'],
+    realised: ['realised', 'realized', 'amount realised', 'amount realized', 'received'],
+    fx: ['fx rate', 'rate', 'exchange rate', 'inr rate'],
+    inrSettled: ['inr settled', 'settled in inr', 'rupee settled'],
+    extendedTo: ['extended to', 'extension until', 'extended due date'],
+    edfFiled: ['edf filed', 'edf', 'edf submitted']
+  };
+  var DEFAULT_FX = { INR: 1, USD: 88.5, EUR: 102, GBP: 117, AED: 24.1 };
+  function read(text) {
+    var rows = parseCSV(text), hi = -1, map = {};
+    for (var r = 0; r < Math.min(rows.length, 12) && hi < 0; r++) {
+      var low = rows[r].map(function (x) { return String(x).trim().toLowerCase(); }), m = {};
+      Object.keys(COLS).forEach(function (k) { for (var a = 0; a < COLS[k].length; a++) { var ix = low.indexOf(COLS[k][a]); if (ix >= 0) { m[k] = ix; break; } } });
+      if (m.bill !== undefined && m.date !== undefined && m.value !== undefined) { hi = r; map = m; }
+    }
+    if (hi < 0) return { error: 'Need at least a bill or invoice number, a shipment or invoice date, and a value.', rows: [] };
+    var out = [], bad = 0;
+    for (var i = hi + 1; i < rows.length; i++) {
+      var x = rows[i], g = function (k) { return map[k] !== undefined ? String(x[map[k]] === undefined ? '' : x[map[k]]).trim() : ''; };
+      var d = parseDate(g('date')); if (!d || !g('bill')) { bad++; continue; }
+      var cur = (g('currency') || 'USD').toUpperCase();
+      out.push({
+        exporter: g('exporter') || 'Exporter', iec: g('iec'), bill: g('bill'), type: normType(g('type')), date: d, saleDate: parseDate(g('saleDate')),
+        currency: cur, value: num(g('value')), realised: num(g('realised')), fx: num(g('fx')) || DEFAULT_FX[cur] || 0,
+        inrSettled: /^(y|yes|true|1)$/i.test(g('inrSettled')) || cur === 'INR', extendedTo: parseDate(g('extendedTo')),
+        edfFiled: /^(y|yes|true|1)$/i.test(g('edfFiled'))
+      });
+    }
+    return { rows: out, skipped: bad };
+  }
+  function normType(t) {
+    t = String(t || '').toLowerCase();
+    if (/soft/.test(t)) return 'software';
+    if (/serv/.test(t)) return 'services';
+    if (/ware/.test(t)) return 'warehouse';
+    return 'goods';
+  }
+
+  // ---------- one bill ----------
+  // Which rules apply, when the money is due, and what to do next.
+  function assess(b, asOf, R) {
+    R = R || RULES;
+    var now = parseDate(asOf) || asOf, cut = parseDate(R.newRegimeFrom);
+    var out = { regime: '', months: 0, trigger: '', due: null, daysLeft: null, cliff: null, edfDue: null, flags: [] };
+    var isNew = b.date >= cut || (b.type === 'warehouse' && b.saleDate && b.saleDate >= cut);
+    if (isNew) {
+      var inr = b.inrSettled;
+      out.months = inr ? R.monthsINR2026 : R.months2026;
+      out.regime = '2026 rules (' + out.months + ' months' + (inr ? ', INR' : '') + ')';
+      if (b.type === 'warehouse') {
+        if (b.saleDate) { out.trigger = 'sale from overseas warehouse'; out.due = addMonths(b.saleDate, out.months); }
+        else { out.trigger = 'sale from overseas warehouse (not yet sold)'; out.flags.push('nosale'); }
+      } else { out.trigger = b.type === 'goods' ? 'shipment' : 'invoice'; out.due = addMonths(b.date, out.months); }
+      if (b.type === 'software' || b.type === 'services') {
+        out.edfDue = addDays(endOfMonth(b.date), R.edfDays);
+        if (b.type === 'services') out.flags.push('edfAlt');
+      }
+    } else {
+      var L = null;
+      for (var i = 0; i < R.legacy.length; i++) if (b.date <= parseDate(R.legacy[i].upto)) { L = R.legacy[i]; break; }
+      if (!L) L = R.legacy[R.legacy.length - 1];
+      out.months = L.months; out.regime = L.label; out.trigger = 'export';
+      out.due = addMonths(b.date, L.months);
+      if (b.type !== 'goods') out.flags.push('legacyTrigger');
+      if (b.inrSettled) out.flags.push('legacyINR');
+    }
+    if (b.extendedTo && out.due && b.extendedTo > out.due) { out.due = b.extendedTo; out.flags.push('extended'); }
+    var inrValue = b.value * (b.fx || 1), outstanding = Math.max(0, b.value - b.realised), outINR = outstanding * (b.fx || 1);
+    out.valueINR = Math.round(inrValue); out.outstanding = outstanding; out.outstandingINR = Math.round(outINR);
+    out.realisedShare = b.value ? Math.min(1, b.realised / b.value) : 0;
+    if (out.due) { out.daysLeft = days(now, out.due); out.cliff = addDays(out.due, R.cliffDays); out.daysToCliff = days(now, out.cliff); }
+
+    // Status, most urgent first.
+    var done = outstanding <= b.value * 0.0001;
+    var small = inrValue <= R.declareLimitINR;
+    if (done) { out.status = 'realised'; out.action = 'Realised. Make sure the bank has closed the EDPMS entry and the eBRC is generated.'; }
+    else if (out.due && out.daysToCliff < 0) { out.status = 'cliff'; out.action = 'Unrealised more than a year past the due date: further exports only against full advance or an irrevocable LC until this is cleared.' + (small ? ' Under ₹10 lakh: close it on declaration now.' : ' Clear it, or get a reduction or extension approved.'); }
+    else if (small && (out.due && out.daysLeft < 0 || b.realised > 0)) { out.status = 'declare'; out.action = (b.realised > 0 ? 'Short by ' + fmtINR(outINR) + ' (likely bank charges or a discount). ' : 'Overdue, but ') + 'the bill is under ₹10 lakh: close or reduce it on the exporter’s declaration; quarterly bulk declarations are allowed.'; }
+    else if (out.due && out.daysLeft < 0) { out.status = 'overdue'; out.action = 'Overdue by ' + (-out.daysLeft) + ' days. Ask the bank for an extension with reasons now. ' + out.daysToCliff + ' days before exports to every buyer are restricted.'; }
+    else if (out.due && out.daysLeft <= R.extendWindow) { out.status = 'extend'; out.action = 'Due in ' + out.daysLeft + ' days. If the buyer will pay late, request an extension before the due date, not after.'; }
+    else if (!out.due) { out.status = 'watch'; out.action = 'Clock starts when the goods are sold from the warehouse. Record the sale date when it happens.'; }
+    else { out.status = 'ontrack'; out.action = 'Due ' + iso(out.due) + ' (' + out.daysLeft + ' days).'; }
+    if (out.edfDue && !b.edfFiled) {
+      var ed = days(now, out.edfDue);
+      if (ed < 0) out.flags.push('edfLate'); else if (ed <= 10) out.flags.push('edfSoon');
+      out.edfDaysLeft = ed;
+    }
+    return out;
+  }
+  function fmtINR(v) {
+    v = Math.round(v);
+    if (v >= 1e7) return '₹' + (v / 1e7).toFixed(2) + ' cr';
+    if (v >= 1e5) return '₹' + (v / 1e5).toFixed(2) + ' lakh';
+    return '₹' + v.toLocaleString('en-IN');
+  }
+
+  // ---------- portfolio (one exporter, or a bank's book) ----------
+  var ORDER = ['cliff', 'overdue', 'extend', 'declare', 'watch', 'ontrack', 'realised'];
+  function analyse(bills, asOf, R) {
+    var rows = bills.map(function (b) { var a = assess(b, asOf, R); var o = {}; for (var k in b) o[k] = b[k]; for (var k2 in a) o[k2] = a[k2]; return o; });
+    var by = {}; ORDER.forEach(function (s) { by[s] = { n: 0, inr: 0 }; });
+    rows.forEach(function (r) { by[r.status].n++; by[r.status].inr += r.outstandingINR; });
+    var ex = {};
+    rows.forEach(function (r) {
+      var e = ex[r.exporter] = ex[r.exporter] || { exporter: r.exporter, iec: r.iec, bills: 0, outstandingINR: 0, worst: 'realised', cliffBills: 0, nextCliff: null, overdue: 0, declare: 0, extend: 0, edfLate: 0 };
+      e.bills++; e.outstandingINR += r.outstandingINR;
+      if (ORDER.indexOf(r.status) < ORDER.indexOf(e.worst)) e.worst = r.status;
+      if (r.status === 'cliff') e.cliffBills++;
+      if (r.status === 'overdue') { e.overdue++; if (!e.nextCliff || r.cliff < e.nextCliff) e.nextCliff = r.cliff; }
+      if (r.status === 'declare') e.declare++;
+      if (r.status === 'extend') e.extend++;
+      if (r.flags.indexOf('edfLate') >= 0) e.edfLate++;
+    });
+    var exporters = Object.keys(ex).map(function (k) { return ex[k]; }).sort(function (a, b) { return ORDER.indexOf(a.worst) - ORDER.indexOf(b.worst) || b.outstandingINR - a.outstandingINR; });
+    var now = parseDate(asOf);
+    var soonCliff = exporters.filter(function (e) { return e.worst === 'overdue' && e.nextCliff && days(now, e.nextCliff) <= 90; });
+    var regimes = {}; rows.forEach(function (r) { if (r.status !== 'realised') regimes[r.regime] = (regimes[r.regime] || 0) + 1; });
+    // Due-date calendar: open bills by the month their realisation falls due.
+    var cal = {};
+    rows.forEach(function (r) { if (r.status !== 'realised' && r.due) { var k = iso(r.due).slice(0, 7); cal[k] = cal[k] || { n: 0, inr: 0, regimes: {} }; cal[k].n++; cal[k].inr += r.outstandingINR; cal[k].regimes[r.months + (r.regime.indexOf('2026 rules') === 0 ? 'n' : 'l')] = (cal[k].regimes[r.months + (r.regime.indexOf('2026 rules') === 0 ? 'n' : 'l')] || 0) + 1; } });
+    return { calendar: cal, rows: rows.sort(function (a, b) { return ORDER.indexOf(a.status) - ORDER.indexOf(b.status) || (a.daysLeft || 0) - (b.daysLeft || 0); }), byStatus: by, exporters: exporters, soonCliff: soonCliff, regimes: regimes,
+      edfLate: rows.filter(function (r) { return r.flags.indexOf('edfLate') >= 0; }).length, total: rows.length };
+  }
+
+  // ---------- letters ----------
+  function extensionRequest(r, exporterName) {
+    return 'To: The Authorised Dealer (trade finance / EDPMS desk)\nSubject: Request to extend the realisation period, ' + (r.type === 'goods' || r.type === 'warehouse' ? 'shipping bill ' : 'invoice ') + r.bill + '\n\n' +
+      'We, ' + (exporterName || r.exporter) + (r.iec ? ' (IEC ' + r.iec + ')' : '') + ', request an extension of the realisation period for ' + r.bill + ' dated ' + iso(r.date) + ', invoice value ' + r.currency + ' ' + r.value.toLocaleString('en-IN') + ', of which ' + r.currency + ' ' + r.outstanding.toLocaleString('en-IN') + ' is outstanding. The current due date is ' + iso(r.due) + '.\n\n' +
+      'Reason for delay: [buyer’s reason, with the correspondence attached]\nExpected date of realisation: [date]\nSupporting documents: [buyer confirmation, correspondence, any part payments]\n\n' +
+      'We confirm the export is genuine and the proceeds will be realised in full. Please update EDPMS accordingly.\n\nAuthorised signatory';
+  }
+
+  function toCSV(rows, cols) {
+    function esc(v) { v = v === undefined || v === null ? '' : (v instanceof Date ? iso(v) : String(v)); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+    return cols.join(',') + '\n' + rows.map(function (r) { return cols.map(function (c) { return esc(r[c]); }).join(','); }).join('\n') + '\n';
+  }
+
+  return { RULES: RULES, ORDER: ORDER, parseDate: parseDate, iso: iso, addMonths: addMonths, days: days, read: read, assess: assess, analyse: analyse, extensionRequest: extensionRequest, fmtINR: fmtINR, toCSV: toCSV };
+})();
+
+
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function day(d) { return d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '–'; }
+  var F = RC.fmtINR;
+  var S = { cliff: ['t-warn', 'Exports restricted'], overdue: ['t-warn', 'Overdue'], extend: ['t-chase', 'Extend now'], declare: ['t-chase', 'Close on declaration'], watch: ['t-neutral', 'Waiting for sale'], ontrack: ['t-good', 'On track'], realised: ['t-neutral', 'Realised'] };
+  var state = { bills: null, source: '', tab: 'act', P: null, sel: null };
+
+  function download(name, text, type) {
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: type || 'text/csv' })); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function loadSample() {
+    var d = BD.generate(26);
+    state.bills = RC.read(BD.toCSV(d.bills)).rows; state.source = d.bank + ': ' + d.bills.length + ' bills from 30 fictional exporters, Jan 2025 to Nov 2026';
+    $('asof').value = d.asOf; run();
+  }
+  function run() {
+    if (!state.bills) return;
+    state.P = RC.analyse(state.bills, $('asof').value || '2026-11-15');
+    $('status').textContent = state.source + '.';
+    renderKpis(); renderCal(); renderExec(); renderTab();
+  }
+  function renderKpis() {
+    var P = state.P, b = P.byStatus, open = P.total - b.realised.n;
+    var k = [
+      [open, 'open bills', F(Object.keys(b).reduce(function (a, s) { return a + b[s].inr; }, 0)) + ' outstanding'],
+      [b.cliff.n, 'already past the one-year cliff', P.exporters.filter(function (e) { return e.cliffBills; }).length + ' exporters can only ship against advance or LC'],
+      [b.overdue.n, 'overdue, still savable', F(b.overdue.inr) + ': ask for extensions now'],
+      [P.soonCliff.length, 'exporters within 90 days of the cliff', 'the calls to make this week'],
+      [b.declare.n, 'closable on declaration', 'under ₹10 lakh: no documents chase needed'],
+      [P.edfLate, 'services EDFs late', 'due 30 days after the invoice month']
+    ];
+    $('kpis').innerHTML = k.map(function (x) { return '<div class="kpi"><span class="v">' + esc(x[0]) + '</span><span class="k">' + esc(x[1]) + '</span><span class="s">' + esc(x[2]) + '</span></div>'; }).join('');
+  }
+  function renderCal() {
+    var C = state.P.calendar, asOf = ($('asof').value || '2026-11-15').slice(0, 7), months = [];
+    var y = +asOf.slice(0, 4), m = +asOf.slice(5, 7);
+    for (var i = 0; i < 14; i++) { var mm = ((m - 1 + i) % 12) + 1, yy = y + Math.floor((m - 1 + i) / 12); months.push(yy + '-' + (mm < 10 ? '0' : '') + mm); }
+    var max = Math.max.apply(null, months.map(function (k) { return C[k] ? C[k].n : 0; }).concat([1]));
+    $('cal').innerHTML = '<div class="cal">' + months.map(function (k) {
+      var c = C[k] || { n: 0, regimes: {} }, l15 = c.regimes['15l'] || 0, l9 = c.regimes['9l'] || 0, n = c.n - l15 - l9;
+      var h = function (v) { return (v / max * 100).toFixed(1) + '%'; };
+      var lab = new Date(Date.UTC(+k.slice(0, 4), +k.slice(5, 7) - 1, 1)).toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' });
+      return '<div class="col" title="' + k + ': ' + c.n + ' bills (' + l15 + ' on 15 months, ' + l9 + ' on 9 months under the 2015 rules, ' + n + ' under the 2026 rules)"><div class="stack"><span style="height:' + h(n) + ';background:var(--c3)"></span><span style="height:' + h(l9) + ';background:var(--c2)"></span><span style="height:' + h(l15) + ';background:var(--c1)"></span></div><b>' + c.n + '</b><i>' + lab + (k.slice(5) === '01' ? ' ’' + k.slice(2, 4) : '') + '</i></div>';
+    }).join('') + '</div><div class="legend"><span><i style="background:var(--c1)"></i>Shipped 14 Nov 2025 – 4 Jun 2026 (15 months)</span><span><i style="background:var(--c2)"></i>Other pre-October bills (9 months)</span><span><i style="background:var(--c3)"></i>2026 rules (9 or 12 months)</span></div>';
+  }
+  function renderExec() {
+    var P = state.P, b = P.byStatus, C = P.calendar;
+    var peak = Object.keys(C).sort(function (a, c) { return C[c].n - C[a].n; })[0];
+    var near = Object.keys(C).filter(function (k) { return k >= ($('asof').value || '').slice(0, 7) && k < '2027-03'; }).reduce(function (a, k) { return a + C[k].n; }, 0);
+    var wave = Object.keys(C).filter(function (k) { return k >= '2027-03' && k <= '2027-08'; }).reduce(function (a, k) { return a + C[k].n; }, 0);
+    var L = [];
+    L.push('<b>' + Object.keys(P.regimes).length + ' sets of deadline rules</b> apply to this one book at the same time, depending on when each bill shipped and whether it was settled in rupees.');
+    L.push('<b>The quiet before the pile-up:</b> ' + near + ' open bills fall due before March 2027, then <b>' + wave + ' fall due between March and August 2027</b>, peaking in ' + new Date(Date.UTC(+peak.slice(0, 4), +peak.slice(5, 7) - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }) + '. Bills shipped on the 15-month clock land at the same time as the 9-month bills shipped after June.');
+    L.push('<b>' + b.cliff.n + ' bills</b> are already more than a year past due, so their exporters can only ship against full advance or an LC. <b>' + P.soonCliff.length + ' more exporters</b> reach that point within 90 days unless an extension is approved.');
+    L.push('<b>' + b.declare.n + ' bills</b> (' + F(b.declare.inr) + ') can be closed on the exporter’s declaration because they are under ₹10 lakh. That is pure paperwork the new rules removed, and bank desks can clear it in one quarterly batch.');
+    L.push('For Bluno, that is the pitch: the bank must now monitor every bill continuously, and the 2027 wave is the deadline that makes it urgent.');
+    $('exec').innerHTML = L.map(function (x) { return '<li>' + x + '</li>'; }).join('');
+  }
+  var TABS = [['act', 'Act now'], ['declare', 'Close on declaration'], ['exp', 'Exporters'], ['letter', 'Extension letter'], ['all', 'All open bills']];
+  function table(rows, withPick) {
+    return '<div class="tablewrap"><table><thead><tr><th>Exporter</th><th>Bill</th><th>Shipped / invoiced</th><th>Rules</th><th>Due</th><th class="num">Outstanding</th><th>Status and next step</th></tr></thead><tbody>' +
+      rows.map(function (r) { var i = state.P.rows.indexOf(r); return '<tr' + (withPick ? ' data-pick="' + i + '" class="pick"' : '') + '><td><b>' + esc(r.exporter) + '</b></td><td class="mono">' + esc(r.bill) + '<br><span class="by">' + esc(r.type) + '</span></td><td>' + day(r.date) + '</td><td>' + esc(r.regime) + '</td><td>' + day(r.due) + '</td><td class="num">' + F(r.outstandingINR) + '</td><td><span class="pill ' + S[r.status][0] + '">' + S[r.status][1] + '</span><br><span class="by">' + esc(r.action) + '</span></td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+  function renderTab() {
+    $('tabs').innerHTML = TABS.map(function (t) { return '<button data-tab="' + t[0] + '" aria-pressed="' + (state.tab === t[0]) + '">' + t[1] + '</button>'; }).join('');
+    var P = state.P, h = '';
+    if (state.tab === 'act') {
+      var act = P.rows.filter(function (r) { return r.status === 'cliff' || r.status === 'overdue' || r.status === 'extend'; });
+      h = '<p class="by" style="margin-bottom:10px">Most urgent first. Click a row to draft its extension request.</p>' + table(act, true);
+    } else if (state.tab === 'declare') {
+      var dec = P.rows.filter(function (r) { return r.status === 'declare'; });
+      h = '<p class="by" style="margin-bottom:10px">Bills up to ₹10 lakh (or the foreign-currency equivalent) can be closed or reduced on the exporter’s declaration; declarations can be consolidated quarterly. Download the list as the batch.</p>' + table(dec, false);
+    } else if (state.tab === 'exp') {
+      h = '<p class="by" style="margin-bottom:10px">The bank’s view: which exporters to call first.</p><div class="tablewrap"><table><thead><tr><th>Exporter</th><th class="num">Bills</th><th class="num">Outstanding</th><th>Worst status</th><th class="num">Past cliff</th><th class="num">Overdue</th><th>Next cliff</th><th class="num">To declare</th></tr></thead><tbody>' +
+        P.exporters.map(function (e) { return '<tr><td><b>' + esc(e.exporter) + '</b></td><td class="num">' + e.bills + '</td><td class="num">' + F(e.outstandingINR) + '</td><td><span class="pill ' + S[e.worst][0] + '">' + S[e.worst][1] + '</span></td><td class="num">' + (e.cliffBills || '–') + '</td><td class="num">' + (e.overdue || '–') + '</td><td>' + day(e.nextCliff) + '</td><td class="num">' + (e.declare || '–') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+    } else if (state.tab === 'letter') {
+      var r = state.sel !== null ? P.rows[state.sel] : P.rows.filter(function (x) { return x.status === 'overdue' || x.status === 'extend'; })[0];
+      h = r ? '<p class="by" style="margin-bottom:10px">Draft for ' + esc(r.exporter) + ', ' + esc(r.bill) + '. Pick another bill from “Act now”.</p><pre class="report" id="lettext">' + esc(RC.extensionRequest(r)) + '</pre><div class="controls" style="margin-top:10px"><button id="copyLet">Copy</button></div>' : '<p class="by">No overdue bills.</p>';
+    } else {
+      var open = P.rows.filter(function (r) { return r.status !== 'realised'; });
+      h = table(open.slice(0, 300), true) + (open.length > 300 ? '<p class="by">First 300 of ' + open.length + '. Download for all.</p>' : '');
+    }
+    $('panel').innerHTML = h;
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-tab]'); if (b) { state.tab = b.getAttribute('data-tab'); renderTab(); return; }
+    var p = e.target.closest('[data-pick]'); if (p) { state.sel = +p.getAttribute('data-pick'); state.tab = 'letter'; renderTab(); return; }
+    if (e.target.id === 'copyLet') { try { navigator.clipboard.writeText($('lettext').textContent); e.target.textContent = 'Copied'; } catch (x) { } }
+  });
+  $('loadSample').addEventListener('click', loadSample);
+  $('asof').addEventListener('change', run);
+  $('file').addEventListener('change', function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () { var res = RC.read(rd.result); if (res.error || !res.rows.length) { $('status').textContent = res.error || 'No bills found.'; return; } state.bills = res.rows; state.source = f.name + ': ' + res.rows.length + ' bills'; state.sel = null; run(); };
+    rd.readAsText(f);
+  });
+  $('dl').addEventListener('click', function () { if (state.P) download('realisation_actions.csv', RC.toCSV(state.P.rows.filter(function (r) { return r.status !== 'realised'; }).map(function (r) { return { exporter: r.exporter, bill: r.bill, type: r.type, date: r.date, rules: r.regime, due: r.due, outstanding_inr: r.outstandingINR, status: S[r.status][1], next_step: r.action }; }), ['exporter', 'bill', 'type', 'date', 'rules', 'due', 'outstanding_inr', 'status', 'next_step'])); });
+  $('tpl').href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(BD.COLS.join(',') + '\nYour Exports Pvt Ltd,0123456789,SB-1001,goods,2026-02-10,,USD,25000,0,88.5,,,\n');
+  loadSample();
+})();
+
+</script>
+
+</body></html>
