@@ -1,0 +1,37 @@
+/* Sourced facts used on the page. Each has the claim as used, the figure, and where it comes from. */
+module.exports = {
+  asOf: "15 November 2026",
+  facts: {
+    stock: { v: "Rs 8.1 lakh crore", text: "locked in delayed payments to MSMEs", src: "Economic Survey 2025-26, reported by PTI / The Week, 29 Jan 2026", url: "https://www.theweek.in/wire-updates/business/2026/01/29/survey-flags-delayed-payment-challenge-for-msmes-suggests-expansion-of-cash-flow-based-lending.html" },
+    peak: { v: "Rs 10.7 lakh crore", text: "2022 estimate; Rs 8.27 lakh crore in 2023", src: "Recordent, Indian SME Receivables Report 2026, via FintechBizNews", url: "https://fintechbiznews.com/fintech-information-technology/risk-to-receivables-how-indian-smes-are-struggling" },
+    samadhaan: { v: "2,56,892 applications, Rs 55,244 crore", text: "filed on MSME Samadhaan since Oct 2017; 58,148 cases disposed by the councils (as of June 2026)", src: "PIB year-end review of the MSME Ministry, June 2026", url: "https://static.pib.gov.in/WriteReadData/specificdocs/documents/2026/jun/doc2026626903401.pdf" },
+    treds: { v: "Rs 40,000 crore to Rs 3.47 lakh crore", text: "invoices discounted on TReDS, FY22 to FY26", src: "Angel One news, on the CPSE TReDS mandate", url: "https://www.angelone.in/news/market-updates/government-mandates-treds-for-msme-invoice-settlement-by-cpses" },
+    tredsMandate: { v: "Rs 250 crore", text: "turnover above which companies (and all CPSEs) must be on TReDS, notified 7 Nov 2024, deadline 31 Mar 2025", src: "Singhania & Partners via Mondaq", url: "https://www.mondaq.com/india/corporate-and-company-law/1579460/mandatory-treds-registration-for-companies-above-%e2%82%b9250-crore-turnover" },
+    cycle: { v: "73 days", text: "average invoice payment cycle; 82.6% of invoices carry 0-30 day terms", src: "Recordent, Indian SME Receivables Report 2026 (industry data, not official)", url: "https://askfuzz.ai/discover/news/msmes/msmes-face-working-capital-stress-from-payment-delays" },
+    h43b: { v: "Section 43B(h)", text: "a buyer can deduct a payment to a micro or small supplier only in the year it is actually paid, if paid after 45 days (15 without a written agreement)", src: "SMFG India Credit explainer; TaxGuru", url: "https://www.smfgindiacredit.com/knowledge-center/what-is-msme-payment-rule.aspx" },
+    h43bSide: { v: "Side effect", text: "some buyers avoid Udyam-registered micro suppliers or squeeze terms", src: "The Hindu via PressReader, 31 Mar 2024; Rajya Sabha debate via Taxscan", url: "https://www.pressreader.com/india/the-hindu-erode-9WW6/20240331/283283167688647" },
+    odr: { v: "ODR portal", text: "live 27 June 2025; since 15 Oct 2025 every new delayed-payment case must be filed on it", src: "YourStory, Sept 2026", url: "https://yourstory.com/2026/09/msme-odr-portal-small-businesses-recover-delayed-payments" },
+    amend: { v: "MSMED (Amendment) Act, 2026", text: "passed Aug 2026, in force 15 Oct 2026 (council changes from 15 Dec 2026): mediation within 90 days, award within 90 days of pleadings, buyer must deposit 75% of an award to appeal, 50% paid out if an appeal drags past 6 months, awards treated as enforceable debt under IBC, CPSEs must settle MSME invoices on TReDS, disclosure penalties up to Rs 1 lakh", src: "Vinod Kothari Consultants, Oct 2026", url: "https://vinodkothari.com/2026/10/strengthening-msme-ecosystem-msmed-amendment-bill/" },
+    budget: { v: "Budget 2026-27", text: "credit guarantee (CGTMSE) for TReDS invoice discounting, mandatory TReDS settlement for CPSE purchases, and a secondary market for TReDS receivables", src: "CredAble; Trade Treasury Payments", url: "https://credable.in/insights-by-credable/budget-2026-for-msmes-why-invoice-discounting-will-decide-the-next-phase-of-msme-growth/" },
+    cgtmse: { v: "Sept 2026", text: "credit guarantee cover for TReDS invoice financing went live", src: "Devdiscourse / ANI", url: "https://www.devdiscourse.com/article/business/3980744-msme-credit-guarantee-cover-goes-live-for-invoice-financing-on-treds" },
+    relationship: { v: "Relationship risk", text: "the Survey notes that filing a case can strain or damage the buyer relationship", src: "KNN India on the Economic Survey 2025-26", url: "https://knnindia.co.in/news/newsdetails/msme/economic-survey-flags-delayed-payments-lack-of-access-to-formal-credit-as-key-challenges-for-msmes" },
+    fund2: { v: "$50 million", text: "8i Fund II target; seed cheques of $1.5-2 million, follow-ons up to $10 million", src: "YourStory, Nov 2022", url: "https://yourstory.com/2022/11/8i-ventures-raises-50-of-the-capital-for-its-50-mi" },
+    ownership: { v: "10-15%", text: "ownership 8i aims to hold in category winners at exit", src: "AVCJ, June 2022 (Vikram Chachra)", url: "https://www.avcj.com/avcj/news/3027131/indias-8i-ventures-seeks-usd50m-for-fund-ii" },
+    m2p: { v: "12x", text: "8i's full exit from M2P: Rs 9.7 crore in, Rs 115.9 crore out in 4.5 years", src: "FF News", url: "https://ffnews.com/newsarticle/fintech/8i-ventures-earns-12x-return-on-full-exit-from-m2p-fintech/" },
+    origami: { v: "$10 million", text: "Origami pre-seed allocation from Fund II", src: "YourStory, Nov 2024", url: "https://yourstory.com/2024/11/8i-ventures-launches-second-edition-of-pre-seed-funding" }
+  },
+  players: [
+    { name: "RXIL, M1xchange, Invoicemart, C2treds, DTX (KredX)", shape: "finance", note: "RBI-licensed TReDS exchanges. Cover accepted invoices from onboarded buyers.", url: "https://m1xchange.com/?p=12496" },
+    { name: "KredX", shape: "finance", note: "Invoice discounting since 2015; runs the DTX TReDS platform.", url: "https://voice.lapaas.com/startup/kredx/business-model/" },
+    { name: "Vayana", shape: "finance", note: "Supply chain finance network; holds an NBFC licence.", url: "https://medial.app/news/supply-chain-finance-startup-vayana-bags-nbfc-licence-set-to-raise-dollar20-million-262c9f1864848" },
+    { name: "CashFlo", shape: "buyer", note: "Accounts-payable automation for corporates plus early payment for suppliers.", url: "https://www.pymnts.com/?p=1387456" },
+    { name: "Recordent", shape: "bureau", note: "Reports B2B defaults, credit reports and legal notices for SMEs.", url: "https://transfin.substack.com/p/solving-payment-delays-for-msmes" },
+    { name: "Presolv360", shape: "claim", note: "Online dispute resolution; $4.7M Series A led by Elevation.", url: "https://www.entrepreneur.com/en-in/news-and-trends/odr-startup-presolv360-secures-usd-47-mn-led-by-elevation/496933" },
+    { name: "Easebuzz EasyCollect (8i portfolio)", shape: "supplier", note: "Payment links and automated reminders for SMEs.", url: "https://easebuzz.in/easy-collect/" }
+  ],
+  portfolio: [
+    { name: "TransBnk", fit: "Escrow-as-a-service and reconciliation with banks. A claim-to-cash or platform company needs escrow for pre-deposits, settlements and financed payouts.", url: "https://www.entrepreneur.com/en-in/news-and-trends/bessemer-leads-usd-25-mn-series-b-round-in-fintech-startup/496452" },
+    { name: "Jurisphere", fit: "Legal AI for research, drafting and document review, with a lawyer network. Drafting claims and handling contested cases is its kind of work.", url: "https://www.barandbench.com/news/law-policy/legal-ai-startup-jurisphereai-raises-22-million-in-funding" },
+    { name: "Easebuzz", fit: "Collects for SMEs with payment links and reminders. A supplier-side copilot competes with it; a buyer-side product could send it payments.", url: "https://easebuzz.in/easy-collect/" }
+  ]
+};
