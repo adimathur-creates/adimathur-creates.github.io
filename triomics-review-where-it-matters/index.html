@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A review queue that spends cancer registrars’ hours where AI-drafted abstract fields are most likely wrong. Independent work on synthetic data.">
+</head><body>
+<title>Review Where It Matters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* One 860px column: a memo to a founder with a working tool in the middle. */
+:root{
+  --paper:#F6F5F1; --panel:#FFFFFF; --ink:#15171B; --muted:#5C6068; --rule:#E0DED6; --soft:#EFEDE7;
+  --rec:#2a78d6; --lost:#eb6834; --neutral:#9A9C95; --good:#1F7A4D; --good-soft:#E3F1E8; --warn-soft:#FBEEE2; --chase-soft:#E5EEFA;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"Public Sans","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023;
+  --rec:#3987e5; --lost:#d95926; --neutral:#6E706B; --good:#6CCB97; --good-soft:#15291F; --warn-soft:#33241A; --chase-soft:#17243A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111214; --panel:#191A1D; --ink:#ECEBE6; --muted:#A4A59F; --rule:#2D2D2B; --soft:#1F2023;
+  --rec:#3987e5; --lost:#d95926; --neutral:#6E706B; --good:#6CCB97; --good-soft:#15291F; --warn-soft:#33241A; --chase-soft:#17243A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.6;margin:0;padding-inline:16px;padding-block:28px 72px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2{font-family:var(--f-display);line-height:1.06;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.6rem,9vw,4.6rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.45rem,4.4vw,2rem);font-weight:600}
+h3{font-size:1.02rem;margin:0}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow,.k,.sec{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec{color:var(--rec)}
+.dek{font-size:1.14rem;max-width:68ch}
+.by{font-size:.9rem;color:var(--muted)}
+a{color:var(--rec)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:14px 16px;font-size:.92rem;color:var(--muted);border-radius:6px}
+.note strong{color:var(--ink)}
+.exec{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--rec);border-radius:6px;padding:18px 20px}
+.exec ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:9px}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.clock{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.clock b{font-family:var(--f-display);font-size:3rem;line-height:1;color:var(--lost)}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+input[type=text],input[type=date],input[type=number],select{font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);color:var(--ink);min-width:0}
+button,.btn{font:inherit;font-size:.86rem;font-weight:600;padding:8px 12px;border-radius:4px;border:1px solid var(--rule);background:var(--soft);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+button.primary{background:var(--rec);border-color:var(--rec);color:#fff}
+button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.file{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+.file input{font-size:.8rem;max-width:100%}
+.status{font-size:.86rem;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi .v{font-family:var(--f-display);font-size:1.75rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:4px 12px;align-items:center;font-size:.88rem}
+.bar .lab{display:flex;justify-content:space-between;gap:10px}
+.bar .lab span:last-child{color:var(--muted);white-space:nowrap}
+.bar .track{grid-column:1/2;height:10px;background:var(--soft);border-radius:2px;overflow:hidden}
+.bar .fill{height:100%;border-radius:2px}
+.bar .val{grid-column:2;grid-row:1/3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+#panel table{min-width:680px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--soft);white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.t-good{background:var(--good-soft);color:var(--good)}
+.t-warn{background:var(--warn-soft);color:var(--lost)}
+.t-chase{background:var(--chase-soft);color:var(--rec)}
+.t-lost{background:var(--warn-soft);color:var(--lost)}
+.t-neutral{background:var(--soft);color:var(--muted)}
+.mono{font-family:var(--f-mono);font-size:.8rem}
+details.msg{border:1px solid var(--rule);border-radius:6px;background:var(--paper)}
+details.msg summary{cursor:pointer;padding:10px 12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+details.msg summary span:last-child{color:var(--muted);font-size:.86rem}
+details.msg pre{margin:0;padding:12px;white-space:pre-wrap;font-family:var(--f-mono);font-size:.78rem;border-top:1px solid var(--rule)}
+details.msg .acts{padding:0 12px 12px;display:flex;gap:8px}
+.list{display:flex;flex-direction:column;gap:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.card h3{font-size:.98rem}
+.card p,.card li{font-size:.92rem;color:var(--muted)}
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px}
+.steps li::before{content:counter(s);font-family:var(--f-mono);font-size:.8rem;width:26px;height:26px;border-radius:50%;background:var(--soft);display:grid;place-items:center}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.84rem}
+.flow span{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:6px 9px}
+.flow em{font-style:normal;color:var(--muted)}
+footer{font-size:.84rem;color:var(--muted);display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--rule);padding-top:18px}
+.controls input[type=number]{width:120px}
+#everyday{width:160px}
+.kpis{grid-template-columns:repeat(3,1fr)}
+td .pill{white-space:normal}
+ul.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:.84rem}
+ul.tl li{padding-left:12px;border-left:3px solid var(--rule);color:var(--muted)}
+ul.tl li.e-decline{border-color:var(--lost);color:var(--ink)}
+ul.tl li.e-topup{border-color:var(--rec)}
+ul.tl li.e-ok{border-color:var(--good)}
+.rules td:first-child{color:var(--muted)}
+@media (max-width:700px){.kpis{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.clock b{font-size:2.4rem}}
+.calc{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.calc label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+.calc input{width:100%}
+.funnel{display:flex;flex-direction:column;gap:6px}
+.frow{display:grid;grid-template-columns:160px 1fr 70px;gap:10px;align-items:center;font-size:.88rem}
+.frow .track{height:12px;background:var(--soft);border-radius:2px;overflow:hidden}
+.frow .fill{height:100%;background:var(--rec)}
+.frow b{text-align:right;font-variant-numeric:tabular-nums}
+.timeline{display:flex;flex-direction:column;gap:0;border-left:2px solid var(--rule);margin-left:6px}
+.timeline .t{position:relative;padding:0 0 14px 18px}
+.timeline .t::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--panel);border:2px solid var(--rec)}
+.timeline .w{font-family:var(--f-mono);font-size:.72rem;color:var(--rec);letter-spacing:.04em;text-transform:uppercase}
+@media (max-width:700px){.calc{grid-template-columns:1fr 1fr}.frow{grid-template-columns:110px 1fr 56px}}
+:root{--c-fifo:#8C8E87;--c-conf:#2a78d6;--c-risk:#eb6834}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--c-fifo:#77796F;--c-conf:#3987e5;--c-risk:#d95926}}
+:root[data-theme="dark"]{--c-fifo:#77796F;--c-conf:#3987e5;--c-risk:#d95926}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.78rem;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:12px;height:3px;margin-right:6px;vertical-align:middle}
+input[type=range]{width:min(360px,100%)}
+td.mono{white-space:nowrap}
+</style>
+
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:16px">
+  <p class="eyebrow">For Triomics · Associate Product Manager · Harmony (registry abstraction) · independent work on synthetic data</p>
+  <h1>Review where it matters</h1>
+  <p class="dek">Once AI drafts the cancer registry abstract, the registrar’s job becomes review, and review time becomes the bottleneck. Check every field and the time saved disappears. Trust the AI’s confidence and the errors it’s overconfident about reach the national cancer database. I built a review queue that spends registrar hours where fields are most likely wrong and matter most. It learns how far to trust the AI from registrars’ own edits, and keeps a random audit sample for whatever it skips.</p>
+  <p class="by">Aditya Mathur · <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a> · built with Claude Code; every number on this page is computed live from the sample data</p>
+</header>
+
+<section>
+  <div class="exec">
+    <p class="k" style="margin-bottom:10px">The short version, for the sample registry</p>
+    <ol id="exec"></ol>
+  </div>
+</section>
+
+<section>
+  <p class="sec">1 · The problem</p>
+  <h2>AI moves the registrar’s work from typing to checking</h2>
+  <p>Health systems such as Yale New Haven are moving to AI-drafted abstracts that registrars review and finalise. That is the right design, but it creates a new product question: which fields deserve a registrar’s minutes? The answer has hard edges:</p>
+  <div class="two">
+    <div class="card"><h3>The rules registries work to</h3><p>Commission on Cancer accredited programs submit new and updated cases at least once a quarter (Standard 6.4), send complete data that meets the national database’s quality checks (6.2, 6.3), and review the accuracy of at least 10% of the year’s cases, up to 200 (6.1).</p></div>
+    <div class="card"><h3>Why confidence isn’t enough</h3><p>Model confidence is rarely equally reliable across fields. A primary site read from a pathology report is easy; a first-treatment date pieced together from outside records is not. If the AI is overconfident on treatment dates, a queue that trusts its score will skip exactly the fields that are wrong most often.</p></div>
+  </div>
+</section>
+
+<section id="tool">
+  <p class="sec">2 · The working tool</p>
+  <h2>One quarter of AI-drafted abstracts, a fixed number of registrar hours</h2>
+  <p>It loads with 300 fictional abstracts across breast, lung, colorectal and prostate cases, plus last quarter’s 300 reviewed abstracts to learn from. Move the slider to change the review time. You can also load your own field-level CSV; it runs in the browser and nothing is uploaded.</p>
+  <div class="sheet">
+    <div class="controls">
+      <button class="primary" id="loadSample">Load sample registry</button>
+      <label class="file">Field-level CSV<input type="file" id="file" accept=".csv,text/csv"></label>
+    </div>
+    <div class="controls"><label>Registrar time available<input type="range" id="share" min="5" max="100" step="1" value="33"></label><span class="status" id="shareOut"></span></div>
+    <p class="status" id="status"></p>
+    <div class="kpis" id="kpis"></div>
+    <div><p class="k" style="margin-bottom:10px">Weighted harm caught with the same hours</p><div class="bars" id="bars"></div></div>
+    <div><p class="k" style="margin-bottom:6px">Weighted harm caught, by share of full review time</p><div id="curve"><p class="by">Computing…</p></div></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="panel"></div>
+    <div class="controls"><a class="btn" id="tpl" download="abstract_fields_template.csv">CSV template</a></div>
+  </div>
+  <p class="note"><strong>Checked, honestly.</strong> 15 automated tests on 20 synthetic registries. The calibrated queue beats reviewing in order at every budget and every seed, by 1.3–1.6x. It beats ranking by AI confidence on every seed when time is scarce (20–25% of a full review) and by a median 8% at 33%, roughly what remains after a 67% cut in review time. Above 40% the two are about even. Calibration flags every planted overconfident field, with false flags within chance (1 in 100). The errors, weights and minutes are invented; real numbers would come from Harmony’s own edit logs.</p>
+</section>
+
+<section>
+  <p class="sec">3 · What I would ship</p>
+  <h2>A field-level review queue inside Harmony</h2>
+  <ol class="steps">
+    <li><div><h3>Rank fields, not cases</h3><p class="by">Order the registrar’s work by estimated error × how much the field matters × whether the case is due this quarter. Show why each field is near the top: sources disagree, the AI is overconfident on this field, high-impact item.</p></div></li>
+    <li><div><h3>Learn trust from edits</h3><p class="by">Every registrar edit is a label. Recalibrate per field and confidence band each month. Where the AI is consistently overconfident (treatment dates from outside records, in the sample), flag it for the model team, not just the queue.</p></div></li>
+    <li><div><h3>Keep a random audit</h3><p class="by">Draw the CoC 6.1 quality-control sample at random and report its error rate. It measures what the queue skipped, and it’s the number a cancer committee should trust.</p></div></li>
+    <li><div><h3>Let registrars set the rules</h3><p class="by">Whether a case can be submitted with unreviewed low-risk fields is a registry policy question. Make it a setting per site, decided with the registry manager.</p></div></li>
+  </ol>
+  <div class="tablewrap"><table><thead><tr><th></th><th>Version 1</th><th>Not doing</th></tr></thead><tbody>
+    <tr><td>Who</td><td>Registrars and registry managers at one or two Harmony sites</td><td>Changing how the AI drafts fields</td></tr>
+    <tr><td>Scope</td><td>Queue order, reason tags, monthly calibration, random QC sample</td><td>Auto-submitting any case without a registrar’s sign-off</td></tr>
+  </tbody></table></div>
+</section>
+
+<section>
+  <p class="sec">4 · How I would research it</p>
+  <ul class="plain">
+    <li><b>Shadowing:</b> two days with registrars at a customer site, timing review per field type and noting where they distrust the draft.</li>
+    <li><b>Interviews:</b> 6–8 registrars and 2–3 registry managers. Ask which errors cost the most rework, how they handle deadlines, and what they would never let a queue skip.</li>
+    <li><b>System data:</b> Harmony’s edit logs to replace every assumption here: real error rates by field, review minutes and calibration gaps.</li>
+    <li><b>Survey:</b> registrars across sites on trust in AI drafts, before and after the queue, to see whether trust follows accuracy.</li>
+  </ul>
+</section>
+
+<section>
+  <p class="sec">5 · How we would know</p>
+  <div class="two">
+    <div class="card"><h3>Main measure</h3><p>Weighted errors caught per registrar hour, and the error rate in the random QC sample. Together they show whether hours moved to where errors are.</p></div>
+    <div class="card"><h3>Throughput</h3><p>Registrar minutes per case, and the share of due cases submitted by each quarterly deadline.</p></div>
+    <div class="card"><h3>Model feedback</h3><p>Calibration gap per field, month on month. A gap that shrinks means the model team acted on what the queue found.</p></div>
+    <div class="card"><h3>Guardrail</h3><p>National database rejections and quality-check failures must not rise. If they do, the queue is skipping something it shouldn’t.</p></div>
+  </div>
+</section>
+
+<section>
+  <p class="sec">6 · What I don’t know</p>
+  <ul class="plain">
+    <li>How Harmony orders review today. It may already rank fields; this is how I would structure and measure it.</li>
+    <li>Real error rates and review minutes per field. Every weight here is a placeholder for Harmony’s edit logs.</li>
+    <li>Site rules on partial submission and how each state registry’s deadlines interact with the quarterly CoC cycle.</li>
+  </ul>
+</section>
+
+<section>
+  <p class="sec">7 · How it’s built</p>
+  <div class="flow"><span>Last quarter’s registrar edits</span><em>→</em><span>error rate by field, confidence band, conflict</span><em>→</em><span>rank this quarter’s fields by risk × impact per minute</span><em>→</em><span>fill the registrar hours</span><em>→</em><span>random QC sample for the rest</span></div>
+</section>
+
+<footer>
+  <p><strong>Sources and honesty notes.</strong> Triomics products, customers and published results (67% less chart review time, more trial matches and enrollment): Series B coverage in HIT Consultant and Causeartist, May 2026. Yale New Haven’s registrar-review model: the same coverage. CoC Standards 6.1–6.5: the American College of Surgeons’ Optimal Resources for Cancer Care, chapter 6. Cases, fields, confidences, errors, weights and minutes are invented. I have no access to Triomics’ data or product. Not affiliated with Triomics.</p>
+  <p>Aditya Mathur · <a href="https://adimathur-creates.github.io/">More work</a></p>
+</footer>
+</div>
+<script>
+// QD: a fictional hospital registry's quarter of AI-drafted abstracts, plus last quarter's registrar edits.
+// Cases, sites, confidences and errors are invented. Error rates are planted per field so the tests know the truth.
+var QD = (function () {
+  'use strict';
+  function rng(seed) { var s = seed >>> 0; return function () { s = (s + 0x6D2B79F5) >>> 0; var t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  var SITES = {
+    Breast: ['Primary site', 'Histology', 'Behavior', 'Laterality', 'Grade', 'Date of diagnosis', 'Summary Stage 2018', 'AJCC clinical stage', 'ER / PR / HER2', 'First surgery date', 'Systemic therapy start', 'Radiation start'],
+    Lung: ['Primary site', 'Histology', 'Behavior', 'Laterality', 'Grade', 'Date of diagnosis', 'Summary Stage 2018', 'AJCC clinical stage', 'Systemic therapy start', 'Radiation start'],
+    Colorectal: ['Primary site', 'Histology', 'Behavior', 'Grade', 'Date of diagnosis', 'Summary Stage 2018', 'AJCC clinical stage', 'First surgery date', 'Systemic therapy start'],
+    Prostate: ['Primary site', 'Histology', 'Behavior', 'Grade', 'Date of diagnosis', 'Summary Stage 2018', 'AJCC clinical stage', 'First surgery date', 'Radiation start']
+  };
+  // How much more often the AI is wrong than its confidence says. >1 = overconfident.
+  var MISCAL = { 'Primary site': 0.6, 'Histology': 0.8, 'Behavior': 0.5, 'Laterality': 0.7, 'Grade': 1.2, 'Date of diagnosis': 1.0, 'Summary Stage 2018': 1.3,
+                 'AJCC clinical stage': 2.2, 'ER / PR / HER2': 1.0, 'First surgery date': 2.8, 'Systemic therapy start': 3.0, 'Radiation start': 2.6 };
+  var OVERCONFIDENT = ['AJCC clinical stage', 'First surgery date', 'Systemic therapy start', 'Radiation start'];
+
+  function quarter(r, n, startMs, prefix, idBase) {
+    var cases = [], fid = 0;
+    for (var i = 0; i < n; i++) {
+      var site = r() < 0.34 ? 'Breast' : r() < 0.45 ? 'Lung' : r() < 0.6 ? 'Colorectal' : 'Prostate';
+      var dx = new Date(startMs + Math.floor(r() * 180) * 864e5).toISOString().slice(0, 10);
+      var outside = r() < 0.3;   // part of the record came from an outside facility
+      var due = r() < 0.6;
+      var c = { id: prefix + (idBase + i), site: site, dx: dx, fields: [] };
+      SITES[site].forEach(function (name) {
+        var conf = Math.min(0.995, 0.70 + 0.30 * Math.pow(r(), 0.45));
+        var conflict = r() < (outside ? 0.18 : 0.06);
+        var p = Math.min(0.9, (1 - conf) * MISCAL[name] * (conflict ? 3 : 1) * (outside && /date|start/i.test(name) ? 1.5 : 1));
+        var wrong = r() < p;
+        c.fields.push({ id: c.id + '#' + (fid++), caseId: c.id, field: name, conf: Math.round(conf * 1000) / 1000, conflict: conflict, due: due, wrong: wrong, edited: wrong });
+      });
+      cases.push(c);
+    }
+    return cases;
+  }
+  function generate(seed, n) {
+    var r = rng(seed || 11);
+    var past = quarter(r, n || 420, Date.UTC(2026, 0, 1), 'Q2-', 20000);
+    var now = quarter(r, n || 420, Date.UTC(2026, 3, 1), 'Q3-', 30000);
+    var history = []; past.forEach(function (c) { c.fields.forEach(function (f) { history.push(f); }); });
+    return { registry: 'Fictional hospital registry', cases: now, history: history, overconfident: OVERCONFIDENT };
+  }
+  function toCSV(cases) {
+    var L = ['case_id,site,dx_date,due,field,confidence,conflict,wrong'];
+    cases.forEach(function (c) { c.fields.forEach(function (f) { L.push([c.id, c.site, c.dx, f.due ? 'yes' : 'no', '"' + f.field + '"', f.conf, f.conflict ? 'yes' : 'no', f.wrong ? 'yes' : 'no'].join(',')); }); });
+    return L.join('\n') + '\n';
+  }
+  return { generate: generate, toCSV: toCSV, MISCAL: MISCAL };
+})();
+
+
+// RQ: spend registrar review hours where AI-drafted abstract fields are most likely wrong and matter most.
+// Pure functions, no network; browser and Node.
+var RQ = (function () {
+  'use strict';
+
+  // Field types: criticality weight (cost of a wrong value reaching the registry) and review minutes.
+  // Weights and minutes are planning assumptions, editable on the page.
+  var FIELDS = {
+    'Primary site':            { w: 5, min: 1.0, group: 'Tumour' },
+    'Histology':               { w: 5, min: 1.5, group: 'Tumour' },
+    'Behavior':                { w: 3, min: 0.5, group: 'Tumour' },
+    'Laterality':              { w: 2, min: 0.5, group: 'Tumour' },
+    'Grade':                   { w: 2, min: 1.0, group: 'Tumour' },
+    'Date of diagnosis':       { w: 4, min: 1.5, group: 'Dates' },
+    'Summary Stage 2018':      { w: 5, min: 3.0, group: 'Stage' },
+    'AJCC clinical stage':     { w: 5, min: 4.0, group: 'Stage' },
+    'ER / PR / HER2':          { w: 4, min: 2.0, group: 'Biomarkers' },
+    'First surgery date':      { w: 3, min: 2.0, group: 'Treatment' },
+    'Systemic therapy start':  { w: 3, min: 2.0, group: 'Treatment' },
+    'Radiation start':         { w: 3, min: 2.0, group: 'Treatment' }
+  };
+  var CASE_OPEN_MIN = 3;    // opening a case, reading the summary and source links
+  var QC_SHARE = 0.10, QC_CAP = 200;   // CoC Standard 6.1: review at least 10% of the annual analytic caseload, up to 200 cases
+
+  function bucket(c) { return c >= 0.95 ? '0.95+' : c >= 0.9 ? '0.90–0.95' : c >= 0.8 ? '0.80–0.90' : '<0.80'; }
+  var BUCKETS = ['<0.80', '0.80–0.90', '0.90–0.95', '0.95+'];
+  function mid(b) { return { '<0.80': 0.72, '0.80–0.90': 0.85, '0.90–0.95': 0.925, '0.95+': 0.97 }[b]; }
+
+  // ---------- learn from last quarter's registrar edits ----------
+  // An edited field is an AI error. Error rate by field, confidence bucket and source conflict, smoothed toward what the AI's confidence claims.
+  function calibrate(history) {
+    var cell = {};
+    history.forEach(function (f) {
+      var k = f.field + '|' + bucket(f.conf) + '|' + (f.conflict ? 1 : 0);
+      var c = cell[k] = cell[k] || { n: 0, err: 0, claimed: 0 };
+      c.n++; c.err += f.edited ? 1 : 0; c.claimed += 1 - f.conf;
+    });
+    var model = {};
+    Object.keys(cell).forEach(function (k) { var c = cell[k], prior = c.claimed / c.n, a = 10; model[k] = (c.err + a * prior) / (c.n + a); });
+    // Calibration report by field: claimed accuracy vs observed accuracy.
+    var byField = {};
+    history.forEach(function (f) { var r = byField[f.field] = byField[f.field] || { field: f.field, n: 0, edits: 0, claimed: 0 }; r.n++; r.edits += f.edited ? 1 : 0; r.claimed += f.conf; });
+    var report = Object.keys(byField).map(function (k) {
+      var r = byField[k], claimed = r.claimed / r.n, observed = 1 - r.edits / r.n;
+      var se = Math.sqrt(Math.max(observed * (1 - observed), 0.01) / r.n);
+      // Overconfident only if the gap is bigger than chance can explain at this sample size (95% interval) and at least 3 points.
+      return { field: k, n: r.n, claimedAcc: claimed, observedAcc: observed, gap: claimed - observed, margin: 1.96 * se, overconfident: claimed - observed > Math.max(0.03, 1.96 * se) && r.edits >= 5 };
+    }).sort(function (a, b) { return b.gap - a.gap; });
+    return { model: model, report: report };
+  }
+  function pErr(model, f) {
+    var k = f.field + '|' + bucket(f.conf) + '|' + (f.conflict ? 1 : 0);
+    if (model && model[k] !== undefined) return model[k];
+    return Math.min(0.95, (1 - f.conf) * (f.conflict ? 3 : 1));
+  }
+
+  // ---------- policies ----------
+  // Each returns the set of fields reviewed within the budget, charging case-open time once per case.
+  function runPolicy(cases, budgetMin, policy, opt) {
+    opt = opt || {};
+    var W = opt.fields || FIELDS, model = opt.model, dueBoost = opt.dueBoost || 1.5;
+    var spent = 0, opened = {}, reviewed = [];
+    function cost(f) { return (W[f.field] ? W[f.field].min : 1) + (opened[f.caseId] ? 0 : CASE_OPEN_MIN); }
+    function take(f) { var c = cost(f); if (spent + c > budgetMin + 1e-9) return false; spent += c; opened[f.caseId] = 1; reviewed.push(f); return true; }
+    if (policy === 'fifo') {
+      // Today: open cases in diagnosis order and review every field.
+      var ordered = cases.slice().sort(function (a, b) { return a.dx < b.dx ? -1 : a.dx > b.dx ? 1 : 0; });
+      outer: for (var i = 0; i < ordered.length; i++) {
+        var need = CASE_OPEN_MIN + ordered[i].fields.reduce(function (s, f) { return s + (W[f.field] ? W[f.field].min : 1); }, 0);
+        if (spent + need > budgetMin + 1e-9) break outer;
+        ordered[i].fields.forEach(take);
+      }
+    } else {
+      var all = []; cases.forEach(function (c) { c.fields.forEach(function (f) { all.push(f); }); });
+      var score;
+      if (policy === 'confidence') score = function (f) { return 1 - f.conf; };
+      else score = function (f) { var w = W[f.field] ? W[f.field].w : 1; return pErr(model, f) * w * (f.due ? dueBoost : 1); };
+      // Greedy by value per minute; case-open cost is shared, so re-rank as cases open (lazy).
+      all.forEach(function (f) { f._s = score(f); });
+      var remaining = all.slice();
+      while (remaining.length) {
+        var best = -1, bestV = -1;
+        for (var j = 0; j < remaining.length; j++) {
+          var v = policy === 'confidence' ? remaining[j]._s : remaining[j]._s / cost(remaining[j]);
+          if (v > bestV) { bestV = v; best = j; }
+        }
+        var f = remaining.splice(best, 1)[0];
+        if (bestV <= 0) break;
+        if (!take(f) && policy === 'confidence') continue;
+      }
+    }
+    return outcome(cases, reviewed, spent, W);
+  }
+  function outcome(cases, reviewed, spent, W) {
+    var set = {}; reviewed.forEach(function (f) { set[f.id] = 1; });
+    var errs = 0, wErr = 0, caught = 0, wCaught = 0, crit = 0, critCaught = 0, casesTouched = {};
+    cases.forEach(function (c) { c.fields.forEach(function (f) {
+      if (!f.wrong) return;
+      var w = W[f.field] ? W[f.field].w : 1; errs++; wErr += w; if (w >= 5) crit++;
+      if (set[f.id]) { caught++; wCaught += w; if (w >= 5) critCaught++; }
+    }); });
+    reviewed.forEach(function (f) { casesTouched[f.caseId] = 1; });
+    var clean = cases.filter(function (c) { return c.fields.every(function (f) { return !f.wrong || set[f.id]; }); }).length;
+    return { spent: spent, fieldsReviewed: reviewed.length, casesOpened: Object.keys(casesTouched).length, errors: errs, caught: caught, weighted: wErr, weightedCaught: wCaught,
+             critical: crit, criticalCaught: critCaught, residual: errs - caught, cleanCases: clean, reviewedIds: set };
+  }
+
+  // ---------- QC audit sample (CoC 6.1) ----------
+  // Random, not risk-chosen, so it measures true accuracy, including fields the queue chose not to review.
+  function qcSample(cases, annualCaseload, seed) {
+    var n = Math.min(QC_CAP, Math.ceil((annualCaseload || cases.length * 4) * QC_SHARE));
+    var perQuarter = Math.ceil(n / 4), s = seed || 7, idx = cases.map(function (c, i) { return i; });
+    function r() { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; }
+    for (var i = idx.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
+    return { annualTarget: n, thisQuarter: Math.min(perQuarter, cases.length), cases: idx.slice(0, Math.min(perQuarter, cases.length)).map(function (i) { return cases[i]; }) };
+  }
+
+  // ---------- CSV ----------
+  function parseCSV(text) {
+    var rows = [], row = [], f = '', q = false, t = String(text || '').replace(/^﻿/, '');
+    for (var i = 0; i < t.length; i++) {
+      var c = t[i];
+      if (q) { if (c === '"') { if (t[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true; else if (c === ',') { row.push(f); f = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+      else f += c;
+    }
+    if (f !== '' || row.length) { row.push(f); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (x) { return String(x).trim() !== ''; }); });
+  }
+  // One row per field: case_id, field, confidence, conflict, dx_date, due, [edited], [wrong]
+  function read(text) {
+    var rows = parseCSV(text), hi = -1, m = {};
+    var A = { caseId: ['case_id', 'case', 'accession'], field: ['field', 'data item', 'item'], conf: ['confidence', 'conf', 'score'], conflict: ['conflict', 'sources disagree'],
+              dx: ['dx_date', 'diagnosis date', 'date of diagnosis'], due: ['due', 'due this quarter'], edited: ['edited', 'registrar edited'], wrong: ['wrong', 'error'] };
+    for (var r = 0; r < Math.min(rows.length, 10) && hi < 0; r++) {
+      var low = rows[r].map(function (x) { return String(x).trim().toLowerCase(); }), mm = {};
+      Object.keys(A).forEach(function (k) { for (var a = 0; a < A[k].length; a++) { var ix = low.indexOf(A[k][a]); if (ix >= 0) { mm[k] = ix; break; } } });
+      if (mm.caseId !== undefined && mm.field !== undefined && mm.conf !== undefined) { hi = r; m = mm; }
+    }
+    if (hi < 0) return { error: 'Need case_id, field and confidence columns.', cases: [] };
+    var yes = function (v) { return /^(y|yes|true|1)$/i.test(String(v || '').trim()); };
+    var byCase = {}, order = [], n = 0;
+    for (var i = hi + 1; i < rows.length; i++) {
+      var x = rows[i], cid = String(x[m.caseId] || '').trim(); if (!cid) continue;
+      var conf = parseFloat(x[m.conf]); if (isNaN(conf)) continue; if (conf > 1) conf /= 100;
+      if (!byCase[cid]) { byCase[cid] = { id: cid, dx: m.dx !== undefined ? String(x[m.dx] || '').trim() : '', fields: [] }; order.push(cid); }
+      var f = { id: cid + '#' + (n++), caseId: cid, field: String(x[m.field]).trim(), conf: conf, conflict: m.conflict !== undefined && yes(x[m.conflict]),
+                due: m.due !== undefined && yes(x[m.due]), edited: m.edited !== undefined && yes(x[m.edited]), wrong: m.wrong !== undefined ? yes(x[m.wrong]) : (m.edited !== undefined && yes(x[m.edited])) };
+      byCase[cid].fields.push(f);
+    }
+    return { cases: order.map(function (k) { return byCase[k]; }) };
+  }
+
+  function toCSV(rows, cols) {
+    function esc(v) { v = v === undefined || v === null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+    return cols.join(',') + '\n' + rows.map(function (r) { return cols.map(function (c) { return esc(r[c]); }).join(','); }).join('\n') + '\n';
+  }
+
+  return { FIELDS: FIELDS, CASE_OPEN_MIN: CASE_OPEN_MIN, BUCKETS: BUCKETS, bucket: bucket, mid: mid, calibrate: calibrate, pErr: pErr, runPolicy: runPolicy, qcSample: qcSample, read: read, toCSV: toCSV };
+})();
+
+
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function pct(a, b) { return b ? Math.round(a / b * 100) + '%' : '0%'; }
+  var P = { fifo: ['Review in order', 'var(--c-fifo)'], confidence: ['Lowest AI confidence first', 'var(--c-conf)'], risk: ['Calibrated risk queue', 'var(--c-risk)'] };
+  var state = { cases: null, history: null, source: '', tab: 'queue', cal: null, full: 0, res: null, curve: null };
+
+  function fullMin(cases) { var m = 0; cases.forEach(function (c) { m += RQ.CASE_OPEN_MIN; c.fields.forEach(function (f) { m += (RQ.FIELDS[f.field] ? RQ.FIELDS[f.field].min : 1); }); }); return m; }
+  function loadSample() {
+    var d = QD.generate(11, 300);
+    state.cases = d.cases; state.history = d.history; state.source = d.registry + ': 300 AI-drafted abstracts this quarter, calibrated on last quarter’s 300 reviewed abstracts';
+    state.full = fullMin(d.cases); $('share').value = 33; run(true);
+  }
+  function run(recurve) {
+    if (!state.cases) return;
+    state.cal = RQ.calibrate(state.history);
+    var share = (+$('share').value || 33) / 100, B = state.full * share;
+    $('shareOut').textContent = Math.round(share * 100) + '% of full review: ' + (B / 60).toFixed(1) + ' registrar hours';
+    state.res = { fifo: RQ.runPolicy(state.cases, B, 'fifo'), confidence: RQ.runPolicy(state.cases, B, 'confidence'), risk: RQ.runPolicy(state.cases, B, 'risk', { model: state.cal.model }) };
+    $('status').textContent = state.source + '. A full review would take ' + (state.full / 60).toFixed(0) + ' registrar hours.';
+    renderKpis(); renderBars(); renderExec(); renderTab();
+    if (recurve) setTimeout(renderCurve, 30);
+  }
+  function renderKpis() {
+    var r = state.res, e = r.risk.errors, over = state.cal.report.filter(function (x) { return x.overconfident; });
+    var qc = RQ.qcSample(state.cases, state.cases.length * 4, 3);
+    var k = [
+      [e, 'fields the AI got wrong', 'out of ' + state.cases.reduce(function (a, c) { return a + c.fields.length; }, 0) + ' drafted fields'],
+      [pct(r.risk.caught, e), 'caught by the risk queue', 'vs ' + pct(r.fifo.caught, e) + ' reviewing in order, same hours'],
+      [pct(r.risk.weightedCaught, r.risk.weighted), 'of weighted harm caught', 'errors weighted by how much the field matters'],
+      [r.risk.residual, 'errors still unreviewed', 'the random quality-control sample measures these'],
+      [over.length, 'fields where AI confidence is too high', over.slice(0, 2).map(function (x) { return x.field; }).join(', ') + (over.length > 2 ? '…' : '')],
+      [qc.thisQuarter, 'random QC cases this quarter', 'CoC 6.1: 10% of the year’s cases, max 200']
+    ];
+    $('kpis').innerHTML = k.map(function (x) { return '<div class="kpi"><span class="v">' + esc(x[0]) + '</span><span class="k">' + esc(x[1]) + '</span><span class="s">' + esc(x[2]) + '</span></div>'; }).join('');
+  }
+  function renderBars() {
+    var r = state.res, max = r.risk.weighted || 1;
+    $('bars').innerHTML = ['fifo', 'confidence', 'risk'].map(function (k) {
+      return '<div class="bar"><div class="lab"><span>' + P[k][0] + '</span><span>' + r[k].caught + ' errors · ' + r[k].fieldsReviewed + ' fields</span></div><div class="track"><div class="fill" style="width:' + (r[k].weightedCaught / max * 100).toFixed(1) + '%;background:' + P[k][1] + '"></div></div><div class="val">' + pct(r[k].weightedCaught, max) + '</div></div>';
+    }).join('');
+  }
+  function renderCurve() {
+    var shares = [0.1, 0.2, 0.33, 0.5, 0.75, 1], pts = { fifo: [], confidence: [], risk: [] };
+    shares.forEach(function (s) {
+      var B = state.full * s;
+      pts.fifo.push(RQ.runPolicy(state.cases, B, 'fifo').weightedCaught);
+      pts.confidence.push(RQ.runPolicy(state.cases, B, 'confidence').weightedCaught);
+      pts.risk.push(RQ.runPolicy(state.cases, B, 'risk', { model: state.cal.model }).weightedCaught);
+    });
+    var W = 640, H = 220, L = 44, R = 12, T = 12, Bm = 30, max = state.res.risk.weighted || 1;
+    var x = function (s) { return L + s * (W - L - R); }, y = function (v) { return T + (1 - v / max) * (H - T - Bm); };
+    var g = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Share of weighted errors caught by review time, three policies" style="width:100%;height:auto">';
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (f) { g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(f * max) + '" y2="' + y(f * max) + '" stroke="var(--rule)"/><text x="' + (L - 6) + '" y="' + (y(f * max) + 4) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + Math.round(f * 100) + '%</text>'; });
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (s) { g += '<text x="' + x(s) + '" y="' + (H - 10) + '" text-anchor="middle" font-size="11" fill="var(--muted)">' + Math.round(s * 100) + '%</text>'; });
+    g += '<line x1="' + x(0.33) + '" x2="' + x(0.33) + '" y1="' + T + '" y2="' + (H - Bm) + '" stroke="var(--muted)" stroke-dasharray="3 3"/><text x="' + (x(0.33) + 4) + '" y="' + (T + 10) + '" font-size="11" fill="var(--muted)">67% time cut</text>';
+    ['fifo', 'confidence', 'risk'].forEach(function (k) {
+      var d = 'M' + x(0) + ' ' + y(0) + shares.map(function (s, i) { return ' L' + x(s).toFixed(1) + ' ' + y(pts[k][i]).toFixed(1); }).join('');
+      g += '<path d="' + d + '" fill="none" stroke="' + P[k][1] + '" stroke-width="2.5"/>';
+    });
+    g += '</svg><div class="legend">' + ['risk', 'confidence', 'fifo'].map(function (k) { return '<span><i style="background:' + P[k][1] + '"></i>' + P[k][0] + '</span>'; }).join('') + '</div>';
+    $('curve').innerHTML = g;
+  }
+  function renderExec() {
+    var r = state.res, over = state.cal.report.filter(function (x) { return x.overconfident; }).slice(0, 4);
+    var L = [];
+    L.push('With ' + $('share').value + '% of the time a full review takes, reviewing cases in order catches <b>' + pct(r.fifo.weightedCaught, r.fifo.weighted) + '</b> of the weighted harm. A queue that reviews the riskiest fields first catches <b>' + pct(r.risk.weightedCaught, r.risk.weighted) + '</b> in the same hours.');
+    L.push('Raw AI confidence can’t be trusted as is: last quarter’s registrar edits show it is too high on <b>' + over.map(function (o) { return esc(o.field) + ' (claims ' + Math.round(o.claimedAcc * 100) + '%, right ' + Math.round(o.observedAcc * 100) + '%)'; }).join('; ') + '</b>. Ranking by confidence alone under-reviews exactly these fields.');
+    L.push('The calibrated queue beats confidence-only clearly when time is scarce and roughly ties when there is plenty. Above about 40% of full review time, the ordering matters less than the calibration.');
+    L.push('Whatever the queue skips needs a <b>random</b> quality-control sample. CoC Standard 6.1 asks for one anyway, and it is the only honest measure of the errors no one looked at.');
+    $('exec').innerHTML = L.map(function (x) { return '<li>' + x + '</li>'; }).join('');
+  }
+  var TABS = [['queue', 'Review queue'], ['cal', 'Calibration'], ['qc', 'QC sample'], ['compare', 'Policy comparison']];
+  function renderTab() {
+    $('tabs').innerHTML = TABS.map(function (t) { return '<button data-tab="' + t[0] + '" aria-pressed="' + (state.tab === t[0]) + '">' + t[1] + '</button>'; }).join('');
+    var h = '', M = state.cal.model;
+    if (state.tab === 'queue') {
+      var all = []; state.cases.forEach(function (c) { c.fields.forEach(function (f) { all.push({ f: f, c: c, p: RQ.pErr(M, f), w: RQ.FIELDS[f.field].w }); }); });
+      all.forEach(function (x) { x.score = x.p * x.w * (x.f.due ? 1.5 : 1); });
+      var overSet = {}; state.cal.report.forEach(function (r) { if (r.overconfident) overSet[r.field] = 1; });
+      all.sort(function (a, b) { return b.score - a.score; });
+      h = '<p class="by" style="margin-bottom:10px">Top 40 fields to review first. Estimated error comes from last quarter’s registrar edits for the same field, confidence band and source conflict, not from the AI’s own score.</p><div class="tablewrap"><table><thead><tr><th>Case</th><th>Site</th><th>Field</th><th class="num">AI confidence</th><th class="num">Estimated error</th><th>Why it’s near the top</th></tr></thead><tbody>' +
+        all.slice(0, 40).map(function (x) {
+          var why = [];
+          if (x.w >= 5) why.push('high-impact field'); if (x.f.conflict) why.push('sources disagree'); if (overSet[x.f.field]) why.push('AI overconfident on this field'); if (x.f.due) why.push('due this quarter');
+          return '<tr><td class="mono">' + esc(x.c.id) + '</td><td>' + esc(x.c.site || '') + '</td><td><b>' + esc(x.f.field) + '</b></td><td class="num">' + Math.round(x.f.conf * 100) + '%</td><td class="num">' + Math.round(x.p * 100) + '%</td><td>' + esc(why.join(', ')) + '</td></tr>';
+        }).join('') + '</tbody></table></div>';
+    } else if (state.tab === 'cal') {
+      h = '<p class="by" style="margin-bottom:10px">Each field’s average AI confidence against how often registrars left it unchanged last quarter. A field is flagged only when the gap is larger than chance explains at that sample size.</p><div class="tablewrap"><table><thead><tr><th>Field</th><th class="num">Fields reviewed</th><th class="num">AI claims</th><th class="num">Actually right</th><th class="num">Gap</th><th></th></tr></thead><tbody>' +
+        state.cal.report.map(function (r) { return '<tr><td><b>' + esc(r.field) + '</b></td><td class="num">' + r.n + '</td><td class="num">' + (r.claimedAcc * 100).toFixed(1) + '%</td><td class="num">' + (r.observedAcc * 100).toFixed(1) + '%</td><td class="num">' + (r.gap > 0 ? '+' : '') + (r.gap * 100).toFixed(1) + ' pts</td><td>' + (r.overconfident ? '<span class="pill t-warn">Overconfident</span>' : '<span class="pill t-good">Within chance</span>') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+    } else if (state.tab === 'qc') {
+      var qc = RQ.qcSample(state.cases, state.cases.length * 4, 3), set = state.res.risk.reviewedIds;
+      var unrev = 0, found = 0; qc.cases.forEach(function (c) { c.fields.forEach(function (f) { if (!set[f.id]) { unrev++; if (f.wrong) found++; } }); });
+      h = '<p class="by" style="margin-bottom:10px">' + qc.thisQuarter + ' cases drawn at random (seeded, so the draw can be audited). In the sample, <b>' + unrev + '</b> fields were skipped by the queue, and <b>' + found + '</b> of those were wrong. That rate, scaled to the quarter, is the honest error estimate to report to the cancer committee.</p><div class="tablewrap"><table><thead><tr><th>Case</th><th>Site</th><th>Diagnosed</th><th class="num">Fields</th><th class="num">Not reviewed by the queue</th></tr></thead><tbody>' +
+        qc.cases.map(function (c) { var n = c.fields.filter(function (f) { return !set[f.id]; }).length; return '<tr><td class="mono">' + esc(c.id) + '</td><td>' + esc(c.site || '') + '</td><td>' + esc(c.dx) + '</td><td class="num">' + c.fields.length + '</td><td class="num">' + n + '</td></tr>'; }).join('') + '</tbody></table></div>';
+    } else {
+      var r = state.res;
+      h = '<div class="tablewrap"><table><thead><tr><th>Policy</th><th class="num">Hours used</th><th class="num">Cases opened</th><th class="num">Fields reviewed</th><th class="num">Errors caught</th><th class="num">High-impact caught</th><th class="num">Cases fully clean</th></tr></thead><tbody>' +
+        ['fifo', 'confidence', 'risk'].map(function (k) { var o = r[k]; return '<tr><td><b>' + P[k][0] + '</b></td><td class="num">' + (o.spent / 60).toFixed(1) + '</td><td class="num">' + o.casesOpened + '</td><td class="num">' + o.fieldsReviewed + '</td><td class="num">' + o.caught + ' / ' + o.errors + '</td><td class="num">' + o.criticalCaught + ' / ' + o.critical + '</td><td class="num">' + o.cleanCases + '</td></tr>'; }).join('') +
+        '</tbody></table></div><p class="by" style="margin-top:10px">“Review in order” finishes whole cases, so it leaves more cases fully clean at low budgets; the queues spread review across cases and catch more errors overall. Which matters more depends on whether a case can be submitted before every field is checked. That is a question for registrars, not an assumption to bake in.</p>';
+    }
+    $('panel').innerHTML = h;
+  }
+  document.addEventListener('click', function (e) { var b = e.target.closest('[data-tab]'); if (b) { state.tab = b.getAttribute('data-tab'); renderTab(); } });
+  $('loadSample').addEventListener('click', loadSample);
+  $('share').addEventListener('change', function () { run(false); });
+  $('share').addEventListener('input', function () { $('shareOut').textContent = $('share').value + '% of full review: ' + (state.full * $('share').value / 100 / 60).toFixed(1) + ' registrar hours'; });
+  $('file').addEventListener('change', function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var res = RQ.read(rd.result);
+      if (res.error || !res.cases.length) { $('status').textContent = res.error || 'No fields found.'; return; }
+      var hist = []; res.cases.forEach(function (c) { c.fields.forEach(function (x) { hist.push(x); }); });
+      var hasLabels = hist.some(function (x) { return x.edited || x.wrong; });
+      state.cases = res.cases; state.history = hasLabels ? hist : state.history || QD.generate(11, 300).history;
+      state.source = f.name + ': ' + res.cases.length + ' cases' + (hasLabels ? ', calibrated on its own edit labels' : ', calibrated on the sample history');
+      state.full = fullMin(res.cases); run(true);
+    };
+    rd.readAsText(f);
+  });
+  $('tpl').href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('case_id,site,dx_date,due,field,confidence,conflict,edited\nA1001,Breast,2026-04-02,yes,Histology,0.97,no,no\nA1001,Breast,2026-04-02,yes,AJCC clinical stage,0.88,yes,yes\n');
+  loadSample();
+})();
+
+</script>
+
+</body></html>
