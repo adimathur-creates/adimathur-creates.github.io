@@ -1,0 +1,990 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Repay on payday: a Lending Lab experiment for Branch India that matches loan debit days to when borrowers get paid. Independent work on synthetic data.">
+</head><body>
+<title>Repay on Payday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* A memo to a Lending Lab lead, with the working experiment in the middle. One column. */
+:root{
+  --paper:#F5F4EF; --panel:#FFFFFF; --ink:#16181A; --muted:#5B5F63; --rule:#DFDDD5; --soft:#ECEAE3;
+  --acc:#0E6B55; --acc-soft:#DDEFE8; --ctl:#8A8D88; --bad:#C2551F; --bad-soft:#F8E8DE; --ok:#1E7A4A; --ok-soft:#E1F1E7; --inc:#2C6FBF;
+  --f-display:"Newsreader",Georgia,serif; --f-body:"IBM Plex Sans","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#101213; --panel:#181B1C; --ink:#ECEBE6; --muted:#A2A6A3; --rule:#2B2E2E; --soft:#1F2324;
+  --acc:#3FB890; --acc-soft:#14302A; --ctl:#7A7E7A; --bad:#E07A45; --bad-soft:#38231A; --ok:#62C98F; --ok-soft:#15291F; --inc:#5E9BE6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#101213; --panel:#181B1C; --ink:#ECEBE6; --muted:#A2A6A3; --rule:#2B2E2E; --soft:#1F2324;
+  --acc:#3FB890; --acc-soft:#14302A; --ctl:#7A7E7A; --bad:#E07A45; --bad-soft:#38231A; --ok:#62C98F; --ok-soft:#15291F; --inc:#5E9BE6; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6;margin:0;padding-inline:16px;padding-block:28px 72px}
+.wrap{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2{font-family:var(--f-display);line-height:1.05;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:clamp(2.7rem,10vw,5rem);letter-spacing:-.02em}
+h2{font-size:clamp(1.5rem,4.6vw,2.1rem);font-weight:500}
+h3{font-size:1rem;margin:0}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow,.k,.sec{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec{color:var(--acc)}
+.dek{font-size:1.12rem;max-width:68ch}
+.by{font-size:.88rem;color:var(--muted)}
+a{color:var(--acc)}
+.note{border:1px solid var(--rule);background:var(--panel);padding:13px 15px;font-size:.9rem;color:var(--muted);border-radius:6px}
+.note strong{color:var(--ink)}
+.exec{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--acc);border-radius:6px;padding:18px 20px}
+.exec ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:9px}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+input[type=number],select{font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);color:var(--ink);min-width:0;width:auto}
+input[type=number]{width:100px}
+button,.btn{font:inherit;font-size:.86rem;font-weight:600;padding:8px 12px;border-radius:4px;border:1px solid var(--rule);background:var(--soft);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) button.primary{color:#0b1512}}
+button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.file{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+.file input{font-size:.8rem;max-width:100%}
+.status{font-size:.86rem;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi .v{font-family:var(--f-display);font-size:1.7rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:.95rem;color:var(--muted);font-weight:500}
+.kpi .s{font-size:.78rem;color:var(--muted)}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.tbl th,.tbl td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+.tbl th{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.tbl#ideas td:first-child{min-width:190px}
+.tbl td.n,.tbl th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.04em;padding:2px 7px;border-radius:3px;text-transform:uppercase;white-space:nowrap}
+.tag.go{background:var(--ok-soft);color:var(--ok)} .tag.stop{background:var(--bad-soft);color:var(--bad)} .tag.park{background:var(--soft);color:var(--muted)}
+.verdict{border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;border:1px solid var(--rule)}
+.verdict b.big{font-family:var(--f-mono);font-size:1rem;letter-spacing:.06em}
+.verdict.go{background:var(--ok-soft);border-color:transparent} .verdict.go b.big{color:var(--ok)}
+.verdict.stop{background:var(--bad-soft);border-color:transparent} .verdict.stop b.big{color:var(--bad)}
+.verdict.wait{background:var(--soft)}
+/* back-test bars */
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:96px minmax(0,1fr) 92px;gap:10px;align-items:center;font-size:.86rem}
+.bar .track{height:14px;background:var(--soft);border-radius:2px;overflow:hidden}
+.bar .fill{height:100%;background:var(--bad);border-radius:2px}
+.bar .val{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)} .bar .val b{color:var(--ink)}
+/* borrower flow */
+.flow{display:grid;grid-template-columns:300px minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:760px){.flow{grid-template-columns:1fr}}
+.phone{border:1px solid var(--rule);border-radius:26px;background:var(--paper);padding:14px 12px 16px;max-width:320px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:10px;min-height:520px}
+.phone .bar0{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:.66rem;color:var(--muted);padding:0 6px}
+.phone .scr{background:var(--panel);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;flex:1;font-size:.88rem}
+.phone .scr h4{margin:0;font-size:1.02rem}
+.phone .big{font-family:var(--f-display);font-size:2rem;font-weight:700;line-height:1}
+.phone .row{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--rule);padding:4px 0;font-size:.84rem}
+.phone .row span:last-child{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.phone .opt{border:1px solid var(--rule);border-radius:8px;padding:9px 10px;display:flex;flex-direction:column;gap:2px;cursor:pointer;background:var(--paper);text-align:left;font-weight:400}
+.phone .opt[aria-pressed=true]{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc);background:var(--acc-soft);color:var(--ink)}
+.phone .opt b{font-size:.86rem} .phone .opt span{font-size:.76rem;color:var(--muted)}
+.phone .nav{display:flex;gap:8px;justify-content:space-between}
+.phone .nav button{flex:1}
+.phone .steps{display:flex;gap:4px;padding:0 6px}
+.phone .steps i{flex:1;height:3px;border-radius:2px;background:var(--rule)} .phone .steps i.on{background:var(--acc)}
+.sms{background:var(--soft);border-radius:10px;padding:9px 11px;font-size:.8rem;line-height:1.45}
+.side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.strip{display:flex;align-items:flex-end;gap:1px;height:70px;border-bottom:1px solid var(--rule)}
+.strip i{flex:1;background:var(--inc);min-width:1px;border-radius:1px 1px 0 0}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;font-size:.7rem}
+.cal div{border-radius:3px;padding:5px 2px;text-align:center;background:var(--soft);color:var(--muted);font-variant-numeric:tabular-nums;position:relative}
+.cal .h{background:transparent;font-family:var(--f-mono);font-size:.62rem}
+.cal .pay{background:var(--inc);color:#fff}
+.cal .debit{outline:2px solid var(--acc);outline-offset:-2px;color:var(--ink);font-weight:700}
+.cal .debit.ctl{outline-color:var(--bad)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.76rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:620px){.two{grid-template-columns:1fr}}
+.mini{border:1px solid var(--rule);border-radius:6px;padding:11px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.mini h3{font-size:.86rem}
+.cmp{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 10px;font-size:.86rem;align-items:center}
+.cmp .h{font-family:var(--f-mono);font-size:.64rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.cmp .n{text-align:right;font-variant-numeric:tabular-nums}
+.cmp .better{color:var(--ok);font-weight:600} .cmp .worse{color:var(--bad);font-weight:600}
+.persona{display:flex;flex-wrap:wrap;gap:8px}
+.persona button{text-align:left;display:flex;flex-direction:column;gap:1px;font-weight:600}
+.persona button span{font-weight:400;font-size:.74rem;opacity:.8}
+details{border:1px solid var(--rule);border-radius:6px;background:var(--panel);padding:10px 14px}
+details summary{cursor:pointer;font-weight:600;font-size:.92rem}
+details > div{margin-top:10px;display:flex;flex-direction:column;gap:8px;font-size:.9rem}
+code{font-family:var(--f-mono);font-size:.82em;background:var(--soft);padding:1px 5px;border-radius:3px;overflow-wrap:anywhere}
+.week{display:grid;grid-template-columns:76px minmax(0,1fr);gap:4px 14px;font-size:.9rem}
+.week b{font-family:var(--f-mono);font-size:.74rem;color:var(--acc);padding-top:3px}
+footer{border-top:1px solid var(--rule);padding-top:22px;display:flex;flex-direction:column;gap:10px;font-size:.9rem;color:var(--muted)}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <span class="eyebrow">Lending Lab · experiment 01 · for Branch India</span>
+  <h1>Repay on payday.</h1>
+  <p class="dek">A rider is paid every Tuesday. A loan debit that lands on a Saturday hits an account that is already half spent. This page takes one lending idea from “what if” to a pilot that is ready to disburse: a test on old loans that could kill it before any code, the borrower flow, success and kill metrics fixed in advance, and the rule for the final call.</p>
+  <p class="by">Aditya Mathur · November 2026 · Independent work on synthetic data. Not affiliated with Branch. Public figures are cited; everything else is labelled as an assumption.</p>
+</header>
+
+<section class="exec" aria-label="Summary">
+  <span class="k">The short version</span>
+  <ol>
+    <li><strong>The bet:</strong> set the debit day from when the borrower gets paid, not from when the loan went out. Weekly earners repay weekly, the day after payout. Salaried borrowers repay the day after salary. Borrowers with no steady rhythm stay on today’s plan.</li>
+    <li><strong>Try to kill it for free first.</strong> Gate 0 uses only loans Branch has already made. If bounces don’t rise as the gap since the last income grows, the idea dies before anyone writes code.</li>
+    <li><strong>In the simulation</strong> (synthetic borrowers, <span id="sumN">…</span> loans per arm): first-instalment bounce <span id="sumFib">…</span>, 30+ DPD at day 120 <span id="sumDpd">…</span>, but <span id="sumAtt">…</span> the debit attempts. That cost is real and is priced below.</li>
+    <li><strong>Fixed before launch:</strong> scale only if the bounce falls at least 3 points with a 95% interval above zero, and 30+ DPD is not worse by more than 1 point. Anything else at full sample is a kill, not an extension.</li>
+    <li><strong>First disbursed loan in four weeks</strong>, using a loan variant on Branch’s own NBFC book, a weekly UPI AutoPay mandate and the existing KFS flow. No new lending partner needed.</li>
+  </ol>
+</section>
+
+<section>
+  <span class="sec">01 · Why this idea, and why first</span>
+  <h2>Branch’s cost of credit is a collections problem as much as an underwriting one.</h2>
+  <p>Branch India’s FY25 numbers, from its credit rating report: loans turn over fast, and a large share of income goes to write-offs and provisions. Anything that lifts on-time repayment without tightening approvals is worth a lot.</p>
+  <div class="kpis">
+    <div class="kpi"><span class="k">Disbursed, FY25</span><span class="v">₹5,128 Cr</span><span class="s">up from ₹2,066 Cr in FY24</span></div>
+    <div class="kpi"><span class="k">Loan book, Mar 2025</span><span class="v">₹909 Cr</span><span class="s">short, unsecured personal loans</span></div>
+    <div class="kpi"><span class="k">Credit costs, FY25</span><span class="v">₹398 Cr</span><span class="s">write-offs and provisions, vs ₹770 Cr net income</span></div>
+    <div class="kpi"><span class="k">1–90 days past due</span><span class="v">10.3%</span><span class="s">of the book, Mar 2025</span></div>
+  </div>
+  <p class="status">Source: Acuité rating rationale for Branch International Financial Services, Aug 2025 (FY25 provisional). Branch also says it has 50M+ app downloads, and its WorkIndia tie-up targets blue-collar workers.</p>
+  <p>I scored five ideas a Lending Lab could test on Branch’s base. Each criterion is 1–5, and higher is better: for regulatory load and downside, a high score means <em>less</em> of it.</p>
+  <div class="scroll"><table class="tbl" id="ideas"></table></div>
+  <p class="status">The scores are my judgement, made before any build. The point is to show why the others wait, not to claim precision.</p>
+</section>
+
+<section>
+  <span class="sec">02 · Gate 0: try to kill it with old data</span>
+  <h2>If timing doesn’t explain bounces in loans already made, stop here.</h2>
+  <p>For each past loan, take the first due date and the last income credit before it. If debits far from an income day don’t bounce more than debits right after one, matching the date can’t help, and the idea is dead at zero build cost.</p>
+  <div class="sheet">
+    <div class="controls">
+      <button class="primary" id="btGen">Use sample history (3,000 past loans)</button>
+      <label class="file">Or load your own CSV<input type="file" id="btFile" accept=".csv,text/csv"></label>
+      <button id="btDl">Download sample CSV</button>
+    </div>
+    <div class="bars" id="btBars"></div>
+    <div id="btVerdict"></div>
+    <p class="status">CSV columns: <code>bounced</code> plus either <code>days_since_income</code> or <code>due_date</code> and <code>last_income_date</code>. Read in your browser only; nothing is uploaded.</p>
+  </div>
+</section>
+
+<section>
+  <span class="sec">03 · The borrower flow</span>
+  <h2>Same loan, same rate. Only the debit day moves.</h2>
+  <p>Pick a borrower. The system reads 90 days of inflows, finds the pay rhythm, sizes the loan off a <em>low</em> month, and offers a plan that debits the day after money lands. The KFS numbers are computed from the actual cash-flow dates, so a weekly plan’s APR is checked, not assumed.</p>
+  <div class="persona" id="personas"></div>
+  <div class="flow">
+    <div class="phone" aria-label="Borrower app prototype">
+      <div class="bar0"><span>9:41</span><span>Branch · prototype</span></div>
+      <div class="steps" id="steps"></div>
+      <div class="scr" id="scr"></div>
+      <div class="nav"><button id="back">Back</button><button class="primary" id="next">Next</button></div>
+    </div>
+    <div class="side">
+      <div class="mini"><h3>What the system read</h3><div class="strip" id="strip" aria-label="Daily income over 90 days"></div><p class="status" id="readout"></p></div>
+      <div class="mini"><h3>Next five weeks: pay days vs debit days</h3>
+        <div class="cal" id="cal"></div>
+        <div class="legend"><span><i style="background:var(--inc)"></i>money lands</span><span><i style="outline:2px solid var(--bad);outline-offset:-2px"></i>today’s debit</span><span><i style="outline:2px solid var(--acc);outline-offset:-2px"></i>matched debit</span></div>
+      </div>
+      <div class="mini"><h3>Key Fact Statement: today vs matched</h3><div class="cmp" id="kfsCmp"></div><p class="status">APR is the annualised internal rate of return on every cash flow: net disbursal out, each instalment in on its actual date. Fee is 2.5% plus 18% GST, rate 3% a month (planning assumptions).</p><p class="status" id="aprNote"></p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="sec">04 · The pilot, simulated</span>
+  <h2>Run both plans on the same borrowers.</h2>
+  <p>Each synthetic borrower has a fixed life: income days, spending habits, how often they set money aside on pay day, emergencies that eat savings, income shocks, and a small share who stop paying. Both arms live the same life, so the only difference is the debit day. UPI AutoPay is all or nothing, so a short wallet means a bounce.</p>
+  <div class="sheet">
+    <div class="controls">
+      <label>Borrowers<select id="simN"><option>1000</option><option selected>3000</option><option>6000</option></select></label>
+      <label>Borrower mix<select id="simMix"><option value="base" selected>Mixed base</option><option value="gig">Gig-heavy</option><option value="sal">Salaried-heavy</option></select></label>
+      <label>AutoPay retries<select id="simRetry"><option>0</option><option>1</option><option selected>2</option><option>3</option></select></label>
+      <label>Overdue sweep<select id="simSweep"><option value="1" selected>On</option><option value="0">Off</option></select></label>
+      <label>Seed<input type="number" id="simSeed" value="11"></label>
+      <button class="primary" id="simRun">Run pilot</button>
+    </div>
+    <div class="kpis" id="simKpis"></div>
+    <div class="scroll"><table class="tbl" id="simSeg"></table></div>
+    <div id="simVerdict"></div>
+    <div class="note"><strong>The measurement trap.</strong> “Ever 30+ DPD” looks <em>worse</em> on weekly plans (<span id="trap">…</span>) because 13 instalments give 13 chances to be late once, even when the same money comes back. Pick that as the guardrail and you kill a good idea. The guardrail here is a snapshot on one date for both arms: share of loans 30+ days past due at day 120.</div>
+    <div>
+      <h3 style="margin-bottom:8px">Is it worth the extra debits? Per 1,000 loans</h3>
+      <div class="controls">
+        <label>₹ per bounce worked by collections<input type="number" id="ecB" value="150"></label>
+        <label>₹ per AutoPay attempt + notice<input type="number" id="ecA" value="2"></label>
+        <label>% of principal lost per 30+ DPD loan<input type="number" id="ecL" value="60" step="5"></label>
+      </div>
+      <div class="kpis" id="ecOut" style="margin-top:10px"></div>
+      <p class="status">All three are planning assumptions to replace with Branch’s own numbers. The case flips if attempts cost a lot more than this, so check the PSP price first.</p>
+    </div>
+    <p class="status">This sizes the pilot and shows the mechanism. It is not evidence that the idea works. Only the live pilot is.</p>
+  </div>
+</section>
+
+<section>
+  <span class="sec">05 · Pre-registered spec</span>
+  <h2>Success, kill and guardrails, written before the first loan.</h2>
+  <div class="scroll"><table class="tbl">
+    <tr><th style="width:150px">Item</th><th>Decision</th></tr>
+    <tr><td>Hypothesis</td><td>Debiting the day after money lands cuts first-instalment bounce for borrowers with a steady pay rhythm, without raising late defaults.</td></tr>
+    <tr><td>Population</td><td>New loans where the rhythm detector reads weekly, daily or monthly. Irregular earners are excluded and stay on today’s plan.</td></tr>
+    <tr><td>Arms</td><td>Control: today’s due date. Matched: weekly the day after payout (weekly earners), weekly on a fixed day (daily earners), monthly the day after salary (salaried). Same amount, rate, fee and tenure.</td></tr>
+    <tr><td>Randomisation</td><td>50/50 at the loan, by a hash of the loan ID, so assignment is reproducible and can’t be picked by anyone.</td></tr>
+    <tr><td>Primary metric</td><td>First-instalment bounce: the first instalment not collected by the due date plus the retry days.</td></tr>
+    <tr><td>Guardrails</td><td>30+ DPD snapshot at day 120 not worse by more than 1 point. Complaints per 1,000 loans and mandate cancellations tracked weekly.</td></tr>
+    <tr><td>Sample</td><td><span id="ssOut">…</span></td></tr>
+    <tr><td>Early stop</td><td>Only for harm: kill the day the 30+ DPD gap is above the guardrail with confidence. No early scale on a good week.</td></tr>
+    <tr><td>Final call</td><td>SCALE if the drop is at least the bar and the interval is above zero, with the guardrail held. Otherwise KILL. No “run it a bit longer.”</td></tr>
+  </table></div>
+  <div class="controls">
+    <label>Control bounce rate %<input type="number" id="ssP1" value="12" step="0.5"></label>
+    <label>Smallest drop worth scaling (pts)<input type="number" id="ssD" value="3" step="0.5"></label>
+    <label>Power<select id="ssPow"><option value="0.8" selected>80%</option><option value="0.9">90%</option></select></label>
+  </div>
+</section>
+
+<section>
+  <span class="sec">06 · Read the real pilot</span>
+  <h2>Drop in the results file; get the call the rules make.</h2>
+  <div class="sheet">
+    <div class="controls">
+      <label class="file">Pilot results CSV<input type="file" id="plFile" accept=".csv,text/csv"></label>
+      <button id="plSample">Try a sample week-6 file</button>
+      <label>Planned loans per arm<input type="number" id="plPlan" value="1638"></label>
+    </div>
+    <div id="plOut" class="status">Columns: <code>arm</code> (control or matched), <code>first_bounce</code> (yes/no), and optionally <code>dpd30</code> (yes/no at day 120).</div>
+  </div>
+</section>
+
+<section>
+  <span class="sec">07 · Path to the first disbursed loan</span>
+  <h2>Four weeks, with sign-offs first.</h2>
+  <div class="week">
+    <b>Week 1</b><div><strong>Confirm today’s due-date logic and kill it on paper.</strong> Run Gate 0 on last quarter’s loans. Get Credit and Compliance sign-off on a repayment-schedule variant (same price) on Branch’s own NBFC book, and on the weekly KFS. Confirm the PSP supports weekly UPI AutoPay with pre-debit notices.</div>
+    <b>Week 2</b><div><strong>Detector and schedules.</strong> Run the rhythm detector on the inflow data Branch already uses for underwriting and back-test its reads. Add weekly schedules and the overdue sweep to the loan system. Make sure payments go to the oldest dues first.</div>
+    <b>Week 3</b><div><strong>Borrower flow behind a flag.</strong> Plan picker, KFS, mandate set-up, pre-debit SMS. Dogfood with staff loans. Set up dashboards for the primary metric and guardrails before go-live.</div>
+    <b>Week 4</b><div><strong>First 50 loans, then ramp.</strong> Watch mandate success and the notice pipeline daily. Ramp to the planned sample once 50 loans go through clean.</div>
+  </div>
+  <div class="scroll"><table class="tbl">
+    <tr><th>Piece</th><th>In this prototype</th><th>In production</th></tr>
+    <tr><td>Income rhythm</td><td>Synthetic inflows</td><td>Inflow data Branch already uses, or Account Aggregator statements with consent</td></tr>
+    <tr><td>Schedule + APR</td><td>Working, tested (48 tests)</td><td>Branch loan system; KFS from the same cash-flow dates</td></tr>
+    <tr><td>Mandate + notice</td><td>Mock screens</td><td>PSP UPI AutoPay (weekly frequency), notice at least 24 hours before each debit</td></tr>
+    <tr><td>Disbursal</td><td>Not simulated</td><td>Straight to the borrower’s bank account; repayments straight to the lender’s account</td></tr>
+    <tr><td>Decision</td><td>Working (CSV in, verdict out)</td><td>Same rules, fed by a daily warehouse export</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <span class="sec">08 · What would kill it</span>
+  <h2>Six ways this fails, and how we’d know early.</h2>
+  <ol class="plain">
+    <li><strong>Branch already sets due dates near pay days.</strong> Then the salaried win is already banked, and the real test is weekly plans for weekly and daily earners. Check this in week 1.</li>
+    <li><strong>Debit costs.</strong> Weekly plans mean about three times the attempts. If the PSP price per attempt is far above the assumption, the economics go negative. The calculator above shows the break-even.</li>
+    <li><strong>Mandate fatigue.</strong> More debits may lead to more cancelled mandates. This is tracked weekly as a guardrail, and the plan has a monthly fallback.</li>
+    <li><strong>The KFS APR goes up on weekly plans.</strong> Same monthly rate and fee, lower rupee cost, but the fee is spread over a shorter average balance, so the all-in APR rises (see the borrower flow). Compliance must sign off on this, or the weekly fee is cut to hold APR flat. Decide this in week 1, not after launch.</li>
+    <li><strong>The detector misreads.</strong> A wrong payday is worse than today’s random date. Mitigation: only enter borrowers whose read is clear, and log the confidence on every read.</li>
+    <li><strong>The effect is selection, not timing.</strong> Randomising at the loan stops this: both arms have the same mix of people.</li>
+  </ol>
+  <details><summary>Rules this design respects (RBI Digital Lending Directions, 2025, and UPI AutoPay)</summary><div>
+    <p>The KFS shows the all-in APR before signing. The cooling-off window lets a borrower exit by paying principal plus proportionate APR, with no penalty; the length is board-set, at least one day. No credit-limit increase without an explicit request. Every weekly debit gets a pre-debit notice at least 24 hours ahead. Debits up to ₹15,000 run without extra authentication; above that, the borrower approves each one, which is why the overdue sweep is capped at ₹15,000.</p>
+    <p>A changed repayment schedule may need Branch’s lending partners to approve if those loans sit on their books, which is why the pilot runs on Branch’s own book.</p>
+  </div></details>
+</section>
+
+<footer>
+  <p><strong style="color:var(--ink)">Why I built this.</strong> Lending Lab’s job is to take a “what if” to the first disbursed loan, and to kill ideas when the data says stop. So this page starts with a test that can kill the idea, fixes the kill rule before launch, and shows the one metric choice that would have killed a good idea by mistake.</p>
+  <p>Aditya Mathur · <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a> · <a href="https://linkedin.com/in/adityaamathur">LinkedIn</a> · <a href="https://adimathur-creates.github.io/">Other work</a></p>
+  <p>Sources: Acuité rating rationale, Branch International Financial Services (Aug 2025); RBI (Digital Lending) Directions, 2025, via AZB &amp; Partners’ summary; UPI AutoPay rules via Juspay’s mandate docs; WorkIndia × Branch release (Mar 2024). Borrowers, income and outcomes on this page are synthetic.</p>
+</footer>
+</div>
+
+<script>
+// DATA: synthetic Branch-like borrowers. Seeded, so every run with the same seed is identical.
+// Each borrower's life (income, spending, shocks, willingness) is fixed before any plan is applied,
+// so the control and matched arms see exactly the same person.
+var DATA = (function () {
+  'use strict';
+  function rng(seed) { var s = seed >>> 0 || 1; return function () { s = (s + 0x6D2B79F5) >>> 0; var t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function norm(r) { var u = 0, v = 0; while (u === 0) u = r(); while (v === 0) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function dow(n) { return ((n + 4) % 7 + 7) % 7; }
+  function dom(n) { return new Date(n * 864e5).getUTCDate(); }
+
+  var SEGMENTS = {
+    weekly:   { label: 'Platform workers paid weekly', note: 'Riders and delivery partners. Weekly net income around ₹4,000–7,500.' },
+    daily:    { label: 'Daily earners',                 note: 'Shopkeepers, drivers, daily-wage work. ₹450–950 on most days.' },
+    salaried: { label: 'Salaried, paid monthly',        note: 'Salary of ₹18,000–38,000 on a fixed day each month.' },
+    irregular:{ label: 'Irregular income',              note: 'Freelance and contract work. Lumpy payments with no steady rhythm.' }
+  };
+
+  // Income on a given absolute day for this borrower's pattern.
+  function incomeFor(p, d, r) {
+    if (p.seg === 'weekly') return dow(d) === p.payWd ? Math.max(0, p.base * (1 + 0.22 * norm(r))) : 0;
+    if (p.seg === 'daily') return r() < p.workShare ? Math.max(0, p.base * (1 + 0.25 * norm(r))) : 0;
+    if (p.seg === 'salaried') return dom(d) === p.payDom ? p.base : 0;
+    // irregular: a payment arrives with small daily probability, sized to keep the monthly mean.
+    return r() < p.hit ? Math.max(0, p.base * (0.4 + 1.2 * r())) : 0;
+  }
+
+  // mix: {weekly, daily, salaried, irregular} shares. n borrowers. disb = disbursal day number.
+  function borrowers(n, seed, mix, disb) {
+    mix = mix || { weekly: 0.35, daily: 0.2, salaried: 0.3, irregular: 0.15 };
+    disb = disb || Math.round(Date.UTC(2026, 11, 1) / 864e5);
+    var r = rng(seed || 11), keys = Object.keys(mix), tot = keys.reduce(function (s, k) { return s + mix[k]; }, 0), out = [];
+    for (var i = 0; i < n; i++) {
+      var u = r() * tot, seg = keys[0]; for (var k = 0, acc = 0; k < keys.length; k++) { acc += mix[keys[k]]; if (u <= acc) { seg = keys[k]; break; } }
+      var p = { seg: seg };
+      if (seg === 'weekly') { p.base = 4000 + 3500 * r(); p.payWd = [1, 2, 2, 3, 3, 4, 5][Math.floor(r() * 7)]; p.daily = p.base / 7; }
+      else if (seg === 'daily') { p.base = 450 + 500 * r(); p.workShare = 0.78 + 0.17 * r(); p.daily = p.base * p.workShare; }
+      else if (seg === 'salaried') { p.base = 18000 + 20000 * r(); p.payDom = 1 + Math.floor(r() * 7); p.daily = p.base * 12 / 365; }
+      else { p.hit = 1 / (4 + 14 * r()); var monthly = 12000 + 16000 * r(); p.base = monthly / 30 / p.hit; p.daily = monthly / 30; }
+      // Disbursal day spread over four weeks so due dates fall on every weekday and date.
+      var d0 = disb + Math.floor(r() * 28);
+      var ir = rng(Math.floor(r() * 1e9)), history = [], histFrom = d0 - 91, histTo = d0 - 1;
+      for (var d = histFrom; d <= histTo; d++) {
+        var a = incomeFor(p, d, ir); if (a > 0) history.push({ day: d, amount: Math.round(a) });
+        if (ir() < 0.08) history.push({ day: d, amount: Math.round(50 + 200 * ir()) });   // small UPI transfers, not income
+      }
+      var H = 130, income = [], shock = [], stoppedAt = Infinity, willing = [], leakU = [], saveU = [];
+      var lr = rng(Math.floor(r() * 1e9)), inShock = 0;
+      if (lr() < 0.05) stoppedAt = Math.floor(lr() * H);                     // stops paying for good (hardship or intent)
+      for (var t = 0; t < H; t++) {
+        if (!inShock && dow(d0 + t) === 1 && lr() < 0.035) inShock = 7 * (1 + Math.floor(lr() * 3));   // income loss spell, 1–3 weeks
+        var x = incomeFor(p, d0 + t, lr);
+        income.push(inShock ? 0 : Math.round(x)); shock.push(inShock > 0); if (inShock) inShock--;
+        willing.push(lr() < 0.3); leakU.push(lr()); saveU.push(lr());
+      }
+      out.push({
+        id: 'B' + String(i + 1).padStart(5, '0'), segment: seg, disb: d0, history: history, histFrom: histFrom, histTo: histTo,
+        income: income, shock: shock, startWallet: Math.round(p.daily * (0.5 + 2.5 * r())),
+        fixedSpend: p.daily * (0.55 + 0.1 * r()), frontLoad: 0.08 + 0.1 * r(), floor: p.daily * 0.3,
+        discipline: 0.8 + 0.2 * r(), leakRate: 0.002 + 0.013 * r(),
+        leak: null,
+        stopped: (function (s) { return function (rel) { return rel >= s; }; })(stoppedAt),
+        willPay: (function (w) { return function (rel) { return !!w[rel]; }; })(willing),
+        truth: p
+      });
+      out[out.length - 1].leak = (function (u, lam) { return function (rel) { return u[rel] < lam; }; })(leakU, out[out.length - 1].leakRate);
+      out[out.length - 1].saves = (function (u, dsc) { return function (rel) { return u[rel] < dsc; }; })(saveU, out[out.length - 1].discipline);
+    }
+    return out;
+  }
+
+  // Past loans on today's plan, for the zero-build gate: days from last income to the first due date, and whether it bounced.
+  function history(PM, n, seed, opt) {
+    var bs = borrowers(n, seed || 5, null), rows = [];
+    bs.forEach(function (b) {
+      var prof = PM.cadence(b.history, { from: b.histFrom, to: b.histTo });
+      var off = PM.offer(prof, opt || {}); var P = off.principal || 5000;
+      var sc = PM.schedule(P, 0.03, 3, PM.control(), b.disb);
+      var o = PM.simulateLoan(b, sc, { retries: 2 });
+      var due = sc.rows[0].day, rel = due - b.disb, last = null;
+      for (var k = rel; k >= 0; k--) if (b.income[k] >= 300) { last = k; break; }
+      if (last === null) { for (var j = b.history.length - 1; j >= 0; j--) if (b.history[j].amount >= 300) { last = b.history[j].day - b.disb; break; } }
+      rows.push({ loan_id: b.id, segment: b.segment, due_date: PM.iso(due), last_income_date: PM.iso(b.disb + last), days_since_income: rel - last, bounced: o.firstBounce ? 'yes' : 'no', daysSinceIncome: rel - last, b: o.firstBounce });
+    });
+    return rows.map(function (x) { return { loan_id: x.loan_id, segment: x.segment, due_date: x.due_date, last_income_date: x.last_income_date, days_since_income: x.days_since_income, bounced: x.bounced, daysSinceIncome: x.daysSinceIncome, bouncedFlag: x.b }; });
+  }
+
+  return { rng: rng, SEGMENTS: SEGMENTS, borrowers: borrowers, history: history };
+})();
+
+
+// PM: "Repay on payday". Match a loan's debit day to the day money actually lands.
+// Pure functions, no network. Runs in the browser and in Node.
+var PM = (function () {
+  'use strict';
+
+  // ---------- dates as integer day numbers (UTC) ----------
+  function day(s) { return Math.round(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 864e5); }
+  function iso(n) { return new Date(n * 864e5).toISOString().slice(0, 10); }
+  function dow(n) { return ((n + 4) % 7 + 7) % 7; }            // 0 = Sunday (1970-01-01 was a Thursday)
+  function dom(n) { return new Date(n * 864e5).getUTCDate(); }
+  var WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function median(a) { if (!a.length) return 0; var s = a.slice().sort(function (x, y) { return x - y; }), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+  function quantile(a, q) { if (!a.length) return 0; var s = a.slice().sort(function (x, y) { return x - y; }); return s[Math.min(s.length - 1, Math.max(0, Math.floor(q * (s.length - 1))))]; }
+  function round2(x) { return Math.round(x * 100) / 100; }
+
+  // ---------- 1. read the borrower's income rhythm from inflows ----------
+  // inflows: [{day, amount}] over the look-back window. Only credits >= minIncome count as income.
+  function cadence(inflows, opt) {
+    opt = opt || {};
+    var minIncome = opt.minIncome || 300;
+    var inc = inflows.filter(function (f) { return f.amount >= minIncome; }).sort(function (a, b) { return a.day - b.day; });
+    var byDay = {}; inc.forEach(function (f) { byDay[f.day] = (byDay[f.day] || 0) + f.amount; });
+    var days = Object.keys(byDay).map(Number).sort(function (a, b) { return a - b; });
+    var res = { cadence: 'irregular', events: days.length, payWeekday: null, payDom: null, medianWeek: 0, lowWeek: 0, cv: 0, reason: '' };
+    if (!inflows.length) { res.reason = 'No inflow data.'; return res; }
+    var start = opt.from !== undefined ? opt.from : Math.min.apply(null, inflows.map(function (f) { return f.day; }));
+    var end = opt.to !== undefined ? opt.to : Math.max.apply(null, inflows.map(function (f) { return f.day; }));
+    var span = end - start + 1;
+    // Weekly income series over complete 7-day blocks.
+    var weeks = [];
+    for (var w = start; w + 6 <= end; w += 7) { var s = 0; for (var k = w; k < w + 7; k++) s += byDay[k] || 0; weeks.push(s); }
+    var mean = weeks.reduce(function (a, b) { return a + b; }, 0) / Math.max(1, weeks.length);
+    var sd = Math.sqrt(weeks.reduce(function (a, b) { return a + (b - mean) * (b - mean); }, 0) / Math.max(1, weeks.length));
+    res.medianWeek = median(weeks); res.lowWeek = quantile(weeks, 0.2); res.cv = mean ? sd / mean : 0; res.weeks = weeks.length;
+    // Rolling 30-day income, stepped weekly. The low month (20th percentile) drives affordability for every cadence.
+    var months = [];
+    for (var m0 = start; m0 + 29 <= end; m0 += 7) { var ms = 0; for (var mk = m0; mk < m0 + 30; mk++) ms += byDay[mk] || 0; months.push(ms); }
+    res.medianMonth = median(months); res.lowMonth = quantile(months, 0.2);
+    if (days.length < 3 || weeks.length < 4) { res.reason = 'Too little history to read a rhythm.'; return res; }
+    var gaps = []; for (var i = 1; i < days.length; i++) gaps.push(days[i] - days[i - 1]);
+    var g = median(gaps);
+    if (g <= 2 && days.length >= span * 0.45) { res.cadence = 'daily'; res.reason = 'Income on ' + Math.round(100 * days.length / span) + '% of days.'; return res; }
+    if (g >= 6 && g <= 8) {
+      var cnt = [0, 0, 0, 0, 0, 0, 0]; days.forEach(function (d) { cnt[dow(d)]++; });
+      var top = cnt.indexOf(Math.max.apply(null, cnt)), share = cnt[top] / days.length;
+      if (share >= 0.6) { res.cadence = 'weekly'; res.payWeekday = top; res.reason = Math.round(share * 100) + '% of payouts land on ' + WD[top] + '.'; return res; }
+      res.reason = 'Weekly gaps, but no steady weekday.'; return res;
+    }
+    if (g >= 26 && g <= 35) { res.cadence = 'monthly'; res.payDom = Math.round(median(days.map(dom))); res.reason = 'Paid around day ' + res.payDom + ' of the month.'; return res; }
+    res.reason = 'No steady rhythm (median gap ' + g + ' days).';
+    return res;
+  }
+
+  // ---------- 2. the matched plan ----------
+  // Weekly earners: weekly, the day after payout. Daily earners: weekly on a fixed day.
+  // Salaried: monthly, the day after salary. Irregular: no change from today's plan.
+  function plan(profile, opt) {
+    opt = opt || {};
+    if (profile.cadence === 'weekly') return { freq: 'weekly', weekday: (profile.payWeekday + 1) % 7, matched: true, label: 'Weekly, every ' + WD[(profile.payWeekday + 1) % 7] + ' (day after payout)' };
+    if (profile.cadence === 'daily') { var wd = opt.dailyWeekday !== undefined ? opt.dailyWeekday : 1; return { freq: 'weekly', weekday: wd, matched: true, label: 'Weekly, every ' + WD[wd] }; }
+    if (profile.cadence === 'monthly') { var dm = Math.min(28, profile.payDom + 1); return { freq: 'monthly', dom: dm, matched: true, label: 'Monthly, on the ' + ord(dm) + ' (day after salary)' }; }
+    return { freq: 'monthly', dom: null, matched: false, label: 'Monthly, same date as disbursal (no steady rhythm found)' };
+  }
+  function control() { return { freq: 'monthly', dom: null, matched: false, label: 'Monthly, same date as disbursal (today)' }; }
+  function ord(n) { var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+
+  // ---------- 3. schedule, with broken-period interest ----------
+  // monthlyRate e.g. 0.03. Weekly periodic rate = monthlyRate x 12 / 52. Daily rate = monthlyRate x 12 / 365.
+  function schedule(P, monthlyRate, tenureMonths, pl, disb, opt) {
+    opt = opt || {};
+    var minFirst = opt.minFirstDays !== undefined ? opt.minFirstDays : (pl.freq === 'weekly' ? 5 : 15);
+    var weekly = pl.freq === 'weekly';
+    var n = weekly ? Math.round(tenureMonths * 52 / 12) : tenureMonths;
+    var r = weekly ? monthlyRate * 12 / 52 : monthlyRate;
+    var periodDays = weekly ? 7 : 30;
+    var emi = r === 0 ? P / n : P * r / (1 - Math.pow(1 + r, -n));
+    // First debit: earliest date at least minFirst days out that matches the plan.
+    var first = disb + minFirst;
+    if (weekly) { while (dow(first) !== pl.weekday) first++; }
+    else if (pl.dom) { while (dom(first) !== pl.dom) first++; }
+    else { first = addMonths(disb, 1); }
+    var gap = first - disb, dailyRate = monthlyRate * 12 / 365;
+    var broken = round2(P * dailyRate * (gap - periodDays));   // positive if the first period is longer than a normal one
+    var rows = [], bal = P, d = first;
+    for (var i = 1; i <= n; i++) {
+      var interest = bal * r, princ = emi - interest;
+      if (i === n) princ = bal;
+      var amt = princ + interest + (i === 1 ? broken : 0);
+      bal = Math.max(0, bal - princ);
+      rows.push({ n: i, day: d, date: iso(d), amount: round2(amt), interest: round2(interest + (i === 1 ? broken : 0)), principal: round2(princ), balance: round2(bal) });
+      d = weekly ? d + 7 : (pl.dom ? nextDom(d, pl.dom) : addMonths(first, i));
+    }
+    return { rows: rows, n: n, emi: round2(emi), first: first, broken: broken, freq: pl.freq };
+  }
+  function addMonths(n, k) { var t = new Date(n * 864e5); var y = t.getUTCFullYear(), m = t.getUTCMonth() + k, dd = t.getUTCDate(); var last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(); return Math.round(Date.UTC(y, m, Math.min(dd, last)) / 864e5); }
+  function nextDom(n, dm) { var t = new Date(n * 864e5); return Math.round(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, dm) / 864e5); }
+
+  // ---------- 4. APR from actual cash-flow dates ----------
+  // Net disbursed out on disb, repayments in on their dates. Solve the daily rate, annualise.
+  function apr(netDisbursed, flows, disb) {
+    function npv(i) { return flows.reduce(function (s, f) { return s + f.amount / Math.pow(1 + i, f.day - disb); }, 0) - netDisbursed; }
+    var lo = 0, hi = 0.05;
+    if (npv(lo) < 0) return { nominal: 0, effective: 0 };
+    for (var k = 0; k < 200; k++) { var mid = (lo + hi) / 2; if (npv(mid) > 0) lo = mid; else hi = mid; }
+    var i = (lo + hi) / 2;
+    return { daily: i, nominal: i * 365, effective: Math.pow(1 + i, 365) - 1 };
+  }
+
+  // ---------- 5. Key Fact Statement numbers ----------
+  function kfs(P, monthlyRate, tenureMonths, pl, disb, opt) {
+    opt = opt || {};
+    var feePct = opt.feePct !== undefined ? opt.feePct : 0.025, gst = opt.gst !== undefined ? opt.gst : 0.18, cool = opt.coolingDays || 3;
+    var sc = schedule(P, monthlyRate, tenureMonths, pl, disb, opt);
+    var fee = round2(P * feePct), feeGst = round2(fee * gst), net = round2(P - fee - feeGst);
+    var flows = sc.rows.map(function (r) { return { day: r.day, amount: r.amount }; });
+    var a = apr(net, flows, disb);
+    var totalRepay = round2(sc.rows.reduce(function (s, r) { return s + r.amount; }, 0));
+    var totalInterest = round2(totalRepay - P);
+    // Exit inside the cooling-off window: principal plus proportionate APR, no penalty.
+    var exitCost = round2(P + P * a.nominal / 365 * cool);
+    return { principal: P, fee: fee, feeGst: feeGst, netDisbursed: net, totalInterest: totalInterest, totalRepay: totalRepay, totalCost: round2(totalRepay - net),
+             aprNominal: a.nominal, aprEffective: a.effective, instalments: sc.n, emi: sc.emi, first: sc.first, coolingDays: cool, exitCostIfCancelled: exitCost, schedule: sc };
+  }
+
+  // ---------- 6. affordability ----------
+  // Instalment capped at a share of a LOW month of income (20th percentile of rolling 30-day sums), not an average one.
+  function offer(profile, opt) {
+    opt = opt || {};
+    var share = opt.share !== undefined ? opt.share : 0.25, rate = opt.monthlyRate || 0.03, ten = opt.tenureMonths || 3;
+    var minP = opt.minP || 5000, maxP = opt.maxP || 200000;
+    var pl = plan(profile, opt), weekly = pl.freq === 'weekly';
+    var capMonth = (profile.lowMonth || 0) * share;
+    var cap = weekly ? capMonth * 12 / 52 : capMonth;
+    var n = weekly ? Math.round(ten * 52 / 12) : ten, r = weekly ? rate * 12 / 52 : rate;
+    var maxByAfford = cap * (1 - Math.pow(1 + r, -n)) / r;
+    var P = Math.floor(Math.min(maxP, maxByAfford) / 500) * 500;
+    return { eligible: P >= minP, principal: P >= minP ? P : 0, capPerInstalment: round2(cap), plan: pl, reason: P < minP ? 'Low-week income too small for the minimum loan.' : '' };
+  }
+
+  // ---------- 7. one loan, day by day ----------
+  // b = borrower from DATA (income days, spending habits, shocks, all seeded so both arms see the same life).
+  // A UPI AutoPay debit is all or nothing; it fails if the wallet is short. Pre-debit notice goes out a day before.
+  // opt.sweep: present overdue instalments with the next debit (default on). opt.mandateCap: largest debit without extra authentication (₹15,000).
+  function simulateLoan(b, sc, opt) {
+    opt = opt || {};
+    var retries = opt.retries !== undefined ? opt.retries : 2, horizon = opt.horizon || 120;
+    var sweep = opt.sweep !== undefined ? opt.sweep : true, cap = opt.mandateCap || 15000;
+    var wallet = b.startWallet, dues = sc.rows.map(function (r) { return { day: r.day, amount: r.amount, paid: 0, paidDay: null }; });
+    var attempts = 0, notices = 0, firstBounce = null, maxDpd = 0, dpd30By = null;
+    var d0 = b.disb, lastDay = Math.max(d0 + horizon, dues.length ? dues[dues.length - 1].day + 30 : d0);
+    var pending = [];   // dues waiting for an autopay attempt: {idx, tries}
+    var R = 0;          // money the borrower has set aside for the next instalment
+    for (var t = d0; t <= Math.min(lastDay, d0 + horizon); t++) {
+      var rel = t - d0;
+      var inc = b.income[rel] || 0;
+      wallet += inc;
+      // On a pay day, the borrower usually sets aside the next instalment (how often depends on their discipline).
+      if (inc > 0) {
+        var nxt = null; for (var q = 0; q < dues.length; q++) if (dues[q].paid < dues[q].amount - 0.01 && dues[q].day >= t && dues[q].day <= t + 35) { nxt = dues[q]; break; }
+        if (nxt && b.saves(rel)) R = Math.max(R, Math.min(wallet - 2 * b.fixedSpend, nxt.amount - nxt.paid));
+      }
+      // Each day there is a small chance an emergency or temptation eats the reserve. The longer money waits, the likelier.
+      if (b.leak(rel)) R = 0;
+      // Spend from what is not set aside: a fixed share of average daily income plus a front-loaded share of the rest.
+      var free = Math.max(0, wallet - R);
+      var spend = Math.min(free, b.fixedSpend * (b.shock[rel] ? 0.8 : 1) + b.frontLoad * Math.max(0, free - b.floor));
+      wallet -= spend;
+      // Autopay attempts due today, oldest first.
+      dues.forEach(function (du, idx) { if (du.day === t) { notices++; pending.push({ idx: idx, tries: 0 }); } });
+      var still = [];
+      var revoked = b.stopped(rel);   // a borrower who has stopped paying also cancels the mandate
+      pending.forEach(function (p) {
+        var du = dues[p.idx];
+        if (du.paid >= du.amount - 0.01) return;
+        var cur = du.amount - du.paid;
+        // Sweep: present older unpaid instalments with today's debit, up to the no-extra-auth limit. Apply oldest first.
+        var older = sweep ? dues.filter(function (x) { return x.day < du.day && x.paid < x.amount - 0.01; }) : [];
+        var extra = Math.min(older.reduce(function (s2, x) { return s2 + x.amount - x.paid; }, 0), Math.max(0, cap - cur));
+        attempts++;
+        if (!revoked && extra > 0 && wallet >= cur + extra) { wallet -= cur + extra; R = Math.max(0, R - cur - extra); var left = extra; older.forEach(function (x) { var o = Math.min(left, x.amount - x.paid); x.paid += o; left -= o; if (x.paid >= x.amount - 0.01) x.paidDay = t; }); du.paid = du.amount; du.paidDay = t; return; }
+        if (extra > 0) attempts++;   // fall back to today's instalment alone
+        if (!revoked && wallet >= cur) { wallet -= cur; R = Math.max(0, R - cur); du.paid = du.amount; du.paidDay = t; }
+        else { p.tries++; if (p.tries <= retries) still.push(p); }
+      });
+      pending = still;
+      // Manual repayment of anything overdue: borrower pays when they can and are willing.
+      var overdue = dues.filter(function (du) { return du.day < t && du.paid < du.amount - 0.01 && !pending.some(function (p) { return dues[p.idx] === du; }); });
+      if (overdue.length && !b.stopped(rel) && b.willPay(rel)) {
+        overdue.forEach(function (du) { var owe = du.amount - du.paid; if (wallet - b.floor >= owe) { wallet -= owe; du.paid = du.amount; du.paidDay = t; } });
+      }
+      // Days past due on the oldest unpaid instalment.
+      var oldest = null; for (var j = 0; j < dues.length; j++) if (dues[j].day <= t && dues[j].paid < dues[j].amount - 0.01) { oldest = dues[j]; break; }
+      var dpd = oldest ? t - oldest.day : 0;
+      if (dpd > maxDpd) maxDpd = dpd;
+      if (dpd >= 30 && dpd30By === null) dpd30By = t;
+    }
+    var f = dues[0];
+    firstBounce = !f || !(f.paidDay !== null && f.paidDay <= f.day + retries);
+    var due = dues.filter(function (du) { return du.day <= d0 + horizon; }).reduce(function (s, du) { return s + du.amount; }, 0);
+    var got = dues.reduce(function (s, du) { return s + du.paid; }, 0);
+    // 30+ DPD as a snapshot on the same date for both arms (end of horizon, about a month after the last instalment).
+    // "Ever 30+" is also returned, but it is biased against weekly plans: 13 instalments give 13 chances to be late once.
+    var tEnd = Math.min(lastDay, d0 + horizon), oldEnd = null;
+    for (var e = 0; e < dues.length; e++) if (dues[e].day <= tEnd && dues[e].paid < dues[e].amount - 0.01) { oldEnd = dues[e]; break; }
+    var dpdEnd = oldEnd ? tEnd - oldEnd.day : 0;
+    return { firstBounce: firstBounce, dpd30: dpdEnd >= 30, everDpd30: dpd30By !== null, dpdAtEnd: dpdEnd, maxDpd: maxDpd, attempts: attempts, notices: notices, collectedShare: due ? got / due : 1, collected: got };
+  }
+
+  // ---------- 8. a pilot: both arms on the same borrowers ----------
+  function pilot(borrowers, opt) {
+    opt = opt || {};
+    var rate = opt.monthlyRate || 0.03, ten = opt.tenureMonths || 3;
+    var seg = {}, tot = { control: blank(), matched: blank() };
+    function blank() { return { n: 0, fib: 0, dpd30: 0, ever30: 0, attempts: 0, notices: 0, principal: 0, collected: 0, due: 0 }; }
+    borrowers.forEach(function (b) {
+      var prof = cadence(b.history, { from: b.histFrom, to: b.histTo });
+      var off = offer(prof, opt); if (!off.principal) return;
+      var arms = { control: control(), matched: off.plan };
+      var s = seg[b.segment] = seg[b.segment] || { segment: b.segment, control: blank(), matched: blank(), detected: {}, excluded: 0 };
+      s.detected[prof.cadence] = (s.detected[prof.cadence] || 0) + 1;
+      // Only borrowers with a detected rhythm enter the experiment; for the rest the "matched" plan is today's plan.
+      if (!off.plan.matched) { s.excluded++; return; }
+      Object.keys(arms).forEach(function (arm) {
+        var sc = schedule(off.principal, rate, ten, arms[arm], b.disb, opt);
+        var o = simulateLoan(b, sc, opt);
+        [s[arm], tot[arm]].forEach(function (x) { x.n++; x.fib += o.firstBounce ? 1 : 0; x.dpd30 += o.dpd30 ? 1 : 0; x.ever30 += o.everDpd30 ? 1 : 0; x.due += sc.rows.reduce(function (s3, rr) { return s3 + rr.amount; }, 0); x.attempts += o.attempts; x.notices += o.notices; x.principal += off.principal; x.collected += o.collected; });
+      });
+    });
+    return { segments: Object.keys(seg).map(function (k) { return seg[k]; }), total: tot };
+  }
+
+  // ---------- 8b. money: per 1,000 loans in the experiment population ----------
+  // a: {bounceCost: ₹ per first-instalment bounce worked by collections, attemptCost: ₹ per autopay attempt incl. notice,
+  //     lossGiven30: share of a 30+ DPD loan's principal eventually lost}. All planning assumptions.
+  function economics(tot, a) {
+    a = a || {};
+    var bc = a.bounceCost !== undefined ? a.bounceCost : 150, ac = a.attemptCost !== undefined ? a.attemptCost : 2, lg = a.lossGiven30 !== undefined ? a.lossGiven30 : 0.6;
+    function per(x) { var k = 1000 / Math.max(1, x.n); return { bounces: x.fib * k, dpd30: x.dpd30 * k, attempts: x.attempts * k, avgP: x.principal / Math.max(1, x.n) }; }
+    var c = per(tot.control), t = per(tot.matched);
+    var bounceSaving = (c.bounces - t.bounces) * bc;
+    var lossSaving = (c.dpd30 - t.dpd30) * ((c.avgP + t.avgP) / 2) * lg;
+    var attemptCost = (t.attempts - c.attempts) * ac;
+    return { control: c, matched: t, bounceSaving: bounceSaving, lossSaving: lossSaving, attemptCost: attemptCost, net: bounceSaving + lossSaving - attemptCost };
+  }
+
+  // ---------- 9. how many loans the pilot needs ----------
+  // Two-proportion test, two-sided alpha, given power. Returns loans per arm.
+  function zq(p) { // inverse normal CDF (Acklam)
+    var a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.357751867269, -30.66479806614716, 2.506628277459239];
+    var b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572];
+    var c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
+    var d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
+    var q, r;
+    if (p < 0.02425) { q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+    if (p > 1 - 0.02425) { q = Math.sqrt(-2 * Math.log(1 - p)); return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+    q = p - 0.5; r = q * q;
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+  }
+  function sampleSize(p1, p2, alpha, power) {
+    alpha = alpha || 0.05; power = power || 0.8;
+    var za = zq(1 - alpha / 2), zb = zq(power), pb = (p1 + p2) / 2;
+    var n = Math.pow(za * Math.sqrt(2 * pb * (1 - pb)) + zb * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2)), 2) / Math.pow(p1 - p2, 2);
+    return Math.ceil(n);
+  }
+
+  // ---------- 10. the pre-registered decision ----------
+  // c, t: {n, fib, dpd30}. Rules fixed before launch:
+  //   SCALE  : first-instalment bounce falls by >= minDrop points AND the 95% interval excludes zero AND 30+ DPD is not worse by > guard points.
+  //   KILL   : 30+ DPD worse by > guard points with confidence (any time), or at full sample the SCALE bar is missed.
+  //   RUNNING: before full sample, no early stop triggered.
+  function diffCI(x1, n1, x2, n2) { var p1 = x1 / n1, p2 = x2 / n2, se = Math.sqrt(p1 * (1 - p1) / n1 + p2 * (1 - p2) / n2); return { d: p1 - p2, lo: p1 - p2 - 1.96 * se, hi: p1 - p2 + 1.96 * se, p1: p1, p2: p2 }; }
+  function decide(c, t, rules) {
+    rules = rules || {};
+    var minDrop = rules.minDrop !== undefined ? rules.minDrop : 0.03, guard = rules.guard !== undefined ? rules.guard : 0.01, planned = rules.plannedPerArm || 0;
+    if (!c.n || !t.n) return { verdict: 'NO DATA', why: 'Both arms need loans.' };
+    var fib = diffCI(c.fib, c.n, t.fib, t.n);          // positive = matched arm bounces less
+    var harm = diffCI(t.dpd30, t.n, c.dpd30, c.n);      // positive = matched arm worse on 30+ DPD
+    var full = !planned || Math.min(c.n, t.n) >= planned;
+    var out = { fib: fib, harm: harm, full: full };
+    if (harm.lo > guard) { out.verdict = 'KILL'; out.why = '30+ DPD is worse in the matched arm by more than the ' + pp(guard) + ' guardrail, with confidence.'; return out; }
+    if (fib.d >= minDrop && fib.lo > 0 && harm.d <= guard) { out.verdict = full ? 'SCALE' : 'ON TRACK'; out.why = 'First-instalment bounce down ' + pp(fib.d) + ' (95% CI ' + pp(fib.lo) + ' to ' + pp(fib.hi) + ') with 30+ DPD inside the guardrail.' + (full ? '' : ' Keep running to the planned sample; no early scale.'); return out; }
+    if (!full) { out.verdict = 'RUNNING'; out.why = 'Below the planned sample. Only the harm guardrail can stop it early.'; return out; }
+    out.verdict = 'KILL';
+    out.why = harm.d > guard ? 'Bounce fell ' + pp(fib.d) + ', but 30+ DPD rose ' + pp(harm.d) + ', past the ' + pp(guard) + ' guardrail. Fewer first bounces bought with more late defaults is not a win.'
+            : fib.d < minDrop ? 'Bounce fell by ' + pp(fib.d) + ', short of the ' + pp(minDrop) + ' bar set before launch.' : 'Drop is not distinguishable from zero at the planned sample.';
+    return out;
+  }
+  function pp(x) { return (x * 100).toFixed(1) + ' pts'; }
+
+  // ---------- 11. the zero-build gate: does old data show the pattern? ----------
+  // rows: {daysSinceIncome, bounced}. If bounce does not rise with days since income, kill the idea before building.
+  function backtest(rows) {
+    var B = [{ k: '0–1 days', lo: 0, hi: 1 }, { k: '2–3 days', lo: 2, hi: 3 }, { k: '4–7 days', lo: 4, hi: 7 }, { k: '8–14 days', lo: 8, hi: 14 }, { k: '15+ days', lo: 15, hi: 1e9 }];
+    var cells = B.map(function (b) { return { bucket: b.k, n: 0, bounced: 0 }; });
+    rows.forEach(function (r) { var bz = typeof r.bounced === 'string' ? yes(r.bounced) : !!r.bounced; for (var i = 0; i < B.length; i++) if (r.daysSinceIncome >= B[i].lo && r.daysSinceIncome <= B[i].hi) { cells[i].n++; cells[i].bounced += bz ? 1 : 0; break; } });
+    cells.forEach(function (c) { c.rate = c.n ? c.bounced / c.n : 0; });
+    var near = cells.slice(0, 2).reduce(function (a, c) { return { n: a.n + c.n, b: a.b + c.bounced }; }, { n: 0, b: 0 });
+    var far = cells.slice(2).reduce(function (a, c) { return { n: a.n + c.n, b: a.b + c.bounced }; }, { n: 0, b: 0 });
+    var gap = near.n && far.n ? diffCI(far.b, far.n, near.b, near.n) : null;
+    var verdict = !gap ? 'NOT ENOUGH DATA' : gap.lo > 0.02 ? 'BUILD' : gap.hi < 0.02 ? 'KILL' : 'UNCLEAR';
+    return { cells: cells, near: near, far: far, gap: gap, verdict: verdict,
+             why: !gap ? 'Need loans both near and far from an income day.' : verdict === 'BUILD' ? 'Debits far from an income day bounce ' + pp(gap.d) + ' more. Matching the date should help.' : verdict === 'KILL' ? 'Timing does not explain bounces here. Stop before building.' : 'Pattern too weak to call. Pull more history.' };
+  }
+
+  // ---------- CSV ----------
+  function parseCSV(text) {
+    var rows = [], row = [], f = '', q = false, t = String(text || '').replace(/^﻿/, '');
+    for (var i = 0; i < t.length; i++) {
+      var c = t[i];
+      if (q) { if (c === '"') { if (t[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true; else if (c === ',') { row.push(f); f = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+      else f += c;
+    }
+    if (f !== '' || row.length) { row.push(f); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (x) { return String(x).trim() !== ''; }); });
+  }
+  function yes(v) { return /^(y|yes|true|1|bounced|missed)$/i.test(String(v || '').trim()); }
+  function header(rows, A, need) {
+    for (var r = 0; r < Math.min(rows.length, 10); r++) {
+      var low = rows[r].map(function (x) { return String(x).trim().toLowerCase(); }), m = {};
+      Object.keys(A).forEach(function (k) { for (var a = 0; a < A[k].length; a++) { var ix = low.indexOf(A[k][a]); if (ix >= 0) { m[k] = ix; break; } } });
+      if (need.every(function (k) { return m[k] !== undefined; })) return { at: r, m: m };
+    }
+    return null;
+  }
+  // Back-test file: one row per past first instalment.
+  function readBacktest(text) {
+    var rows = parseCSV(text);
+    var h = header(rows, { due: ['due_date', 'due'], last: ['last_income_date', 'last_income', 'last_credit_date'], gap: ['days_since_income', 'days_since_credit'], bounced: ['bounced', 'first_bounce', 'missed'] }, ['bounced']);
+    if (!h || (h.m.gap === undefined && (h.m.due === undefined || h.m.last === undefined))) return { error: 'Need bounced plus either days_since_income or due_date and last_income_date.', rows: [] };
+    var out = [];
+    for (var i = h.at + 1; i < rows.length; i++) {
+      var x = rows[i], g;
+      if (h.m.gap !== undefined) g = parseFloat(x[h.m.gap]); else g = day(x[h.m.due]) - day(x[h.m.last]);
+      if (isNaN(g) || g < 0) continue;
+      out.push({ daysSinceIncome: g, bounced: yes(x[h.m.bounced]) });
+    }
+    return { rows: out };
+  }
+  // Pilot results file: one row per loan.
+  function readPilot(text) {
+    var rows = parseCSV(text);
+    var h = header(rows, { arm: ['arm', 'group', 'variant'], fib: ['first_bounce', 'bounced', 'first_instalment_bounced'], dpd: ['dpd30', 'dpd30_by_day60', '30dpd'] }, ['arm', 'fib']);
+    if (!h) return { error: 'Need arm and first_bounce columns (dpd30 optional).' };
+    var c = { n: 0, fib: 0, dpd30: 0 }, t = { n: 0, fib: 0, dpd30: 0 };
+    for (var i = h.at + 1; i < rows.length; i++) {
+      var x = rows[i], a = String(x[h.m.arm] || '').trim().toLowerCase();
+      var g = /^(control|c|a|today|current)$/.test(a) ? c : /^(matched|treatment|t|b|payday|test)$/.test(a) ? t : null;
+      if (!g) continue;
+      g.n++; g.fib += yes(x[h.m.fib]) ? 1 : 0; if (h.m.dpd !== undefined) g.dpd30 += yes(x[h.m.dpd]) ? 1 : 0;
+    }
+    return { control: c, matched: t };
+  }
+  function toCSV(rows, cols) {
+    function esc(v) { v = v === undefined || v === null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+    return cols.join(',') + '\n' + rows.map(function (r) { return cols.map(function (c) { return esc(r[c]); }).join(','); }).join('\n') + '\n';
+  }
+
+  return { day: day, iso: iso, dow: dow, dom: dom, WD: WD, ord: ord, median: median, cadence: cadence, plan: plan, control: control, schedule: schedule, apr: apr, kfs: kfs, offer: offer,
+           simulateLoan: simulateLoan, pilot: pilot, economics: economics, sampleSize: sampleSize, decide: decide, diffCI: diffCI, backtest: backtest, readBacktest: readBacktest, readPilot: readPilot, toCSV: toCSV, addMonths: addMonths };
+})();
+
+
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function inr(x) { return '₹' + Math.round(x).toLocaleString('en-IN'); }
+  function pct(x, d) { return (x * 100).toFixed(d === undefined ? 1 : d) + '%'; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function download(name, text) { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+  function readFile(input, cb) { var f = input.files && input.files[0]; if (!f) return; var r = new FileReader(); r.onload = function () { cb(String(r.result)); }; r.readAsText(f); }
+  function fmtDate(n) { var d = new Date(n * 864e5); return d.getUTCDate() + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getUTCMonth()] + ' (' + PM.WD[PM.dow(n)] + ')'; }
+
+  // ---------- 01 idea scorecard ----------
+  var IDEAS = [
+    { name: 'Repay on payday', what: 'Debit the day after money lands; weekly for weekly earners', s: [4, 5, 5, 4, 5], call: 'go', why: 'Uses the existing loan, price and book. Only the schedule changes, so it reaches a first loan fastest.' },
+    { name: 'Starter loan for declined applicants', what: '₹1,000–2,000 step-up loan instead of a flat no', s: [5, 3, 4, 3, 2], call: 'park', why: 'Big need, but risky to price blind. Run it after this test produces repayment data by pay rhythm.' },
+    { name: 'Weekly-pay advance via job platforms', what: 'Advance against verified platform earnings', s: [4, 4, 2, 3, 3], call: 'park', why: 'Needs a partner data deal before the first loan. Weeks of business development, not days.' },
+    { name: 'Repair and fuel credit for riders', what: 'Purpose loan paid straight to the merchant', s: [4, 3, 2, 3, 3], call: 'park', why: 'Needs a merchant network. Revisit with a fleet partner.' },
+    { name: 'Gold-backed small loans', what: 'Secured small-ticket loans', s: [3, 2, 1, 2, 4], call: 'stop', why: 'Physical custody and valuation are far from an app-only model.' }
+  ];
+  (function () {
+    var cols = ['Borrower pain', 'Fit with Branch', 'Speed to first loan', 'Regulatory load', 'Downside'];
+    var h = '<tr><th>Idea</th>' + cols.map(function (c) { return '<th class="n">' + c + '</th>'; }).join('') + '<th class="n">Total</th><th>Call</th></tr>';
+    IDEAS.forEach(function (i) {
+      var t = i.s.reduce(function (a, b) { return a + b; }, 0);
+      h += '<tr><td><strong>' + esc(i.name) + '</strong><br><span class="status">' + esc(i.what) + '</span></td>' + i.s.map(function (v) { return '<td class="n">' + v + '</td>'; }).join('') + '<td class="n"><strong>' + t + '</strong></td><td><span class="tag ' + i.call + '">' + { go: 'Test now', park: 'Park', stop: 'Kill for now' }[i.call] + '</span><br><span class="status">' + esc(i.why) + '</span></td></tr>';
+    });
+    $('ideas').innerHTML = h;
+  })();
+
+  // ---------- 02 Gate 0 ----------
+  var histRows = null;
+  function renderBacktest(rows) {
+    var bt = PM.backtest(rows), max = Math.max.apply(null, bt.cells.map(function (c) { return c.rate; }).concat([0.01]));
+    $('btBars').innerHTML = '<p class="k">First-instalment bounce, by days from last income to due date</p>' + bt.cells.map(function (c) {
+      return '<div class="bar"><span>' + c.bucket + '</span><div class="track"><div class="fill" style="width:' + (100 * c.rate / max).toFixed(1) + '%"></div></div><span class="val"><b>' + pct(c.rate) + '</b> · ' + c.n + '</span></div>';
+    }).join('');
+    var cls = bt.verdict === 'BUILD' ? 'go' : bt.verdict === 'KILL' ? 'stop' : 'wait';
+    $('btVerdict').innerHTML = '<div class="verdict ' + cls + '"><b class="big">' + bt.verdict + '</b><span>' + esc(bt.why) + (bt.gap ? ' Within 3 days of income: ' + pct(bt.near.b / bt.near.n) + ' of ' + bt.near.n + '. Four days or more: ' + pct(bt.far.b / bt.far.n) + ' of ' + bt.far.n + '.' : '') + '</span><span class="status">Rule: build only if the gap’s 95% interval is above 2 points; kill if it’s entirely below 2 points.</span></div>';
+  }
+  $('btGen').onclick = function () { histRows = histRows || DATA.history(PM, 3000, 5); renderBacktest(histRows); };
+  $('btDl').onclick = function () { histRows = histRows || DATA.history(PM, 3000, 5); download('branch-gate0-sample.csv', PM.toCSV(histRows, ['loan_id', 'segment', 'due_date', 'last_income_date', 'days_since_income', 'bounced'])); };
+  $('btFile').onchange = function () { readFile(this, function (t) { var r = PM.readBacktest(t); if (r.error) { $('btBars').innerHTML = ''; $('btVerdict').innerHTML = '<div class="verdict stop"><b class="big">CAN’T READ</b><span>' + esc(r.error) + '</span></div>'; return; } renderBacktest(r.rows); }); };
+
+  // ---------- 03 borrower flow ----------
+  var DISB = PM.day('2026-12-05');
+  function makeHistory(kind, seed) {
+    var r = DATA.rng(seed), out = [], from = DISB - 91, to = DISB - 1;
+    for (var d = from; d <= to; d++) {
+      var a = 0;
+      if (kind === 'weekly' && PM.dow(d) === 2) a = 5600 * (0.8 + 0.4 * r());
+      if (kind === 'daily' && r() < 0.86) a = 700 * (0.75 + 0.5 * r());
+      if (kind === 'salaried' && PM.dom(d) === 1) a = 26000;
+      if (kind === 'irregular' && r() < 0.07) a = 6000 + 10000 * r();
+      if (a) out.push({ day: d, amount: Math.round(a) });
+      if (r() < 0.08) out.push({ day: d, amount: Math.round(60 + 180 * r()) });
+    }
+    return { inflows: out, from: from, to: to };
+  }
+  var PERSONAS = [
+    { id: 'weekly', name: 'Ravi', role: 'Delivery rider, paid Tuesdays', seed: 3 },
+    { id: 'salaried', name: 'Meena', role: 'Retail staff, salary on the 1st', seed: 4 },
+    { id: 'daily', name: 'Salim', role: 'Tea stall, cash in daily', seed: 5 },
+    { id: 'irregular', name: 'Kavya', role: 'Freelance designer', seed: 6 }
+  ];
+  var cur = null, step = 0, choice = 'matched';
+  $('personas').innerHTML = PERSONAS.map(function (p) { return '<button data-p="' + p.id + '" aria-pressed="false">' + p.name + '<span>' + esc(p.role) + '</span></button>'; }).join('');
+  Array.prototype.forEach.call($('personas').querySelectorAll('button'), function (b) { b.onclick = function () { pick(b.getAttribute('data-p')); }; });
+
+  function pick(id) {
+    var p = PERSONAS.filter(function (x) { return x.id === id; })[0];
+    var h = makeHistory(id, p.seed), prof = PM.cadence(h.inflows, { from: h.from, to: h.to }), off = PM.offer(prof, {});
+    var P = Math.min(off.principal, 25000) || 5000;
+    var k0 = PM.kfs(P, 0.03, 3, PM.control(), DISB), k1 = PM.kfs(P, 0.03, 3, off.plan, DISB);
+    cur = { p: p, h: h, prof: prof, off: off, P: P, k0: k0, k1: k1 }; step = 0; choice = off.plan.matched ? 'matched' : 'control';
+    Array.prototype.forEach.call($('personas').querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-p') === id)); });
+    renderSide(); renderPhone();
+  }
+  function renderSide() {
+    var c = cur, byDay = {}; c.h.inflows.forEach(function (f) { if (f.amount >= 300) byDay[f.day] = (byDay[f.day] || 0) + f.amount; });
+    var max = 1; for (var d = c.h.from; d <= c.h.to; d++) max = Math.max(max, byDay[d] || 0);
+    var s = ''; for (d = c.h.from; d <= c.h.to; d++) s += '<i style="height:' + (100 * (byDay[d] || 0) / max).toFixed(1) + '%" title="' + PM.iso(d) + ': ' + inr(byDay[d] || 0) + '"></i>';
+    $('strip').innerHTML = s;
+    var label = { weekly: 'Weekly', daily: 'Daily', monthly: 'Monthly', irregular: 'No steady rhythm' }[c.prof.cadence];
+    $('readout').innerHTML = '<strong style="color:var(--ink)">' + label + '.</strong> ' + esc(c.prof.reason) + ' Low month (20th percentile of rolling 30-day income): ' + inr(c.prof.lowMonth) + '. Instalment capped at 25% of that: ' + inr(c.off.capPerInstalment) + (c.off.plan.freq === 'weekly' ? ' a week.' : ' a month.') + ' Small transfers under ₹300 are ignored as not income.';
+    // Calendar: five weeks from disbursal, starting Monday of that week.
+    var start = DISB - ((PM.dow(DISB) + 6) % 7), pays = {}, d0 = {}, d1 = {};
+    var lastPay = null;
+    for (var x = start; x < start + 35; x++) {
+      if (c.prof.cadence === 'weekly' && PM.dow(x) === c.prof.payWeekday) pays[x] = 1;
+      if (c.prof.cadence === 'monthly' && PM.dom(x) === c.prof.payDom) pays[x] = 1;
+      if (c.prof.cadence === 'daily' && PM.dow(x) !== 0) pays[x] = 1;
+    }
+    c.k0.schedule.rows.forEach(function (r) { d0[r.day] = 1; });
+    c.k1.schedule.rows.forEach(function (r) { d1[r.day] = 1; });
+    var cal = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(function (w) { return '<div class="h">' + w + '</div>'; }).join('');
+    for (x = start; x < start + 35; x++) {
+      var cls = (pays[x] ? 'pay ' : '') + (d1[x] && c.off.plan.matched ? 'debit ' : d0[x] ? 'debit ctl ' : '');
+      var lab = x === DISB ? '<b>Loan</b>' : PM.dom(x);
+      cal += '<div class="' + cls + '" title="' + PM.iso(x) + '">' + lab + '</div>';
+    }
+    $('cal').innerHTML = cal;
+    var r = [['Loan amount', c.k0.principal, c.k1.principal, 'inr'], ['Net disbursed', c.k0.netDisbursed, c.k1.netDisbursed, 'inr'], ['Instalments', c.k0.instalments + ' × ' + inr(c.k0.emi), c.k1.instalments + ' × ' + inr(c.k1.emi), 'txt'],
+             ['Total repayable', c.k0.totalRepay, c.k1.totalRepay, 'inr'], ['Total cost of credit', c.k0.totalCost, c.k1.totalCost, 'inr'], ['APR', c.k0.aprNominal, c.k1.aprNominal, 'pct'], ['First debit', fmtDate(c.k0.first), fmtDate(c.k1.first), 'txt']];
+    $('kfsCmp').innerHTML = '<span class="h"></span><span class="h n">Today</span><span class="h n">Matched</span>' + r.map(function (row) {
+      var f = row[3] === 'inr' ? inr : row[3] === 'pct' ? function (v) { return pct(v); } : function (v) { return v; };
+      return '<span>' + row[0] + '</span><span class="n">' + f(row[1]) + '</span><span class="n">' + f(row[2]) + '</span>';
+    }).join('');
+    var dA = c.k1.aprNominal - c.k0.aprNominal, dC = c.k1.totalCost - c.k0.totalCost;
+    $('aprNote').innerHTML = c.off.plan.matched && Math.abs(dA) > 0.001 ? '<strong style="color:var(--ink)">Note:</strong> the matched plan costs ' + (dC <= 0 ? inr(-dC) + ' less in rupees' : inr(dC) + ' more in rupees') + ', but its APR is ' + (dA > 0 ? 'higher' : 'lower') + ' by ' + (Math.abs(dA) * 100).toFixed(1) + ' points. ' + (dA > 0 ? 'Repaying faster spreads the same fee over a smaller average balance. Compliance has to see this before launch.' : '') : '';
+    if (!c.off.plan.matched) $('kfsCmp').innerHTML += '<span style="grid-column:1/-1" class="status">No steady rhythm, so this borrower stays on today’s plan and is kept out of the experiment.</span>';
+  }
+  var STEPS = ['Offer', 'Plan', 'Key facts', 'AutoPay', 'Done'];
+  function renderPhone() {
+    var c = cur, k = choice === 'matched' ? c.k1 : c.k0, pl = choice === 'matched' ? c.off.plan : PM.control();
+    $('steps').innerHTML = STEPS.map(function (s, i) { return '<i class="' + (i <= step ? 'on' : '') + '" title="' + s + '"></i>'; }).join('');
+    var h = '';
+    if (step === 0) {
+      h = '<span class="k">Hi ' + c.p.name + '</span><h4>You can borrow up to</h4><div class="big">' + inr(c.P) + '</div>' +
+        '<p class="status">Sized so a repayment never takes more than a quarter of a slow month’s income.</p>' +
+        '<div class="row"><span>Tenure</span><span>3 months</span></div><div class="row"><span>Interest</span><span>3% a month</span></div><div class="row"><span>Processing fee</span><span>2.5% + GST</span></div>' +
+        (c.off.plan.matched ? '<div class="sms">We noticed your money usually comes in ' + (c.prof.cadence === 'weekly' ? 'every ' + PM.WD[c.prof.payWeekday] : c.prof.cadence === 'monthly' ? 'around the ' + PM.ord(c.prof.payDom) : 'most days') + '. You can repay on a day that suits that.</div>' : '');
+    } else if (step === 1) {
+      h = '<h4>When should we collect?</h4>';
+      if (c.off.plan.matched) h += opt('matched', c.off.plan.label, c.k1.instalments + ' payments of ' + inr(c.k1.emi) + ' · Recommended') + opt('control', 'Monthly, same date as today', c.k0.instalments + ' payments of ' + inr(c.k0.emi));
+      else h += opt('control', 'Monthly, same date as today', c.k0.instalments + ' payments of ' + inr(c.k0.emi)) + '<p class="status">We couldn’t see a regular pay day, so we’ve kept the standard monthly plan.</p>';
+      h += '<p class="status">Same amount, same rate, same fee. Only the day changes.</p>';
+    } else if (step === 2) {
+      h = '<h4>Key Fact Statement</h4><div class="row"><span>Loan amount</span><span>' + inr(k.principal) + '</span></div><div class="row"><span>Fee + GST (deducted)</span><span>' + inr(k.fee + k.feeGst) + '</span></div><div class="row"><span>You receive</span><span>' + inr(k.netDisbursed) + '</span></div>' +
+        '<div class="row"><span>Repayments</span><span>' + k.instalments + ' × ' + inr(k.emi) + '</span></div><div class="row"><span>Total you repay</span><span>' + inr(k.totalRepay) + '</span></div><div class="row"><span>APR (all-in)</span><span>' + pct(k.aprNominal) + '</span></div>' +
+        '<div class="row"><span>Cooling-off</span><span>' + k.coolingDays + ' days</span></div><p class="status">Change your mind within ' + k.coolingDays + ' days: repay ' + inr(k.exitCostIfCancelled) + ' (principal plus interest for the days held), no penalty.</p>';
+    } else if (step === 3) {
+      var maxAmt = Math.min(15000, Math.ceil(k.emi * 2 / 100) * 100);
+      h = '<h4>Set up UPI AutoPay</h4><div class="row"><span>Frequency</span><span>' + (pl.freq === 'weekly' ? 'Weekly' : 'Monthly') + '</span></div><div class="row"><span>First debit</span><span>' + fmtDate(k.first) + '</span></div><div class="row"><span>Usual amount</span><span>' + inr(k.emi) + '</span></div><div class="row"><span>Mandate limit</span><span>' + inr(maxAmt) + '</span></div>' +
+        '<p class="status">The limit is twice the usual amount, so a missed payment can be collected with the next one. It stays under ₹15,000, so no extra approval is needed for each debit.</p>' +
+        '<div class="sms">Branch: ' + inr(k.emi) + ' will be debited from your UPI account on ' + fmtDate(k.first) + ' for your loan. Keep the balance ready. Reply HELP for support.</div><p class="status">This notice goes out 24 hours before every debit.</p>';
+    } else {
+      h = '<h4>Money on its way</h4><div class="big">' + inr(k.netDisbursed) + '</div><p class="status">Sent straight to your bank account. Your repayments go straight to the lender.</p><div class="row"><span>First repayment</span><span>' + fmtDate(k.first) + '</span></div><div class="row"><span>Plan</span><span>' + esc(pl.label.split(' (')[0]) + '</span></div><p class="status">Prototype screens: no money moves.</p>';
+    }
+    $('scr').innerHTML = h;
+    Array.prototype.forEach.call($('scr').querySelectorAll('.opt'), function (b) { b.onclick = function () { choice = b.getAttribute('data-o'); renderPhone(); }; });
+    $('back').disabled = step === 0; $('next').textContent = step === STEPS.length - 1 ? 'Start again' : 'Next';
+  }
+  function opt(id, title, sub) { return '<button class="opt" data-o="' + id + '" aria-pressed="' + (choice === id) + '"><b>' + esc(title) + '</b><span>' + esc(sub) + '</span></button>'; }
+  $('next').onclick = function () { step = step === STEPS.length - 1 ? 0 : step + 1; renderPhone(); };
+  $('back').onclick = function () { if (step > 0) { step--; renderPhone(); } };
+
+  // ---------- 05 sample size (used by 04 and 06) ----------
+  function planned() { var p1 = (+$('ssP1').value || 12) / 100, dd = (+$('ssD').value || 3) / 100; return PM.sampleSize(p1, Math.max(0.001, p1 - dd), 0.05, +$('ssPow').value); }
+  function renderSS() {
+    var n = planned(), p1 = +$('ssP1').value, dd = +$('ssD').value;
+    $('ssOut').innerHTML = '<strong>' + n.toLocaleString('en-IN') + ' loans per arm</strong> (' + (2 * n).toLocaleString('en-IN') + ' in total) to detect a fall from ' + p1 + '% to ' + (p1 - dd).toFixed(1) + '% at 5% significance (two-sided) and ' + Math.round(+$('ssPow').value * 100) + '% power. First instalments fall due 5–35 days after disbursal, so the read lands about five weeks after the last loan.';
+    $('plPlan').value = n;
+  }
+  ['ssP1', 'ssD', 'ssPow'].forEach(function (id) { $(id).addEventListener('input', function () { renderSS(); if (lastSim) renderSim(lastSim); }); });
+
+  // ---------- 04 simulation ----------
+  var MIX = { base: { weekly: 0.35, daily: 0.2, salaried: 0.3, irregular: 0.15 }, gig: { weekly: 0.5, daily: 0.3, salaried: 0.1, irregular: 0.1 }, sal: { weekly: 0.15, daily: 0.1, salaried: 0.65, irregular: 0.1 } };
+  var lastSim = null;
+  function runSim() {
+    $('simRun').disabled = true; $('simRun').textContent = 'Running…';
+    setTimeout(function () {
+      var bs = DATA.borrowers(+$('simN').value, +$('simSeed').value || 11, MIX[$('simMix').value]);
+      lastSim = PM.pilot(bs, { retries: +$('simRetry').value, sweep: $('simSweep').value === '1' });
+      renderSim(lastSim);
+      $('simRun').disabled = false; $('simRun').textContent = 'Run pilot';
+    }, 20);
+  }
+  function arrow(a, b, lowerBetter) { var better = lowerBetter ? b < a : b > a; return '<span style="color:' + (Math.abs(a - b) < 1e-9 ? 'var(--muted)' : better ? 'var(--ok)' : 'var(--bad)') + '">'; }
+  function renderSim(r) {
+    var c = r.total.control, m = r.total.matched;
+    var fc = c.fib / c.n, fm = m.fib / m.n, dc = c.dpd30 / c.n, dm = m.dpd30 / m.n, ec = c.ever30 / c.n, em = m.ever30 / m.n, ac = c.attempts / c.n, am = m.attempts / m.n;
+    $('simKpis').innerHTML =
+      '<div class="kpi"><span class="k">First-instalment bounce</span><span class="v">' + arrow(fc, fm, true) + pct(fm) + '</span> <small>from ' + pct(fc) + '</small></span><span class="s">primary metric</span></div>' +
+      '<div class="kpi"><span class="k">30+ DPD at day 120</span><span class="v">' + arrow(dc, dm, true) + pct(dm) + '</span> <small>from ' + pct(dc) + '</small></span><span class="s">guardrail</span></div>' +
+      '<div class="kpi"><span class="k">Ever 30+ DPD</span><span class="v">' + arrow(ec, em, true) + pct(em) + '</span> <small>from ' + pct(ec) + '</small></span><span class="s">the trap metric</span></div>' +
+      '<div class="kpi"><span class="k">Debit attempts per loan</span><span class="v">' + arrow(ac, am, true) + am.toFixed(1) + '</span> <small>from ' + ac.toFixed(1) + '</small></span><span class="s">the cost</span></div>';
+    var rows = '<tr><th>Borrowers</th><th class="n">In test</th><th class="n">Bounce today</th><th class="n">Bounce matched</th><th class="n">30+ DPD today</th><th class="n">30+ DPD matched</th><th class="n">Kept out</th></tr>';
+    var order = ['weekly', 'daily', 'salaried', 'irregular'];
+    r.segments.slice().sort(function (a, b) { return order.indexOf(a.segment) - order.indexOf(b.segment); }).forEach(function (s) {
+      var x = s.control, y = s.matched;
+      rows += '<tr><td>' + esc(DATA.SEGMENTS[s.segment].label) + '</td><td class="n">' + x.n.toLocaleString('en-IN') + '</td>' +
+        (x.n >= 30 ? '<td class="n">' + pct(x.fib / x.n) + '</td><td class="n">' + arrow(x.fib / x.n, y.fib / y.n, true) + pct(y.fib / y.n) + '</span></td><td class="n">' + pct(x.dpd30 / x.n) + '</td><td class="n">' + arrow(x.dpd30 / x.n, y.dpd30 / y.n, true) + pct(y.dpd30 / y.n) + '</span></td>' : '<td class="n" colspan="4" style="text-align:center;color:var(--muted)">' + (x.n ? 'too few to read' : 'kept out') + '</td>') +
+        '<td class="n">' + s.excluded.toLocaleString('en-IN') + '</td></tr>';
+    });
+    $('simSeg').innerHTML = rows;
+    var dcsn = PM.decide(c, m, { plannedPerArm: planned() });
+    var cls = /SCALE|ON TRACK/.test(dcsn.verdict) ? 'go' : dcsn.verdict === 'KILL' ? 'stop' : 'wait';
+    $('simVerdict').innerHTML = '<div class="verdict ' + cls + '"><b class="big">' + dcsn.verdict + '</b><span>' + esc(dcsn.why) + '</span><span class="status">Planned sample: ' + planned().toLocaleString('en-IN') + ' per arm; this run has ' + c.n.toLocaleString('en-IN') + '. Rules from section 05.</span></div>';
+    $('trap').textContent = pct(ec) + ' today vs ' + pct(em) + ' matched';
+    $('sumN').textContent = c.n.toLocaleString('en-IN'); $('sumFib').textContent = pct(fc) + ' → ' + pct(fm); $('sumDpd').textContent = pct(dc) + ' → ' + pct(dm); $('sumAtt').textContent = (am / ac).toFixed(1) + '×';
+    renderEcon();
+  }
+  function renderEcon() {
+    if (!lastSim) return;
+    var e = PM.economics(lastSim.total, { bounceCost: +$('ecB').value, attemptCost: +$('ecA').value, lossGiven30: (+$('ecL').value || 0) / 100 });
+    function k(label, v, s) { return '<div class="kpi"><span class="k">' + label + '</span><span class="v" style="color:' + (v >= 0 ? 'var(--ok)' : 'var(--bad)') + '">' + (v < 0 ? '−' : '') + inr(Math.abs(v)) + '</span><span class="s">' + s + '</span></div>'; }
+    $('ecOut').innerHTML = k('Fewer bounces to work', e.bounceSaving, Math.round(e.control.bounces - e.matched.bounces) + ' fewer bounces') +
+      k('Less principal lost', e.lossSaving, Math.round(e.control.dpd30 - e.matched.dpd30) + ' fewer loans 30+ DPD') +
+      k('Extra debit cost', -e.attemptCost, Math.round(e.matched.attempts - e.control.attempts).toLocaleString('en-IN') + ' more attempts') +
+      k('Net per 1,000 loans', e.net, 'before build and running costs');
+  }
+  ['ecB', 'ecA', 'ecL'].forEach(function (id) { $(id).addEventListener('input', renderEcon); });
+  $('simRun').onclick = runSim;
+
+  // ---------- 06 real pilot ----------
+  function renderPilot(res) {
+    if (res.error) { $('plOut').innerHTML = '<div class="verdict stop"><b class="big">CAN’T READ</b><span>' + esc(res.error) + '</span></div>'; return; }
+    var c = res.control, m = res.matched, d = PM.decide(c, m, { plannedPerArm: +$('plPlan').value || 0 });
+    var cls = /SCALE|ON TRACK/.test(d.verdict) ? 'go' : d.verdict === 'KILL' ? 'stop' : 'wait';
+    $('plOut').innerHTML = '<div class="kpis"><div class="kpi"><span class="k">Loans</span><span class="v">' + c.n + ' / ' + m.n + '</span><span class="s">control / matched</span></div>' +
+      (c.n && m.n ? '<div class="kpi"><span class="k">First-instalment bounce</span><span class="v">' + pct(m.fib / m.n) + ' <small>vs ' + pct(c.fib / c.n) + '</small></span><span class="s">matched vs control</span></div><div class="kpi"><span class="k">30+ DPD</span><span class="v">' + pct(m.dpd30 / m.n) + ' <small>vs ' + pct(c.dpd30 / c.n) + '</small></span><span class="s">matched vs control</span></div>' : '') +
+      '</div><div class="verdict ' + cls + '" style="margin-top:12px"><b class="big">' + d.verdict + '</b><span>' + esc(d.why || '') + '</span></div>';
+  }
+  $('plFile').onchange = function () { readFile(this, function (t) { renderPilot(PM.readPilot(t)); }); };
+  $('plSample').onclick = function () {
+    var r = DATA.rng(99), rows = [];
+    for (var i = 0; i < 2300; i++) { var arm = i % 2 ? 'matched' : 'control'; rows.push({ loan_id: 'L' + (100000 + i), arm: arm, first_bounce: r() < (arm === 'control' ? 0.12 : 0.07) ? 'yes' : 'no', dpd30: r() < (arm === 'control' ? 0.085 : 0.07) ? 'yes' : 'no' }); }
+    var csv = PM.toCSV(rows, ['loan_id', 'arm', 'first_bounce', 'dpd30']);
+    renderPilot(PM.readPilot(csv));
+  };
+
+  // ---------- start ----------
+  renderSS(); pick('weekly'); runSim(); $('btGen').click();
+})();
+
+</script>
+
+</body></html>
