@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent-safe Payment Links · Aditya Mathur</title>
+<meta name="description" content="A policy gate and test set for AI agents that create payment links and issue refunds. Independent product concept, not affiliated with Paytm.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1f;--muted:#5f6368;--card:#fff;--line:#e4e1da;--accent:#0b4f9c;--auto:#1d7a46;--autobg:#e3f4ea;--conf:#9a5b00;--confbg:#fdf0d8;--block:#b3261e;--blockbg:#fbe4e2;--code:#f2efe8}
+@media (prefers-color-scheme:dark){:root{--bg:#121316;--fg:#ececec;--muted:#a0a4ab;--card:#1b1d21;--line:#2d3036;--accent:#7cb3ff;--auto:#6fd39b;--autobg:#16301f;--conf:#f1bd62;--confbg:#33280f;--block:#ff8a80;--blockbg:#3a1a18;--code:#24262b}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+main{max-width:1040px;margin:0 auto;padding:28px 18px 60px}
+h1{font-size:clamp(28px,5vw,42px);line-height:1.15;margin:.2em 0 .3em;letter-spacing:-.01em}
+h2{font-size:24px;margin:48px 0 10px;padding-top:12px;border-top:1px solid var(--line)}
+h3{font-size:18px;margin:22px 0 6px}
+p{margin:.5em 0}a{color:var(--accent)}
+.kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:19px;max-width:760px}
+.muted{color:var(--muted)}.small{font-size:13px}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:2px 10px;font-size:13px;color:var(--muted);margin:2px 4px 2px 0}
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:18px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpi b{display:block;font-size:28px;line-height:1.1}
+.kpi span{font-size:13px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.two{grid-template-columns:1fr 1fr}@media (max-width:760px){.two{grid-template-columns:1fr}}
+.pill{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.03em;border-radius:6px;padding:1px 7px;vertical-align:1px}
+.pill.auto{background:var(--autobg);color:var(--auto)}.pill.confirm{background:var(--confbg);color:var(--conf)}.pill.block{background:var(--blockbg);color:var(--block)}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:13px;word-break:break-word}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--card);position:sticky;top:0}
+tr.bad td{background:var(--blockbg)}
+#cases td:nth-child(3){min-width:260px}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+input,select,textarea{width:100%;font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+textarea{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+.reasons{list-style:none;padding:0;margin:10px 0}.reasons li{margin:6px 0;font-size:14px}
+.decision{font-size:16px;margin-bottom:6px}.decision .pill{font-size:15px;padding:3px 10px}
+.phone{margin-top:14px;max-width:340px;border:1px solid var(--line);border-radius:18px;padding:14px;background:var(--bg)}
+.phone-h{font-weight:700;margin-bottom:6px}.phone-b{font-size:14px}
+.phone-a{display:flex;gap:8px;margin:12px 0 6px}.phone-a span{flex:1;text-align:center;border:1px solid var(--line);border-radius:8px;padding:6px;font-size:14px}
+.phone-a .ok{background:var(--accent);color:#fff;border-color:var(--accent)}
+.slider{display:grid;grid-template-columns:1fr 120px 56px;gap:10px;align-items:center;margin:6px 0;color:var(--fg)}
+.slider span{font-size:14px}.slider b{font-size:13px;text-align:right}
+@media (max-width:560px){.slider{grid-template-columns:1fr 70px 50px}}
+button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;padding:6px 12px;cursor:pointer}
+#checks{list-style:none;padding:0}#checks li{margin:5px 0}#checks .ok{color:var(--auto)}#checks .no{color:var(--block)}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+@media (max-width:760px){.flow{grid-template-columns:1fr 1fr}}
+.flow div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px}
+.flow b{display:block;margin-bottom:2px}
+ul.tight li{margin:4px 0}
+.note{border-left:3px solid var(--conf);padding:8px 12px;background:var(--confbg);border-radius:0 8px 8px 0;font-size:14px;margin:12px 0}
+footer{margin-top:50px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<main>
+<div class="kicker">Independent product concept · Payment Links / Payment Pages · not affiliated with Paytm</div>
+<h1>Let the agent create the link.<br>Not the mistake.</h1>
+<p class="lede">Paytm already lets a merchant's AI agent create payment links and start refunds from a plain prompt. That is the right bet. This page is what I would ship next as the Payment Links PM: a policy gate between the agent and the money, so the agent proposes, the rules decide, and the merchant approves only what needs a human.</p>
+<p><span class="tag">Working rules engine</span><span class="tag">41-case test set</span><span class="tag">30-day simulation</span><span class="tag">PRD, metrics, rollout</span><span class="tag" id="hero-checks">self-checks</span></p>
+
+<div class="grid kpis">
+  <div class="kpi"><b id="k-total">…</b><span>agent write requests simulated across 3 fictional merchants, 30 days</span></div>
+  <div class="kpi"><b id="k-bad">…</b><span>of them should never have run (wrong amount, wrong person, duplicate, over-refund, injected)</span></div>
+  <div class="kpi"><b id="k-cap">…</b><span>still get through with an amount cap, because most bad calls are small</span></div>
+  <div class="kpi"><b id="k-gate">…</b><span>get through the gate</span></div>
+  <div class="kpi"><b id="k-ask">…</b><span>of writes ask the merchant for a tap</span></div>
+  <div class="kpi"><b id="k-clean">…</b><span>of clean requests run straight through, no tap</span></div>
+</div>
+<p class="muted small">All numbers on this page come from fictional merchants and assumed error rates (move the sliders below). They show how the rules behave, not how Paytm's merchants behave. No AI model was run; every agent proposal is scripted.</p>
+
+<h2>1. The problem</h2>
+<div class="grid two">
+<div class="card">
+<h3>What is true today (public sources)</h3>
+<ul class="tight">
+<li>Paytm's MCP server lets merchants manage payments from Cursor, ChatGPT, Claude and n8n with natural-language prompts, and is pitched for agentic AI payments and bot-led shopping.</li>
+<li>Its tools create and fetch payment links, list orders, and start and track refunds (<code>create_link</code> / <code>create_payment_link</code>, <code>fetch_link</code>, <code>initiate_refund</code>). Paytm's own example: <i>"Create a ₹500 payment link"</i>.</li>
+<li>When a link is created with a mobile number or email, it is sent to the customer by SMS or email automatically.</li>
+<li>An independent review of the connector found 21 tools, 9 of which write, and sign-in scopes that only establish identity: there is no separate read versus write permission to grant.</li>
+</ul>
+</div>
+<div class="card">
+<h3>Why that matters for Payment Links</h3>
+<ul class="tight">
+<li>An agent's mistake is not a wrong answer on a screen. It is an SMS with a payment request, from the merchant's name, to a real person. Or money leaving the account.</li>
+<li>The common agent failures are small and boring: a misread "dhai hazaar", two digits swapped in a number, the same create fired twice after a timeout, a refund larger than what is left on the order, an instruction copied from a customer's email.</li>
+<li>Two easy answers both fail. An amount cap misses small mistakes. Asking before every action trains merchants to tap Approve without reading.</li>
+<li>Competitors are moving the same way: PhonePe launched SmartPages (June 2026), which builds a payment page from a merchant's prompt.</li>
+</ul>
+</div>
+</div>
+<p><b>Problem statement.</b> Merchants who connect an AI agent to Payment Links need it to create and manage links on its own, without a wrong amount, a wrong recipient, a duplicate or an unwanted refund ever reaching a customer or leaving their account, and without approving every single action.</p>
+
+<div class="flow">
+<div><b>1. Merchant asks</b>"Meera ko saadhe chaar hazaar ka link bhej do"</div>
+<div><b>2. Agent proposes</b>create_payment_link, ₹4,500, Meera Shah, 98xxxxxx34</div>
+<div><b>3. Gate decides</b><span class="pill auto">AUTO</span> run · <span class="pill confirm">CONFIRM</span> tap · <span class="pill block">BLOCK</span> refuse with a reason</div>
+<div><b>4. Merchant approves</b>only the 1 in 6 that need a human, on a card that says exactly what will happen</div>
+</div>
+
+<h2>2. Try it</h2>
+<p>Pick any of the 41 test cases, or edit the merchant's message or the agent's proposed call and watch the decision change.</p>
+<div class="grid two">
+<div class="card">
+<label for="case">Test case</label><select id="case"></select>
+<label for="t-text">Merchant's message (or the text the instruction came from)</label><textarea id="t-text" rows="2"></textarea>
+<label for="t-source">Where the instruction came from</label>
+<select id="t-source"><option value="merchant">The merchant typed or said it</option><option value="tool_output">Text the agent read from a tool (email, chat, CRM)</option><option value="document">A document the agent opened (PDF, invoice)</option></select>
+<label for="t-tool">Tool the agent wants to call</label>
+<select id="t-tool"><option>create_payment_link</option><option>update_payment_link</option><option>initiate_refund</option><option>fetch_payment_links</option><option>fetch_transactions_by_link_id</option><option>create_qr_code</option></select>
+<label for="t-args">Arguments (JSON; parameter names are my assumption)</label><textarea id="t-args" rows="7"></textarea>
+<div id="t-err" class="small" style="color:var(--block)"></div>
+</div>
+<div class="card"><div id="t-out"></div></div>
+</div>
+<p class="muted small">Merchant used in the tool: Shiksha Point Coaching, Noida (fictional). 6 saved customers, typical link ₹4,500, largest usual link ₹18,000, ₹4 lakh left on this month's acceptance limit, 4 recent links, 4 orders.</p>
+
+<h2>3. The rules</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Rule</th><th>Level</th><th>What it catches</th><th>Why this level</th></tr></thead>
+<tbody>
+<tr><td>Reads run free</td><td><span class="pill auto">AUTO</span></td><td>Any <code>fetch_</code> call</td><td>No money or message moves. Friction here kills adoption.</td></tr>
+<tr><td>Scope per action type</td><td><span class="pill block">BLOCK</span></td><td>Agent tries a write the merchant never allowed (for example QR codes or refunds)</td><td>Today's sign-in has no read vs write split. The merchant should pick: read, create links, edit links, refunds.</td></tr>
+<tr><td>Instruction must come from the merchant</td><td><span class="pill block">BLOCK</span></td><td>"Refund me on my new account" inside a customer email; hidden text in a PDF</td><td>Text the agent reads is data, not a command. This is the prompt-injection rule.</td></tr>
+<tr><td>Amount must match the merchant's words</td><td><span class="pill block">BLOCK</span> / <span class="pill confirm">CONFIRM</span></td><td>4,500 became 45,000; "dhai hazaar" read as 2,000. Ambiguous text ("1.5", "15,00") or no amount at all asks.</td><td>A mismatch is a bug, so refuse. Ambiguity is human, so ask.</td></tr>
+<tr><td>Amount vs this merchant's history</td><td><span class="pill confirm">CONFIRM</span></td><td>Above 3x the merchant's usual largest link</td><td>Big but possibly real (annual fees, a bulk order).</td></tr>
+<tr><td>Acceptance limit</td><td><span class="pill block">BLOCK</span></td><td>Link larger than what is left on the monthly acceptance limit</td><td>The customer's payment would fail anyway; Paytm applies the account's monthly limit to links.</td></tr>
+<tr><td>Recipient must be known</td><td><span class="pill block">BLOCK</span> / <span class="pill confirm">CONFIRM</span></td><td>Swapped digits, another customer's number, an invented number, bad email. A new number the merchant typed asks.</td><td>The link is sent automatically. A wrong contact means a stranger gets a payment request.</td></tr>
+<tr><td>No duplicates</td><td><span class="pill block">BLOCK</span> / <span class="pill confirm">CONFIRM</span></td><td>Same link within 2 minutes (agent retry) is refused and the existing link returned. Same unpaid link within 24 hours asks "resend instead?"</td><td>Two links means two payments and a refund ticket.</td></tr>
+<tr><td>Expiry</td><td><span class="pill auto">default</span> / <span class="pill block">BLOCK</span></td><td>No expiry: set 7 days. Past date or beyond one year: refused.</td><td>One year is Paytm's stated maximum validity. 7 days is my assumption.</td></tr>
+<tr><td>Part payments only if asked</td><td><span class="pill confirm">CONFIRM</span></td><td>Agent turns on partial payments when the merchant never said instalments, kisht, advance</td><td>Changes how the merchant gets paid; easy to miss.</td></tr>
+<tr><td>Only updatable fields</td><td><span class="pill block">BLOCK</span></td><td>Changing the amount of a live link; editing a paid link</td><td>Paytm's update API changes description and expiry only. The agent is told: expire it and create a new one.</td></tr>
+<tr><td>Scam-like wording</td><td><span class="pill block">BLOCK</span></td><td>"KYC update fee", "OTP", "police", "refund processing fee" in the link purpose</td><td>The text reaches the customer under the merchant's name. These phrases are the language of payment scams.</td></tr>
+<tr><td>Refunds are money out</td><td><span class="pill confirm">always</span> / <span class="pill block">BLOCK</span></td><td>Every refund asks. Refused if more than what is left, the payment failed, it is redirected to a new UPI ID or account, the refund reference was used before, or more than 3 agent refunds in an hour.</td><td>Refunds go back to the original payment method only. A reused reference means a retry, not a second refund.</td></tr>
+<tr><td>Velocity</td><td><span class="pill confirm">CONFIRM</span> / <span class="pill block">BLOCK</span></td><td>Over 50 agent links in a day asks; 20 in 10 minutes is refused</td><td>Loops and spam look like this.</td></tr>
+</tbody></table></div>
+
+<h2>4. Test set: 41 agent proposals <span class="muted small" id="cases-score"></span></h2>
+<p class="muted">Each case is a merchant message plus the call an agent might propose. The expected decision is written from the rule table before running. Red rows would mean a mismatch.</p>
+<div class="table-wrap"><table id="cases"><thead><tr><th>ID</th><th>Type</th><th>Merchant message and agent call</th><th>Why it is tricky</th><th>Expected</th><th>Got</th><th>Rules fired</th></tr></thead><tbody></tbody></table></div>
+
+<h2>5. Simulation: one month, three merchants</h2>
+<p>A coaching institute collecting fees (25 agent requests a day), a home bakery taking Instagram orders (15 a day) and a B2B electrical distributor sending invoices (10 a day). Customers, amounts and errors are generated; links get paid over the following two days; refunds come from paid orders. Four policies are compared on the same requests.</p>
+<div class="card" id="sliders"></div>
+<p><button id="reset">Reset to defaults</button></p>
+<div class="table-wrap"><table id="sim-table"><thead><tr><th>Policy</th><th>Bad calls that run</th><th>Good calls that wait for a tap</th><th>Good calls refused</th><th>What it means</th></tr></thead><tbody></tbody></table></div>
+<h3>By type of request (gate)</h3>
+<div class="table-wrap"><table id="kind-table"><thead><tr><th>Request type</th><th>Right outcome</th><th>Count</th><th>Auto</th><th>Confirm</th><th>Block</th></tr></thead><tbody></tbody></table></div>
+<div class="note"><b>Read this honestly.</b> The simulation tests the rules against the failure types they were written for, so the gate is bound to look good here. What it does show: what the rules cost in taps, and why an amount cap or "ask every time" leaves most real mistakes through. The real test is a replay of real agent logs from the MCP server, which is the first thing I would ask for.<br>"Bad calls that run" for the confirm-based policies assumes people approve some taps without reading, more often the more they are asked (the last slider).</div>
+
+<h2>6. PRD: Agent-safe Payment Links</h2>
+<div class="grid two">
+<div class="card">
+<h3>Users</h3>
+<ul class="tight">
+<li><b>Small merchant owner</b> who runs the business from WhatsApp and wants "link bhej do" to just work.</li>
+<li><b>Merchant's staff</b> using a shared agent; the owner wants limits on what staff and agent can do.</li>
+<li><b>Developers and bot builders</b> building shopping or collections bots on the MCP server.</li>
+<li><b>Paytm risk and support</b>, who pay for every wrong link in tickets and complaints.</li>
+</ul>
+<h3>Goals</h3>
+<ul class="tight"><li>Agents can create and manage links unattended for the large majority of requests.</li><li>No wrong-amount, wrong-recipient, duplicate or unauthorised money-out action executes without a human seeing it.</li><li>When the agent is refused, it gets a reason it can act on, so it fixes the call instead of retrying blindly.</li></ul>
+<h3>Not in scope (v1)</h3>
+<ul class="tight"><li>Judging whether the merchant's business is legitimate (that is onboarding and transaction monitoring).</li><li>Voice or WhatsApp front ends; the gate sits under any front end.</li><li>Payouts and subscriptions (same pattern, later).</li></ul>
+</div>
+<div class="card">
+<h3>Requirements</h3>
+<p><b>P0</b></p>
+<ul class="tight">
+<li><b>Scopes:</b> merchant grants read / create link / edit link / refund separately in the dashboard. <i>Accept:</i> a token without refund scope gets a clear refusal on <code>initiate_refund</code>.</li>
+<li><b>Decision on every write</b> (AUTO / CONFIRM / BLOCK) with reason codes returned to the agent. <i>Accept:</i> all 41 test cases match; the reason text names the field to fix.</li>
+<li><b>Approve card</b> in the business app: amount, person, masked number, channel, expiry, single or part payment. Ignored for 10 minutes: nothing runs. <i>Accept:</i> card text generated from the final arguments, not from the agent's summary.</li>
+<li><b>Idempotency:</b> retry within 2 minutes returns the existing link; refund reference required and unique. <i>Accept:</i> 0 duplicate links in a retry storm test.</li>
+<li><b>Instruction source:</b> MCP clients mark whether a write was asked by the user or derived from tool output; derived writes are refused. <i>Accept:</i> injection cases P01 and P02 blocked.</li>
+</ul>
+<p><b>P1</b></p>
+<ul class="tight"><li>Merchant-set limits (auto up to ₹X; refunds above ₹Y need the owner, not staff).</li><li>"Resend existing link" as a first-class tool, so agents stop recreating.</li><li>Weekly digest: what the agent did, what was refused and why.</li><li>Hinglish and regional-number parsing shared with the voice stack.</li></ul>
+</div>
+</div>
+<div class="grid two" style="margin-top:14px">
+<div class="card">
+<h3>Metrics</h3>
+<ul class="tight">
+<li><b>North star:</b> agent-created links paid without the merchant correcting, cancelling or re-sending them.</li>
+<li><b>Hard guardrail:</b> unsafe writes executed without a human = 0 (from replay and from support tickets tagged "agent").</li>
+<li><b>Friction:</b> share of writes asking for a tap (target under 20%), time to approve, share of taps rejected or edited (if near 0%, the rule asking is too strict).</li>
+<li><b>Agent recovery:</b> share of BLOCKs followed by a corrected call within 1 minute.</li>
+<li><b>Adoption:</b> merchants with an agent connected who create 10+ links a week through it.</li>
+</ul>
+</div>
+<div class="card">
+<h3>Rollout</h3>
+<ol class="tight">
+<li><b>Week 1-2, shadow mode:</b> run the gate on live MCP traffic, decide but do not enforce. Compare decisions with what happened (cancelled links, refund tickets).</li>
+<li><b>Week 3:</b> enforce BLOCK only for retries, invented contacts and over-refunds (near-zero false positives).</li>
+<li><b>Week 4-6:</b> turn on CONFIRM with the approve card for 5% of agent-connected merchants; A/B against shadow.</li>
+<li><b>Then:</b> scopes in the dashboard and the developer docs; default on for new MCP sign-ups.</li>
+</ol>
+<h3>Risks</h3>
+<ul class="tight"><li>Too many taps: merchants switch the agent off. Watch reject rate per rule.</li><li>Agents loop on BLOCK: reason codes must say what to change.</li><li>Customer book is incomplete for new merchants: "invented contact" fires often; fall back to CONFIRM in their first 30 days.</li><li>Paytm may already run some of these checks server-side; I could not see tool annotations without signing in.</li></ul>
+</div>
+</div>
+<h3>What I would ask the team first</h3>
+<ul class="tight"><li>How many merchants have the MCP server connected, and what share of its calls are writes?</li><li>Of agent-created links, how many are cancelled or re-sent within a day? That is the cheapest proxy for agent mistakes.</li><li>Do refunds through the MCP server already need a second factor?</li><li>Is there a link-level "created by agent" flag in the data today?</li></ul>
+
+<h2>7. Self-checks <span class="muted small" id="checks-score"></span></h2>
+<p class="muted">These run in your browser every time the page loads. The same checks run as a Node test suite in the source.</p>
+<ul id="checks"></ul>
+
+<h2>8. Facts used, with sources</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Fact</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Paytm MCP server: manage payments from Cursor, ChatGPT, Claude, n8n with natural-language prompts; built for agentic AI payments and bot-led shopping</td><td><a href="https://paytmpayments.com/docs/mcp-server-overview">Paytm Payments docs: MCP server overview</a></td></tr>
+<tr><td>Open-source server tools: create_link, fetch_link, fetch_transaction, fetch_order_list, initiate_refund (plus refund status and list); example prompt "Create a ₹500 payment link"</td><td><a href="https://pypi.org/project/iflow-mcp_paytm-payment-mcp/0.1.2/">Package listing of the Paytm MCP server</a></td></tr>
+<tr><td>Hosted server write tools named create_payment_link, initiate_refund, process_transaction, cancel_subscription, create_qr_code. Tool names differ between versions; this page uses the hosted names.</td><td><a href="https://agentman.ai/agentskills/connections/mcp-server/paytm-for-business">Agentman connector review</a></td></tr>
+<tr><td>21 tools, 9 write; sign-in scopes are openid, profile, email only; no read vs write scope</td><td><a href="https://agentman.ai/agentskills/connections/mcp-server/paytm-for-business">Agentman connector review</a> (third party, checked Aug 2026)</td></tr>
+<tr><td>Link types (generic, fixed amount, payment page, invoice); statuses issued, paid, cancelled, expired; link with mobile or email is sent by SMS or email on creation; update changes only description and expiry; partial payments; refund REFID must be unique</td><td><a href="https://paytmpayments.com/docs/v1/payment-link">Paytm Payments docs: Payment Links</a></td></tr>
+<tr><td>One year is the maximum validity of a link; link acceptance limit is the account's monthly acceptance limit</td><td><a href="https://paytmpayments.com/payment-link">Paytm Payment Links FAQ</a></td></tr>
+<tr><td>PPSL received RBI's Certificate of Authorisation as a payment aggregator on 26 Nov 2025 (online); offline and cross-border authorisation followed on 17 Dec 2025</td><td><a href="https://inc42.com/buzz/paytm-payments-services-gets-rbis-payment-aggregator-licence">Inc42</a>, <a href="https://www.freepressjournal.in/business/rbi-grants-paytm-payments-services-approval-for-offline-cross-border-payments">Free Press Journal</a></td></tr>
+<tr><td>RBI Payment Aggregator Directions, 15 Sep 2025: tighter merchant due diligence and continuous transaction monitoring</td><td><a href="https://www.outlookbusiness.com/news/rbi-issues-new-master-directions-for-payment-aggregators-rules-take-effect-immediately">Outlook Business</a></td></tr>
+<tr><td>Paytm Q2 FY27: payment services revenue ₹1,434 crore (+25% YoY); 8.5 crore monthly transacting users</td><td><a href="https://www.exchange4media.com/marketing-news/paytm-q2-profit-jumps-over-10-fold-to-rs-225-crore-159534.html">exchange4media</a>, <a href="https://www.newkerala.com/news/a/paytm-q2-fy27-profit-rises-over-10-fold-225-714.htm">NewKerala / IANS</a></td></tr>
+<tr><td>PhonePe SmartPages (June 2026): AI builds a payment page from a merchant's prompt, inside the PhonePe PG dashboard</td><td><a href="https://indiantelevision.com/iworld/phonepe-launches-ai-tool-to-help-merchants-build-payment-pages/">indiantelevision.com</a></td></tr>
+</tbody></table></div>
+<p class="muted small">Assumptions (not facts): every error rate in the simulation; the 7-day default expiry; the 3x outlier multiple, 2-minute retry window, 24-hour resend window, velocity caps; the tool parameter names; the three merchants and their customers.</p>
+
+<footer>
+Built by <b>Aditya Mathur</b> with Claude, Nov 2026. Independent product concept using public information only; not affiliated with or endorsed by Paytm or Paytm Payments Services Ltd. I was an Associate PM on EnKash's acquiring product (checkout, payment links, refunds, reconciliation), where I specced the payment-links merchant dashboard changes, and spent a year in AML and financial crimes at Stripe. The rules engine, test set and simulation are in the page source.
+· <a href="https://adimathur-creates.github.io">Portfolio</a> · <a href="https://www.linkedin.com/in/adityaamathur">LinkedIn</a>
+</footer>
+</main>
+<script>
+/*__SCRIPTS__*/
+</script>
+</body>
+</html>
