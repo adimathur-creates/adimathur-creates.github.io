@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Why did payout success drop on Tuesday? A Payouts pod analytics kit (simulation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--mute:#8a8984;--rule:#e6e5e1;--s1:#2a78d6;--s2:#eb6834;--crit:#c8322f;--warnbg:#fff4d6;--warnink:#5c4300}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 "Source Serif 4",Georgia,serif}
+.banner{background:var(--warnbg);color:var(--warnink);border-bottom:1px solid #ecd9a0;font:500 14.5px/1.5 "Inter Tight",system-ui,sans-serif;padding:14px 20px;text-align:center}
+.banner b{font-weight:600}
+main{max-width:760px;margin:0 auto;padding:40px 22px 80px}
+h1{font-size:38px;line-height:1.15;margin:8px 0 10px;font-weight:600;letter-spacing:-.01em}
+h2{font:600 23px/1.3 "Source Serif 4",serif;margin:52px 0 10px;padding-top:18px;border-top:1px solid var(--rule)}
+h3{font:600 15px/1.4 "Inter Tight",sans-serif;margin:28px 0 6px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2)}
+.kicker{font:500 13px "Inter Tight",sans-serif;color:var(--ink2);letter-spacing:.06em;text-transform:uppercase}
+.dek{font-size:19px;color:var(--ink2);margin:0 0 18px}
+.by{font:14px "Inter Tight",sans-serif;color:var(--ink2)}
+.tldr{background:#fff;border:1px solid var(--rule);border-radius:10px;padding:18px 22px;margin:26px 0}
+.tldr li{margin:6px 0}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+.num{background:#fff;border:1px solid var(--rule);border-radius:10px;padding:14px 14px 12px}
+.num .v{font:600 26px "Inter Tight",sans-serif}.num .l{font:13px/1.4 "Inter Tight",sans-serif;color:var(--ink2)}
+.num.real{border-color:var(--s1);box-shadow:inset 0 0 0 1px var(--s1)}
+svg{width:100%;height:auto;display:block;margin:10px 0 4px;font-family:"Inter Tight",sans-serif}
+.grid{stroke:#ecebe7;stroke-width:1}.thr{stroke:var(--crit);stroke-width:1.5;stroke-dasharray:4 3}.axis0{stroke:#bdbcb7}
+.ax{font-size:11.5px;fill:var(--mute)}.ann{font-size:12.5px;fill:var(--ink);font-weight:600}
+.lab{font-size:13px;fill:var(--ink)}.val{font-size:13px;fill:var(--ink2)}
+.ln{fill:none;stroke:var(--s1);stroke-width:2}.ln-dash{fill:none;stroke:var(--s1);stroke-width:2;stroke-dasharray:3 4;opacity:.6}
+.dot{fill:var(--s1);stroke:var(--bg);stroke-width:1.5}.dot-hi{fill:var(--s2);stroke:var(--bg);stroke-width:2}
+.bar{fill:var(--s1)}.bar-hi{fill:var(--s2)}.hit:hover .bar,.hit:hover .bar-hi{opacity:.8}
+.cap{font:13px/1.5 "Inter Tight",sans-serif;color:var(--ink2);margin:2px 0 18px}
+.tw{overflow-x:auto;margin:10px 0 18px}table{border-collapse:collapse;font:13.5px/1.4 "Inter Tight",sans-serif;width:100%}
+th{text-align:left;font-weight:600;color:var(--ink2);border-bottom:1px solid var(--ink);padding:6px 8px;white-space:nowrap}
+td{border-bottom:1px solid var(--rule);padding:6px 8px;font-variant-numeric:tabular-nums}
+.callout{border-left:3px solid var(--s1);padding:4px 0 4px 16px;margin:18px 0;color:var(--ink)}
+.act{display:grid;gap:10px;margin:14px 0}.act div{background:#fff;border:1px solid var(--rule);border-radius:10px;padding:12px 16px;font-size:16px}
+.act b{font-family:"Inter Tight",sans-serif;font-weight:600}
+code,pre{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12.5px}
+pre{background:#f4f3f0;border-radius:8px;padding:14px;overflow-x:auto;line-height:1.45}
+details{border-top:1px solid var(--rule);padding:8px 0}summary{cursor:pointer;font:14px "Inter Tight",sans-serif}
+.small{font-size:14.5px;color:var(--ink2)}
+@media (max-width:620px){.nums{grid-template-columns:1fr}h1{font-size:30px}}
+</style></head><body>
+<div class="banner"><b>Simulation on fictional data.</b> This is not Cashfree data and not a real incident. Merchants, banks, volumes, prices and the Tuesday incident are invented. The causes were planted on purpose so the SQL could be checked against a known answer. Status and reason names follow Cashfree's public Payouts docs.</div>
+<main>
+<div class="kicker">Payouts + SecureID pod · Product Analyst work sample</div>
+<h1>Why did payout success drop on Tuesday?</h1>
+<p class="dek">A working analytics kit for a payouts team: one agreed definition of success rate, a repeatable root-cause method for the "why did success rate drop on Tuesday?" question, and two growth levers it surfaces along the way.</p>
+<p class="by">Aditya Mathur · built with Claude · 444k payout intents, 600 merchants, 8 weeks · SQLite, every number on this page is produced by the SQL in the appendix</p>
+
+<div class="tldr"><b>The short version</b><ul>
+<li>The dashboard showed success rate down <b>1.20 points</b> on Tuesday. The real drop, per payout and after late reversals, was <b>0.51 points</b> (99.03% → 98.52%). Part of the scare was how we count.</li>
+<li>Two causes explain all of it: one gaming merchant's withdrawal promo paying unverified new accounts (<b>-0.35</b>) and a beneficiary bank failing on IMPS and UPI from 11:15 to 14:15 (<b>-0.23</b>). Cashfree-side errors and API latency were flat.</li>
+<li>First payouts to unverified accounts fail on invalid details <b>7.2x</b> as often as verified ones (2.36% vs 0.33%). 393 Payouts merchants don't verify. That is a SecureID adoption lever that shows up as a Payouts success-rate win.</li>
+<li>Merchants that hit a failure spike churned at <b>32.1%</b> vs <b>5.1%</b>. A simple week-6 alert, back-tested, flagged 7 merchants; 6 were gone two weeks later.</li>
+</ul></div>
+
+<h2>1. One number everyone agrees on</h2>
+<p>A payouts pod argues about success rate until it agrees what it is counting. Three choices change the answer: counting <b>attempts or payouts</b> (a retried payout is one payout, not three), <b>when</b> you read the status (reversals land up to a day after a success; pending transfers can take up to 72 hours to settle), and whether a merchant's own <b>insufficient-balance</b> errors count against the platform.</p>
+<div class="nums">
+<div class="num"><div class="v">97.95% → 96.75%</div><div class="l">Attempt success rate, as the dashboard showed it on Tuesday night</div></div>
+<div class="num"><div class="v">97.82% → 96.62%</div><div class="l">Attempt success rate, final, after reversals landed</div></div>
+<div class="num real"><div class="v">99.03% → 98.52%</div><div class="l"><b>Payout success rate</b>: per payout, final, merchant balance errors excluded. The real number.</div></div>
+</div>
+<p class="cap">Baseline = the four most recent normal Tuesdays (22 and 29 Sep, 27 Oct, 3 Nov), pooled. Same data, three different answers.</p>
+<p><b>The definition I'd make the pod's single source of truth:</b> payouts that reached the beneficiary and stayed there (final success, not reversed), divided by payouts sent to a bank, counted only once a payout is 72 hours old. Attempt-level success rate stays on the dashboard as an <i>infrastructure</i> metric, labelled as such. The full metric dictionary (activation, retention, reversal rate, time to final status) is in <code>METRICS.md</code>.</p>
+<svg viewBox="0 0 720 230" role="img" aria-label="Daily payout success rate, 21 Sep to 15 Nov 2026"><line x1="44" x2="704" y1="196.0" y2="196.0" class="grid"/><text x="38" y="200.0" class="ax" text-anchor="end">98.0%</text><line x1="44" x2="704" y1="136.0" y2="136.0" class="grid"/><text x="38" y="140.0" class="ax" text-anchor="end">98.5%</text><line x1="44" x2="704" y1="76.0" y2="76.0" class="grid"/><text x="38" y="80.0" class="ax" text-anchor="end">99.0%</text><line x1="44" x2="704" y1="16.0" y2="16.0" class="grid"/><text x="38" y="20.0" class="ax" text-anchor="end">99.5%</text><path d="M44.0,82.0 L56.0,72.4 L68.0,60.4 L80.0,77.2 L92.0,82.0 L104.0,80.8 L116.0,97.6 L128.0,67.6 L140.0,80.8 L152.0,79.6 L164.0,85.6 L176.0,71.2 L188.0,65.2 L200.0,84.4 L212.0,143.2 L224.0,146.8 L236.0,150.4 L248.0,150.4 L260.0,139.6 L272.0,91.6 L284.0,144.4 L296.0,146.8 L308.0,109.6 L320.0,137.2 L332.0,115.6 L344.0,114.4 L356.0,164.8 L368.0,118.0 L380.0,140.8 L392.0,102.4 L404.0,142.0 L416.0,151.6 L428.0,143.2 L440.0,128.8 L452.0,122.8 L464.0,98.8 L476.0,55.6 L488.0,77.2 L500.0,56.8 L512.0,58.0 L524.0,95.2 L536.0,96.4 L548.0,66.4 L560.0,79.6 L572.0,64.0 L584.0,88.0 L596.0,50.8 L608.0,72.4 L620.0,80.8 L632.0,71.2 L644.0,133.6 L656.0,58.0 L668.0,78.4" class="ln"/><path d="M668.0,78.4 L680.0,67.6 L692.0,85.6 L704.0,71.2" class="ln-dash"/><g class="hit"><circle cx="44.0" cy="82.0" r="9" fill="transparent"/><circle cx="44.0" cy="82.0" r="2.5" class="dot"/><title>2026-09-21: 98.95%</title></g><g class="hit"><circle cx="56.0" cy="72.4" r="9" fill="transparent"/><circle cx="56.0" cy="72.4" r="2.5" class="dot"/><title>2026-09-22: 99.03%</title></g><g class="hit"><circle cx="68.0" cy="60.4" r="9" fill="transparent"/><circle cx="68.0" cy="60.4" r="2.5" class="dot"/><title>2026-09-23: 99.13%</title></g><g class="hit"><circle cx="80.0" cy="77.2" r="9" fill="transparent"/><circle cx="80.0" cy="77.2" r="2.5" class="dot"/><title>2026-09-24: 98.99%</title></g><g class="hit"><circle cx="92.0" cy="82.0" r="9" fill="transparent"/><circle cx="92.0" cy="82.0" r="2.5" class="dot"/><title>2026-09-25: 98.95%</title></g><g class="hit"><circle cx="104.0" cy="80.8" r="9" fill="transparent"/><circle cx="104.0" cy="80.8" r="2.5" class="dot"/><title>2026-09-26: 98.96%</title></g><g class="hit"><circle cx="116.0" cy="97.6" r="9" fill="transparent"/><circle cx="116.0" cy="97.6" r="2.5" class="dot"/><title>2026-09-27: 98.82%</title></g><g class="hit"><circle cx="128.0" cy="67.6" r="9" fill="transparent"/><circle cx="128.0" cy="67.6" r="2.5" class="dot"/><title>2026-09-28: 99.07%</title></g><g class="hit"><circle cx="140.0" cy="80.8" r="9" fill="transparent"/><circle cx="140.0" cy="80.8" r="2.5" class="dot"/><title>2026-09-29: 98.96%</title></g><g class="hit"><circle cx="152.0" cy="79.6" r="9" fill="transparent"/><circle cx="152.0" cy="79.6" r="2.5" class="dot"/><title>2026-09-30: 98.97%</title></g><g class="hit"><circle cx="164.0" cy="85.6" r="9" fill="transparent"/><circle cx="164.0" cy="85.6" r="2.5" class="dot"/><title>2026-10-01: 98.92%</title></g><g class="hit"><circle cx="176.0" cy="71.2" r="9" fill="transparent"/><circle cx="176.0" cy="71.2" r="2.5" class="dot"/><title>2026-10-02: 99.04%</title></g><g class="hit"><circle cx="188.0" cy="65.2" r="9" fill="transparent"/><circle cx="188.0" cy="65.2" r="2.5" class="dot"/><title>2026-10-03: 99.09%</title></g><g class="hit"><circle cx="200.0" cy="84.4" r="9" fill="transparent"/><circle cx="200.0" cy="84.4" r="2.5" class="dot"/><title>2026-10-04: 98.93%</title></g><g class="hit"><circle cx="212.0" cy="143.2" r="9" fill="transparent"/><circle cx="212.0" cy="143.2" r="2.5" class="dot"/><title>2026-10-05: 98.44%</title></g><g class="hit"><circle cx="224.0" cy="146.8" r="9" fill="transparent"/><circle cx="224.0" cy="146.8" r="2.5" class="dot"/><title>2026-10-06: 98.41%</title></g><g class="hit"><circle cx="236.0" cy="150.4" r="9" fill="transparent"/><circle cx="236.0" cy="150.4" r="2.5" class="dot"/><title>2026-10-07: 98.38%</title></g><g class="hit"><circle cx="248.0" cy="150.4" r="9" fill="transparent"/><circle cx="248.0" cy="150.4" r="2.5" class="dot"/><title>2026-10-08: 98.38%</title></g><g class="hit"><circle cx="260.0" cy="139.6" r="9" fill="transparent"/><circle cx="260.0" cy="139.6" r="2.5" class="dot"/><title>2026-10-09: 98.47%</title></g><g class="hit"><circle cx="272.0" cy="91.6" r="9" fill="transparent"/><circle cx="272.0" cy="91.6" r="2.5" class="dot"/><title>2026-10-10: 98.87%</title></g><g class="hit"><circle cx="284.0" cy="144.4" r="9" fill="transparent"/><circle cx="284.0" cy="144.4" r="2.5" class="dot"/><title>2026-10-11: 98.43%</title></g><g class="hit"><circle cx="296.0" cy="146.8" r="9" fill="transparent"/><circle cx="296.0" cy="146.8" r="2.5" class="dot"/><title>2026-10-12: 98.41%</title></g><g class="hit"><circle cx="308.0" cy="109.6" r="9" fill="transparent"/><circle cx="308.0" cy="109.6" r="2.5" class="dot"/><title>2026-10-13: 98.72%</title></g><g class="hit"><circle cx="320.0" cy="137.2" r="9" fill="transparent"/><circle cx="320.0" cy="137.2" r="2.5" class="dot"/><title>2026-10-14: 98.49%</title></g><g class="hit"><circle cx="332.0" cy="115.6" r="9" fill="transparent"/><circle cx="332.0" cy="115.6" r="2.5" class="dot"/><title>2026-10-15: 98.67%</title></g><g class="hit"><circle cx="344.0" cy="114.4" r="9" fill="transparent"/><circle cx="344.0" cy="114.4" r="2.5" class="dot"/><title>2026-10-16: 98.68%</title></g><g class="hit"><circle cx="356.0" cy="164.8" r="9" fill="transparent"/><circle cx="356.0" cy="164.8" r="2.5" class="dot"/><title>2026-10-17: 98.26%</title></g><g class="hit"><circle cx="368.0" cy="118.0" r="9" fill="transparent"/><circle cx="368.0" cy="118.0" r="2.5" class="dot"/><title>2026-10-18: 98.65%</title></g><g class="hit"><circle cx="380.0" cy="140.8" r="9" fill="transparent"/><circle cx="380.0" cy="140.8" r="2.5" class="dot"/><title>2026-10-19: 98.46%</title></g><g class="hit"><circle cx="392.0" cy="102.4" r="9" fill="transparent"/><circle cx="392.0" cy="102.4" r="2.5" class="dot"/><title>2026-10-20: 98.78%</title></g><g class="hit"><circle cx="404.0" cy="142.0" r="9" fill="transparent"/><circle cx="404.0" cy="142.0" r="2.5" class="dot"/><title>2026-10-21: 98.45%</title></g><g class="hit"><circle cx="416.0" cy="151.6" r="9" fill="transparent"/><circle cx="416.0" cy="151.6" r="2.5" class="dot"/><title>2026-10-22: 98.37%</title></g><g class="hit"><circle cx="428.0" cy="143.2" r="9" fill="transparent"/><circle cx="428.0" cy="143.2" r="2.5" class="dot"/><title>2026-10-23: 98.44%</title></g><g class="hit"><circle cx="440.0" cy="128.8" r="9" fill="transparent"/><circle cx="440.0" cy="128.8" r="2.5" class="dot"/><title>2026-10-24: 98.56%</title></g><g class="hit"><circle cx="452.0" cy="122.8" r="9" fill="transparent"/><circle cx="452.0" cy="122.8" r="2.5" class="dot"/><title>2026-10-25: 98.61%</title></g><g class="hit"><circle cx="464.0" cy="98.8" r="9" fill="transparent"/><circle cx="464.0" cy="98.8" r="2.5" class="dot"/><title>2026-10-26: 98.81%</title></g><g class="hit"><circle cx="476.0" cy="55.6" r="9" fill="transparent"/><circle cx="476.0" cy="55.6" r="2.5" class="dot"/><title>2026-10-27: 99.17%</title></g><g class="hit"><circle cx="488.0" cy="77.2" r="9" fill="transparent"/><circle cx="488.0" cy="77.2" r="2.5" class="dot"/><title>2026-10-28: 98.99%</title></g><g class="hit"><circle cx="500.0" cy="56.8" r="9" fill="transparent"/><circle cx="500.0" cy="56.8" r="2.5" class="dot"/><title>2026-10-29: 99.16%</title></g><g class="hit"><circle cx="512.0" cy="58.0" r="9" fill="transparent"/><circle cx="512.0" cy="58.0" r="2.5" class="dot"/><title>2026-10-30: 99.15%</title></g><g class="hit"><circle cx="524.0" cy="95.2" r="9" fill="transparent"/><circle cx="524.0" cy="95.2" r="2.5" class="dot"/><title>2026-10-31: 98.84%</title></g><g class="hit"><circle cx="536.0" cy="96.4" r="9" fill="transparent"/><circle cx="536.0" cy="96.4" r="2.5" class="dot"/><title>2026-11-01: 98.83%</title></g><g class="hit"><circle cx="548.0" cy="66.4" r="9" fill="transparent"/><circle cx="548.0" cy="66.4" r="2.5" class="dot"/><title>2026-11-02: 99.08%</title></g><g class="hit"><circle cx="560.0" cy="79.6" r="9" fill="transparent"/><circle cx="560.0" cy="79.6" r="2.5" class="dot"/><title>2026-11-03: 98.97%</title></g><g class="hit"><circle cx="572.0" cy="64.0" r="9" fill="transparent"/><circle cx="572.0" cy="64.0" r="2.5" class="dot"/><title>2026-11-04: 99.10%</title></g><g class="hit"><circle cx="584.0" cy="88.0" r="9" fill="transparent"/><circle cx="584.0" cy="88.0" r="2.5" class="dot"/><title>2026-11-05: 98.90%</title></g><g class="hit"><circle cx="596.0" cy="50.8" r="9" fill="transparent"/><circle cx="596.0" cy="50.8" r="2.5" class="dot"/><title>2026-11-06: 99.21%</title></g><g class="hit"><circle cx="608.0" cy="72.4" r="9" fill="transparent"/><circle cx="608.0" cy="72.4" r="2.5" class="dot"/><title>2026-11-07: 99.03%</title></g><g class="hit"><circle cx="620.0" cy="80.8" r="9" fill="transparent"/><circle cx="620.0" cy="80.8" r="2.5" class="dot"/><title>2026-11-08: 98.96%</title></g><g class="hit"><circle cx="632.0" cy="71.2" r="9" fill="transparent"/><circle cx="632.0" cy="71.2" r="2.5" class="dot"/><title>2026-11-09: 99.04%</title></g><g class="hit"><circle cx="644.0" cy="133.6" r="9" fill="transparent"/><circle cx="644.0" cy="133.6" r="5" class="dot-hi"/><title>2026-11-10: 98.52%</title></g><g class="hit"><circle cx="656.0" cy="58.0" r="9" fill="transparent"/><circle cx="656.0" cy="58.0" r="2.5" class="dot"/><title>2026-11-11: 99.15%</title></g><g class="hit"><circle cx="668.0" cy="78.4" r="9" fill="transparent"/><circle cx="668.0" cy="78.4" r="2.5" class="dot"/><title>2026-11-12: 98.98%</title></g><g class="hit"><circle cx="680.0" cy="67.6" r="9" fill="transparent"/><circle cx="680.0" cy="67.6" r="2.5" class="dot"/><title>2026-11-13: 99.07% (not final yet)</title></g><g class="hit"><circle cx="692.0" cy="85.6" r="9" fill="transparent"/><circle cx="692.0" cy="85.6" r="2.5" class="dot"/><title>2026-11-14: 98.92% (not final yet)</title></g><g class="hit"><circle cx="704.0" cy="71.2" r="9" fill="transparent"/><circle cx="704.0" cy="71.2" r="2.5" class="dot"/><title>2026-11-15: 99.04% (not final yet)</title></g><text x="44.0" y="218" class="ax" text-anchor="middle">21 Sep</text><text x="212.0" y="218" class="ax" text-anchor="middle">05 Oct</text><text x="380.0" y="218" class="ax" text-anchor="middle">19 Oct</text><text x="548.0" y="218" class="ax" text-anchor="middle">02 Nov</text><text x="704.0" y="218" class="ax" text-anchor="middle">15 Nov</text><text x="636.0" y="151.6" class="ann" text-anchor="end">Tue 10 Nov: 98.52%</text></svg>
+<p class="cap">Daily payout success rate. Orange dot = Tue 10 Nov. Dashed tail = last three days, not yet 72 hours old, so not final. Hover a point for the value.</p>
+<p>The three-week dip in October has a different cause (merchant-level failure shocks, section 5). That matters for Tuesday: my first version compared Tuesday with the four previous Tuesdays, two of which sit inside the dip. The lower baseline made the rest of Tuesday look better than it was. The baseline below skips 13 and 20 Oct for that reason.</p>
+
+<h2>2. Tuesday, in four questions</h2>
+<h3>Is the drop real?</h3>
+<p>Yes, but smaller than it looked: 0.51 points, not 1.20. On a normal day around 9,000 payouts, that is still roughly 46 payouts that didn't reach someone.</p>
+<h3>Where is it?</h3>
+<p>Split by beneficiary bank and mode, two cells stand out. Bank F on IMPS and on UPI account for the largest excess failures; everything else is within normal noise.</p>
+<div class="tw"><table><thead><tr><th>bene bank</th><th>mode</th><th>tue sent</th><th>base sent</th><th>tue sr</th><th>base sr</th><th>extra failed vs expected</th></tr></thead><tbody><tr><td>F</td><td>IMPS</td><td>391</td><td>355</td><td>95.40</td><td>99.08</td><td>14</td></tr><tr><td>F</td><td>UPI</td><td>261</td><td>264</td><td>94.25</td><td>98.77</td><td>12</td></tr><tr><td>A</td><td>IMPS</td><td>900</td><td>765</td><td>98.56</td><td>99.25</td><td>6</td></tr><tr><td>D</td><td>UPI</td><td>291</td><td>277</td><td>97.94</td><td>99.28</td><td>4</td></tr><tr><td>G</td><td>UPI</td><td>215</td><td>189</td><td>97.67</td><td>99.07</td><td>3</td></tr></tbody></table></div>
+<p>Split by merchant, one name dominates: <b>M0412</b>, a gaming merchant, sent 436 payouts against its usual 108, 309 of them to brand-new beneficiaries, and 32 of its 36 failures were invalid accounts. That pattern is a promo, not an outage.</p>
+<h3>When did Bank F break, and how fast could we have known?</h3>
+<svg viewBox="0 0 720 220" role="img" aria-label="Bank F IMPS success rate by 15-minute slot on Tuesday"><line x1="44" x2="704" y1="186.0" y2="186.0" class="grid"/><text x="38" y="190.0" class="ax" text-anchor="end">0%</text><line x1="44" x2="704" y1="100.0" y2="100.0" class="grid"/><text x="38" y="104.0" class="ax" text-anchor="end">50%</text><line x1="44" x2="704" y1="31.2" y2="31.2" class="thr"/><text x="38" y="35.2" class="ax" text-anchor="end">90%</text><line x1="44" x2="704" y1="14.0" y2="14.0" class="grid"/><text x="38" y="18.0" class="ax" text-anchor="end">100%</text><g class="hit"><rect x="45.0" y="14" width="18.6" height="172" fill="transparent"/><rect x="45.0" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>09:00: 100.0% of 8 attempts succeeded</title></g><text x="55.3" y="208" class="ax" text-anchor="middle">09:00</text><g class="hit"><rect x="65.6" y="14" width="18.6" height="172" fill="transparent"/><rect x="65.6" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>09:15: 100.0% of 6 attempts succeeded</title></g><g class="hit"><rect x="86.2" y="14" width="18.6" height="172" fill="transparent"/><rect x="86.2" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>09:30: 100.0% of 14 attempts succeeded</title></g><g class="hit"><rect x="106.9" y="14" width="18.6" height="172" fill="transparent"/><rect x="106.9" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>09:45: 100.0% of 4 attempts succeeded</title></g><g class="hit"><rect x="127.5" y="14" width="18.6" height="172" fill="transparent"/><rect x="127.5" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>10:00: 100.0% of 9 attempts succeeded</title></g><g class="hit"><rect x="148.1" y="14" width="18.6" height="172" fill="transparent"/><rect x="148.1" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>10:15: 100.0% of 9 attempts succeeded</title></g><g class="hit"><rect x="168.8" y="14" width="18.6" height="172" fill="transparent"/><rect x="168.8" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>10:30: 100.0% of 11 attempts succeeded</title></g><g class="hit"><rect x="189.4" y="14" width="18.6" height="172" fill="transparent"/><rect x="189.4" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>10:45: 100.0% of 6 attempts succeeded</title></g><g class="hit"><rect x="210.0" y="14" width="18.6" height="172" fill="transparent"/><rect x="210.0" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>11:00: 100.0% of 3 attempts succeeded</title></g><text x="220.3" y="208" class="ax" text-anchor="middle">11:00</text><g class="hit"><rect x="230.6" y="14" width="18.6" height="172" fill="transparent"/><rect x="230.6" y="112.2" width="18.6" height="73.8" rx="2" class="bar-hi"/><title>11:15: 42.9% of 14 attempts succeeded</title></g><g class="hit"><rect x="251.2" y="14" width="18.6" height="172" fill="transparent"/><rect x="251.2" y="42.7" width="18.6" height="143.3" rx="2" class="bar-hi"/><title>11:30: 83.3% of 6 attempts succeeded</title></g><g class="hit"><rect x="271.9" y="14" width="18.6" height="172" fill="transparent"/><rect x="271.9" y="35.5" width="18.6" height="150.5" rx="2" class="bar-hi"/><title>11:45: 87.5% of 8 attempts succeeded</title></g><g class="hit"><rect x="292.5" y="14" width="18.6" height="172" fill="transparent"/><rect x="292.5" y="100.0" width="18.6" height="86.0" rx="2" class="bar-hi"/><title>12:00: 50.0% of 10 attempts succeeded</title></g><g class="hit"><rect x="313.1" y="14" width="18.6" height="172" fill="transparent"/><rect x="313.1" y="35.5" width="18.6" height="150.5" rx="2" class="bar-hi"/><title>12:15: 87.5% of 8 attempts succeeded</title></g><g class="hit"><rect x="333.8" y="14" width="18.6" height="172" fill="transparent"/><rect x="333.8" y="100.0" width="18.6" height="86.0" rx="2" class="bar-hi"/><title>12:30: 50.0% of 4 attempts succeeded</title></g><g class="hit"><rect x="354.4" y="14" width="18.6" height="172" fill="transparent"/><rect x="354.4" y="87.8" width="18.6" height="98.2" rx="2" class="bar-hi"/><title>12:45: 57.1% of 14 attempts succeeded</title></g><g class="hit"><rect x="375.0" y="14" width="18.6" height="172" fill="transparent"/><rect x="375.0" y="107.7" width="18.6" height="78.3" rx="2" class="bar-hi"/><title>13:00: 45.5% of 11 attempts succeeded</title></g><text x="385.3" y="208" class="ax" text-anchor="middle">13:00</text><g class="hit"><rect x="395.6" y="14" width="18.6" height="172" fill="transparent"/><rect x="395.6" y="65.6" width="18.6" height="120.4" rx="2" class="bar-hi"/><title>13:15: 70.0% of 10 attempts succeeded</title></g><g class="hit"><rect x="416.2" y="14" width="18.6" height="172" fill="transparent"/><rect x="416.2" y="128.7" width="18.6" height="57.3" rx="2" class="bar-hi"/><title>13:30: 33.3% of 15 attempts succeeded</title></g><g class="hit"><rect x="436.9" y="14" width="18.6" height="172" fill="transparent"/><rect x="436.9" y="38.6" width="18.6" height="147.4" rx="2" class="bar-hi"/><title>13:45: 85.7% of 7 attempts succeeded</title></g><g class="hit"><rect x="457.5" y="14" width="18.6" height="172" fill="transparent"/><rect x="457.5" y="67.0" width="18.6" height="119.0" rx="2" class="bar-hi"/><title>14:00: 69.2% of 13 attempts succeeded</title></g><g class="hit"><rect x="478.1" y="14" width="18.6" height="172" fill="transparent"/><rect x="478.1" y="109.6" width="18.6" height="76.4" rx="2" class="bar-hi"/><title>14:15: 44.4% of 9 attempts succeeded</title></g><g class="hit"><rect x="498.8" y="14" width="18.6" height="172" fill="transparent"/><rect x="498.8" y="25.5" width="18.6" height="160.5" rx="2" class="bar"/><title>14:30: 93.3% of 15 attempts succeeded</title></g><g class="hit"><rect x="519.4" y="14" width="18.6" height="172" fill="transparent"/><rect x="519.4" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>14:45: 100.0% of 9 attempts succeeded</title></g><g class="hit"><rect x="540.0" y="14" width="18.6" height="172" fill="transparent"/><rect x="540.0" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>15:00: 100.0% of 9 attempts succeeded</title></g><text x="550.3" y="208" class="ax" text-anchor="middle">15:00</text><g class="hit"><rect x="560.6" y="14" width="18.6" height="172" fill="transparent"/><rect x="560.6" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>15:15: 100.0% of 4 attempts succeeded</title></g><g class="hit"><rect x="581.2" y="14" width="18.6" height="172" fill="transparent"/><rect x="581.2" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>15:30: 100.0% of 4 attempts succeeded</title></g><g class="hit"><rect x="601.9" y="14" width="18.6" height="172" fill="transparent"/><rect x="601.9" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>15:45: 100.0% of 9 attempts succeeded</title></g><g class="hit"><rect x="622.5" y="14" width="18.6" height="172" fill="transparent"/><rect x="622.5" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>16:00: 100.0% of 6 attempts succeeded</title></g><g class="hit"><rect x="643.1" y="14" width="18.6" height="172" fill="transparent"/><rect x="643.1" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>16:15: 100.0% of 10 attempts succeeded</title></g><g class="hit"><rect x="663.8" y="14" width="18.6" height="172" fill="transparent"/><rect x="663.8" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>16:30: 100.0% of 7 attempts succeeded</title></g><g class="hit"><rect x="684.4" y="14" width="18.6" height="172" fill="transparent"/><rect x="684.4" y="14.0" width="18.6" height="172.0" rx="2" class="bar"/><title>16:45: 100.0% of 10 attempts succeeded</title></g></svg>
+<p class="cap">Bank F, IMPS, Tuesday, success rate per 15-minute slot. Orange = under 90%. Dashed red line = 90% alert threshold. Hover a bar for attempts.</p>
+<p>Failures start in the 11:15 slot. An alert on a rolling 45-minute success rate under 90% for one bank would have fired at <b>11:15</b>, within about 15 minutes, and cleared by 15:00. Cashfree already advertises a bank downtime detector; this is the analyst's version of the same idea, at bank × mode level, used to <i>explain</i> the day after.</p>
+<h3>How much does each cause explain?</h3>
+<svg viewBox="0 0 720 200" role="img" aria-label="Contribution of each cause to the change in success rate"><line x1="495.0" x2="495.0" y1="4" y2="164" class="axis0"/><text x="0" y="25" class="lab">M0412 promo, unverified new accounts</text><g class="hit"><rect x="360.1" y="10" width="134.8" height="22" rx="3" class="bar-hi"/><title>M0412 promo, unverified new accounts: -0.35 pts</title></g><text x="354.1" y="25" class="val" text-anchor="end">-0.35</text><text x="0" y="65" class="lab">M0077 retry loop</text><g class="hit"><rect x="495.0" y="50" width="1.6" height="22" rx="3" class="bar"/><title>M0077 retry loop: +0.00 pts</title></g><text x="502.6" y="65" class="val" text-anchor="start">+0.00</text><text x="0" y="105" class="lab">Bank F, IMPS/UPI, 11:00-14:30</text><g class="hit"><rect x="405.1" y="90" width="89.9" height="22" rx="3" class="bar-hi"/><title>Bank F, IMPS/UPI, 11:00-14:30: -0.23 pts</title></g><text x="399.1" y="105" class="val" text-anchor="end">-0.23</text><text x="0" y="145" class="lab">Everything else</text><g class="hit"><rect x="495.0" y="130" width="26.0" height="22" rx="3" class="bar"/><title>Everything else: +0.07 pts</title></g><text x="527.0" y="145" class="val" text-anchor="start">+0.07</text><text x="0" y="188" class="lab"><tspan font-weight="600">Total change</tspan></text><text x="495.0" y="188" class="val" text-anchor="middle" font-weight="600">-0.51 pts</text></svg>
+<p class="cap">Mix and rate split against the four-Tuesday baseline. Rate effect = this bucket did worse than usual; mix effect = this bucket was a bigger share of the day than usual. The pieces add to the total exactly.</p>
+<p>M0412 promo (gaming, unverified new beneficiaries): success fell from 99.07% to 91.74% inside the merchant and its share of the day went from 1.26% to 4.77%. Bank F's window: 98.86% → 84.46%. Everything else was slightly <i>better</i> than a normal Tuesday (+0.07), which is noise.</p>
+<h3>What it wasn't</h3>
+<div class="tw"><table><thead><tr><th>Check</th><th>Baseline</th><th>Tuesday</th><th>Verdict</th></tr></thead><tbody>
+<tr><td>Cashfree-side errors (connection, timeouts)</td><td>0.29%</td><td>0.45%</td><td>a little higher, but inside the normal daily range (0.00% to 0.48% over 35 normal days)</td></tr>
+<tr><td>Bank failures at every bank except F</td><td>0.88%</td><td>0.88%</td><td>flat</td></tr>
+<tr><td>Merchant insufficient-balance errors</td><td>0.38%</td><td>0.41%</td><td>flat</td></tr>
+<tr><td>API response time, p95</td><td>245 ms</td><td>245 ms</td><td>flat</td></tr>
+<tr><td>M0077's retry loop (lending, 6 retries in minutes)</td><td colspan="2">81 attempts for 72 payouts; 10 failed attempts but 1 failed payout</td><td>noise in attempt counts only (96.62% → 96.71% without it)</td></tr>
+</tbody></table></div>
+<p class="small">One more trap: 7 of M0412's 13 Tuesday reversals landed on Wednesday or later. A same-day dashboard cannot see them, which is why final success rate waits 72 hours.</p>
+
+<h2>3. What I'd do on Wednesday morning</h2>
+<div class="act">
+<div><b>Bank F (engineering + bank partnerships).</b> Confirm the window with the bank. Propose an alert at bank × mode level on the rolling 45-minute rate, and measure how many affected payouts could have been held or routed by mode instead of failing. Metric: failed payouts per incident-minute.</div>
+<div><b>M0412 (account manager + SecureID).</b> Call them with their own numbers: 32 invalid-account failures in one day, all to new beneficiaries. Offer bank account verification before first payout for promo traffic. Metric: invalid-account rate on their first payouts next promo.</div>
+<div><b>The dashboard (the pod).</b> Swap the headline tile to payout success rate, final. Keep attempt success rate, renamed as an infrastructure metric. Add a "not final yet" marker for the last 72 hours.</div>
+</div>
+
+<h2>4. Growth lever: verification that pays for itself in Payouts</h2>
+<p>Cashfree's help docs say SecureID's bank account verification is switched on automatically for Payouts merchants. So the question is not access, it is use.</p>
+<div class="tw"><table><thead><tr><th>first payout to a new beneficiary</th><th>first payouts</th><th>invalid account</th><th>invalid pct</th><th>reversed</th><th>reversed (Rs lakh)</th></tr></thead><tbody><tr><td>not verified</td><td>85,832</td><td>2,024</td><td>2.36</td><td>798</td><td>145</td></tr><tr><td>verified with BAV first</td><td>39,816</td><td>130</td><td>0.33</td><td>49</td><td>20.90</td></tr></tbody></table></div>
+<p>In this data, 393 merchants never verify. Their new-beneficiary payouts come to about <b>44,133 a month</b>. At an assumed Rs 2 per check that is only <b>Rs 0.88 lakh a month</b> of SecureID revenue. The bigger number is on the Payouts side: about <b>835 bad payouts a month avoided</b> (if verification catches 80%) and <b>Rs 72.7 lakh a month</b> of money currently bouncing back as reversals.</p>
+<div class="callout">So I would not pitch verification as a revenue line. I'd pitch it as a Payouts success-rate and merchant-retention lever, and measure it on those.</div>
+<h3>Who to call first</h3>
+<div class="tw"><table><thead><tr><th>merchant id</th><th>segment</th><th>new bene payouts per month</th><th>bad payouts per month</th><th>invalid pct</th><th>wave</th></tr></thead><tbody><tr><td>M0187</td><td>ecom_refunds</td><td>2,498</td><td>77.10</td><td>3.09</td><td>1</td></tr><tr><td>M0423</td><td>ecom_refunds</td><td>2,088</td><td>60</td><td>2.87</td><td>1</td></tr><tr><td>M0582</td><td>ecom_refunds</td><td>1,346</td><td>46.10</td><td>3.42</td><td>1</td></tr><tr><td>M0412</td><td>gaming</td><td>905</td><td>44.50</td><td>4.91</td><td>1</td></tr><tr><td>M0311</td><td>ecom_refunds</td><td>1,011</td><td>33.80</td><td>3.34</td><td>1</td></tr><tr><td>M0432</td><td>ecom_refunds</td><td>804</td><td>32.70</td><td>4.07</td><td>1</td></tr><tr><td>M0044</td><td>lending</td><td>2,210</td><td>31.60</td><td>1.43</td><td>1</td></tr><tr><td>M0376</td><td>gaming</td><td>884</td><td>31.60</td><td>3.58</td><td>1</td></tr></tbody></table></div>
+<h3>How I'd prove it is causal</h3>
+<p>Verified and unverified merchants are not alike (merchants choose), so the 7.2x gap is not proof. The test: randomise eligible non-verifying merchants into nudge vs no nudge (dashboard prompt plus account-manager outreach), and compare invalid-account rate on first payouts. To detect a drop from 2.36% to 1.86% at 80% power needs about <b>12,966 first payouts per arm</b>, which this merchant base generates in roughly 18 days. Randomise by merchant, not by payout, and widen the sample for clustering. Guardrail: payout volume per merchant must not fall.</p>
+
+<h2>5. Retention: a failure spike is a churn signal</h2>
+<div class="tw"><table><thead><tr><th>group</th><th>merchants</th><th>churned</th><th>churn %</th></tr></thead><tbody><tr><td>no shock</td><td>491</td><td>25</td><td>5.10</td></tr><tr><td>had a failure shock in weeks 3-5</td><td>28</td><td>9</td><td>32.10</td></tr></tbody></table></div>
+<p>"Shock" = a week in weeks 3-5 with 20+ payouts where a merchant's own success rate fell 10+ points below its normal. "Churned" = weeks 7-8 volume under 30% of weeks 1-2. Both are computed from the data with window functions, not read from the answer key. Checked against the answer key afterwards, the shock rule is right 26 times out of 28; it misses smaller merchants, whose shocks can't be told apart from noise at weekly grain.</p>
+<p><b>Back-test of an early-warning rule</b> (volume down 40%+ vs the trailing 4-week average, plus a sub-92% week in the prior four): run at the end of week 6, it flags <b>7</b> merchants, <b>6</b> of whom were gone by week 8 (86% precision). It catches only 18% of all churners, so it is a list for account managers, not a churn model.</p>
+<p class="small">Caveat for real data: a merchant that is winding down may also send worse payouts, so the arrow can point both ways. I'd check whether the shock came from the bank side (not the merchant's fault) before calling it causal.</p>
+
+<h2>6. How it's built, and where AI fits</h2>
+<p>Built with Claude. Pipeline: <code>generate_data.py</code> writes a fictional SQLite database with the incidents planted → <code>sql/</code> holds the metric layer and every analysis query → <code>run_sql.py</code> runs them → <code>build_page.py</code> writes this page from the output, so no number is typed by hand → <code>tests.py</code> checks that the SQL recovers each planted cause and that the decomposition adds up.</p>
+<p>The AI part I'd bring to a real pod is in <code>ai/sr_drop_runbook.md</code>: a prompt that takes a success-rate alert, runs these queries, and drafts the Slack summary, with one hard rule: <b>every number in the draft must come from a query result attached below it</b>, and an analyst signs off before it is posted.</p>
+
+<h2>7. Limits</h2>
+<ul class="small">
+<li>Fictional data with planted causes. Real Tuesdays have several small causes and no answer key.</li>
+<li>Real reason codes are richer and some failures are ambiguous between bank and beneficiary; I bucketed them simply.</li>
+<li>Prices (Rs 2 per check, per-mode fees), the 80% catch rate and the Rs 150 cost per bad payout are assumptions, labelled where used.</li>
+<li>SQLite here; the same SQL ports to a warehouse with small changes (date functions, percentile functions).</li>
+</ul>
+
+<h2>Appendix: every query</h2>
+<details><summary><code>01_metric_layer.sql</code> · metric definitions (views)</summary><pre><code>-- 01_metric_layer.sql
+-- One definition of each payouts metric, so every dashboard and every
+-- &quot;why did X move&quot; question starts from the same numbers.
+-- SQLite dialect. Fictional data. See METRICS.md for the plain-English version.
+
+DROP VIEW IF EXISTS v_attempts;
+DROP VIEW IF EXISTS v_intents;
+DROP VIEW IF EXISTS v_params;
+
+-- Snapshot: data is &quot;as of&quot; Mon 16 Nov 2026 00:00.
+-- Maturity: an intent counts in final success rate only once it is 72h old,
+-- because Cashfree polls pending transfers for up to 72h and reversals can land
+-- up to ~24h after a success.
+CREATE VIEW v_params AS
+SELECT &#x27;2026-11-16 00:00:00&#x27; AS snapshot_at,
+       &#x27;2026-11-13 00:00:00&#x27; AS mature_before;
+
+-- Attempt level: one row per transfer_id, with a failure-cause bucket.
+CREATE VIEW v_attempts AS
+SELECT t.*,
+       substr(t.created_at, 1, 10)                       AS day,
+       CAST(strftime(&#x27;%H&#x27;, t.created_at) AS INTEGER)     AS hour,
+       CASE
+         WHEN t.outcome = &#x27;SUCCESS&#x27; THEN &#x27;none&#x27;
+         WHEN t.reason = &#x27;INSUFFICIENT_BALANCE&#x27; THEN &#x27;merchant&#x27;
+         WHEN t.reason IN (&#x27;INVALID_ACCOUNT_FAIL&#x27;,&#x27;INVALID_ACCOUNT_REVERSAL&#x27;,&#x27;ACCOUNT_BLOCKED&#x27;)
+              THEN &#x27;beneficiary&#x27;
+         WHEN t.reason IN (&#x27;BENE_BANK_DECLINED&#x27;,&#x27;BANK_GATEWAY_ERROR&#x27;) THEN &#x27;bank&#x27;
+         WHEN t.reason IN (&#x27;BAD_CONNECTION&#x27;,&#x27;WAIT_TIME_EXCEEDED&#x27;) THEN &#x27;platform&#x27;
+         ELSE &#x27;other&#x27;
+       END AS failure_cause
+FROM transfers t;
+
+-- Intent level: one row per payout the merchant wanted to make, however many
+-- transfer_ids (retries) it took. The final outcome is the LAST attempt&#x27;s.
+CREATE VIEW v_intents AS
+WITH ranked AS (
+  SELECT a.*,
+         ROW_NUMBER() OVER (PARTITION BY intent_id ORDER BY attempt_no DESC) AS rn_last,
+         MIN(created_at) OVER (PARTITION BY intent_id)                       AS intent_created_at,
+         COUNT(*)        OVER (PARTITION BY intent_id)                       AS attempts
+  FROM v_attempts a
+)
+SELECT intent_id, merchant_id, bene_id, is_new_bene, bene_bav_verified, mode, bene_bank,
+       amount, intent_created_at AS created_at,
+       substr(intent_created_at, 1, 10) AS day,
+       CAST(strftime(&#x27;%H&#x27;, intent_created_at) AS INTEGER) AS hour,
+       attempts,
+       outcome  AS final_outcome,
+       reason   AS final_reason,
+       failure_cause AS final_failure_cause,
+       resolved_at, reversed_at,
+       -- sent to bank = not stopped by a merchant-side error on the last try
+       CASE WHEN failure_cause = &#x27;merchant&#x27; THEN 0 ELSE 1 END AS sent_to_bank,
+       CASE WHEN outcome = &#x27;SUCCESS&#x27; THEN 1 ELSE 0 END        AS is_success,
+       CASE WHEN intent_created_at &lt; (SELECT mature_before FROM v_params) THEN 1 ELSE 0 END AS is_mature
+FROM ranked
+WHERE rn_last = 1;
+
+-- Headline definition used everywhere on the page:
+--   Payout success rate = intents that reached the beneficiary and stayed there
+--                         (final SUCCESS, not reversed)
+--                         / intents sent to a bank
+--   over mature intents only.
+</code></pre></details><details><summary><code>02_daily_kpis.sql</code> · daily_kpis</summary><pre><code>WITH intents AS (
+  SELECT day,
+         COUNT(*)                                        AS intents,
+         SUM(sent_to_bank)                               AS sent,
+         SUM(is_success)                                 AS succeeded,
+         SUM(CASE WHEN final_outcome = &#x27;REVERSED&#x27; THEN 1 ELSE 0 END) AS reversed,
+         SUM(CASE WHEN is_success = 1 THEN amount ELSE 0 END)        AS value_paid,
+         COUNT(DISTINCT merchant_id)                     AS active_merchants,
+         MIN(is_mature)                                  AS mature
+  FROM v_intents
+  GROUP BY day
+),
+attempts AS (
+  SELECT day,
+         COUNT(*) AS attempts,
+         SUM(CASE WHEN outcome IN (&#x27;SUCCESS&#x27;,&#x27;REVERSED&#x27;) THEN 1 ELSE 0 END) AS attempt_ok_first_status,
+         SUM(CASE WHEN outcome = &#x27;SUCCESS&#x27; THEN
+               CASE mode WHEN &#x27;IMPS&#x27; THEN 5 WHEN &#x27;UPI&#x27; THEN 4 WHEN &#x27;NEFT&#x27; THEN 3 ELSE 20 END
+             ELSE 0 END) AS fee_revenue
+  FROM v_attempts
+  GROUP BY day
+)
+SELECT i.day,
+       i.intents, a.attempts,
+       ROUND(100.0 * i.succeeded / i.sent, 2)                 AS payout_success_rate,
+       ROUND(100.0 * a.attempt_ok_first_status / a.attempts, 2) AS attempt_success_rate_naive,
+       ROUND(1.0 * a.attempts / i.intents, 3)                 AS attempts_per_intent,
+       ROUND(100.0 * i.reversed / i.sent, 3)                  AS reversal_rate,
+       ROUND(i.value_paid / 1e7, 2)                           AS value_paid_cr,
+       i.active_merchants,
+       a.fee_revenue,
+       i.mature
+FROM intents i JOIN attempts a USING (day)
+ORDER BY i.day;</code></pre></details><details><summary><code>02_daily_kpis.sql</code> · resolve_time_p95</summary><pre><code>-- p50 / p95 time-to-final-status for instant modes, per week, without a
+-- PERCENTILE function: rank each intent, then pick the row at the percentile.
+WITH x AS (
+  SELECT strftime(&#x27;%W&#x27;, created_at) AS wk,
+         (julianday(resolved_at) - julianday(created_at)) * 86400.0 AS secs
+  FROM v_intents
+  WHERE mode IN (&#x27;IMPS&#x27;,&#x27;UPI&#x27;) AND sent_to_bank = 1
+),
+r AS (
+  SELECT wk, secs,
+         ROW_NUMBER() OVER (PARTITION BY wk ORDER BY secs) AS rn,
+         COUNT(*)     OVER (PARTITION BY wk)               AS n
+  FROM x
+)
+SELECT wk,
+       MAX(CASE WHEN rn = CAST(0.50 * n AS INTEGER) THEN ROUND(secs, 0) END) AS p50_secs,
+       MAX(CASE WHEN rn = CAST(0.95 * n AS INTEGER) THEN ROUND(secs, 0) END) AS p95_secs,
+       MAX(CASE WHEN rn = CAST(0.99 * n AS INTEGER) THEN ROUND(secs/3600.0, 1) END) AS p99_hours
+FROM r GROUP BY wk ORDER BY wk;</code></pre></details><details><summary><code>03_tuesday_rca.sql</code> · headline_three_numbers</summary><pre><code>-- The same day measured three ways. Only the last one is the real number.
+WITH days AS (
+  SELECT &#x27;2026-11-10&#x27; AS day, &#x27;Tuesday&#x27; AS grp
+  UNION ALL SELECT &#x27;2026-09-22&#x27;,&#x27;baseline&#x27; UNION ALL SELECT &#x27;2026-09-29&#x27;,&#x27;baseline&#x27;
+  UNION ALL SELECT &#x27;2026-10-27&#x27;,&#x27;baseline&#x27; UNION ALL SELECT &#x27;2026-11-03&#x27;,&#x27;baseline&#x27;
+),
+att AS (
+  SELECT d.grp, a.*,
+         -- status as the dashboard saw it at 23:59 that same day
+         CASE WHEN a.resolved_at &gt; a.day || &#x27; 23:59:59&#x27; THEN &#x27;PENDING&#x27;
+              WHEN a.reversed_at IS NOT NULL AND a.reversed_at &lt;= a.day || &#x27; 23:59:59&#x27; THEN &#x27;REVERSED&#x27;
+              WHEN a.outcome = &#x27;REVERSED&#x27; THEN &#x27;SUCCESS&#x27;
+              ELSE a.outcome END AS status_same_day
+  FROM v_attempts a JOIN days d ON d.day = a.day
+),
+same_day AS (
+  SELECT grp,
+         100.0 * SUM(status_same_day = &#x27;SUCCESS&#x27;) / SUM(status_same_day &lt;&gt; &#x27;PENDING&#x27;) AS sr
+  FROM att GROUP BY grp
+),
+attempt_final AS (
+  SELECT grp, 100.0 * SUM(outcome = &#x27;SUCCESS&#x27;) / COUNT(*) AS sr FROM att GROUP BY grp
+),
+intent_final AS (
+  SELECT d.grp, 100.0 * SUM(i.is_success) / SUM(i.sent_to_bank) AS sr
+  FROM v_intents i JOIN days d ON d.day = i.day GROUP BY d.grp
+)
+SELECT &#x27;Attempt SR, as the dashboard showed it on the night&#x27; AS measure,
+       ROUND((SELECT sr FROM same_day WHERE grp=&#x27;baseline&#x27;),2) AS baseline,
+       ROUND((SELECT sr FROM same_day WHERE grp=&#x27;Tuesday&#x27;),2)  AS tuesday
+UNION ALL
+SELECT &#x27;Attempt SR, final (after late reversals)&#x27;,
+       ROUND((SELECT sr FROM attempt_final WHERE grp=&#x27;baseline&#x27;),2),
+       ROUND((SELECT sr FROM attempt_final WHERE grp=&#x27;Tuesday&#x27;),2)
+UNION ALL
+SELECT &#x27;Payout success rate (per intent, final) - the real number&#x27;,
+       ROUND((SELECT sr FROM intent_final WHERE grp=&#x27;baseline&#x27;),2),
+       ROUND((SELECT sr FROM intent_final WHERE grp=&#x27;Tuesday&#x27;),2);</code></pre></details><details><summary><code>03_tuesday_rca.sql</code> · retry_inflation</summary><pre><code>-- How much of the attempt-level drop is one merchant retrying the same payout?
+SELECT CASE WHEN merchant_id = &#x27;M0077&#x27; THEN &#x27;M0077&#x27; ELSE &#x27;all other merchants&#x27; END AS who,
+       COUNT(*) AS attempts,
+       COUNT(DISTINCT intent_id) AS intents,
+       SUM(outcome = &#x27;FAILED&#x27;) AS failed_attempts,
+       SUM(intent_failed) AS failed_intents
+FROM (
+  SELECT a.*, CASE WHEN a.attempt_no = MAX(a.attempt_no) OVER (PARTITION BY a.intent_id)
+                    AND a.outcome NOT IN (&#x27;SUCCESS&#x27;) AND a.failure_cause &lt;&gt; &#x27;merchant&#x27;
+              THEN 1 ELSE 0 END AS intent_failed
+  FROM v_attempts a WHERE a.day = &#x27;2026-11-10&#x27;
+)
+GROUP BY 1;</code></pre></details><details><summary><code>03_tuesday_rca.sql</code> · attempt_sr_without_retry_loop</summary><pre><code>-- Tuesday attempt-level SR (final) with and without M0077.
+SELECT ROUND(100.0*SUM(outcome=&#x27;SUCCESS&#x27;)/COUNT(*),2) AS attempt_sr_all,
+       ROUND(100.0*SUM(CASE WHEN merchant_id&lt;&gt;&#x27;M0077&#x27; THEN outcome=&#x27;SUCCESS&#x27; END)
+             / SUM(merchant_id&lt;&gt;&#x27;M0077&#x27;),2) AS attempt_sr_without_m0077
+FROM v_attempts WHERE day = &#x27;2026-11-10&#x27;;</code></pre></details><details><summary><code>03_tuesday_rca.sql</code> · where_bank_mode</summary><pre><code>-- Which bank x mode cells moved? Ranked by extra failed intents vs baseline.
+WITH base AS (
+  SELECT bene_bank, mode,
+         SUM(sent_to_bank) / 4.0 AS sent, (SUM(sent_to_bank) - SUM(is_success)) / 4.0 AS failed
+  FROM v_intents WHERE day IN (&#x27;2026-09-22&#x27;,&#x27;2026-09-29&#x27;,&#x27;2026-10-27&#x27;,&#x27;2026-11-03&#x27;)
+  GROUP BY 1,2
+),
+tue AS (
+  SELECT bene_bank, mode, SUM(sent_to_bank) AS sent, SUM(sent_to_bank) - SUM(is_success) AS failed
+  FROM v_intents WHERE day = &#x27;2026-11-10&#x27; GROUP BY 1,2
+)
+SELECT t.bene_bank, t.mode,
+       t.sent AS tue_sent, ROUND(b.sent,0) AS base_sent,
+       ROUND(100.0*(t.sent - t.failed)/t.sent, 2) AS tue_sr,
+       ROUND(100.0*(b.sent - b.failed)/b.sent, 2) AS base_sr,
+       ROUND(t.failed - b.failed * (1.0 * t.sent / b.sent), 0) AS extra_failed_vs_expected
+FROM tue t JOIN base b USING (bene_bank, mode)
+ORDER BY extra_failed_vs_expected DESC
+LIMIT 8;</code></pre></details><details><summary><code>03_tuesday_rca.sql</code> · bank_f_15min</summary><pre><code>-- Bank F, IMPS, Tuesday, in 15-minute buckets. When did it break, when did it
+-- recover, and how long would a 90% alert on a 3-bucket rolling window have taken?
+WITH b AS (
+  SELECT substr(created_at, 12, 2) || &#x27;:&#x27; ||
+         printf(&#x27;%02d&#x27;, (CAST(substr(created_at, 15, 2) AS INTEGER) / 15) * 15) AS slot,
+         COUNT(*) AS attempts,
+         SUM(outcome IN (&#x27;SUCCESS&#x27;,&#x27;REVERSED&#x27;)) AS ok
+  FROM v_attempts
+  WHERE day = &#x27;2026-11-10&#x27; AND bene_bank = &#x27;F&#x27; AND mode = &#x27;IMPS&#x27;
+  GROUP BY 1
+),
+w AS (
+  SELECT slot, attempts, ok,
+         ROUND(100.0 * ok / attempts, 1) AS sr,
+         ROUND(100.0 * SUM(ok) OVER win / SUM(attempts) OVER win, 1) AS sr_rolling_45m
+  FROM b
+  WINDOW win AS (ORDER BY slot ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)
+)
+SELECT slot, attempts, sr, sr_rolling_45m,
+       CASE WHEN sr_rolling_45m &lt; 90 AND
+                 LAG(sr_rolling_45m) OVER (ORDER BY slot) &gt;= 90 THEN &#x27;ALERT FIRES&#x27; END AS alert
+FROM w
+WHERE slot BETWEEN &#x27;09:00&#x27; AND &#x27;16:45&#x27;
+ORDER BY slot;</code></pre></details><details><summary><code>03_tuesday_rca.sql</code> · merchant_contribution</summary><pre><code>-- Which merchants added the most failed intents vs their own normal Tuesday?
+WITH base AS (
+  SELECT merchant_id, SUM(sent_to_bank)/4.0 AS sent, (SUM(sent_to_bank)-SUM(is_success))/4.0 AS failed,
+         SUM(attempts)/4.0 AS attempts
+  FROM v_intents WHERE day IN (&#x27;2026-09-22&#x27;,&#x27;2026-09-29&#x27;,&#x27;2026-10-27&#x27;,&#x27;2026-11-03&#x27;)
+  GROUP BY 1
+),
+tue AS (
+  SELECT merchant_id, SUM(sent_to_bank) AS sent, SUM(sent_to_bank)-SUM(is_success) AS failed,
+         SUM(attempts) AS attempts,
+         SUM(is_new_bene) AS new_benes,
+         SUM(CASE WHEN final_failure_cause = &#x27;beneficiary&#x27; THEN 1 ELSE 0 END) AS bene_failures
+  FROM v_intents WHERE day = &#x27;2026-11-10&#x27; GROUP BY 1
+)
+SELECT t.merchant_id, m.segment, m.uses_bav,
+       t.sent AS tue_intents, ROUND(COALESCE(b.sent,0),0) AS base_intents,
+       t.failed AS tue_failed, ROUND(COALESCE(b.failed,0),1) AS base_failed,
+       t.attempts AS tue_attempts, ROUND(COALESCE(b.attempts,0),0) AS base_attempts,
+       t.new_benes, t.bene_failures,
+       RANK() OVER (ORDER BY t.failed - COALESCE(b.failed,0) DESC) AS rnk
+FROM tue t LEFT JOIN base b USING (merchant_id) JOIN merchants m USING (merchant_id)
+ORDER BY rnk LIMIT 6;</code></pre></details><details><summary><code>03_tuesday_rca.sql</code> · decomposition</summary><pre><code>-- Mix / rate split of the drop. Each intent goes into exactly one bucket, in
+-- this priority order. For every bucket:
+--   rate effect = Tuesday share x (Tuesday SR - baseline SR of that bucket)
+--   mix effect  = (Tuesday share - baseline share) x (baseline SR of bucket - overall baseline SR)
+-- The effects add up exactly to the headline change.
+WITH tagged AS (
+  SELECT CASE WHEN day = &#x27;2026-11-10&#x27; THEN &#x27;tue&#x27; ELSE &#x27;base&#x27; END AS grp,
+         CASE
+           WHEN merchant_id = &#x27;M0412&#x27; THEN &#x27;1 M0412 promo (gaming, unverified new beneficiaries)&#x27;
+           WHEN merchant_id = &#x27;M0077&#x27; THEN &#x27;2 M0077 (lending, retry loop)&#x27;
+           WHEN bene_bank = &#x27;F&#x27; AND mode IN (&#x27;IMPS&#x27;,&#x27;UPI&#x27;)
+                AND substr(created_at,12,5) &gt;= &#x27;11:00&#x27; AND substr(created_at,12,5) &lt; &#x27;14:30&#x27;
+                THEN &#x27;3 Bank F, IMPS/UPI, 11:00-14:30&#x27;
+           ELSE &#x27;4 Everything else&#x27;
+         END AS bucket,
+         sent_to_bank, is_success
+  FROM v_intents
+  WHERE day IN (&#x27;2026-11-10&#x27;,&#x27;2026-09-22&#x27;,&#x27;2026-09-29&#x27;,&#x27;2026-10-27&#x27;,&#x27;2026-11-03&#x27;)
+    AND sent_to_bank = 1
+),
+seg AS (
+  SELECT grp, bucket, COUNT(*) AS n, AVG(is_success) AS sr FROM tagged GROUP BY 1,2
+),
+tot AS (SELECT grp, SUM(n) AS n_tot, SUM(n*sr)/SUM(n) AS sr_tot FROM seg GROUP BY grp),
+w AS (
+  SELECT s.grp, s.bucket, 1.0*s.n/t.n_tot AS share, s.sr, t.sr_tot FROM seg s JOIN tot t USING (grp)
+)
+SELECT tu.bucket,
+       ROUND(100*ba.share,2) AS base_share_pct, ROUND(100*tu.share,2) AS tue_share_pct,
+       ROUND(100*ba.sr,2) AS base_sr, ROUND(100*tu.sr,2) AS tue_sr,
+       ROUND(100*tu.share*(tu.sr - ba.sr), 3)                    AS rate_effect_pts,
+       ROUND(100*(tu.share - ba.share)*(ba.sr - ba.sr_tot), 3)   AS mix_effect_pts,
+       ROUND(100*(tu.share*(tu.sr - ba.sr) + (tu.share - ba.share)*(ba.sr - ba.sr_tot)), 3) AS total_pts
+FROM w tu JOIN w ba ON ba.bucket = tu.bucket AND ba.grp = &#x27;base&#x27;
+WHERE tu.grp = &#x27;tue&#x27;
+ORDER BY tu.bucket;</code></pre></details><details><summary><code>03_tuesday_rca.sql</code> · ruled_out</summary><pre><code>-- Things that did NOT cause it. Cashfree-side errors and API latency were flat.
+WITH a AS (
+  SELECT CASE WHEN day=&#x27;2026-11-10&#x27; THEN &#x27;Tuesday&#x27; ELSE &#x27;baseline&#x27; END AS grp, *
+  FROM v_attempts
+  WHERE day IN (&#x27;2026-11-10&#x27;,&#x27;2026-09-22&#x27;,&#x27;2026-09-29&#x27;,&#x27;2026-10-27&#x27;,&#x27;2026-11-03&#x27;)
+    AND merchant_id &lt;&gt; &#x27;M0077&#x27;   -- remove the retry loop so it does not inflate counts
+),
+lat AS (
+  SELECT grp, api_latency_ms,
+         ROW_NUMBER() OVER (PARTITION BY grp ORDER BY api_latency_ms) AS rn,
+         COUNT(*) OVER (PARTITION BY grp) AS n
+  FROM a
+)
+SELECT grp,
+       ROUND(100.0 * SUM(failure_cause = &#x27;platform&#x27;) / COUNT(*), 3) AS platform_fail_pct,
+       ROUND(100.0 * SUM(failure_cause = &#x27;bank&#x27; AND bene_bank &lt;&gt; &#x27;F&#x27;) / SUM(bene_bank &lt;&gt; &#x27;F&#x27;), 3)
+             AS bank_fail_pct_other_banks,
+       ROUND(100.0 * SUM(failure_cause = &#x27;merchant&#x27;) / COUNT(*), 3) AS merchant_balance_error_pct,
+       (SELECT api_latency_ms FROM lat l WHERE l.grp = a.grp AND l.rn = CAST(0.95*l.n AS INTEGER))
+             AS api_p95_ms
+FROM a GROUP BY grp;</code></pre></details><details><summary><code>03_tuesday_rca.sql</code> · platform_daily_range</summary><pre><code>-- Is Tuesday&#x27;s Cashfree-side error rate unusual? Compare with every normal day
+-- (October dip excluded, M0077 excluded).
+WITH d AS (
+  SELECT day, 100.0 * SUM(failure_cause = &#x27;platform&#x27;) / COUNT(*) AS pct
+  FROM v_attempts
+  WHERE merchant_id &lt;&gt; &#x27;M0077&#x27; AND day NOT BETWEEN &#x27;2026-10-05&#x27; AND &#x27;2026-10-25&#x27;
+    AND day &lt;&gt; &#x27;2026-11-10&#x27;
+  GROUP BY day
+)
+SELECT ROUND(MIN(pct),3) AS min_pct, ROUND(AVG(pct),3) AS avg_pct, ROUND(MAX(pct),3) AS max_pct,
+       COUNT(*) AS normal_days
+FROM d;</code></pre></details><details><summary><code>03_tuesday_rca.sql</code> · reversal_lag</summary><pre><code>-- M0412&#x27;s Tuesday reversals: how many landed after the day closed?
+-- These are invisible to a same-day dashboard.
+SELECT CASE WHEN reversed_at &lt;= &#x27;2026-11-10 23:59:59&#x27; THEN &#x27;landed on Tuesday&#x27;
+            ELSE &#x27;landed Wednesday or later&#x27; END AS when_landed,
+       COUNT(*) AS reversals,
+       ROUND(SUM(amount)/1e5, 2) AS amount_lakh
+FROM v_attempts
+WHERE merchant_id = &#x27;M0412&#x27; AND day = &#x27;2026-11-10&#x27; AND outcome = &#x27;REVERSED&#x27;
+GROUP BY 1;</code></pre></details><details><summary><code>04_bav_cross_sell.sql</code> · first_payout_quality</summary><pre><code>-- First payout to a new beneficiary: verified vs not verified.
+SELECT CASE WHEN bene_bav_verified = 1 THEN &#x27;verified with BAV first&#x27; ELSE &#x27;not verified&#x27; END AS bene,
+       COUNT(*) AS first_payouts,
+       SUM(final_failure_cause = &#x27;beneficiary&#x27; AND final_reason LIKE &#x27;INVALID%&#x27;) AS invalid_account,
+       ROUND(100.0 * SUM(final_failure_cause = &#x27;beneficiary&#x27; AND final_reason LIKE &#x27;INVALID%&#x27;) / COUNT(*), 2)
+             AS invalid_pct,
+       SUM(final_outcome = &#x27;REVERSED&#x27;) AS reversed,
+       ROUND(SUM(CASE WHEN final_outcome = &#x27;REVERSED&#x27; THEN amount ELSE 0 END) / 1e5, 1) AS reversed_lakh
+FROM v_intents
+WHERE is_new_bene = 1 AND sent_to_bank = 1
+GROUP BY 1;</code></pre></details><details><summary><code>04_bav_cross_sell.sql</code> · sizing</summary><pre><code>-- Monthly opportunity from merchants that do not use BAV.
+-- Assumptions (fictional): BAV check Rs 2; BAV catches 80% of invalid accounts;
+-- each failed/reversed payout costs the merchant ~Rs 150 in support and re-collection
+-- of correct details.
+WITH nonbav AS (
+  SELECT i.merchant_id, m.segment,
+         COUNT(*) AS first_payouts_8w,
+         SUM(i.final_reason LIKE &#x27;INVALID%&#x27;) AS invalid_8w,
+         SUM(CASE WHEN i.final_outcome = &#x27;REVERSED&#x27; THEN i.amount ELSE 0 END) AS reversed_amt_8w
+  FROM v_intents i JOIN merchants m USING (merchant_id)
+  WHERE i.is_new_bene = 1 AND i.sent_to_bank = 1 AND m.uses_bav = 0
+  GROUP BY 1, 2
+)
+SELECT COUNT(*)                                            AS merchants_not_using_bav,
+       ROUND(SUM(first_payouts_8w) * 30.0 / 56)            AS bav_checks_per_month,
+       ROUND(SUM(first_payouts_8w) * 30.0 / 56 * 2 / 1e5, 2) AS bav_revenue_lakh_per_month,
+       ROUND(SUM(invalid_8w) * 30.0 / 56 * 0.8)            AS bad_payouts_avoided_per_month,
+       ROUND(SUM(invalid_8w) * 30.0 / 56 * 0.8 * 150 / 1e5, 2) AS merchant_cost_avoided_lakh_per_month,
+       ROUND(SUM(reversed_amt_8w) * 30.0 / 56 / 1e5, 1)    AS reversed_value_lakh_per_month
+FROM nonbav;</code></pre></details><details><summary><code>04_bav_cross_sell.sql</code> · target_list</summary><pre><code>-- Who sales / account managers should call first: most bad payouts per month,
+-- with a NTILE bucket so the list can be split into waves.
+WITH nonbav AS (
+  SELECT i.merchant_id, m.segment, m.size_tier,
+         COUNT(*) AS first_payouts_8w,
+         SUM(i.final_reason LIKE &#x27;INVALID%&#x27;) AS invalid_8w,
+         SUM(CASE WHEN i.final_outcome = &#x27;REVERSED&#x27; THEN i.amount ELSE 0 END) AS reversed_amt_8w
+  FROM v_intents i JOIN merchants m USING (merchant_id)
+  WHERE i.is_new_bene = 1 AND i.sent_to_bank = 1 AND m.uses_bav = 0
+  GROUP BY 1, 2, 3
+)
+SELECT merchant_id, segment, size_tier,
+       ROUND(first_payouts_8w * 30.0 / 56) AS new_bene_payouts_per_month,
+       ROUND(invalid_8w * 30.0 / 56, 1)    AS bad_payouts_per_month,
+       ROUND(100.0 * invalid_8w / first_payouts_8w, 2) AS invalid_pct,
+       ROUND(reversed_amt_8w / 1e5, 2)      AS reversed_lakh_8w,
+       NTILE(4) OVER (ORDER BY invalid_8w DESC) AS wave
+FROM nonbav
+WHERE first_payouts_8w &gt;= 50
+ORDER BY invalid_8w DESC
+LIMIT 10;</code></pre></details><details><summary><code>05_churn_early_warning.sql</code> · churn_vs_shock</summary><pre><code>WITH wk AS (
+  SELECT merchant_id,
+         (CAST(julianday(day) - julianday(&#x27;2026-09-21&#x27;) AS INTEGER) / 7) + 1 AS week,
+         COUNT(*) AS intents,
+         SUM(sent_to_bank) AS sent, SUM(is_success) AS ok
+  FROM v_intents GROUP BY 1, 2
+),
+-- fill in zero weeks so window functions see a gap as zero, not as missing
+grid AS (
+  SELECT m.merchant_id, w.week
+  FROM merchants m
+  CROSS JOIN (SELECT DISTINCT week FROM wk) w
+  WHERE m.onboarded_on &lt; &#x27;2026-09-21&#x27;
+),
+filled AS (
+  SELECT g.merchant_id, g.week, COALESCE(wk.intents,0) AS intents,
+         COALESCE(wk.sent,0) AS sent, COALESCE(wk.ok,0) AS ok
+  FROM grid g LEFT JOIN wk USING (merchant_id, week)
+),
+w AS (
+  SELECT f.*,
+         -- merchant&#x27;s own success rate in weeks 1-2, as their &quot;normal&quot;
+         SUM(CASE WHEN week &lt;= 2 THEN ok END)   OVER (PARTITION BY merchant_id) * 1.0 /
+         NULLIF(SUM(CASE WHEN week &lt;= 2 THEN sent END) OVER (PARTITION BY merchant_id), 0) AS sr_normal,
+         AVG(intents) OVER (PARTITION BY merchant_id ORDER BY week
+                            ROWS BETWEEN 4 PRECEDING AND 1 PRECEDING) AS trailing_4w_avg
+  FROM filled f
+),
+per_merchant AS (
+  SELECT merchant_id,
+         -- shock: any week in 3-5 with 20+ payouts where SR fell 10+ points below
+         -- the merchant&#x27;s normal. Below 20 a week, two failures look like a shock.
+         MAX(CASE WHEN week BETWEEN 3 AND 5 AND sent &gt;= 20
+                   AND 1.0*ok/sent &lt; sr_normal - 0.10 THEN 1 ELSE 0 END) AS had_shock,
+         SUM(CASE WHEN week &lt;= 2 THEN intents END) AS early,
+         SUM(CASE WHEN week &gt;= 7 THEN intents END) AS late
+  FROM w GROUP BY merchant_id
+)
+SELECT CASE had_shock WHEN 1 THEN &#x27;had a failure shock in weeks 3-5&#x27; ELSE &#x27;no shock&#x27; END AS grp,
+       COUNT(*) AS merchants,
+       SUM(late &lt; 0.3 * early) AS churned,
+       ROUND(100.0 * SUM(late &lt; 0.3 * early) / COUNT(*), 1) AS churn_pct
+FROM per_merchant
+WHERE early &gt;= 20            -- enough volume to judge
+GROUP BY had_shock;</code></pre></details><details><summary><code>05_churn_early_warning.sql</code> · early_warning_backtest</summary><pre><code>-- Back-test: if an alert had run at the end of week 6, whom would it flag, and
+-- how many of them were actually gone by weeks 7-8?
+-- Rule: week-6 volume down 40%+ vs the merchant&#x27;s trailing 4-week average
+--       AND the merchant had a week in the prior 4 with success rate under 92%.
+WITH wk AS (
+  SELECT merchant_id,
+         (CAST(julianday(day) - julianday(&#x27;2026-09-21&#x27;) AS INTEGER) / 7) + 1 AS week,
+         COUNT(*) AS intents, SUM(sent_to_bank) AS sent, SUM(is_success) AS ok
+  FROM v_intents GROUP BY 1, 2
+),
+grid AS (
+  SELECT m.merchant_id, w.week FROM merchants m
+  CROSS JOIN (SELECT DISTINCT week FROM wk) w
+  WHERE m.onboarded_on &lt; &#x27;2026-09-21&#x27;
+),
+filled AS (
+  SELECT g.merchant_id, g.week, COALESCE(wk.intents,0) AS intents,
+         COALESCE(wk.sent,0) AS sent, COALESCE(wk.ok,0) AS ok
+  FROM grid g LEFT JOIN wk USING (merchant_id, week)
+),
+w AS (
+  SELECT f.*,
+         AVG(intents) OVER (PARTITION BY merchant_id ORDER BY week
+                            ROWS BETWEEN 4 PRECEDING AND 1 PRECEDING) AS trailing_4w_avg,
+         MIN(CASE WHEN sent &gt;= 20 THEN 1.0*ok/sent END)
+             OVER (PARTITION BY merchant_id ORDER BY week
+                   ROWS BETWEEN 4 PRECEDING AND 1 PRECEDING) AS worst_sr_prev_4w
+  FROM filled f
+),
+outcome AS (
+  SELECT merchant_id,
+         SUM(CASE WHEN week &lt;= 2 THEN intents END) AS early,
+         SUM(CASE WHEN week &gt;= 7 THEN intents END) AS late
+  FROM filled GROUP BY 1
+),
+flags AS (
+  SELECT w.merchant_id,
+         CASE WHEN w.trailing_4w_avg &gt;= 5 AND w.intents &lt; 0.6 * w.trailing_4w_avg
+               AND w.worst_sr_prev_4w &lt; 0.92 THEN 1 ELSE 0 END AS flagged,
+         CASE WHEN o.late &lt; 0.3 * o.early THEN 1 ELSE 0 END AS churned
+  FROM w JOIN outcome o USING (merchant_id)
+  WHERE w.week = 6 AND o.early &gt;= 20
+)
+SELECT SUM(flagged)                      AS flagged_at_week_6,
+       SUM(flagged * churned)            AS flagged_and_churned,
+       ROUND(100.0 * SUM(flagged*churned) / NULLIF(SUM(flagged),0), 0) AS precision_pct,
+       SUM(churned)                      AS all_churners,
+       ROUND(100.0 * SUM(flagged*churned) / NULLIF(SUM(churned),0), 0) AS share_of_churners_caught
+FROM flags;</code></pre></details>
+<p class="small" style="margin-top:28px">Aditya Mathur · adityamathur2004@gmail.com · linkedin.com/in/adityaamathur</p>
+</main></body></html>
