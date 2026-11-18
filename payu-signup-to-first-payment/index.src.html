@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From signup to first payment: a program pack for a product leadership office (simulation)</title>
+<style>
+  :root { --ink:#1b1f24; --muted:#5b6470; --line:#d9dee4; --bg:#ffffff; --soft:#f5f7f9; --red:#b42318; --amber:#b54708; --green:#067647; --blue:#1d4ed8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.55 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color:var(--ink); background:var(--bg); }
+  .sim { background:#fff4e5; border-bottom:2px solid #f0b46a; padding:12px 20px; font-size:14px; }
+  .sim b { color:#7a3e00; }
+  main { max-width:1040px; margin:0 auto; padding:24px 20px 80px; }
+  h1 { font-size:28px; line-height:1.25; margin:8px 0 6px; }
+  h2 { font-size:21px; margin:44px 0 10px; padding-top:12px; border-top:1px solid var(--line); }
+  h3 { font-size:16px; margin:22px 0 8px; }
+  p, li { max-width:78ch; }
+  .muted { color:var(--muted); }
+  .small { font-size:13px; }
+  nav.toc { background:var(--soft); border:1px solid var(--line); border-radius:8px; padding:10px 14px; margin:16px 0; font-size:14px; }
+  nav.toc a { display:inline-block; margin:2px 12px 2px 0; white-space:nowrap; color:var(--blue); text-decoration:none; }
+  .memo { border:1px solid var(--line); border-left:4px solid var(--ink); border-radius:6px; padding:16px 20px; background:#fff; }
+  .memo h3 { margin-top:14px; }
+  table { border-collapse:collapse; width:100%; margin:8px 0 14px; font-size:14px; }
+  th, td { border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+  th { background:var(--soft); font-weight:600; }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin:10px 0; }
+  .tile { border:1px solid var(--line); border-radius:8px; padding:10px 12px; }
+  .tile .k { font-size:12px; color:var(--muted); }
+  .tile .v { font-size:22px; font-weight:650; font-variant-numeric:tabular-nums; }
+  .bar { height:18px; background:#2f4a6d; border-radius:3px; }
+  .controls { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:8px 0; font-size:14px; }
+  select, input[type=number], input[type=date] { font:inherit; padding:3px 6px; border:1px solid var(--line); border-radius:4px; }
+  input[type=number] { width:90px; }
+  .rag { font-weight:650; }
+  .rag.Red { color:var(--red); } .rag.Amber { color:var(--amber); } .rag.Green { color:var(--green); } .rag.Done { color:var(--muted); }
+  pre { background:#0f172a; color:#e2e8f0; padding:12px 14px; border-radius:6px; overflow:auto; font-size:12.5px; line-height:1.5; }
+  .note { background:var(--soft); border:1px solid var(--line); border-radius:6px; padding:12px 16px; white-space:pre-wrap; font-size:14px; }
+  .tree ul { list-style:none; padding-left:18px; border-left:1px dashed var(--line); }
+  .tree > ul { border-left:none; padding-left:0; }
+  .tree li { margin:4px 0; }
+  .callout { border-left:3px solid var(--amber); padding:6px 12px; background:#fffaf2; margin:10px 0; }
+  button { font:inherit; padding:4px 10px; border:1px solid var(--line); background:#fff; border-radius:4px; cursor:pointer; }
+  footer { margin-top:50px; font-size:13px; color:var(--muted); }
+  @media (max-width:700px){ h1{font-size:23px;} table{font-size:12.5px;} }
+</style>
+</head>
+<body>
+<div class="sim"><b>SIMULATION ON FICTIONAL DATA.</b> Every merchant, rate, rupee amount, owner and date on this page is invented. Nothing here is PayU data, and I have no inside knowledge of PayU's numbers or plans. Public facts are marked and sourced. Independent work by Aditya Mathur for an application to PayU's Associate, Product Strategy &amp; Operations role. Built with Claude.</div>
+<main>
+<p class="muted small">Aditya Mathur · Bengaluru · November 2026</p>
+<h1>From signup to first payment: how I'd run a merchant activation program from a product leadership office</h1>
+<p>The role I'm applying for runs critical product programs, keeps leadership reviews short and useful, and builds the tracking that makes this possible. So instead of a feature idea, this is a program pack: one defined problem, structured, sized, planned across seven functions, measured, and reported in a weekly note that writes itself from the tracker.</p>
+<p><b>The problem:</b> merchants sign up for a payment gateway, then a large share never take a single successful payment, or take weeks to. Every one of them is sales and onboarding cost already spent.</p>
+<nav class="toc">
+  <a href="#memo">1. Note to the CPO</a><a href="#why">2. Why now</a><a href="#tree">3. Problem structure</a><a href="#data">4. What the data says</a><a href="#case">5. Levers and business case</a><a href="#plan">6. Program plan</a><a href="#weekly">7. Weekly review, automated</a><a href="#measure">8. Measurement</a><a href="#sql">9. SQL</a><a href="#day1">10. Day one with real data</a><a href="#limits">11. Limits</a><a href="#sources">Sources</a>
+</nav>
+
+<h2 id="memo">1. The note I'd send the CPO (one page)</h2>
+<div class="memo" id="memoBox">
+  <p class="muted small">Written as if for a weekly product leadership review. Numbers are from the fictional simulation below.</p>
+  <h3>Problem</h3>
+  <p id="memoProblem">Of merchants who sign up, 23.8% take a first successful payment within 14 days and 45.9% ever do by day 45. The rest stall at four points: documents never finished, KYC rework never completed, integration never live, and live with no customer payment. Each stalled merchant is acquisition and onboarding cost already spent.</p>
+  <h3>Why it matters now</h3>
+  <p>Since 1 January 2026, every new merchant must clear the RBI's stricter due-diligence standard, so onboarding has more steps where a merchant can stall. Activation is also where PayU's own AI work is heading next (see section 2). And products sold on top of payments, like Agent HQ, only earn on merchants who are live.</p>
+  <h3>Recommendation</h3>
+  <p id="memoRec">Run activation as one program with four levers, in this order: the KYC fix-it queue and first payment by link first (inside Product's control, largest effect), voice and WhatsApp nudges as a holdout test, and the simplified route only after Compliance decides. In the simulation, all four together move the 14-day rate from 23.8% to 39.8%, cut median days to first payment from 13.6 to 9.9, and add about 222 merchants active at day 30 for every month of signups, paying back in about 3 months on the stated assumptions.</p>
+  <h3>Decisions I need</h3>
+  <ol>
+    <li>Compliance: approve or reject the simplified due-diligence route for micro merchants (turnover up to ₹40 lakh), excluding high-risk categories.</li>
+    <li>Finance: a mapping so payments taken by link reconcile to the same merchant ledger, before the link pilot starts.</li>
+    <li>Everyone: one definition of "first successful payment" (excluding test and self-payments) that all teams report against.</li>
+  </ol>
+  <h3>What would make me stop</h3>
+  <p>If merchants who went through the simplified route show a 60-day fraud or chargeback rate more than 1.5 times the standard route, the simplified route pauses for that category until Risk reviews it.</p>
+</div>
+
+<h2 id="why">2. Why now: public facts</h2>
+<table>
+  <tr><th style="width:130px">When</th><th>What happened (public)</th><th>Why it matters for activation</th></tr>
+  <tr><td>May 2025</td><td>RBI gave PayU final authorisation to operate as an online payment aggregator, after a corporate restructuring and compliance overhaul.<sup><a href="#s1">1</a></sup></td><td>Onboarding new merchants is a growth line again, so the cost of each stalled merchant is real.</td></tr>
+  <tr><td>15 Sep 2025</td><td>RBI's consolidated Payment Aggregator directions: a simplified due-diligence route for small merchants (turnover up to ₹40 lakh), PAN and contact point checks, agent-assisted KYC allowed, and the new standard for all onboarding from 1 Jan 2026.<sup><a href="#s2">2</a></sup><sup><a href="#s3">3</a></sup></td><td>More checks per merchant means more places to stall. The simplified route and assisted KYC are levers, but only with Compliance's sign-off.</td></tr>
+  <tr><td>Apr 2026</td><td>PayU launched an AI voice assistant that calls merchant leads during onboarding, in English and Hindi, and said KYC drop-off recovery and activation workflows are next.<sup><a href="#s4">4</a></sup></td><td>The company has already named this problem. A program office can make sure the next step is measured, not just launched.</td></tr>
+  <tr><td>Jun 2026</td><td>PayU released a CLI and a Builder MCP server to speed up developer integration.<sup><a href="#s5">5</a></sup></td><td>Integration time for API merchants is one of the stall points modelled below.</td></tr>
+  <tr><td>FY26</td><td>Prosus reported PayU India revenue of about $781M and a first full-year adjusted EBITDA profit, after exiting negative-margin portfolios.<sup><a href="#s6">6</a></sup></td><td>Profit focus favours programs that raise revenue from merchants already acquired, over buying more signups.</td></tr>
+  <tr><td>Sep 2026</td><td>PayU launched Agent HQ, an AI agent store inside the merchant dashboard.<sup><a href="#s7">7</a></sup></td><td>Products like this only reach merchants who are live and using the dashboard.</td></tr>
+</table>
+
+<h2 id="tree">3. The problem, structured</h2>
+<p><b>Question:</b> why do signed-up merchants not take a first successful payment within 14 days, and which causes can we fix in one quarter?</p>
+<div class="tree">
+<ul>
+ <li><b>A. They never finish documents.</b>
+  <ul><li>Hypothesis: friction at the bank account and website steps, not lack of intent. <span class="muted">Test: drop-off by step; compare sales-assisted vs self-serve.</span></li>
+      <li>Hypothesis: some aren't ready (no website, no current account). <span class="muted">Test: share with no website by path; outcome after a reminder.</span></li></ul></li>
+ <li><b>B. KYC sends them back and they don't return.</b>
+  <ul><li>Hypothesis: rejection reasons are unclear, so merchants don't know what to fix. <span class="muted">Test: rework completion rate by reason code.</span></li>
+      <li>Hypothesis: small merchants carry more documents than the rules require. <span class="muted">Test: share of micro merchants eligible for the simplified route but sent down the full route.</span></li></ul></li>
+ <li><b>C. Approved, but integration never goes live.</b>
+  <ul><li>Hypothesis: API merchants wait on their own developers; plugin merchants hit configuration errors. <span class="muted">Test: time from keys issued to first test call, by path.</span></li></ul></li>
+ <li><b>D. Live, but no customer pays.</b>
+  <ul><li>Hypothesis: the store isn't launched yet, or the merchant is still testing. <span class="muted">Test: share with test-mode activity only; sales notes.</span></li></ul></li>
+ <li><b>E. Correctly rejected.</b> <span class="muted">Not a leak. Kept out of the north star so nobody is rewarded for approving risky merchants.</span></li>
+</ul>
+</div>
+
+<h2 id="data">4. What the (fictional) data says</h2>
+<p class="muted small">4,800 fictional merchants who signed up over 8 weeks, followed for 45 days. Mix: 58% micro, 32% small, 10% mid; self-serve, sales-assisted and partner-referred; no-code, plugin and API paths. The rates behind each step are my assumptions, listed in <code>engine.js</code>.</p>
+<div class="controls">
+  <label>Segment <select id="fSeg"><option value="">All</option></select></label>
+  <label>Path <select id="fPath"><option value="">All</option></select></label>
+  <label>Source <select id="fSrc"><option value="">All</option><option value="self">Self-serve</option><option value="sales">Sales-assisted</option><option value="partner">Partner</option></select></label>
+</div>
+<div class="tiles" id="tiles"></div>
+<table id="funnel"></table>
+<h3>Where merchants stall (ranked)</h3>
+<table id="stuck"></table>
+<h3>14-day first-payment rate by segment and path</h3>
+<table id="grid"></table>
+<div class="callout" id="dataTakeaway"></div>
+
+<h2 id="case">5. Levers and the business case</h2>
+<p>Four levers, each aimed at one stall point. Turn them on and off; the simulation re-runs on the same merchants, so differences come from the lever, not from random noise.</p>
+<table>
+  <tr><th>Lever</th><th>What changes</th><th>Stall it targets</th><th>Lead owner</th></tr>
+  <tr><td><b>L1</b> Fix-it rework queue</td><td>Each KYC rejection reason gets its own fix screen (for example, "the name on your bank account doesn't match your PAN: upload a cancelled cheque or change the account"), instead of a generic "documents rejected".</td><td>B</td><td>Product (Onboarding) + Risk Ops</td></tr>
+  <tr><td><b>L2</b> Simplified route</td><td>Eligible micro merchants (turnover up to ₹40 lakh, not high-risk) go down the simplified due-diligence route the RBI allows. Checks still happen; fewer documents.</td><td>A, B</td><td>Risk &amp; Compliance + Product</td></tr>
+  <tr><td><b>L3</b> First payment by link</td><td>Once KYC is approved, plugin and API merchants can take their first live payment by payment link while their integration finishes.</td><td>C</td><td>Product (Payment Links) + Sales</td></tr>
+  <tr><td><b>L4</b> Stall nudges</td><td>A Hindi/English voice call and WhatsApp message at the two biggest stall points, with hand-off to an account manager. Run with a 20% holdout.</td><td>A, C</td><td>Product (Merchant Growth) + Ops</td></tr>
+</table>
+<div class="controls" id="leverBoxes"></div>
+<div class="controls">
+  <label>Net revenue as % of GMV <input type="number" id="aRate" step="0.05" min="0.05" max="2" value="0.25"></label>
+  <label>Monthly churn after day 30, % <input type="number" id="aChurn" step="1" min="0" max="30" value="4"></label>
+</div>
+<table id="caseTable"></table>
+<div class="callout" id="caseTakeaway"></div>
+<p class="muted small">How value is counted: merchants still transacting at day 30 × assumed monthly GMV for their segment (micro ₹60k, small ₹4.5 lakh, mid ₹25 lakh) × net revenue rate. Each month's signups add a layer of revenue that then decays with churn. Build cost: engineering weeks at ₹1.5 lakh each. Running cost: two voice calls (₹8 each) and three WhatsApp messages (₹0.80 each) per nudged merchant. All assumptions, all fictional.</p>
+
+<h2 id="plan">6. Program plan</h2>
+<h3>Sequence</h3>
+<table>
+  <tr><th>Weeks</th><th>What happens</th><th>Exit criteria to move on</th></tr>
+  <tr><td>1–2</td><td>One definition of first payment; baseline dashboard; KYC reason codes cleaned up; Compliance review of the simplified route starts.</td><td>Dashboard numbers match the finance settlement report within 1%.</td></tr>
+  <tr><td>3–4</td><td>L1 spec; L3 pilot with 200 merchants once Finance confirms reconciliation; L4 scripts reviewed; holdout live.</td><td>Holdout balanced on segment and path; pilot merchants reconcile end to end.</td></tr>
+  <tr><td>5–8</td><td>L1 released; L4 runs; L2 launches only if approved, with the fraud and chargeback watch running from day one.</td><td>14-day rate up for treated merchants vs holdout, with guardrails inside limits.</td></tr>
+</table>
+<h3>Who does what (R = does it, A = decides, C = consulted, I = kept informed)</h3>
+<table>
+  <tr><th>Deliverable</th><th>Product</th><th>Eng</th><th>Risk &amp; Compliance</th><th>Ops</th><th>Sales</th><th>Finance</th><th>Analytics</th><th>CPO office</th></tr>
+  <tr><td>North-star definition and dashboard</td><td>C</td><td>I</td><td>C</td><td>I</td><td>I</td><td>C</td><td>R</td><td>A</td></tr>
+  <tr><td>L1 fix screens</td><td>R</td><td>R</td><td>A</td><td>C</td><td>I</td><td>I</td><td>C</td><td>I</td></tr>
+  <tr><td>L2 simplified route</td><td>R</td><td>R</td><td>A</td><td>C</td><td>I</td><td>I</td><td>C</td><td>C</td></tr>
+  <tr><td>L3 link-first pilot</td><td>A</td><td>R</td><td>C</td><td>I</td><td>R</td><td>C</td><td>C</td><td>I</td></tr>
+  <tr><td>L4 nudges and holdout</td><td>A</td><td>R</td><td>C</td><td>R</td><td>C</td><td>I</td><td>R</td><td>I</td></tr>
+  <tr><td>Weekly review and decision log</td><td>C</td><td>C</td><td>C</td><td>C</td><td>C</td><td>C</td><td>C</td><td>R/A</td></tr>
+</table>
+<h3>How the program runs</h3>
+<ul>
+  <li><b>Weekly, 30 minutes:</b> metric first (2 min), then red items only, each ending with an owner and a date; decisions are written into the log in the meeting, not after.</li>
+  <li><b>Escalate to the CPO when:</b> a decision is more than 3 working days late, an item is more than 7 days past due with no new date, or a guardrail is breached.</li>
+  <li><b>Every red needs a root cause.</b> The weekly note below traces each red item back to the item actually causing it, so leadership sees two problems, not four.</li>
+</ul>
+
+<h2 id="weekly">7. The weekly review, written by the tracker</h2>
+<p>The job description asks for AI and automation to cut repetitive tracking and reporting. This is the plain version: change a forecast date, a percentage or a decision below and the leadership note rewrites itself, including which reds share a root cause and what to ask for. It uses simple rules, not an AI model, so every line can be traced to a cell. An AI model could draft the wording on top, but the RAG status and root causes should stay rule-based so they can be checked.</p>
+<p class="muted small">Rules: <b>Red</b> if forecast is more than 7 days past due, a dependency is red, or a decision is overdue. <b>Amber</b> if forecast is past due, or due within 7 days and under 70% done. As of <span id="asOf"></span>, compared with the week before.</p>
+<table id="tracker"></table>
+<h3>Note for the leadership review <button id="copyNote">Copy</button></h3>
+<div class="note" id="weeklyNote"></div>
+
+<h2 id="measure">8. Measurement</h2>
+<h3>Metric tree</h3>
+<table>
+  <tr><th>Level</th><th>Metric</th><th>Definition</th></tr>
+  <tr><td>North star</td><td>14-day first-payment rate</td><td>Signups (excluding policy rejections and test accounts) with a first successful customer payment within 14 days of signup. Self-payments by the merchant don't count.</td></tr>
+  <tr><td>Driver</td><td>Document completion</td><td>Share of signups submitting all documents within 7 days.</td></tr>
+  <tr><td>Driver</td><td>First-pass KYC approval and rework completion</td><td>Approved without rework; and, of those sent back, share who complete rework within 7 days, by reason code.</td></tr>
+  <tr><td>Driver</td><td>Integration live, by path</td><td>Share of approved merchants with a live integration within 10 days (no-code, plugin, API reported separately).</td></tr>
+  <tr><td>Driver</td><td>Live to first payment</td><td>Days from live to first successful customer payment.</td></tr>
+  <tr><td>Guardrail</td><td>60-day fraud and chargeback rate</td><td>Simplified-route cohort vs standard route. Pause at 1.5 times.</td></tr>
+  <tr><td>Guardrail</td><td>KYC reversals after go-live</td><td>Merchants suspended after going live, per 1,000 activated.</td></tr>
+  <tr><td>Guardrail</td><td>Contact complaints</td><td>Opt-outs and complaints per 1,000 nudged merchants.</td></tr>
+</table>
+<h3>How long the nudge test (L4) needs to run</h3>
+<div class="controls">
+  <label>Baseline rate in the test group, % <input type="number" id="eBase" value="24" step="0.5"></label>
+  <label>Smallest lift worth detecting, points <input type="number" id="eMde" value="3" step="0.5"></label>
+  <label>Holdout share, % <input type="number" id="eHold" value="20" step="5" min="5" max="50"></label>
+  <label>Eligible merchants per week <input type="number" id="eWeekly" value="450" step="10"></label>
+</div>
+<p id="expOut" class="note"></p>
+<p class="muted small">Randomise by merchant at signup, not by week, because signup mix shifts week to week. 5% two-sided significance, 80% power. Unequal split handled by sizing the smaller (holdout) arm.</p>
+
+<h2 id="sql">9. SQL I'd run first</h2>
+<p class="muted small">Table and column names are assumptions about a typical onboarding schema, not PayU's.</p>
+<pre id="sqlBlock">-- 1. Funnel and 14-day first-payment rate by weekly signup cohort
+WITH m AS (
+  SELECT merchant_id, signup_at, segment, integration_path, source,
+         docs_submitted_at, kyc_approved_at, live_at, kyc_status
+  FROM merchant_onboarding
+  WHERE signup_at >= DATE '2026-09-01' AND is_test = FALSE
+),
+fp AS (                                  -- first successful customer payment
+  SELECT t.merchant_id, MIN(t.created_at) AS first_payment_at
+  FROM transactions t
+  JOIN m ON m.merchant_id = t.merchant_id
+  WHERE t.status = 'SUCCESS'
+    AND t.payer_vpa_or_card_hash NOT IN (SELECT hash FROM merchant_own_instruments WHERE merchant_id = t.merchant_id)
+  GROUP BY t.merchant_id
+)
+SELECT DATE_TRUNC('week', m.signup_at)                         AS cohort_week,
+       COUNT(*)                                                AS signups,
+       COUNT(*) FILTER (WHERE kyc_status = 'REJECTED_POLICY')  AS policy_rejections,
+       COUNT(docs_submitted_at)                                AS docs_submitted,
+       COUNT(kyc_approved_at)                                  AS kyc_approved,
+       COUNT(live_at)                                          AS live,
+       COUNT(fp.first_payment_at)                              AS first_payment_ever,
+       ROUND(100.0 * COUNT(*) FILTER (WHERE fp.first_payment_at &lt;= m.signup_at + INTERVAL '14 days')
+             / NULLIF(COUNT(*) FILTER (WHERE kyc_status IS DISTINCT FROM 'REJECTED_POLICY'), 0), 1) AS rate_14d_pct
+FROM m LEFT JOIN fp USING (merchant_id)
+GROUP BY 1 ORDER BY 1;
+
+-- 2. Where merchants stall: last step reached and the open reason code
+SELECT COALESCE(r.reason_code, s.last_step) AS stall_point, COUNT(*) AS merchants,
+       ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) AS pct
+FROM merchant_last_step s
+LEFT JOIN kyc_rework r ON r.merchant_id = s.merchant_id AND r.resolved_at IS NULL
+WHERE s.first_payment_at IS NULL AND s.kyc_status IS DISTINCT FROM 'REJECTED_POLICY'
+GROUP BY 1 ORDER BY merchants DESC;
+
+-- 3. Rework completion by reason (does L1 work?)
+SELECT reason_code,
+       COUNT(*) AS sent_back,
+       ROUND(100.0 * AVG(CASE WHEN resolved_at &lt;= raised_at + INTERVAL '7 days' THEN 1 ELSE 0 END), 1) AS fixed_in_7d_pct,
+       PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM resolved_at - raised_at) / 86400) AS median_days_to_fix
+FROM kyc_rework GROUP BY 1 ORDER BY sent_back DESC;
+
+-- 4. Guardrail: 60-day chargeback and fraud rate, simplified vs standard route
+SELECT o.dd_route,
+       COUNT(DISTINCT o.merchant_id) AS merchants,
+       ROUND(10000.0 * COUNT(c.id) / NULLIF(COUNT(t.id), 0), 2) AS chargebacks_per_10k_txn,
+       COUNT(DISTINCT f.merchant_id) AS merchants_flagged_fraud
+FROM merchant_onboarding o
+JOIN transactions t ON t.merchant_id = o.merchant_id AND t.created_at &lt; o.live_at + INTERVAL '60 days'
+LEFT JOIN chargebacks c ON c.transaction_id = t.id
+LEFT JOIN fraud_flags f ON f.merchant_id = o.merchant_id AND f.flagged_at &lt; o.live_at + INTERVAL '60 days'
+WHERE o.live_at IS NOT NULL
+GROUP BY 1;</pre>
+
+<h2 id="day1">10. Day one with real data: what I'd check before trusting any of this</h2>
+<ol>
+  <li><b>Definitions.</b> Does "signup" mean account created, or lead qualified? Are partner sub-merchants counted? Agree this before any target is set.</li>
+  <li><b>Self-payments.</b> Many merchants pay themselves ₹1 to test. If those count as "first payment", the north star is inflated.</li>
+  <li><b>Event gaps.</b> KYC vendor callbacks and onboarding events often don't join cleanly. I'd reconcile dashboard counts to the settlement report before showing a number to leadership.</li>
+  <li><b>Which stall is biggest.</b> My simulation puts "never started documents" first. Real data could say otherwise, and the lever order would change.</li>
+  <li><b>What already exists.</b> PayU's voice assistant already calls leads. L4 should build on it and measure it with a holdout, not duplicate it.</li>
+  <li><b>Compliance position.</b> Whether the simplified route is already in use, and how, is Compliance's call. L2 stays off the plan until they decide.</li>
+</ol>
+
+<h2 id="limits">11. Limits (read this before the numbers)</h2>
+<ul>
+  <li>The data is generated by my own assumptions, so the simulation can only show what those assumptions imply. It shows how I'd structure, size and run the work, not what PayU's real numbers are.</li>
+  <li>Lever effects are my estimates, not measured results. The point of the plan is to measure them with holdouts.</li>
+  <li>The value model ignores sales cost recovered, support cost and seasonality, and assumes GMV per merchant by segment.</li>
+  <li>No AI model was run. The weekly note uses fixed rules.</li>
+  <li>Engine and tracker rules are checked by 23 automated tests (<code>node tests/run.js</code>).</li>
+</ul>
+
+<h2 id="sources">Sources (public facts only)</h2>
+<ol class="small">
+  <li id="s1">Business Standard, "PayU gets final RBI approval to operate as online payment aggregator", May 2025. business-standard.com</li>
+  <li id="s2">Reserve Bank of India, Master Direction on Regulation of Payment Aggregator (PA), 15 Sep 2025. rbi.org.in</li>
+  <li id="s3">YourStory, "New RBI rulebook opens agent-assisted KYC route for payment aggregators", Sep 2025. yourstory.com</li>
+  <li id="s4">Lokmat Times / ANI, "PayU introduces AI-powered outbound voice call assistant ... merchant onboarding journey", 14 Apr 2026. lokmattimes.com</li>
+  <li id="s5">IBS Intelligence, "PayU launches AI-powered developer tools", 25 Jun 2026. ibsintelligence.com</li>
+  <li id="s6">Inc42, "PayU India turns adjusted EBITDA profitable in FY26, revenue zooms 13% YoY", Jun 2026. inc42.com</li>
+  <li id="s7">FinTech BizNews / PayU press release, "Agent HQ", 11 Sep 2026. fintechbiznews.com</li>
+</ol>
+<footer>Independent work. Not affiliated with or endorsed by PayU. Fictional data throughout. Built with Claude by Aditya Mathur · adityamathur2004@gmail.com · linkedin.com/in/adityaamathur</footer>
+</main>
+
+<script src="engine.js"></script>
+<script src="program.js"></script>
+<script>
+(function () {
+  var E = window.Engine, P = window.Program;
+  if (!E || !P) { document.querySelectorAll('#tiles,#caseTable,#weeklyNote').forEach(function (el) { el.textContent = 'The simulation script did not load, so this section is empty. Open the page with engine.js and program.js beside it.'; }); return; }
+  var fmtInt = function (x) { return Math.round(x).toLocaleString('en-IN'); };
+  var pct = function (x, d) { return (x * 100).toFixed(d === undefined ? 1 : d) + '%'; };
+  var rupees = function (x) { var s = x < 0 ? '−' : ''; x = Math.abs(x);
+    if (x >= 1e7) return s + '₹' + (x / 1e7).toFixed(2) + ' Cr'; if (x >= 1e5) return s + '₹' + (x / 1e5).toFixed(1) + ' lakh'; return s + '₹' + fmtInt(x); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+
+  // ---------- section 4: data ----------
+  var base = E.evaluate({});
+  var fSeg = document.getElementById('fSeg'), fPath = document.getElementById('fPath'), fSrc = document.getElementById('fSrc');
+  E.A.segments.forEach(function (s) { fSeg.insertAdjacentHTML('beforeend', '<option value="' + s.key + '">' + esc(s.label) + '</option>'); });
+  E.A.paths.forEach(function (s) { fPath.insertAdjacentHTML('beforeend', '<option value="' + s.key + '">' + esc(s.label) + '</option>'); });
+  function renderData() {
+    var seg = fSeg.value, path = fPath.value, src = fSrc.value;
+    var s = E.summarise(base.rows, function (r) { return (!seg || r.segment === seg) && (!path || r.path === path) && (!src || r.source === src); });
+    document.getElementById('tiles').innerHTML =
+      tile('Merchants in view', fmtInt(s.n)) + tile('First payment within 7 days', pct(s.rate7)) + tile('Within 14 days (north star)', pct(s.rate14)) +
+      tile('Ever, by day 45', pct(s.rateEver)) + tile('Median days to first payment', s.medianDays === null ? '–' : s.medianDays.toFixed(1));
+    var rows = '<tr><th>Step</th><th class="num">Merchants</th><th class="num">% of signups</th><th class="num">From previous step</th><th style="width:40%"></th></tr>';
+    E.STAGES.forEach(function (st, i) {
+      var c = s.counts[i], prev = i ? s.counts[i - 1] : c;
+      var label = st.label + (st.key === 'first' ? ' (by day 45)' : '') + (st.key === 'live' ? ' (excludes link-only)' : '');
+      rows += '<tr><td>' + label + '</td><td class="num">' + fmtInt(c) + '</td><td class="num">' + pct(c / Math.max(1, s.n)) + '</td><td class="num">' +
+        (i ? pct(c / Math.max(1, prev)) : '–') + '</td><td><div class="bar" style="width:' + (100 * c / Math.max(1, s.n)).toFixed(1) + '%"></div></td></tr>';
+    });
+    rows += '<tr><td class="muted">Rejected on policy (correct outcome, excluded from rates)</td><td class="num muted">' + fmtInt(s.rejected) + '</td><td class="num muted">' + pct(s.rejected / Math.max(1, s.n)) + '</td><td></td><td></td></tr>';
+    document.getElementById('funnel').innerHTML = rows;
+    var st = '<tr><th>Stall point</th><th class="num">Merchants</th><th class="num">% of signups in view</th></tr>';
+    s.stuck.slice(0, 12).forEach(function (x) { st += '<tr><td>' + esc(x.reason) + '</td><td class="num">' + fmtInt(x.count) + '</td><td class="num">' + pct(x.share) + '</td></tr>'; });
+    document.getElementById('stuck').innerHTML = st;
+  }
+  function tile(k, v) { return '<div class="tile"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>'; }
+  [fSeg, fPath, fSrc].forEach(function (el) { el.addEventListener('change', renderData); });
+  renderData();
+  (function grid() {
+    var h = '<tr><th>Segment</th>' + E.A.paths.map(function (p) { return '<th class="num">' + esc(p.label) + '</th>'; }).join('') + '<th class="num">All paths</th></tr>';
+    E.A.segments.forEach(function (sg) {
+      h += '<tr><td>' + esc(sg.label) + '</td>';
+      E.A.paths.forEach(function (p) { var s = E.summarise(base.rows, function (r) { return r.segment === sg.key && r.path === p.key; }); h += '<td class="num">' + pct(s.rate14) + ' <span class="muted small">(n=' + s.n + ')</span></td>'; });
+      h += '<td class="num"><b>' + pct(E.summarise(base.rows, function (r) { return r.segment === sg.key; }).rate14) + '</b></td></tr>';
+    });
+    document.getElementById('grid').innerHTML = h;
+  })();
+  var bs = base.summary;
+  var kycRework = bs.stuck.filter(function (x) { return /KYC rework/.test(x.reason); }).reduce(function (a, b) { return a + b.count; }, 0);
+  var docStall = bs.stuck.filter(function (x) { return /documents|bank account step|policy pages step/.test(x.reason); }).reduce(function (a, b) { return a + b.count; }, 0);
+  var integStall = bs.stuck.filter(function (x) { return /Plugin|API keys|Webhook|developer|Never created/.test(x.reason); }).reduce(function (a, b) { return a + b.count; }, 0);
+  document.getElementById('dataTakeaway').innerHTML = '<b>Takeaway (fictional):</b> ' + pct(bs.rate14) + ' of eligible signups take a first payment within 14 days, and ' + pct(bs.rateEver) +
+    ' ever do by day 45. The stalls cluster in three places: documents never finished (' + pct(docStall / bs.n) + ' of signups), KYC rework never completed (' + pct(kycRework / bs.n) +
+    '), and integration never live (' + pct(integStall / bs.n) + '). API merchants are the slowest path; that is where a payment-link fallback helps most.';
+
+  // ---------- section 5: levers ----------
+  var boxes = document.getElementById('leverBoxes');
+  Object.keys(E.LEVERS).forEach(function (k) { boxes.insertAdjacentHTML('beforeend', '<label><input type="checkbox" data-lev="' + k + '" checked> ' + k + ' ' + esc(E.LEVERS[k].name) + '</label>'); });
+  function renderCase() {
+    E.A.netRevenueRate = Math.max(0.0005, (+document.getElementById('aRate').value || 0.25) / 100);
+    E.A.monthlyChurnAfterD30 = Math.max(0, (+document.getElementById('aChurn').value || 0) / 100);
+    var on = {}; boxes.querySelectorAll('input').forEach(function (b) { if (b.checked) on[b.dataset.lev] = true; });
+    var rowsOut = [];
+    Object.keys(E.LEVERS).forEach(function (k) { var o = {}; o[k] = true; rowsOut.push([k + ' ' + E.LEVERS[k].name + ' (alone)', E.businessCase(o)]); });
+    var anyOn = Object.keys(on).length;
+    var combo = anyOn ? E.businessCase(on) : null;
+    if (combo) rowsOut.push(['Selected together: ' + Object.keys(on).join(' + '), combo]);
+    var h = '<tr><th>Scenario</th><th class="num">14-day rate</th><th class="num">Ever rate</th><th class="num">Median days</th><th class="num">More merchants active at day 30, per month of signups</th><th class="num">Added monthly net revenue, per month of signups</th><th class="num">Build cost</th><th class="num">Running cost / month</th><th class="num">Payback</th><th class="num">First-year net</th></tr>';
+    h += '<tr><td class="muted">No levers (baseline)</td><td class="num">' + pct(bs.rate14) + '</td><td class="num">' + pct(bs.rateEver) + '</td><td class="num">' + bs.medianDays.toFixed(1) + '</td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>';
+    rowsOut.forEach(function (r) {
+      var b = r[1], strong = /Selected/.test(r[0]);
+      h += '<tr' + (strong ? ' style="font-weight:650;background:#f8fafc"' : '') + '><td>' + esc(r[0]) + '</td><td class="num">' + pct(b.with.rate14) + ' <span class="muted small">(' + sign((b.with.rate14 - b.base.rate14) * 100) + ' pts)</span></td><td class="num">' + pct(b.with.rateEver) +
+        '</td><td class="num">' + b.with.medianDays.toFixed(1) + '</td><td class="num">' + fmtInt(b.incActivePerMonth) + '</td><td class="num">' + rupees(b.incNetPerCohortMonth) + '</td><td class="num">' + rupees(b.buildCost) +
+        '</td><td class="num">' + rupees(b.runCostPerMonth) + '</td><td class="num">' + (b.paybackMonths === null ? 'over 36 months' : b.paybackMonths + ' mo') + '</td><td class="num">' + rupees(b.firstYearNet) + '</td></tr>';
+    });
+    document.getElementById('caseTable').innerHTML = h;
+    var l2 = rowsOut[1][1], l4 = rowsOut[3][1];
+    document.getElementById('caseTakeaway').innerHTML = '<b>What I take from this (fictional):</b> L1 and L3 carry most of the value and sit inside Product\'s control, so they go first. ' +
+      'L2 speeds up micro merchants (' + sign((l2.with.rate14 - l2.base.rate14) * 100) + ' pts on the 14-day rate) but adds little revenue, because micro merchants process little; I\'d justify it on speed and cost to serve, and only with Compliance\'s approval. ' +
+      'L4 brings back merchants late, so it moves the ever rate (' + sign((l4.with.rateEver - l4.base.rateEver) * 100) + ' pts) more than the 14-day rate (' + sign((l4.with.rate14 - l4.base.rate14) * 100) + ' pts): judge it on the holdout, not on the north star alone.';
+    if (combo) {
+      document.getElementById('memoRec').textContent = 'Run activation as one program with four levers, in this order: the KYC fix-it queue and first payment by link first (inside Product\'s control, largest effect), voice and WhatsApp nudges as a holdout test, and the simplified route only after Compliance decides. ' +
+        'In the simulation, all four together move the 14-day rate from ' + pct(combo.base.rate14) + ' to ' + pct(combo.with.rate14) + ', cut median days to first payment from ' + combo.base.medianDays.toFixed(1) + ' to ' + combo.with.medianDays.toFixed(1) +
+        ', and add about ' + fmtInt(combo.incActivePerMonth) + ' merchants active at day 30 for every month of signups, paying back in about ' + (combo.paybackMonths || 'over 36') + ' months on the stated assumptions.';
+    }
+  }
+  function sign(x) { return (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(1); }
+  boxes.addEventListener('change', renderCase);
+  document.getElementById('aRate').addEventListener('change', renderCase);
+  document.getElementById('aChurn').addEventListener('change', renderCase);
+  renderCase();
+  document.getElementById('memoProblem').textContent = 'Of merchants who sign up, ' + pct(bs.rate14) + ' take a first successful payment within 14 days and ' + pct(bs.rateEver) +
+    ' ever do by day 45. The rest stall at four points: documents never finished, KYC rework never completed, integration never live, and live with no customer payment. Each stalled merchant is acquisition and onboarding cost already spent.';
+
+  // ---------- section 7: tracker ----------
+  document.getElementById('asOf').textContent = P.asOf;
+  var cur = JSON.parse(JSON.stringify(P.cur));
+  function renderTracker() {
+    var note = E.weeklyNote(P.prev, cur, P.asOf, { prev: P.metric.prev, cur: P.metric.cur, prevAsOf: P.prevAsOf });
+    var h = '<tr><th>ID</th><th>Workstream</th><th>Milestone</th><th>Owner</th><th>Due</th><th>Forecast</th><th class="num">% done</th><th>Decision made?</th><th>Status</th></tr>';
+    note.items.forEach(function (it, i) {
+      h += '<tr><td>' + it.id + '</td><td class="small">' + esc(it.ws) + '</td><td>' + esc(it.title) + (it.dependsOn ? ' <span class="muted small">(needs ' + it.dependsOn.join(', ') + ')</span>' : '') +
+        (it.blocker ? '<div class="small muted">Blocker: ' + esc(it.blocker) + '</div>' : '') + '</td><td class="small">' + esc(it.owner) + '</td><td class="small">' + it.due + '</td>' +
+        '<td><input type="date" data-i="' + i + '" data-f="forecast" value="' + it.forecast + '"></td>' +
+        '<td class="num"><input type="number" min="0" max="100" step="5" data-i="' + i + '" data-f="pct" value="' + it.pct + '" style="width:64px"></td>' +
+        '<td>' + (it.decision ? '<input type="checkbox" data-i="' + i + '" data-f="decisionMade"' + (it.decisionMade ? ' checked' : '') + '>' : '<span class="muted">–</span>') + '</td>' +
+        '<td><span class="rag ' + it.rag + '">' + it.rag + '</span><div class="small muted">' + esc(it.why) + '</div></td></tr>';
+    });
+    document.getElementById('tracker').innerHTML = h;
+    var text = note.lines.join('\n') + (note.asks.length ? '\n\nAsks:\n' + note.asks.map(function (a, i) { return (i + 1) + '. ' + a; }).join('\n') : '\n\nAsks: none this week.');
+    document.getElementById('weeklyNote').textContent = text;
+  }
+  document.getElementById('tracker').addEventListener('change', function (e) {
+    var t = e.target, i = +t.dataset.i, f = t.dataset.f; if (!f) return;
+    cur[i][f] = f === 'pct' ? Math.max(0, Math.min(100, +t.value || 0)) : f === 'decisionMade' ? t.checked : t.value;
+    renderTracker();
+  });
+  document.getElementById('copyNote').addEventListener('click', function () {
+    var txt = document.getElementById('weeklyNote').textContent;
+    try { navigator.clipboard.writeText(txt); this.textContent = 'Copied'; } catch (e) { this.textContent = 'Select and copy'; }
+  });
+  renderTracker();
+
+  // ---------- section 8: experiment ----------
+  function renderExp() {
+    var p1 = (+document.getElementById('eBase').value || 24) / 100, mde = (+document.getElementById('eMde').value || 3) / 100;
+    var hold = (+document.getElementById('eHold').value || 20) / 100, weekly = +document.getElementById('eWeekly').value || 450;
+    var p2 = Math.min(0.99, p1 + mde);
+    var nEq = E.sampleSizePerArm(p1, p2, 0.05, 0.8);
+    // unequal allocation: total N so that the smaller arm has enough; standard adjustment k = treat/hold
+    var k = (1 - hold) / hold, nHold = Math.ceil(nEq * (1 + k) / (2 * k)), nTreat = Math.ceil(nHold * k), total = nHold + nTreat;
+    var weeks = Math.ceil(total / weekly);
+    document.getElementById('expOut').textContent = 'To detect ' + (p1 * 100).toFixed(1) + '% → ' + (p2 * 100).toFixed(1) + '%: about ' + fmtInt(nHold) + ' merchants in the holdout and ' + fmtInt(nTreat) +
+      ' treated (' + fmtInt(total) + ' total). At ' + fmtInt(weekly) + ' eligible merchants a week, that is about ' + weeks + ' weeks of signups, plus 14 days to observe the last cohort.' +
+      (weeks > 8 ? ' That is long: consider testing on the earlier metric (documents submitted within 7 days) first.' : '');
+  }
+  ['eBase', 'eMde', 'eHold', 'eWeekly'].forEach(function (id) { document.getElementById(id).addEventListener('input', renderExp); });
+  renderExp();
+})();
+</script>
+</body>
+</html>
