@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkout events partners can trust: a webhook contract spec and simulator</title>
+<style>
+  :root { --ink:#1d1d1b; --soft:#5b5b57; --line:#e3e1da; --bg:#fbfaf7; --card:#fff; --accent:#1f5f8b; --bad:#a23b2a; --good:#2f6b3a; --warn:#8a6411; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.6 Georgia, "Iowan Old Style", "Times New Roman", serif; }
+  .sim-banner { background:#2b2b28; color:#fff; font:600 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; padding:12px 20px; text-align:center; }
+  .sim-banner span { font-weight:400; opacity:.85; }
+  main { max-width:860px; margin:0 auto; padding:28px 20px 80px; }
+  h1 { font-size:34px; line-height:1.2; margin:18px 0 8px; }
+  h2 { font-size:24px; margin:48px 0 10px; padding-top:18px; border-top:1px solid var(--line); }
+  h3 { font-size:18px; margin:26px 0 6px; }
+  p, li { max-width:720px; }
+  .byline { color:var(--soft); font:14px/1.5 system-ui, sans-serif; }
+  .ui, button, select, input, label, table, .kpi, .note, code, pre, textarea { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .note { font-size:14px; color:var(--soft); background:#f2f0ea; border-left:3px solid #c9c5b8; padding:10px 14px; margin:14px 0; }
+  .short { background:var(--card); border:1px solid var(--line); padding:6px 22px 14px; }
+  .short li { margin:6px 0; }
+  table { border-collapse:collapse; width:100%; font-size:14px; margin:10px 0; }
+  th, td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-weight:600; color:var(--soft); }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .controls { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; background:var(--card); border:1px solid var(--line); padding:14px; font-size:14px; }
+  .controls label { display:block; font-weight:600; margin-bottom:4px; }
+  .controls small { color:var(--soft); display:block; }
+  .kpis { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:14px 0; }
+  .kpi { background:var(--card); border:1px solid var(--line); padding:14px; }
+  .kpi .big { font-size:34px; font-weight:700; line-height:1.1; }
+  .kpi .lbl { color:var(--soft); font-size:13px; }
+  .bad { color:var(--bad); } .good { color:var(--good); } .warn { color:var(--warn); }
+  .shapes { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  pre { background:#f4f3ee; border:1px solid var(--line); padding:12px; overflow:auto; font-size:12.5px; line-height:1.45; white-space:pre; }
+  .shape h4 { margin:0 0 4px; font:600 14px system-ui, sans-serif; }
+  .shape p { font-size:13px; color:var(--soft); margin:0 0 6px; }
+  textarea { width:100%; min-height:230px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size:12.5px; padding:10px; border:1px solid var(--line); }
+  button { background:var(--accent); color:#fff; border:0; padding:8px 12px; border-radius:3px; cursor:pointer; font-size:14px; margin:6px 6px 0 0; }
+  button.ghost { background:#fff; color:var(--accent); border:1px solid var(--accent); }
+  .result { font-size:14px; margin-top:8px; }
+  .story { background:var(--card); border:1px solid var(--line); padding:10px 16px; margin:10px 0; }
+  .story p { margin:4px 0; }
+  .story .ac { font:13.5px/1.5 system-ui, sans-serif; color:#333; }
+  .tag { display:inline-block; font:600 11px system-ui, sans-serif; letter-spacing:.03em; text-transform:uppercase; color:var(--soft); }
+  a { color:var(--accent); }
+  code { font-size:.86em; background:#f1efe8; padding:0 3px; }
+  @media (max-width:640px) { .kpis, .shapes { grid-template-columns:1fr; } h1 { font-size:27px; } }
+</style>
+</head>
+<body>
+<div class="sim-banner">SIMULATION ON FICTIONAL DATA. <span>Every merchant, partner app, failure rate and outage on this page is made up. The old payload shapes are illustrative, not any company's real API. Not affiliated with or endorsed by GoKwik.</span></div>
+<main>
+  <p class="byline">Independent product work by Aditya Mathur for the Assistant Product Manager, Platform role at GoKwik · Built with Claude · November 2026</p>
+  <h1>Checkout events partners can trust</h1>
+  <p>A platform spec and a working simulator for one webhook contract that works the same on every checkout setup: one documented payload, signed, retried, deduplicated, and visible in a delivery log.</p>
+
+  <div class="short">
+    <h3>The short version</h3>
+    <ul>
+      <li><b>The problem (from public material):</b> a partner app that wants checkout events gets a different answer depending on which checkout the merchant runs: a webhook that someone on the provider's team has to add, an event from the store platform, or nothing. The public setup guide does not document the payload, retries, signing or limits.</li>
+      <li><b>What I'd build:</b> five events in one versioned envelope, published the same way by every checkout setup, with signed requests, 8 delivery tries over 24 hours, a dead-letter queue with replay, stable event IDs, self-serve subscriptions and a delivery log.</li>
+      <li><b>What the simulation shows (fictional):</b> across <span data-k="subs">93,254</span> subscribed deliveries (40 merchants, 5 partner apps, 30 days), the share that arrives usable within 5 minutes goes from <b class="bad"><span data-k="todayPct">73.1%</span></b> to <b class="good"><span data-k="contractPct">99.7%</span></b>. Silent losses go from <span data-k="todayLost">4,060</span> to 0, and partners doing the same thing twice (two WhatsApp messages, two shipments) from <span data-k="todayDouble">719</span> to 0.</li>
+      <li><b>How I'd know it worked:</b> one north-star metric (share of subscribed events delivered usable within 5 minutes), plus adoption (share of integrations on the contract, share set up without a ticket) and reliability (first-try success, p95 latency, dead-letter age).</li>
+    </ul>
+  </div>
+
+  <h2>1. The problem, from public material</h2>
+  <ul>
+    <li>GoKwik's own help article on setting up its abandoned-cart webhook covers the URL and the trigger stage, but does not document the payload, retry behaviour, authentication or limits, and mentions both "real time" and a 24-48 hour wait. <a href="https://gokwik.freshdesk.com/support/solutions/articles/82000925370-how-to-configure-abandoned-cart-webhook">Source</a></li>
+    <li>A partner's help doc explains that on the one-click modal checkout (their "Version 1"), merchants usually cannot add webhooks themselves; the merchant shares a URL and GoKwik's Merchant Integration team adds it. It also says abandoned checkouts from that setup no longer appear in Shopify automatically, so the custom webhook is now needed. <a href="https://help.spurnow.com/en/articles/10562030-recover-abandoned-checkouts-with-gokwik-and-spur">Source</a></li>
+    <li>On the Shopify-native blocks setup ("Version 2"), the same partner picks events up from Shopify instead: a second integration path for the same job. <a href="https://help.spurnow.com/en/articles/10562030-recover-abandoned-checkouts-with-gokwik-and-spur">Source</a></li>
+    <li>Other partners' docs start with "contact your GoKwik POC" or "share this webhook URL with your POC". <a href="https://help.bik.ai/en/articles/8750241-gokwik-integration">Source</a></li>
+    <li>In December 2025 a Shopify app developer asked publicly whether GoKwik offers any API, webhook or event stream, and how to carry UTM parameters through checkout, because their app could not see journey data for GoKwik merchants. The thread had no reply. <a href="https://community.shopify.com/t/how-can-our-shopify-app-pass-order-tracking-when-merchants-use-gokwik-checkout/577708">Source</a></li>
+    <li>GoKwik's platform product postings talk about owning shared services, APIs and data contracts, standardising integrations across Shopify, custom storefronts and other platforms, and measuring adoption and reliability. This page is one concrete slice of that. <a href="https://www.founditgulf.com/job/senior-product-manager-platform-gokwik-bengaluru-bangalore-61551220">Source</a></li>
+  </ul>
+  <p><b>Problem statement.</b> Checkout events reach partner apps in a different way, in a different shape and with different reliability depending on the merchant's checkout setup, and nobody (merchant, partner or provider) can see whether a given event arrived. So every integration is a one-off, failures are silent, and integration work grows with every new merchant and partner.</p>
+  <div class="note">This is my reading of public pages. I have not seen GoKwik's internal systems, volumes or failure rates, and some of this may already be solved. The first thing I would do in the role is check it (see section 9).</div>
+
+  <h2>2. Simulator: today versus the contract</h2>
+  <p>Forty fictional merchants (18 on a one-click modal, 14 on blocks inside the store platform's checkout, 8 on a custom storefront) send 30 days of events to five fictional partner apps. Each partner endpoint fails now and then, and three have an outage of a few hours on one day. "Today" follows the public description above; "Contract" is the proposal.</p>
+  <div class="controls ui">
+    <div><label for="adoption">Subscriptions moved to the contract: <span id="adoptionV">100%</span></label><input id="adoption" type="range" min="0" max="100" step="10" value="100"><small>Migration is gradual; try 30%.</small></div>
+    <div><label for="fail">Partner endpoint failure rate: <span id="failV">1x</span></label><input id="fail" type="range" min="1" max="10" step="1" value="1"><small>Multiplies each partner's base rate.</small></div>
+    <div><label><input id="retries" type="checkbox" checked> Retries (8 tries over 24 h)</label><small>Off = one try, like today.</small></div>
+    <div><label><input id="dedupe" type="checkbox" checked> Stable event IDs + dedupe</label><small>Off = re-sent events get new IDs.</small></div>
+  </div>
+  <div class="kpis ui">
+    <div class="kpi"><div class="lbl">Today: arrived usable within 5 minutes</div><div class="big bad" id="kToday">-</div><div class="lbl" id="kTodaySub">-</div></div>
+    <div class="kpi"><div class="lbl">With the contract at the chosen adoption</div><div class="big good" id="kMixed">-</div><div class="lbl" id="kMixedSub">-</div></div>
+  </div>
+  <table class="ui" id="outcomes"><thead><tr><th>What happened to each subscribed event</th><th class="num">Today</th><th class="num">With contract</th></tr></thead><tbody></tbody></table>
+  <p class="note">"Unusable" means the event arrived in a shape the partner was not built for. In this simulation most of it is the attribution app receiving modal-checkout events with no UTM fields, the gap the Shopify developer asked about. That share depends entirely on my assumptions about which shapes each partner handles; the direction matters more than the size.</p>
+  <h3>Where events die today</h3>
+  <table class="ui" id="cells"><thead><tr><th>Partner app</th><th>Checkout setup</th><th class="num">Subscribed</th><th class="num">Lost</th><th class="num">Unusable</th><th>Why</th></tr></thead><tbody></tbody></table>
+
+  <h2>3. Same abandoned checkout, four shapes</h2>
+  <p>One fictional abandoned cart of Rs 1,299 at 7:45 pm IST, as two illustrative legacy payloads, the platform-native setup, and the contract. The normaliser in this page turns either legacy shape into the contract shape.</p>
+  <div class="shapes">
+    <div class="shape"><h4>One-click modal (illustrative legacy)</h4><p>Amount in paise, 10-digit phone, IST string time, no UTMs.</p><pre id="sModal"></pre></div>
+    <div class="shape"><h4>Custom storefront (illustrative legacy)</h4><p>Amount in rupees with decimals, phone with +91, epoch time, UTMs present.</p><pre id="sHeadless"></pre></div>
+    <div class="shape"><h4>Blocks inside the store platform's checkout</h4><p>No provider webhook in this model: the event reaches partners only through the store platform, and the COD confirmation never does.</p><pre>// nothing is sent by the checkout provider
+// partner needs a second, store-platform integration</pre></div>
+    <div class="shape"><h4>Contract version 2026-11-01 (normalised)</h4><p>Same fields, units and time zone on every setup.</p><pre id="sContract"></pre></div>
+  </div>
+
+  <h2>4. Contract checker</h2>
+  <p>Paste any event. The checker applies the contract's rules (envelope, event type, paise, E.164 phone, UTC time, required IDs).</p>
+  <textarea id="val" class="ui" spellcheck="false"></textarea>
+  <div class="ui"><button id="vRun">Check event</button><button class="ghost" id="vGood">Load a valid event</button><button class="ghost" id="vBad">Load a broken event</button></div>
+  <div class="result ui" id="vOut"></div>
+
+  <h2>5. Spec</h2>
+  <h3>Who it is for</h3>
+  <table class="ui"><thead><tr><th>User</th><th>What they need</th></tr></thead><tbody>
+    <tr><td>Partner app developer (WhatsApp, loyalty, analytics, shipping apps)</td><td>Build once against one documented payload and trust that events arrive.</td></tr>
+    <tr><td>Merchant growth or ops manager</td><td>Connect an app without raising a ticket, and see when something breaks.</td></tr>
+    <tr><td>Merchant integration and success team</td><td>Stop hand-adding webhook URLs and debugging silent failures one merchant at a time.</td></tr>
+    <tr><td>Internal product teams (checkout, engagement, login, returns)</td><td>Consume the same events as partners instead of building private feeds.</td></tr>
+  </tbody></table>
+
+  <h3>What to build first</h3>
+  <ol>
+    <li><b>One envelope, five versioned events:</b> <code>checkout.abandoned</code>, <code>order.placed</code>, <code>payment.captured</code>, <code>order.cod_confirmed</code>, <code>order.cancelled</code>. Same fields on every checkout setup.</li>
+    <li><b>Delivery service:</b> HMAC-SHA256 signed requests with a timestamp; 8 tries over 24 hours (1 min, 5 min, 30 min, 2 h, 6 h, 12 h, 24 h after the first); then a dead-letter queue with replay.</li>
+    <li><b>Stable event IDs:</b> the same checkout in the same state always gets the same ID, so re-sends and retries can be ignored safely.</li>
+    <li><b>Self-serve subscriptions:</b> in the merchant dashboard and through a partner API, with a "send test event" button.</li>
+    <li><b>Delivery log:</b> per merchant and partner, 30 days: status, attempts, last response code; alerts when an endpoint drops below 95% success in an hour.</li>
+    <li><b>Public docs:</b> event catalogue, sample payloads, signature guide, changelog with deprecation dates (draft in section 6).</li>
+  </ol>
+  <h3>Not in this version</h3>
+  <ul>
+    <li>New event types beyond the five (returns, refunds and login events come next, once the pattern is proven).</li>
+    <li>SDKs in every language: one Node and one Python sample only.</li>
+    <li>Changing the store platform's own checkout events.</li>
+    <li>Streaming (Kafka-style) access for partners, and charging for webhooks.</li>
+  </ul>
+
+  <h3>User stories and acceptance criteria</h3>
+  <div class="story"><span class="tag">US1 · Partner developer · P0</span><p>As a partner developer, I want one documented payload for each event on every checkout setup, so that I build my integration once.</p><p class="ac"><b>Given</b> merchants on the modal, platform-native and custom storefront setups, <b>when</b> a checkout with a captured phone is abandoned, <b>then</b> each sends <code>checkout.abandoned</code> in version 2026-11-01 with <code>amount_paise</code> as a whole number, <code>phone_e164</code> and a UTC <code>created_at</code>; 100% of events sampled in staging pass the contract checker.</p></div>
+  <div class="story"><span class="tag">US2 · Partner developer · P0</span><p>As a partner developer, I want failed deliveries retried with the same ID, so that a short outage on my side does not lose events.</p><p class="ac"><b>Given</b> my endpoint times out (10 s) or returns 5xx, <b>then</b> the event is retried at 1 min, 5 min, 30 min, 2 h, 6 h, 12 h and 24 h with the same <code>id</code>; after the last failure it moves to the dead-letter queue, shows in both delivery logs, and a replay sends the original <code>id</code>.</p></div>
+  <div class="story"><span class="tag">US3 · Partner developer · P0</span><p>As a partner developer, I want to verify that a request really came from the checkout provider.</p><p class="ac">Every request carries <code>t</code> and <code>v1</code> (HMAC-SHA256 of <code>t.body</code>); the guide tells receivers to reject anything older than 5 minutes; during secret rotation both secrets work for 24 hours.</p></div>
+  <div class="story"><span class="tag">US4 · Merchant ops · P0</span><p>As a merchant admin, I want to connect an app's endpoint myself, so that I do not wait on a ticket.</p><p class="ac"><b>Given</b> the admin role, <b>when</b> I add an endpoint and pick events, <b>then</b> a test event is sent and its result shown within 10 seconds, no integration-team action is needed, and the audit log records who changed what.</p></div>
+  <div class="story"><span class="tag">US5 · Merchant ops and integration team · P1</span><p>As a merchant or support agent, I want to see whether events reached an app, so that I can fix problems before customers notice.</p><p class="ac">The delivery log filters by partner, event type and status, shows attempts and last response code, and alerts the merchant and partner when an endpoint's success rate falls below 95% over an hour (at least 20 attempts).</p></div>
+  <div class="story"><span class="tag">US6 · Internal product team · P1</span><p>As an internal product team, I want to consume the same events, so that the platform has one source of truth.</p><p class="ac">Internal consumers subscribe through the same catalogue; a change that removes, renames or retypes a field fails the contract tests in CI until a new version is published.</p></div>
+  <div class="story"><span class="tag">US7 · Partner developer · P1</span><p>As a shipping app, I want the COD confirmation event from every setup, including the platform-native one.</p><p class="ac">On the platform-native setup, <code>order.cod_confirmed</code> appears in the delivery log within 5 minutes at p95. <i>Depends on whether checkout blocks can publish this event; open question.</i></p></div>
+
+  <h3>How I'd measure it</h3>
+  <table class="ui"><thead><tr><th>Type</th><th>Metric</th><th>Target to start with</th></tr></thead><tbody>
+    <tr><td><b>North star</b></td><td>Share of subscribed events that reach the partner, usable, within 5 minutes</td><td>99% for contract subscriptions</td></tr>
+    <tr><td>Adoption</td><td>Share of active partner integrations on the contract version</td><td>Tracked weekly; target set after the inventory</td></tr>
+    <tr><td>Adoption</td><td>Share of new subscriptions created without the integration team</td><td>80% after self-serve launch</td></tr>
+    <tr><td>Adoption</td><td>Time from new subscription to first successful delivery</td><td>Under 15 minutes (median)</td></tr>
+    <tr><td>Reliability</td><td>First-try success rate; p95 delivery latency</td><td>Baseline first, then set</td></tr>
+    <tr><td>Reliability</td><td>Dead-letter queue size and oldest item</td><td>Nothing older than 24 h without an owner</td></tr>
+    <tr><td>Guardrail</td><td>Checkout API p95 latency (publishing must be async)</td><td>No change</td></tr>
+    <tr><td>Guardrail</td><td>Webhook-related tickets to the integration team per month</td><td>Down, never up</td></tr>
+    <tr><td>Guardrail</td><td>Events acked twice by the same endpoint</td><td>Watched, not a failure (partners dedupe on ID)</td></tr>
+  </tbody></table>
+  <p>The SQL for these is in section 7.</p>
+
+  <h3>Rollout and migration</h3>
+  <table class="ui"><thead><tr><th>Phase</th><th>What happens</th><th>Move on when</th></tr></thead><tbody>
+    <tr><td>0. Inventory (2 weeks)</td><td>List every live webhook: who set it up, which setup, what shape. Talk to 5 partner apps, 5 merchants and the integration team.</td><td>Baseline numbers for the north star and tickets exist.</td></tr>
+    <tr><td>1. Publish and dual-send</td><td>Publish version 2026-11-01 and docs. For opted-in partners, send both the legacy and the contract shape; compare them automatically.</td><td>Contract and legacy agree on 99.9% of shadow events for 2 weeks.</td></tr>
+    <tr><td>2. Design partners</td><td>2-3 partner apps with many shared merchants move fully. Self-serve opens for contract subscriptions only.</td><td>North star at or above target for their merchants for 4 weeks; no checkout latency change.</td></tr>
+    <tr><td>3. Default</td><td>All new subscriptions use the contract. Legacy shapes frozen; 90-day sunset notice; per-partner migration tracker.</td><td>Legacy traffic under 5%, then switched off.</td></tr>
+  </tbody></table>
+
+  <h3>First three sprints</h3>
+  <table class="ui"><thead><tr><th>Sprint</th><th>Stories (size)</th></tr></thead><tbody>
+    <tr><td>1</td><td>Event envelope and five schemas (M) · stable ID rule (S) · contract tests in CI (M) · request signing (S)</td></tr>
+    <tr><td>2</td><td>Retry scheduler and dead-letter queue (L) · delivery log storage (M) · test-event endpoint (S)</td></tr>
+    <tr><td>3</td><td>Dashboard subscription screen (M) · delivery log screen (M) · docs pages (M) · endpoint alerts (S)</td></tr>
+  </tbody></table>
+
+  <h2>6. Integration guide (draft)</h2>
+  <p>What a partner developer would read. Endpoints and headers are made up.</p>
+  <pre id="guide">/*GUIDE*/</pre>
+
+  <h2>7. SQL for adoption and reliability</h2>
+  <pre id="sql">/*SQL*/</pre>
+
+  <h2>8. Risks and open questions</h2>
+  <ul>
+    <li><b>Platform-native setup:</b> can checkout blocks publish provider-only events like COD confirmation reliably within the store platform's rules? If not, US7 drops and partners keep two paths for that setup.</li>
+    <li><b>Customer data:</b> payloads carry phone numbers. Send only to apps the merchant enabled, only the fields each event needs, and get a legal review against India's data protection law (DPDP Act) before launch.</li>
+    <li><b>Sale-day load:</b> publishing must not slow checkout. Events go to a queue after the order is saved, never in the checkout request itself.</li>
+    <li><b>Partner migration:</b> partners with working one-off integrations have no reason to move. Dual-send and a long sunset lower the cost; the delivery log is the reason to move.</li>
+    <li><b>Ownership:</b> who owns the event catalogue when a product team needs a new field? Proposal: product teams propose, platform reviews, the contract tests enforce.</li>
+  </ul>
+
+  <h2>9. What I'd check in week one</h2>
+  <ol>
+    <li>How many webhook subscriptions exist today, per checkout setup, and how many were added by hand?</li>
+    <li>What happens today when a partner endpoint is down: is anything retried or logged?</li>
+    <li>Is there already an internal event bus that checkout, engagement and returns publish to?</li>
+    <li>Which partner apps share the most merchants (the design-partner shortlist)?</li>
+    <li>How many integration-team hours a month go to webhooks and "my app isn't getting data" tickets?</li>
+  </ol>
+
+  <h2>Assumptions and limits</h2>
+  <ul>
+    <li>All merchants, partner apps, volumes, failure rates and outages are fictional and chosen to be plausible, not measured.</li>
+    <li>The legacy payload shapes are illustrative. I have not seen GoKwik's real payloads.</li>
+    <li>"Today" models what public pages describe: no documented retries, manual setup on one setup, a second path on another. If GoKwik already retries or signs requests, the gap is smaller.</li>
+    <li>The simulator shows direction, not size. Its code and 23 checks are in the project files.</li>
+  </ul>
+  <p class="byline">Aditya Mathur · adimathur-creates.github.io · Built with Claude</p>
+</main>
+<script>
+/*CORE*/
+</script>
+<script>
+(function () {
+  var W = window.WC;
+  var fmt = function (n) { return Math.round(n).toLocaleString('en-IN'); };
+  var pc = function (n, d) { return W.pct(n, d).toFixed(1) + '%'; };
+  var $ = function (id) { return document.getElementById(id); };
+  var WHY = {
+    lost_native_cod: 'COD confirmation is never seen by the store platform',
+    lost_native_noconn: 'App has no store-platform integration',
+    unusable: 'Shape the app was not built for',
+    lost: 'Endpoint down or failed, no retry'
+  };
+  function render() {
+    var adoption = +$('adoption').value / 100, failMult = +$('fail').value;
+    $('adoptionV').textContent = Math.round(adoption * 100) + '%';
+    $('failV').textContent = failMult + 'x';
+    var r = W.simulate({ adoption: adoption, failMult: failMult, retries: $('retries').checked, dedupe: $('dedupe').checked });
+    var t = r.today, m = r.mixed;
+    $('kToday').textContent = pc(t.onTime, t.subscribed);
+    $('kTodaySub').textContent = fmt(t.lost + t.unusable) + ' events lost or unusable; ' + fmt(t.doubleActions) + ' double actions';
+    $('kMixed').textContent = pc(m.onTime, m.subscribed);
+    $('kMixedSub').textContent = fmt(m.lost + m.unusable) + ' lost or unusable; ' + fmt(m.dlq) + ' parked for replay; ' + fmt(m.doubleActions) + ' double actions';
+    var rows = [
+      ['Arrived usable within 5 minutes', t.onTime, m.onTime],
+      ['  of which came through the store platform (second integration)', t.viaPlatform, m.viaPlatform],
+      ['Arrived usable, but after 5 minutes (retry)', t.late, m.late],
+      ['Never arrived, and nobody was told', t.lost, m.lost],
+      ['Arrived, but in a shape the app could not use', t.unusable, m.unusable],
+      ['Parked in the dead-letter queue, can be replayed', t.dlq, m.dlq],
+      ['App did the same thing twice (message, shipment, points)', t.doubleActions, m.doubleActions],
+      ['Delivery attempts made', t.attempts, m.attempts]
+    ];
+    $('outcomes').querySelector('tbody').innerHTML = rows.map(function (x) {
+      return '<tr><td>' + x[0] + '</td><td class="num">' + fmt(x[1]) + '</td><td class="num">' + fmt(x[2]) + '</td></tr>';
+    }).join('') + '<tr><td><b>Subscribed events</b></td><td class="num"><b>' + fmt(t.subscribed) + '</b></td><td class="num"><b>' + fmt(m.subscribed) + '</b></td></tr>';
+    var cells = r.cells.filter(function (c) { return c.today.lost + c.today.unusable > 0; })
+      .sort(function (a, b) { return (b.today.lost + b.today.unusable) - (a.today.lost + a.today.unusable); }).slice(0, 8);
+    $('cells').querySelector('tbody').innerHTML = cells.map(function (c) {
+      var p = W.PARTNERS.filter(function (x) { return x.name === c.partner; })[0];
+      var why = c.today.unusable > c.today.lost ? WHY.unusable : (c.env === 'native' ? (p.platformConnector ? WHY.lost_native_cod : WHY.lost_native_noconn) : WHY.lost);
+      return '<tr><td>' + c.partner + ' <span style="color:#777">(' + p.kind + ')</span></td><td>' + W.ENV_LABEL[c.env] + '</td><td class="num">' + fmt(c.today.subscribed) + '</td><td class="num">' + fmt(c.today.lost) + '</td><td class="num">' + fmt(c.today.unusable) + '</td><td>' + why + '</td></tr>';
+    }).join('');
+  }
+  ['adoption', 'fail', 'retries', 'dedupe'].forEach(function (id) { $(id).addEventListener('input', render); $(id).addEventListener('change', render); });
+  render();
+
+  // headline numbers in "the short version" always come from the default run
+  var d = W.simulate({});
+  var set = function (k, v) { document.querySelectorAll('[data-k="' + k + '"]').forEach(function (el) { el.textContent = v; }); };
+  set('subs', fmt(d.today.subscribed)); set('todayPct', pc(d.today.onTime, d.today.subscribed)); set('contractPct', pc(d.contract.onTime, d.contract.subscribed));
+  set('todayLost', fmt(d.today.lost)); set('todayDouble', fmt(d.today.doubleActions));
+
+  var modal = { event: 'abandoned_cart', cart_id: 'c_88231XQ', phone: '9876543210', total: 129900, created_at: '18/11/2026 19:45:10', items: [{ sku: 'TEE-BLK-M', qty: 1 }] };
+  var headless = { type: 'checkout_abandoned', checkoutId: 'chk_88231XQ', customer: { mobile: '+919876543210' }, amount: 1299.0, ts: Date.UTC(2026, 10, 18, 14, 15, 10), utm: { source: 'instagram', medium: 'paid', campaign: 'diwali' } };
+  $('sModal').textContent = JSON.stringify(modal, null, 2);
+  $('sHeadless').textContent = JSON.stringify(headless, null, 2).replace('1299', '1299.00');
+  var good = W.normalize(headless, 'headless', 'm_002');
+  $('sContract').textContent = JSON.stringify(good, null, 2);
+
+  var bad = JSON.parse(JSON.stringify(W.normalize(modal, 'modal', 'm_001')));
+  bad.data.amount_paise = 1299.0 + 0.5; bad.data.customer.phone_e164 = '9876543210'; bad.created_at = '18/11/2026 19:45:10'; bad.id = 'c_88231XQ';
+  function check() {
+    var out = $('vOut'), evt;
+    try { evt = JSON.parse($('val').value); } catch (e) { out.innerHTML = '<span class="bad">Not valid JSON: ' + e.message + '</span>'; return; }
+    var errs = W.validate(evt);
+    out.innerHTML = errs.length ? '<span class="bad"><b>' + errs.length + ' problem' + (errs.length > 1 ? 's' : '') + ':</b></span><ul>' + errs.map(function (x) { return '<li><code>' + x.path + '</code> ' + x.msg + '</li>'; }).join('') + '</ul>' : '<span class="good"><b>Passes the contract.</b></span>';
+  }
+  $('vGood').onclick = function () { $('val').value = JSON.stringify(good, null, 2); check(); };
+  $('vBad').onclick = function () { $('val').value = JSON.stringify(bad, null, 2); check(); };
+  $('vRun').onclick = check;
+  $('val').value = JSON.stringify(bad, null, 2); check();
+})();
+</script>
+</body>
+</html>
