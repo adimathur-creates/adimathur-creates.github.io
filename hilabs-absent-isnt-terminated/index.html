@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Absent isn't terminated: a provider roster pipeline with validation, controls and live SQL, for HiLabs. Synthetic data.">
+<title>Absent Isn't Terminated</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* A deployment memo for a payer client, with the pipeline and a SQL console inside. Clinical teal accent. */
+:root{
+  --paper:#F5F7F7; --panel:#FFFFFF; --ink:#13191B; --muted:#5A6568; --rule:#DCE3E4; --soft:#EAF0F0;
+  --acc:#0B6E79; --acc-soft:#DDF0F2; --ok:#17784A; --ok-soft:#DFF1E6; --bad:#B9382B; --bad-soft:#F7E2DF; --warn:#946200; --warn-soft:#F6EBD5;
+  --f-display:"Source Serif 4",Georgia,serif; --f-body:"Inter","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0F1415; --panel:#161D1F; --ink:#E7EEEF; --muted:#9DAAAD; --rule:#283335; --soft:#1C2527;
+  --acc:#4FC3CF; --acc-soft:#12302F; --ok:#5DC98D; --ok-soft:#13281C; --bad:#EF7B6D; --bad-soft:#361A17; --warn:#E3AE4C; --warn-soft:#2F250F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F1415; --panel:#161D1F; --ink:#E7EEEF; --muted:#9DAAAD; --rule:#283335; --soft:#1C2527;
+  --acc:#4FC3CF; --acc-soft:#12302F; --ok:#5DC98D; --ok-soft:#13281C; --bad:#EF7B6D; --bad-soft:#361A17; --warn:#E3AE4C; --warn-soft:#2F250F; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6;margin:0;padding-inline:16px;padding-block:30px 80px}
+.wrap{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2{font-family:var(--f-display);line-height:1.08;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:clamp(2.5rem,9vw,4.3rem);letter-spacing:-.015em}
+h2{font-size:clamp(1.5rem,4.6vw,2.1rem);font-weight:500}
+h3{font-size:.98rem;margin:0}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.k{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.sec{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:var(--acc)}
+.lede{font-size:1.12rem;max-width:66ch}
+.muted,.status{color:var(--muted);font-size:.88rem}
+a{color:var(--acc)}
+.exec{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--acc);border-radius:8px;padding:18px 20px}
+.exec ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 15px;display:flex;flex-direction:column;gap:7px}
+.card p{font-size:.9rem}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:18px 16px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+select{font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);color:var(--ink)}
+button{font:inherit;font-size:.84rem;font-weight:600;padding:8px 12px;border-radius:7px;border:1px solid var(--rule);background:var(--soft);color:var(--ink);cursor:pointer}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) button.primary{color:#0b1718}}
+button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-family:var(--f-mono);font-size:.72rem;padding:3px 8px;border-radius:4px;background:var(--soft);white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.acc{background:var(--acc-soft);color:var(--acc)}
+.tbl{width:100%;border-collapse:collapse;font-size:.84rem}
+.tbl th,.tbl td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+.tbl th{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500;white-space:nowrap}
+.tbl td.n,.tbl th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl.raw td{font-family:var(--f-mono);font-size:.74rem;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi .v{font-family:var(--f-display);font-size:1.7rem;line-height:1.1;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.78rem;color:var(--muted)}
+.duel{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:660px){.duel{grid-template-columns:1fr}}
+.col{border:1px solid var(--rule);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.row{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;border-bottom:1px dashed var(--rule);padding:4px 0}
+.row span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
+.good{color:var(--ok)} .harm{color:var(--bad)}
+textarea{width:100%;min-height:200px;font-family:var(--f-mono);font-size:.8rem;line-height:1.5;padding:12px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--ink);resize:vertical}
+.flow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+@media (max-width:720px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stage{border:1px solid var(--rule);border-radius:8px;padding:10px;background:var(--panel);font-size:.82rem;display:flex;flex-direction:column;gap:4px}
+.stage b{font-size:.88rem}
+.week{display:grid;grid-template-columns:86px minmax(0,1fr);gap:6px 14px;font-size:.9rem}
+.week b{font-family:var(--f-mono);font-size:.74rem;color:var(--acc);padding-top:3px}
+ul.plain,ol.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:7px}
+footer{border-top:1px solid var(--rule);padding-top:22px;display:flex;flex-direction:column;gap:10px;font-size:.88rem;color:var(--muted)}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:16px">
+  <span class="k">Forward Deployed Product Manager (APM track) · HiLabs · work sample by Aditya Mathur</span>
+  <h1>Absent isn’t terminated.</h1>
+  <p class="lede">A provider group sends this month’s roster. It’s in its own layout, half the addresses are written differently from the directory, two rows contradict each other, one NPI has a typo, and this time the file is missing half the group. A naive diff turns that into dozens of wrongful terminations and hundreds of fake “changes.” This page takes 12 synthetic rosters through the part HiLabs says carries 75% of the value: everything after standardising.</p>
+  <p class="muted">Independent work on synthetic data. Not affiliated with HiLabs; no client or patient data. NPIs are synthetic but pass the real NPI check digit.</p>
+</header>
+
+<section class="exec">
+  <span class="k">The short version</span>
+  <ol>
+    <li><strong>Standardising a roster is the easy quarter.</strong> The hard part is deciding which rows should change the directory, which go back to the group, and what to do about providers who simply aren’t on the file.</li>
+    <li><strong>A naive diff</strong> (raw text compare, missing means terminated, no validation) on these 12 rosters: <span id="sN">…</span>.</li>
+    <li><strong>The pipeline</strong> maps each layout, normalises addresses and phones, checks NPIs against the check digit and NPPES, catches rows that contradict each other, and requires evidence before terminating anyone. Result: <span id="sP">…</span>.</li>
+    <li><strong>Two lines of defence against wrongful terminations:</strong> a completeness check (if a “full” roster is missing over 20% of a group, hold every termination and ask the group to resend), then claims (anyone who billed in the last 90 days goes to review, not termination).</li>
+    <li><strong>Every rejected row goes back to the group</strong> with a reason and a fix, and the directory-update clock (2 business days) is tracked per roster. The SQL behind each check runs live below.</li>
+  </ol>
+</section>
+
+<section>
+  <span class="sec">01 · Why rosters</span>
+  <h2>The data arrives wrong, in a different shape every time.</h2>
+  <div class="grid">
+    <div class="card"><span class="k">The clock</span><p>The 2021 Consolidated Appropriations Act (No Surprises Act) expects directory updates within 2 business days of receiving a change. Roster backlogs break that clock.</p></div>
+    <div class="card"><span class="k">The 75%</span><p>HiLabs’ own write-up says standardisation is only about 25% of the value of roster automation. The rest is rules, balance-and-controls, loading the provider database and feedback to providers.</p></div>
+    <div class="card"><span class="k">The trap</span><p>Groups send partial files, delta files labelled as full, and rows that disagree with each other. Treat “missing” as “terminated” and you remove real doctors: the reverse of a ghost network.</p></div>
+  </div>
+  <div class="flow">
+    <div class="stage"><span class="pill acc">1</span><b>Map</b><span class="muted">Any layout to standard fields</span></div>
+    <div class="stage"><span class="pill acc">2</span><b>Normalise</b><span class="muted">Addresses, phones, ZIP, Y/N</span></div>
+    <div class="stage"><span class="pill acc">3</span><b>Validate</b><span class="muted">NPI check digit, NPPES, licence</span></div>
+    <div class="stage"><span class="pill acc">4</span><b>Conflicts</b><span class="muted">Rows that disagree</span></div>
+    <div class="stage"><span class="pill acc">5</span><b>Diff + controls</b><span class="muted">Completeness, claims evidence</span></div>
+    <div class="stage"><span class="pill acc">6</span><b>Route</b><span class="muted">Auto, review, back to group</span></div>
+  </div>
+</section>
+
+<section>
+  <span class="sec">02 · One roster, end to end</span>
+  <h2>Pick a group and follow its file through.</h2>
+  <div class="sheet">
+    <div class="controls"><label>Provider group<select id="grp"></select></label><button id="dlFb">Download feedback file</button><button id="dlCh">Download change set</button></div>
+    <div><span class="k">What arrived</span><div class="scroll" style="margin-top:6px"><table class="tbl raw" id="raw"></table></div></div>
+    <div><span class="k">Header mapping</span><div class="pills" id="map" style="margin-top:6px"></div></div>
+    <div class="kpis" id="gk"></div>
+    <div id="partialNote"></div>
+    <div class="scroll"><table class="tbl" id="chg"></table></div>
+  </div>
+</section>
+
+<section>
+  <span class="sec">03 · Naive diff vs pipeline</span>
+  <h2>All 12 rosters, scored against what really happened.</h2>
+  <p>Every synthetic provider has a hidden truth: same, moved, new phone, panel opened or closed, left the group, NPI deactivated, licence lapsed, or new hire. Both approaches see only the files.</p>
+  <div class="duel"><div class="col" id="cN"></div><div class="col" id="cP"></div></div>
+  <p class="status">The pipeline’s 2 missed terminations are leavers in the half-sent roster: held on purpose until the group resends. That’s the trade: a short delay instead of removing 20+ active providers.</p>
+</section>
+
+<section>
+  <span class="sec">04 · The SQL lab</span>
+  <h2>The same checks, in SQL, on the normalised tables.</h2>
+  <p>Tables: <code>roster_rows</code> (all 12 rosters after mapping and normalising), <code>directory</code>, <code>nppes</code>, <code>claims</code>. Pick a query, edit it, run it. This runs on SQLite in your browser.</p>
+  <div class="sheet">
+    <div class="pills" id="qbtn"></div>
+    <p class="status" id="qwhy"></p>
+    <textarea id="sql" spellcheck="false" aria-label="SQL query"></textarea>
+    <div class="controls"><button class="primary" id="runSql">Run query</button><span class="status" id="sqlStatus">Loading SQLite…</span></div>
+    <div class="scroll"><table class="tbl" id="sqlOut"></table></div>
+  </div>
+</section>
+
+<section>
+  <span class="sec">05 · How I’d deploy this at a new payer client</span>
+  <h2>First 30 days, and what I’d report each week.</h2>
+  <div class="week">
+    <b>Days 1–5</b><div><strong>Discovery with provider data ops.</strong> Which groups send rosters, how often, in which layouts, full or delta? Who loads them today, how big is the backlog, and how often is the 2-day clock missed? Get 3 months of past rosters and the directory as it looked each month.</div>
+    <b>Days 6–12</b><div><strong>Replay history.</strong> Run past rosters through the pipeline and compare against what ops actually loaded. Count wrongful terminations and missed changes in the client’s own data. That number makes the case to their VP.</div>
+    <b>Days 13–20</b><div><strong>Agree the rules with the client.</strong> The completeness threshold, what goes to review vs back to the group, and who signs off on terminations. Write them as configuration, not code, so the next client is a setting change.</div>
+    <b>Days 21–30</b><div><strong>Run in parallel</strong> with their current process for the 5 highest-volume groups, then switch over group by group. Feedback files go to groups weekly so the data improves at the source.</div>
+  </div>
+  <div class="scroll"><table class="tbl">
+    <tr><th>Weekly metric</th><th>Why</th></tr>
+    <tr><td>Rosters loaded within 2 business days</td><td>The regulatory clock. The headline.</td></tr>
+    <tr><td>Touchless share of rows</td><td>Ops capacity freed up. It should rise as groups fix their files.</td></tr>
+    <tr><td>Terminations reversed within 30 days</td><td>The wrongful-termination rate. Target zero.</td></tr>
+    <tr><td>Rows rejected per group, over time</td><td>Whether feedback files are working at the source.</td></tr>
+    <tr><td>Review queue age</td><td>Review is only safe if it’s fast.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <span class="sec">06 · Limits</span>
+  <h2>What this doesn’t do yet.</h2>
+  <ul class="plain">
+    <li><strong>Header mapping is a synonym list.</strong> Real rosters need a model for unseen layouts, plus a human confirming the mapping the first time a group sends a new one.</li>
+    <li><strong>Address matching is rule-based.</strong> Production needs USPS standardisation and geocoding: “Suite 4” vs “Floor 2, Suite 4” still slips through.</li>
+    <li><strong>Specialty is compared as text.</strong> It should be mapped to taxonomy codes and checked against NPPES.</li>
+    <li><strong>The simulation sets its own error rates.</strong> The replay against a client’s real history (day 6) is what gives real numbers.</li>
+  </ul>
+</section>
+
+<footer>
+  <p><strong style="color:var(--ink)">About me.</strong> I worked with US-market data in SQL every day at Stripe: fraud and AML investigations at a 3x caseload with 0% error, KPI dashboards behind a 20% throughput uplift, and a silently failing data pipeline I found and rebuilt. As a payments APM at EnKash I ran client onboarding and integrations across engineering, risk, reconciliation and support. I built this with Claude Code; 49 automated tests cover the pipeline, the scoring and every SQL query on real SQLite.</p>
+  <p>Aditya Mathur · Bengaluru · <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a> · +91 95354 25442 · <a href="https://linkedin.com/in/adityaamathur">LinkedIn</a> · <a href="https://adimathur-creates.github.io/">Other work</a></p>
+  <p>Sources: HiLabs, “Beyond Standardization: Maximizing Value through Roster End-to-End Automation” (Becker’s Payer Issues, sponsored); CMS NPI check-digit standard (Luhn over 80840 + 9 digits); Consolidated Appropriations Act 2021 provider directory provisions. All providers, rosters and claims here are synthetic.</p>
+</footer>
+</div>
+
+<script>
+// DATA: a synthetic health plan's provider data. A payer directory (PDM), an NPPES-like registry, 90 days of claims,
+// and this month's rosters from 12 provider groups, each in its own spreadsheet layout. Every roster row and every
+// provider carries a hidden truth label so pipelines can be scored. NPIs are synthetic but pass the real NPI check digit.
+var DATA = (function () {
+  'use strict';
+  function rng(seed) { var s = seed >>> 0 || 1; return function () { s = (s + 0x6D2B79F5) >>> 0; var t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+  // NPI check digit: Luhn over "80840" + first 9 digits (CMS standard).
+  function npiCheck(nine) {
+    var s = '80840' + nine, sum = 0, dbl = true;
+    for (var i = s.length - 1; i >= 0; i--) { var d = +s[i]; if (dbl) { d *= 2; if (d > 9) d -= 9; } sum += d; dbl = !dbl; }
+    return String((10 - (sum % 10)) % 10);
+  }
+  function makeNpi(r) { var nine = '1' + String(Math.floor(r() * 1e8)).padStart(8, '0'); return nine + npiCheck(nine); }
+
+  var FIRST = ['Anita', 'Brian', 'Carmen', 'David', 'Elena', 'Farah', 'George', 'Hannah', 'Ivan', 'Julia', 'Kevin', 'Laura', 'Miguel', 'Nora', 'Omar', 'Priya', 'Quinn', 'Rachel', 'Samuel', 'Tanya', 'Uma', 'Victor', 'Wendy', 'Xavier', 'Yusuf', 'Zoe'];
+  var LAST = ['Patel', 'Nguyen', 'Garcia', 'Smith', 'Johnson', 'Kim', 'Lopez', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Thomas', 'Lee', 'Martin', 'Clark', 'Lewis', 'Walker', 'Hall', 'Young', 'Allen', 'Wright', 'Scott'];
+  var SPEC = [
+    { name: 'Family Medicine', tax: '207Q00000X' }, { name: 'Internal Medicine', tax: '207R00000X' }, { name: 'Pediatrics', tax: '208000000X' },
+    { name: 'Psychiatry', tax: '2084P0800X' }, { name: 'Clinical Psychologist', tax: '103TC0700X' }, { name: 'Cardiology', tax: '207RC0000X' },
+    { name: 'Obstetrics & Gynecology', tax: '207V00000X' }, { name: 'Dermatology', tax: '207N00000X' }, { name: 'Orthopaedic Surgery', tax: '207X00000X' }
+  ];
+  var STREETS = [['Main', 'Street'], ['Oak', 'Avenue'], ['Maple', 'Drive'], ['Cedar', 'Road'], ['Lakeview', 'Boulevard'], ['Park', 'Lane'], ['Washington', 'Street'], ['Highland', 'Avenue']];
+  var CITIES = [['Columbus', 'OH', '432'], ['Dayton', 'OH', '454'], ['Cincinnati', 'OH', '452'], ['Akron', 'OH', '443'], ['Toledo', 'OH', '436']];
+
+  // Each group sends its roster in its own layout. The pipeline has to map these headers.
+  var LAYOUTS = [
+    { npi: 'NPI', first: 'First Name', last: 'Last Name', spec: 'Specialty', addr: 'Address 1', city: 'City', state: 'State', zip: 'Zip', phone: 'Phone', anp: 'Accepting New Patients' },
+    { npi: 'Rendering NPI', first: 'Provider First', last: 'Provider Last', spec: 'Primary Specialty', addr: 'Practice Address', city: 'Practice City', state: 'ST', zip: 'Postal Code', phone: 'Office Phone', anp: 'Panel Open (Y/N)' },
+    { npi: 'Individual NPI', first: 'FName', last: 'LName', spec: 'Taxonomy Description', addr: 'Service Location Address', city: 'Service City', state: 'Service State', zip: 'Service ZIP', phone: 'Appointment Phone', anp: 'New Pts' },
+    { npi: 'Provider NPI #', first: 'Given Name', last: 'Surname', spec: 'Board Specialty', addr: 'Street', city: 'Town', state: 'State Code', zip: 'ZIP Code', phone: 'Contact Number', anp: 'Accepting Patients' }
+  ];
+
+  function fmtAddr(num, st, ste, style) {   // same address written different ways
+    var abbr = { Street: 'St', Avenue: 'Ave', Drive: 'Dr', Road: 'Rd', Boulevard: 'Blvd', Lane: 'Ln' };
+    if (style === 0) return num + ' ' + st[0] + ' ' + st[1] + (ste ? ' Suite ' + ste : '');
+    if (style === 1) return (num + ' ' + st[0] + ' ' + abbr[st[1]] + (ste ? ' Ste ' + ste : '')).toUpperCase();
+    return num + ' ' + st[0] + ' ' + abbr[st[1]] + '.' + (ste ? ', #' + ste : '');
+  }
+  function fmtPhone(d, style) { return style === 0 ? '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6) : style === 1 ? d.slice(0, 3) + '-' + d.slice(3, 6) + '-' + d.slice(6) : d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6); }
+
+  function build(seed) {
+    var r = rng(seed || 9), pick = function (a) { return a[Math.floor(r() * a.length)]; };
+    var groups = [], pdm = [], nppes = [], claims = [], rosters = [];
+    var today = '2026-11-23';
+    for (var g = 0; g < 12; g++) {
+      var gid = 'G' + String(g + 1).padStart(2, '0'), cityI = pick(CITIES), layout = LAYOUTS[g % LAYOUTS.length];
+      var grp = { id: gid, name: ['Riverside', 'Summit', 'Buckeye', 'Northgate', 'Valley', 'Lakeshore', 'Heartland', 'Crossroads', 'Maplewood', 'Pinecrest', 'Brookside', 'Fairview'][g] + ' ' + pick(['Medical Group', 'Physicians', 'Health Partners', 'Family Care']), layout: layout, rosterType: 'full', partial: g === 2, addrStyle: g % 3, phoneStyle: (g + 1) % 3 };
+      groups.push(grp);
+      var n = 35 + Math.floor(r() * 30), rows = [];
+      for (var i = 0; i < n; i++) {
+        var npi = makeNpi(r), sp = pick(SPEC), st = pick(STREETS), num = 100 + Math.floor(r() * 8900), ste = r() < 0.5 ? String(100 + Math.floor(r() * 400)) : '';
+        var zip = cityI[2] + String(Math.floor(r() * 100)).padStart(2, '0'), phone = '614' + String(Math.floor(r() * 1e7)).padStart(7, '0');
+        var p = { npi: npi, group: gid, first: pick(FIRST), last: pick(LAST), spec: sp.name, tax: sp.tax, num: num, street: st, ste: ste, city: cityI[0], state: cityI[1], zip: zip, phone: phone, anp: r() < 0.7 ? 'Y' : 'N' };
+        // PDM stores a canonical form
+        pdm.push({ npi: npi, group_id: gid, first_name: p.first, last_name: p.last, specialty: p.spec, address: fmtAddr(num, st, ste, 1), city: p.city, state: p.state, zip: zip, phone: phone, accepting_new: p.anp, status: 'active' });
+        nppes.push({ npi: npi, taxonomy: sp.tax, deactivated: 0, license_state: 'OH', license_expires: '2027-' + String(1 + Math.floor(r() * 12)).padStart(2, '0') + '-28' });
+        // truth: what really happened to this provider this month
+        var u = r(), truth = 'same';
+        if (u < 0.03) truth = 'left';               // left the group: absent from roster, no recent claims
+        else if (u < 0.08) truth = 'moved';         // new address
+        else if (u < 0.11) truth = 'phone';
+        else if (u < 0.15) truth = 'panel';         // accepting-new-patients flipped
+        else if (u < 0.17) truth = 'deactivated';   // NPI deactivated in NPPES, group still lists them
+        else if (u < 0.185) truth = 'license';      // license lapsed
+        p.truth = truth;
+        if (truth === 'deactivated') nppes[nppes.length - 1].deactivated = 1;
+        if (truth === 'license') nppes[nppes.length - 1].license_expires = '2026-10-31';
+        // claims in the last 90 days: everyone active bills; leavers don't
+        if (truth !== 'left') { var k = 2 + Math.floor(r() * 25); claims.push({ npi: npi, claims_90d: k }); }
+        rows.push(p);
+      }
+      // new hires: on the roster, not in PDM
+      var hires = 1 + Math.floor(r() * 3);
+      for (i = 0; i < hires; i++) { var sp2 = pick(SPEC), np2 = makeNpi(r); rows.push({ npi: np2, group: gid, first: pick(FIRST), last: pick(LAST), spec: sp2.name, tax: sp2.tax, num: 100 + Math.floor(r() * 8900), street: pick(STREETS), ste: '', city: cityI[0], state: cityI[1], zip: cityI[2] + '10', phone: '614' + String(Math.floor(r() * 1e7)).padStart(7, '0'), anp: 'Y', truth: 'new' }); nppes.push({ npi: np2, taxonomy: sp2.tax, deactivated: 0, license_state: 'OH', license_expires: '2027-06-30' }); }
+      // ---- write the roster rows, in this group's layout and formatting habits
+      var out = [];
+      rows.forEach(function (p) {
+        if (p.truth === 'left') return;                         // leavers drop off the roster
+        if (grp.partial && r() < 0.45) { p.partialDrop = true; return; }   // this group sent half its roster by mistake
+        var num = p.num, st = p.street, ste = p.ste, phone = p.phone, anp = p.anp, npi = p.npi, spec = p.spec;
+        if (p.truth === 'moved') { num = 100 + Math.floor(r() * 8900); st = pick(STREETS); ste = ''; }
+        if (p.truth === 'phone') phone = '614' + String(Math.floor(r() * 1e7)).padStart(7, '0');
+        if (p.truth === 'panel') anp = anp === 'Y' ? 'N' : 'Y';
+        var row = { truth: p.truth, trueNpi: p.npi };
+        if (r() < 0.012) { npi = npi.slice(0, 8) + String((+npi[8] + 1) % 10) + npi[9]; row.typo = true; }   // a typo: fails the check digit
+        row[grp.layout.npi] = npi; row[grp.layout.first] = p.first; row[grp.layout.last] = grp.addrStyle === 1 ? p.last.toUpperCase() : p.last;
+        row[grp.layout.spec] = spec; row[grp.layout.addr] = fmtAddr(num, st, ste, grp.addrStyle); row[grp.layout.city] = p.city; row[grp.layout.state] = p.state;
+        row[grp.layout.zip] = r() < 0.2 ? p.zip + '-' + String(Math.floor(r() * 9999)).padStart(4, '0') : p.zip;
+        row[grp.layout.phone] = fmtPhone(phone, grp.phoneStyle); row[grp.layout.anp] = grp.layout.anp === 'Accepting New Patients' ? (anp === 'Y' ? 'Yes' : 'No') : anp;
+        out.push(row);
+        // the same provider listed twice with a conflicting specialty
+        if (r() < 0.015) { var dup = Object.assign({}, row); dup[grp.layout.spec] = pick(SPEC).name; dup.conflict = true; dup.truth = 'conflict-dup'; out.push(dup); }
+      });
+      rosters.push({ group: gid, received: '2026-11-20T16:30', declaredType: 'full', headers: Object.keys(grp.layout).map(function (k) { return grp.layout[k]; }), rows: out });
+      grp.providers = rows;
+    }
+    return { groups: groups, pdm: pdm, nppes: nppes, claims: claims, rosters: rosters, today: today, SPEC: SPEC };
+  }
+  return { rng: rng, build: build, npiCheck: npiCheck, makeNpi: makeNpi, SPEC: SPEC };
+})();
+if (typeof module !== 'undefined') module.exports = DATA;
+
+// RR: roster round-trip. A messy provider roster in, a validated change set out:
+// map the layout, normalise, validate against NPPES and licences, catch conflicts, diff against the plan's directory,
+// guard against "absent means terminated", route each change (auto, review, back to the group) and write the feedback file.
+// Pure functions, no network. Browser and Node.
+var RR = (function () {
+  'use strict';
+
+  // ---------- 1. header mapping ----------
+  var SYN = {
+    npi: ['npi', 'rendering npi', 'individual npi', 'provider npi', 'provider npi #', 'npi number', 'type 1 npi'],
+    first: ['first name', 'provider first', 'fname', 'given name', 'first'],
+    last: ['last name', 'provider last', 'lname', 'surname', 'last'],
+    spec: ['specialty', 'primary specialty', 'taxonomy description', 'board specialty', 'speciality'],
+    addr: ['address 1', 'practice address', 'service location address', 'street', 'address', 'address line 1'],
+    city: ['city', 'practice city', 'service city', 'town'],
+    state: ['state', 'st', 'service state', 'state code'],
+    zip: ['zip', 'postal code', 'service zip', 'zip code', 'zipcode'],
+    phone: ['phone', 'office phone', 'appointment phone', 'contact number', 'telephone'],
+    anp: ['accepting new patients', 'panel open (y/n)', 'new pts', 'accepting patients', 'panel status']
+  };
+  function clean(h) { return String(h || '').toLowerCase().replace(/[^a-z0-9#/() ]/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function mapHeaders(headers) {
+    var map = {}, used = {}, unmapped = [];
+    headers.forEach(function (h) {
+      var c = clean(h), hit = null;
+      Object.keys(SYN).forEach(function (f) { if (!hit && !map[f] && SYN[f].indexOf(c) >= 0) hit = f; });
+      if (!hit) Object.keys(SYN).forEach(function (f) { if (!hit && !map[f] && SYN[f].some(function (s) { return s.length > 3 && c.indexOf(s) >= 0; })) hit = f; });
+      if (hit) { map[hit] = h; used[h] = 1; } else unmapped.push(h);
+    });
+    var missing = Object.keys(SYN).filter(function (f) { return !map[f]; });
+    return { map: map, missing: missing, unmapped: unmapped, ok: missing.indexOf('npi') < 0 && missing.indexOf('addr') < 0 };
+  }
+
+  // ---------- 2. normalisation ----------
+  var ABBR = { STREET: 'ST', AVENUE: 'AVE', DRIVE: 'DR', ROAD: 'RD', BOULEVARD: 'BLVD', LANE: 'LN', SUITE: 'STE', '#': 'STE' };
+  function addrKey(s) {
+    var t = String(s || '').toUpperCase().replace(/#\s*/g, ' STE ').replace(/[.,]/g, ' ').replace(/\s+/g, ' ').trim();
+    return t.split(' ').map(function (w) { return ABBR[w] || w; }).join(' ');
+  }
+  function phoneKey(s) { var d = String(s || '').replace(/\D/g, ''); return d.length === 11 && d[0] === '1' ? d.slice(1) : d; }
+  function zip5(s) { return String(s || '').replace(/\D/g, '').slice(0, 5); }
+  function yn(s) { var t = String(s || '').trim().toLowerCase(); return /^(y|yes|open|true|1)$/.test(t) ? 'Y' : /^(n|no|closed|false|0)$/.test(t) ? 'N' : ''; }
+  function nameKey(s) { return String(s || '').toUpperCase().replace(/[^A-Z]/g, ''); }
+
+  // NPI check digit (Luhn over 80840 + first 9 digits)
+  function npiValid(npi) {
+    var s = String(npi || '').replace(/\D/g, ''); if (s.length !== 10) return false;
+    var t = '80840' + s.slice(0, 9), sum = 0, dbl = true;
+    for (var i = t.length - 1; i >= 0; i--) { var d = +t[i]; if (dbl) { d *= 2; if (d > 9) d -= 9; } sum += d; dbl = !dbl; }
+    return String((10 - (sum % 10)) % 10) === s[9];
+  }
+
+  // ---------- 3. business days for the directory-update clock ----------
+  function addBusinessDays(isoStart, n) {
+    var d = new Date(isoStart.slice(0, 10) + 'T00:00:00Z'), left = n;
+    while (left > 0) { d.setUTCDate(d.getUTCDate() + 1); var w = d.getUTCDay(); if (w !== 0 && w !== 6) left--; }
+    return d.toISOString().slice(0, 10);
+  }
+
+  // ---------- 4. process one roster ----------
+  // ctx: { pdm, nppes, claims, today }. opt: { partialShare (default 0.2), naive }
+  function process(roster, ctx, opt) {
+    opt = opt || {};
+    var partialShare = opt.partialShare !== undefined ? opt.partialShare : 0.2;
+    var m = mapHeaders(roster.headers), F = m.map;
+    var nppes = {}; ctx.nppes.forEach(function (x) { nppes[x.npi] = x; });
+    var claims = {}; ctx.claims.forEach(function (x) { claims[x.npi] = x.claims_90d; });
+    var cur = {}; ctx.pdm.filter(function (p) { return p.group_id === roster.group; }).forEach(function (p) { cur[p.npi] = p; });
+    var rows = roster.rows.map(function (raw, i) {
+      return { i: i + 2, raw: raw, npi: String(raw[F.npi] || '').replace(/\D/g, ''), first: raw[F.first], last: raw[F.last], spec: raw[F.spec],
+               addr: raw[F.addr], addrKey: addrKey(raw[F.addr]), city: raw[F.city], state: String(raw[F.state] || '').toUpperCase(), zip: zip5(raw[F.zip]), phone: phoneKey(raw[F.phone]), anp: yn(raw[F.anp]), issues: [] };
+    });
+    var changes = [], feedback = [];
+    function change(o) { changes.push(o); return o; }
+
+    if (opt.naive) {
+      // Naive: raw string diff, everything missing is a termination, no validation.
+      var seenN = {};
+      rows.forEach(function (r) {
+        seenN[r.npi] = 1; var p = cur[r.npi];
+        if (!p) { change({ type: 'add', npi: r.npi, route: 'auto', row: r }); return; }
+        var diffs = [];
+        if (String(r.addr) !== p.address) diffs.push('address'); if (String(r.raw[F.phone]) !== p.phone) diffs.push('phone'); if (r.anp !== p.accepting_new) diffs.push('accepting_new'); if (r.spec !== p.specialty) diffs.push('specialty');
+        if (diffs.length) change({ type: 'change', npi: r.npi, fields: diffs, route: 'auto', row: r });
+      });
+      Object.keys(cur).forEach(function (npi) { if (!seenN[npi]) change({ type: 'term', npi: npi, route: 'auto' }); });
+      return finish();
+    }
+
+    // ---- validation
+    var byKey = {};
+    rows.forEach(function (r) {
+      if (!r.npi) r.issues.push({ sev: 'reject', code: 'NPI_MISSING', msg: 'NPI is blank' });
+      else if (!npiValid(r.npi)) r.issues.push({ sev: 'reject', code: 'NPI_CHECK_DIGIT', msg: 'NPI ' + r.npi + ' fails the check digit (likely a typo)' });
+      else {
+        var reg = nppes[r.npi];
+        if (!reg) r.issues.push({ sev: 'review', code: 'NPI_NOT_IN_NPPES', msg: 'NPI not found in NPPES' });
+        else {
+          if (reg.deactivated) r.issues.push({ sev: 'reject', code: 'NPI_DEACTIVATED', msg: 'NPI is deactivated in NPPES' });
+          if (reg.license_expires < ctx.today) r.issues.push({ sev: 'review', code: 'LICENSE_EXPIRED', msg: 'State licence expired ' + reg.license_expires });
+        }
+      }
+      if (!r.addrKey) r.issues.push({ sev: 'reject', code: 'ADDRESS_MISSING', msg: 'Service address is blank' });
+      if (r.anp === '') r.issues.push({ sev: 'review', code: 'PANEL_UNKNOWN', msg: 'Accepting-new-patients value not recognised' });
+      var k = r.npi + '|' + r.addrKey; (byKey[k] = byKey[k] || []).push(r);
+    });
+    // conflicts inside the roster: same provider, same location, different specialty
+    Object.keys(byKey).forEach(function (k) {
+      var g = byKey[k]; if (g.length < 2) return;
+      var specs = {}; g.forEach(function (r) { specs[r.spec] = 1; });
+      if (Object.keys(specs).length > 1) g.forEach(function (r) { r.issues.push({ sev: 'review', code: 'CONFLICT_IN_ROSTER', msg: 'Same NPI and location listed with ' + Object.keys(specs).join(' and ') }); });
+    });
+
+    // ---- diff against the directory
+    var seen = {};
+    rows.forEach(function (r) {
+      var rej = r.issues.filter(function (x) { return x.sev === 'reject'; }), rev = r.issues.filter(function (x) { return x.sev === 'review'; });
+      if (rej.length) { rej.forEach(function (x) { feedback.push({ group: roster.group, row: r.i, npi: r.npi, code: x.code, issue: x.msg, fix: fixFor(x.code) }); }); change({ type: 'reject', npi: r.npi, route: 'group', row: r, codes: rej.map(function (x) { return x.code; }) });
+        if (r.issues.some(function (x) { return x.code === 'NPI_DEACTIVATED'; }) && cur[r.npi]) change({ type: 'term', npi: r.npi, route: 'review', reason: 'NPI deactivated in NPPES but still listed' });
+        seen[r.npi] = 1; return; }
+      seen[r.npi] = 1; var p = cur[r.npi];
+      if (!p) { change({ type: 'add', npi: r.npi, route: rev.length ? 'review' : 'auto', row: r, codes: rev.map(function (x) { return x.code; }) }); return; }
+      var diffs = [];
+      if (r.addrKey !== addrKey(p.address) || r.zip !== zip5(p.zip)) diffs.push('address');
+      if (r.phone !== phoneKey(p.phone)) diffs.push('phone');
+      if (r.anp && r.anp !== p.accepting_new) diffs.push('accepting_new');
+      if (r.spec !== p.specialty) diffs.push('specialty');
+      if (diffs.length || rev.length) change({ type: diffs.length ? 'change' : 'hold', npi: r.npi, fields: diffs, route: rev.length || diffs.indexOf('specialty') >= 0 ? 'review' : 'auto', row: r, codes: rev.map(function (x) { return x.code; }) });
+    });
+    rows.forEach(function (r) { if (r.issues.some(function (x) { return x.code === 'NPI_CHECK_DIGIT'; })) { /* the real provider will look absent; flag it */ } });
+
+    // ---- absent from roster: termination candidates, with a completeness control and claims evidence
+    var absent = Object.keys(cur).filter(function (npi) { return !seen[npi]; });
+    var share = Object.keys(cur).length ? absent.length / Object.keys(cur).length : 0;
+    var partial = roster.declaredType === 'full' && share > partialShare;
+    absent.forEach(function (npi) {
+      var c = claims[npi] || 0;
+      if (partial) change({ type: 'term', npi: npi, route: 'hold', reason: Math.round(share * 100) + '% of this group’s providers are missing: likely a partial file. Holding all terms and asking the group to resend.' });
+      else if (c > 0) change({ type: 'term', npi: npi, route: 'review', reason: 'Missing from roster but billed ' + c + ' claims in the last 90 days: confirm with the group before terminating' });
+      else change({ type: 'term', npi: npi, route: 'auto', reason: 'Missing from a complete roster and no claims in 90 days' });
+    });
+    var res = finish();
+    res.partial = partial; res.absentShare = share;
+    if (partial) feedback.push({ group: roster.group, row: '—', npi: '—', code: 'ROSTER_INCOMPLETE', issue: absent.length + ' of ' + Object.keys(cur).length + ' providers missing from a roster marked complete', fix: 'Resend the full roster, or mark this file as a partial update' });
+    return res;
+
+    function finish() {
+      return { group: roster.group, mapping: m, rows: rows, changes: changes, feedback: feedback,
+               due: addBusinessDays(roster.received, 2), counts: count(changes), touchless: rows.length ? rows.filter(function (r) { return !changes.some(function (c) { return c.row === r && c.route !== 'auto'; }); }).length / rows.length : 1 };
+    }
+  }
+  function count(ch) { var o = { auto: 0, review: 0, group: 0, hold: 0, add: 0, change: 0, term: 0, reject: 0 }; ch.forEach(function (c) { o[c.route] = (o[c.route] || 0) + 1; o[c.type] = (o[c.type] || 0) + 1; }); return o; }
+  function fixFor(code) {
+    return { NPI_MISSING: 'Add the provider’s individual (Type 1) NPI', NPI_CHECK_DIGIT: 'Check the NPI digits against NPPES and resend this row', NPI_DEACTIVATED: 'Remove this provider, or send their current NPI',
+             ADDRESS_MISSING: 'Add the service location address', ROSTER_INCOMPLETE: 'Resend the full roster' }[code] || 'Correct and resend';
+  }
+
+  // ---------- 5. score a pipeline against the hidden truth ----------
+  function score(data, results) {
+    var truth = {}; data.groups.forEach(function (g) { g.providers.forEach(function (p) { truth[p.npi] = p; }); });
+    var s = { falseTerms: 0, missedTerms: 0, noiseChanges: 0, trueChanges: 0, missedChanges: 0, badLoaded: 0, autoActions: 0, review: 0, hold: 0, toGroup: 0, rows: 0, touchlessRows: 0 };
+    results.forEach(function (res) {
+      s.rows += res.rows.length; s.touchlessRows += Math.round(res.touchless * res.rows.length);
+      res.changes.forEach(function (c) {
+        var t = truth[c.npi]; if (c.route === 'review') s.review++; else if (c.route === 'hold') s.hold++; else if (c.route === 'group') s.toGroup++; else s.autoActions++;
+        var applied = c.route === 'auto';
+        if (c.type === 'term' && applied && t && t.truth !== 'left' && t.truth !== 'deactivated') s.falseTerms++;
+        if (c.type === 'change' && applied && t && t.truth === 'same') s.noiseChanges++;
+        if ((c.type === 'change' || c.type === 'add') && applied && c.row && (c.row.raw.typo || (t && (t.truth === 'deactivated' || t.truth === 'license')) || c.row.raw.conflict)) s.badLoaded++;
+        if (c.type === 'change' && t && ['moved', 'phone', 'panel'].indexOf(t.truth) >= 0) s.trueChanges++;
+      });
+    });
+    data.groups.forEach(function (g) { g.providers.forEach(function (p) {
+      var res = results.filter(function (x) { return x.group === g.id; })[0];
+      if (p.truth === 'left' && !res.changes.some(function (c) { return c.type === 'term' && c.npi === p.npi && c.route !== 'hold'; })) s.missedTerms++;
+      if (['moved', 'phone', 'panel'].indexOf(p.truth) >= 0 && !p.partialDrop && !res.changes.some(function (c) { return c.type === 'change' && c.npi === p.npi; })) s.missedChanges++;
+    }); });
+    s.touchless = s.rows ? s.touchlessRows / s.rows : 0;
+    return s;
+  }
+  function runAll(data, opt) { var ctx = { pdm: data.pdm, nppes: data.nppes, claims: data.claims, today: data.today }; return data.rosters.map(function (r) { return process(r, ctx, opt); }); }
+
+  // ---------- 6. tables for the SQL lab (normalised roster + directory + registry + claims) ----------
+  function tables(data) {
+    var rr = [];
+    data.rosters.forEach(function (ro) { var m = mapHeaders(ro.headers).map; ro.rows.forEach(function (raw, i) { rr.push({ group_id: ro.group, row_no: i + 2, npi: String(raw[m.npi] || '').replace(/\D/g, ''), npi_valid: npiValid(raw[m.npi]) ? 1 : 0, specialty: raw[m.spec], addr_key: addrKey(raw[m.addr]), zip5: zip5(raw[m.zip]), phone_key: phoneKey(raw[m.phone]), accepting_new: yn(raw[m.anp]) }); }); });
+    var pdm = data.pdm.map(function (p) { return { npi: p.npi, group_id: p.group_id, specialty: p.specialty, addr_key: addrKey(p.address), zip5: zip5(p.zip), phone_key: phoneKey(p.phone), accepting_new: p.accepting_new }; });
+    return { roster_rows: rr, directory: pdm, nppes: data.nppes, claims: data.claims };
+  }
+
+  function toCSV(rows, cols) {
+    function esc(v) { v = v === undefined || v === null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+    return cols.join(',') + '\n' + rows.map(function (r) { return cols.map(function (c) { return esc(r[c]); }).join(','); }).join('\n') + '\n';
+  }
+
+  return { mapHeaders: mapHeaders, addrKey: addrKey, phoneKey: phoneKey, zip5: zip5, yn: yn, npiValid: npiValid, addBusinessDays: addBusinessDays, process: process, runAll: runAll, score: score, tables: tables, toCSV: toCSV };
+})();
+if (typeof module !== 'undefined') module.exports = RR;
+
+// Q: the SQL lab. Each query runs on SQLite (sql.js) over the normalised tables from RR.tables().
+var Q = [
+  { id: 'q1', title: '1. Roster vs directory, by group', why: 'The first thing I’d run on a new client’s roster: how much of each group matched, what’s new, what’s missing, and how much of what’s missing is still billing.',
+    sql: "WITH r AS (SELECT DISTINCT group_id, npi FROM roster_rows WHERE npi_valid = 1),\n     d AS (SELECT group_id, npi FROM directory)\nSELECT d.group_id,\n       COUNT(*)                                                    AS in_directory,\n       SUM(CASE WHEN r.npi IS NOT NULL THEN 1 ELSE 0 END)          AS on_roster,\n       SUM(CASE WHEN r.npi IS NULL THEN 1 ELSE 0 END)              AS missing,\n       SUM(CASE WHEN r.npi IS NULL AND c.claims_90d > 0 THEN 1 ELSE 0 END) AS missing_but_billing,\n       ROUND(100.0 * SUM(CASE WHEN r.npi IS NULL THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_missing\nFROM d\nLEFT JOIN r ON r.group_id = d.group_id AND r.npi = d.npi\nLEFT JOIN claims c ON c.npi = d.npi\nGROUP BY d.group_id\nORDER BY pct_missing DESC;" },
+  { id: 'q2', title: '2. Rows that must not load', why: 'Typos that fail the NPI check digit, NPIs deactivated in NPPES, and expired licences. These go back to the group with a reason, not into the directory.',
+    sql: "SELECT r.group_id, r.row_no, r.npi,\n       CASE WHEN r.npi_valid = 0 THEN 'NPI fails check digit'\n            WHEN n.deactivated = 1 THEN 'NPI deactivated in NPPES'\n            WHEN n.license_expires < '2026-11-23' THEN 'Licence expired ' || n.license_expires\n       END AS problem\nFROM roster_rows r\nLEFT JOIN nppes n ON n.npi = r.npi\nWHERE r.npi_valid = 0 OR n.deactivated = 1 OR n.license_expires < '2026-11-23'\nORDER BY r.group_id, r.row_no;" },
+  { id: 'q3', title: '3. Rosters that disagree with themselves', why: 'The same provider at the same location listed twice with different specialties. Neither row can be trusted until the group confirms.',
+    sql: "SELECT group_id, npi, addr_key,\n       COUNT(*) AS rows_listed,\n       GROUP_CONCAT(DISTINCT specialty) AS specialties\nFROM roster_rows\nWHERE npi_valid = 1\nGROUP BY group_id, npi, addr_key\nHAVING COUNT(DISTINCT specialty) > 1;" },
+  { id: 'q4', title: '4. Missing from the roster, still seeing patients', why: 'Absent doesn’t mean terminated. If a provider billed in the last 90 days, terminating them creates the opposite of a ghost: a real doctor members can’t find.',
+    sql: "SELECT d.group_id, d.npi, d.specialty, c.claims_90d\nFROM directory d\nJOIN claims c ON c.npi = d.npi AND c.claims_90d > 0\nWHERE NOT EXISTS (SELECT 1 FROM roster_rows r WHERE r.npi = d.npi AND r.group_id = d.group_id AND r.npi_valid = 1)\nORDER BY c.claims_90d DESC;" },
+  { id: 'q5', title: '5. Real changes, after normalising', why: 'Compare normalised address, phone and panel status instead of raw strings. “123 Main Street Suite 4” and “123 MAIN ST STE 4” are the same place.',
+    sql: "SELECT r.group_id,\n       SUM(CASE WHEN r.addr_key <> d.addr_key OR r.zip5 <> d.zip5 THEN 1 ELSE 0 END) AS address_changes,\n       SUM(CASE WHEN r.phone_key <> d.phone_key THEN 1 ELSE 0 END)                  AS phone_changes,\n       SUM(CASE WHEN r.accepting_new <> d.accepting_new THEN 1 ELSE 0 END)          AS panel_changes\nFROM roster_rows r\nJOIN directory d ON d.npi = r.npi AND d.group_id = r.group_id\nWHERE r.npi_valid = 1\nGROUP BY r.group_id\nORDER BY r.group_id;" }
+];
+if (typeof module !== 'undefined') module.exports = Q;
+
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function download(name, text) { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); }, 300); }
+  var D = DATA.build(9), P = RR.runAll(D), N = RR.runAll(D, { naive: true }), SP = RR.score(D, P), SN = RR.score(D, N);
+
+  // ---------- summary + duel ----------
+  $('sN').textContent = SN.falseTerms + ' active providers terminated, ' + SN.noiseChanges + ' formatting-only “changes” written, and ' + SN.badLoaded + ' bad rows loaded';
+  $('sP').textContent = SP.falseTerms + ' wrongful terminations, ' + SP.noiseChanges + ' fake changes, ' + SP.badLoaded + ' bad rows loaded, with ' + Math.round(100 * SP.touchless) + '% of rows needing no human';
+  function col(el, s, title) {
+    function row(a, b, cls) { return '<div class="row"><span>' + a + '</span><span class="' + (cls || '') + '">' + b + '</span></div>'; }
+    $(el).innerHTML = '<h3>' + title + '</h3>' +
+      row('Active providers terminated', s.falseTerms, s.falseTerms ? 'harm' : 'good') + row('Formatting-only “changes” applied', s.noiseChanges, s.noiseChanges ? 'harm' : 'good') +
+      row('Bad rows loaded (typo, deactivated, lapsed licence, conflict)', s.badLoaded, s.badLoaded ? 'harm' : 'good') + row('Real changes captured (moves, phones, panel)', s.trueChanges, 'good') +
+      row('Leavers terminated late or missed', s.missedTerms, s.missedTerms ? '' : 'good') + row('Sent to human review', s.review) + row('Held (likely partial file)', s.hold) + row('Rows sent back to the group', s.toGroup) +
+      row('Rows needing no human', Math.round(100 * s.touchless) + '%');
+  }
+  col('cN', SN, 'Naive diff'); col('cP', SP, 'Pipeline');
+
+  // ---------- one roster ----------
+  $('grp').innerHTML = D.groups.map(function (g, i) { return '<option value="' + i + '">' + g.id + ' · ' + esc(g.name) + (g.partial ? ' (sent a partial file)' : '') + '</option>'; }).join('');
+  function showGroup(i) {
+    var ro = D.rosters[i], res = P[i], hdr = ro.headers;
+    $('raw').innerHTML = '<tr>' + hdr.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') + '</tr>' + ro.rows.slice(0, 6).map(function (r) { return '<tr>' + hdr.map(function (h) { return '<td>' + esc(r[h]) + '</td>'; }).join('') + '</tr>'; }).join('') +
+      '<tr><td colspan="' + hdr.length + '" class="status" style="font-family:var(--f-body)">… ' + ro.rows.length + ' rows, received ' + ro.received.replace('T', ' ') + ', marked “' + ro.declaredType + ' roster”</td></tr>';
+    var m = res.mapping.map;
+    $('map').innerHTML = Object.keys(m).map(function (f) { return '<span class="pill ok">' + esc(m[f]) + ' → ' + f + '</span>'; }).join('') + res.mapping.missing.map(function (f) { return '<span class="pill bad">missing: ' + f + '</span>'; }).join('');
+    var c = res.counts;
+    function k(l, v, s, cls) { return '<div class="kpi"><span class="k">' + l + '</span><span class="v ' + (cls || '') + '">' + v + '</span><span class="s">' + s + '</span></div>'; }
+    $('gk').innerHTML = k('Applied automatically', c.auto || 0, 'adds, changes, terms') + k('Human review', c.review || 0, 'evidence needed') + k('Held', c.hold || 0, 'waiting on the group') + k('Back to group', c.group || 0, 'rejected rows', (c.group ? 'harm' : '')) + k('Directory due by', res.due, '2 business days from receipt');
+    $('partialNote').innerHTML = res.partial ? '<div class="card" style="border-color:var(--warn)"><span class="pill warn">completeness control</span><p>' + Math.round(res.absentShare * 100) + '% of this group’s providers are missing from a file marked complete. Every termination is held and the group is asked to resend. A naive diff would have terminated them all, including providers who billed last month.</p></div>' : '';
+    var order = { group: 0, hold: 1, review: 2, auto: 3 };
+    var rows = res.changes.slice().sort(function (a, b) { return order[a.route] - order[b.route]; });
+    $('chg').innerHTML = '<tr><th>NPI</th><th>Change</th><th>Route</th><th>Why</th></tr>' + rows.slice(0, 40).map(function (ch) {
+      var why = ch.reason || (ch.codes && ch.codes.length ? ch.codes.join(', ') : '') || (ch.fields ? ch.fields.join(', ') : '');
+      var cls = ch.route === 'auto' ? 'ok' : ch.route === 'group' ? 'bad' : 'warn';
+      return '<tr><td class="mono">' + esc(ch.npi) + '</td><td>' + esc(ch.type) + '</td><td><span class="pill ' + cls + '">' + ch.route + '</span></td><td>' + esc(why) + '</td></tr>';
+    }).join('') + (rows.length > 40 ? '<tr><td colspan="4" class="status">… ' + (rows.length - 40) + ' more in the downloadable change set</td></tr>' : '');
+  }
+  $('grp').onchange = function () { showGroup(+this.value); };
+  $('dlFb').onclick = function () { var r = P[+$('grp').value]; download(r.group + '-feedback.csv', RR.toCSV(r.feedback, ['group', 'row', 'npi', 'code', 'issue', 'fix'])); };
+  $('dlCh').onclick = function () { var r = P[+$('grp').value]; download(r.group + '-changes.csv', RR.toCSV(r.changes.map(function (c) { return { npi: c.npi, type: c.type, route: c.route, fields: (c.fields || []).join('|'), reason: c.reason || (c.codes || []).join('|') }; }), ['npi', 'type', 'route', 'fields', 'reason'])); };
+  showGroup(2);
+  $('grp').value = '2';
+
+  // ---------- SQL lab ----------
+  var db = null, cur = Q[0];
+  $('qbtn').innerHTML = Q.map(function (q, i) { return '<button data-i="' + i + '" aria-pressed="' + (i === 0) + '">' + esc(q.title) + '</button>'; }).join('');
+  Array.prototype.forEach.call($('qbtn').querySelectorAll('button'), function (b) { b.onclick = function () { cur = Q[+b.getAttribute('data-i')]; Array.prototype.forEach.call($('qbtn').querySelectorAll('button'), function (x) { x.setAttribute('aria-pressed', String(x === b)); }); setQ(); runSql(); }; });
+  function setQ() { $('sql').value = cur.sql; $('qwhy').textContent = cur.why; }
+  setQ();
+  function runSql() {
+    if (!db) { $('sqlStatus').textContent = 'SQLite is still loading…'; return; }
+    try {
+      var t0 = performance.now(), res = db.exec($('sql').value), ms = Math.round(performance.now() - t0);
+      if (!res.length) { $('sqlOut').innerHTML = ''; $('sqlStatus').textContent = 'No rows. (' + ms + ' ms)'; return; }
+      var r = res[0];
+      $('sqlOut').innerHTML = '<tr>' + r.columns.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr>' + r.values.slice(0, 200).map(function (v) { return '<tr>' + v.map(function (x) { return '<td' + (typeof x === 'number' ? ' class="n"' : '') + '>' + esc(x) + '</td>'; }).join('') + '</tr>'; }).join('');
+      $('sqlStatus').textContent = r.values.length + ' rows · ' + ms + ' ms' + (r.values.length > 200 ? ' (showing 200)' : '');
+    } catch (e) { $('sqlOut').innerHTML = ''; $('sqlStatus').textContent = 'SQL error: ' + e.message; }
+  }
+  $('runSql').onclick = runSql;
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js';
+  s.onload = function () {
+    initSqlJs({ locateFile: function (f) { return 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/' + f; } }).then(function (SQL) {
+      db = new SQL.Database(); var T = RR.tables(D);
+      Object.keys(T).forEach(function (name) {
+        var cols = Object.keys(T[name][0]); db.run('CREATE TABLE ' + name + ' (' + cols.join(', ') + ')');
+        var st = db.prepare('INSERT INTO ' + name + ' VALUES (' + cols.map(function () { return '?'; }).join(',') + ')');
+        T[name].forEach(function (row) { st.run(cols.map(function (c) { return row[c]; })); }); st.free();
+      });
+      $('sqlStatus').textContent = 'SQLite ready: ' + T.roster_rows.length + ' roster rows, ' + T.directory.length + ' directory rows.'; runSql();
+    }).catch(function (e) { $('sqlStatus').textContent = 'Could not start SQLite (' + e.message + '). The pipeline above still works.'; });
+  };
+  s.onerror = function () { $('sqlStatus').textContent = 'Could not load SQLite from the CDN. The pipeline above still works; the queries are shown so you can read them.'; };
+  document.head.appendChild(s);
+})();
+
+</script>
+
+</body>
+</html>
