@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="What did management actually promise? A guidance ledger for earnings season, with the eval, runtime checks and production plan. Built for Pascal AI by Aditya Mathur. Fictional data.">
+<title>What They Promised</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* An earnings-season research memo with the working ledger, the eval and the production plan inside. */
+:root{
+  --paper:#F6F4EF; --panel:#FFFFFF; --ink:#151A22; --muted:#5B6370; --rule:#E0DCD3; --soft:#EFECE5;
+  --acc:#1F4E8C; --acc-soft:#E3ECF7; --ok:#16754A; --ok-soft:#E0F1E7; --bad:#B3261E; --bad-soft:#F8E3E1; --warn:#9A5B00; --warn-soft:#F7ECD9; --new:#5B3FA3; --new-soft:#ECE7F7;
+  --f-display:"Source Serif 4",Georgia,serif; --f-body:"Inter","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0E1117; --panel:#151A22; --ink:#E8EAEE; --muted:#9AA3B0; --rule:#262D38; --soft:#1B212B;
+  --acc:#7FA8E6; --acc-soft:#172436; --ok:#5CCB91; --ok-soft:#12271C; --bad:#F08A80; --bad-soft:#35191A; --warn:#E6B054; --warn-soft:#2E2412; --new:#B59CF2; --new-soft:#221B35; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0E1117; --panel:#151A22; --ink:#E8EAEE; --muted:#9AA3B0; --rule:#262D38; --soft:#1B212B;
+  --acc:#7FA8E6; --acc-soft:#172436; --ok:#5CCB91; --ok-soft:#12271C; --bad:#F08A80; --bad-soft:#35191A; --warn:#E6B054; --warn-soft:#2E2412; --new:#B59CF2; --new-soft:#221B35; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font:15.5px/1.6 var(--f-body);margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px}
+@media (max-width:600px){.wrap{padding:20px 16px 60px}}
+h1,h2,h3{font-family:var(--f-display);line-height:1.2;margin:0 0 10px;text-wrap:balance}
+h1{font-size:clamp(30px,5.4vw,50px);letter-spacing:-.01em}
+h2{font-size:clamp(23px,3.4vw,31px);margin-top:6px}
+h3{font-size:18.5px}
+p{margin:0 0 12px;max-width:72ch}
+a{color:var(--acc)}
+.kicker{font:600 12px/1.4 var(--f-body);letter-spacing:.09em;text-transform:uppercase;color:var(--acc);margin-bottom:10px}
+.dek{font-size:18px;color:var(--muted);max-width:68ch}
+section{margin-top:56px;padding-top:28px;border-top:1px solid var(--rule)}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:18px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:860px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:1fr}}
+@media (max-width:640px){.g2{grid-template-columns:1fr}}
+.stat .v{font:600 30px/1.1 var(--f-display);display:block;margin-bottom:4px}
+.stat .s{color:var(--muted);font-size:13.5px}
+.bad{color:var(--bad)} .good{color:var(--ok)} .warn{color:var(--warn)}
+.muted{color:var(--muted)} .small{font-size:13.5px}
+.mono{font-family:var(--f-mono);font-size:13px}
+.pill{display:inline-block;font:600 11.5px/1 var(--f-body);padding:5px 8px;border-radius:99px;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-new{background:var(--new-soft);color:var(--new)} .p-acc{background:var(--acc-soft);color:var(--acc)} .p-mute{background:var(--soft);color:var(--muted)}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.seg button,.btn{font:600 13.5px/1 var(--f-body);padding:10px 13px;border-radius:9px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#0E1117}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#0E1117}}
+select,textarea,input{font:14px var(--f-body);color:var(--ink);background:var(--panel);border:1px solid var(--rule);border-radius:9px;padding:9px 10px}
+textarea{width:100%;font-family:var(--f-mono);font-size:12.5px;line-height:1.5}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.brief{list-style:none;padding:0;margin:0}
+.brief li{display:grid;grid-template-columns:96px 1fr auto;gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid var(--rule)}
+.brief li:last-child{border-bottom:0}
+@media (max-width:600px){.brief li{grid-template-columns:1fr}}
+.linkbtn{background:none;border:0;color:var(--acc);font:600 13px var(--f-body);cursor:pointer;padding:2px 0;white-space:nowrap}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--rule);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;background:var(--soft);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.n{text-align:right;font-family:var(--f-mono)}
+.ledger td{min-width:104px}
+.ledger td:first-child{min-width:170px;position:sticky;left:0;background:var(--panel);z-index:1}
+.ledger th:first-child{position:sticky;left:0;z-index:2}
+.cell{display:block;width:100%;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer}
+.cell .r{font-family:var(--f-mono);font-size:12.5px;display:block;margin-top:5px}
+.cell:hover .r{text-decoration:underline}
+.src{margin-top:14px}
+.src .ln{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:7px 10px;border-radius:8px}
+.src .ln.hl{background:var(--warn-soft);outline:1px solid var(--warn)}
+.src .who{font-weight:600;font-size:12.5px;color:var(--muted)}
+.src .ln.analyst .who{color:var(--new)}
+.gate{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--rule);font-size:14px}
+.gate:last-child{border-bottom:0}
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;counter-reset:s}
+@media (max-width:860px){.flow{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.flow{grid-template-columns:1fr}}
+.flow .card{position:relative;padding-top:34px}
+.flow .card:before{counter-increment:s;content:counter(s);position:absolute;top:12px;left:18px;font:700 13px var(--f-mono);color:var(--acc)}
+.calc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.calc{grid-template-columns:1fr 1fr}}
+.calc label{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.calc input{width:100%}
+.callout{border-left:3px solid var(--acc);padding:4px 0 4px 14px;margin:14px 0}
+ul.tight{margin:0;padding-left:18px} ul.tight li{margin:4px 0}
+.status{color:var(--muted);font-size:13px;margin-top:8px}
+.toggle{position:fixed;top:12px;right:12px;z-index:5}
+.foot{margin-top:60px;padding-top:24px;border-top:1px solid var(--rule)}
+.err-ex{font-size:12.5px;color:var(--muted)}
+details summary{cursor:pointer;font-weight:600;margin:8px 0}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<button class="btn toggle" id="theme" aria-label="Toggle dark mode">◐</button>
+<header>
+  <div class="kicker">A working prototype, written as Pascal AI’s first PM · by Aditya Mathur</div>
+  <h1>What did management actually promise?</h1>
+  <p class="dek">A guidance ledger for earnings season, and the eval I’d want passing before it ships to an asset manager. Every guided number is traced to the line it came from, followed across six calls, and checked against what was reported.</p>
+  <div class="grid g4" style="margin-top:22px">
+    <div class="card stat"><span class="v" id="s1"></span><span class="s" id="s1s"></span></div>
+    <div class="card stat"><span class="v warn" id="s2"></span><span class="s" id="s2s"></span></div>
+    <div class="card stat"><span class="v bad" id="s3"></span><span class="s" id="s3s"></span></div>
+    <div class="card stat"><span class="v good" id="s4"></span><span class="s" id="s4s"></span></div>
+  </div>
+  <p class="small muted" style="margin-top:12px">The three companies, their calls and every number are fictional and written by me to plant the traps real transcripts contain. Nothing here is real company data or Pascal’s product.</p>
+</header>
+
+<section id="problem">
+  <div class="kicker">The problem</div>
+  <h2>Results season is a guidance problem, not a summary problem</h2>
+  <div class="grid g2">
+    <div>
+      <p>An analyst at an AMC covering 25 companies has a few hours after each call to answer four questions: <b>What is guidance now? Did it change? Is the change real or just new wording? What did management stop talking about?</b></p>
+      <p>A summary doesn’t answer those. A summary of a call where the CFO says “high single digits” reads fine. It doesn’t tell you that last quarter he said “double-digit”, which means guidance was cut without anyone saying the word.</p>
+    </div>
+    <div class="card">
+      <h3>Where an AI goes wrong here</h3>
+      <p class="small">It rarely misses guidance outright. It records the <b>wrong thing with confidence</b>: an analyst’s “should we assume 12%?”, ₹25 billion read as ₹25 crore, an adjusted margin compared with a reported one, last year’s actual logged as next year’s target.</p>
+      <p class="small" style="margin:0">Each of those goes straight into a model and an IC note. For a product that sells auditability, <b>one wrong number costs more trust than ten missing ones.</b></p>
+    </div>
+  </div>
+  <div class="callout"><b>Product decisions I made up front:</b>
+    <ul class="tight">
+      <li>A wrong number is worse than a missing one, so precision and zero critical errors gate the launch before recall does.</li>
+      <li>No citation, no number. Every figure links to the line it came from, and the line must contain that figure.</li>
+      <li>Silence is a signal. Guidance that disappears gets flagged like a cut.</li>
+      <li>Beat or miss only on the same basis. Reported vs adjusted gets two verdicts, never one blended one.</li>
+      <li>Verbal ranges follow a house convention the customer can edit (“mid-teens” = 14–16% by default).</li>
+    </ul>
+  </div>
+</section>
+
+<section id="brief">
+  <div class="kicker">1 · The 30-second read</div>
+  <h2>What changed on this call</h2>
+  <p>Pick a company and a call. The brief is ordered by what an analyst must act on first: misses, silent drops and cuts, then everything else. “See the line” opens the transcript at the source.</p>
+  <div class="controls"><div class="seg" id="coTabs" style="margin:0"></div><select id="callSel" aria-label="Call"></select></div>
+  <div class="card"><ul class="brief" id="briefList"></ul></div>
+</section>
+
+<section id="ledger">
+  <div class="kicker">2 · The ledger</div>
+  <h2>Every guided number, across six calls</h2>
+  <p>Rows are guidance items; columns are calls. Click any cell to read the line it came from. A grey “silent” cell means the period was still open and management said nothing.</p>
+  <div class="controls"><select id="ledCo" aria-label="Company"></select><span class="small muted" id="ledNote"></span></div>
+  <div class="tw"><table class="ledger" id="ledTable"></table></div>
+  <div class="card src" id="src"><p class="muted small" style="margin:0">Click a cell or “See the line” to open the source here.</p></div>
+</section>
+
+<section id="eval">
+  <div class="kicker">3 · The eval</div>
+  <h2>Is an extractor safe to ship? Grade it, don’t trust it</h2>
+  <p>35 guidance statements, each with a hand-written gold record. Two extractors run on the same 18 transcripts: a careful pipeline and a deliberately naive one that makes the classic mistakes, so the checks have something to catch. You can grade any real model further down.</p>
+  <div class="grid g2" id="duel"></div>
+  <h3 style="margin-top:26px">What the naive extractor got wrong</h3>
+  <div class="tw"><table id="errTable"></table></div>
+  <h3 style="margin-top:26px">One bad extraction, many bad ledger lines</h3>
+  <p id="damageLead"></p>
+  <div class="grid g2" id="damage"></div>
+  <div class="callout" id="checksNote"></div>
+</section>
+
+<section id="unseen">
+  <div class="kicker">4 · The honest part</div>
+  <h2>My rules pass because I wrote the test. So I wrote new lines.</h2>
+  <p id="unseenLead"></p>
+  <div class="tw"><table id="unseenTable"></table></div>
+  <p class="small muted" style="margin-top:10px">This is why, in the production design below, a model does the extraction and rules do the filtering and the checking. Every analyst correction becomes a new test case.</p>
+</section>
+
+<section id="byo">
+  <div class="kicker">5 · Grade your own model</div>
+  <h2>Paste any model’s output and score it</h2>
+  <p>Copy the prompt, download the transcripts, run them through any model, paste the JSON back. The page grades it against the gold set, runs the runtime checks and shows what it would do to the ledger.</p>
+  <div class="grid g2">
+    <div>
+      <h3>The prompt</h3>
+      <textarea id="prompt" rows="14" readonly></textarea>
+      <div class="controls" style="margin-top:8px"><button class="btn" id="copyPrompt">Copy prompt</button><button class="btn" id="dlCorpus">Download transcripts (.txt)</button><button class="btn" id="dlGold">Download gold set (.csv)</button></div>
+    </div>
+    <div>
+      <h3>Paste the JSON</h3>
+      <textarea id="paste" rows="14" placeholder='[{"company":"DCL","call":"Q1FY26","line":2,"metric":"vol_growth","period":"FY26","low":8,"high":10,"unit":"%","basis":"company"}]'></textarea>
+      <div class="controls" style="margin-top:8px"><button class="btn primary" id="gradeBtn">Grade it</button><button class="btn" id="loadNaive">Load the naive output</button></div>
+    </div>
+  </div>
+  <div id="byoOut" class="status"></div>
+</section>
+
+<section id="traps">
+  <div class="kicker">6 · The traps</div>
+  <h2>What the test set plants, and why each one matters</h2>
+  <div class="tw"><table id="trapTable"></table></div>
+</section>
+
+<section id="prod">
+  <div class="kicker">7 · How I’d run it in production</div>
+  <h2>A model extracts. Rules filter and check. An analyst confirms the soft cases.</h2>
+  <div class="flow">
+    <div class="card"><h3>Filter</h3><p class="small" style="margin:0" id="f1"></p></div>
+    <div class="card"><h3>Extract</h3><p class="small" style="margin:0">A strong model reads only the flagged lines plus two lines of context either side, and returns records with a citation. It never sees the whole call at once, so it can’t blend two answers.</p></div>
+    <div class="card"><h3>Check</h3><p class="small" style="margin:0">Seven checks that need no answer key: speaker, citation contains the number, forward-looking language, unit and plausible range, period, basis, floor vs range. Any failure blocks the record.</p></div>
+    <div class="card"><h3>Confirm</h3><p class="small" style="margin:0" id="f4"></p></div>
+  </div>
+  <h3 style="margin-top:26px">Cost and time (every input is an assumption; change it)</h3>
+  <div class="grid g2">
+    <div class="card"><div class="calc" id="calc"></div></div>
+    <div class="card" id="calcOut"></div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card">
+      <h3>Ship gates and what I’d watch</h3>
+      <ul class="tight small">
+        <li><b>Launch gate:</b> zero critical errors on the eval set and on one shadow season; recall ≥ 95%; every figure grounded.</li>
+        <li><b>Guardrail:</b> wrong numbers found by analysts per 100 records. Target zero; one is an incident with a written root cause.</li>
+        <li><b>Value:</b> minutes from transcript to brief; analyst edits per call; share of records auto-accepted.</li>
+        <li><b>Signal quality:</b> share of flags (cuts, drops, basis shifts) the analyst opens; share they dismiss.</li>
+        <li><b>Learning loop:</b> every correction becomes a test case; the eval set should grow every season.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Rollout</h3>
+      <ul class="tight small">
+        <li><b>Season 1, shadow:</b> one AMC team’s coverage list. Analysts keep their own tracker; we compare after every call.</li>
+        <li><b>Go/no-go:</b> zero wrong numbers in shadow, and the team says the brief saved time on at least most calls.</li>
+        <li><b>Season 2:</b> live for that team with the review queue on. Add investor presentations and results releases as sources.</li>
+        <li><b>Then:</b> push flags into the model refresh and IC-memo flows, so a quiet cut shows up where the analyst already works.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3>What I’d ask the first five customers</h3>
+    <ul class="tight small">
+      <li>Where does guidance live today: an Excel tracker, Bloomberg, call notes? Who updates it, and when?</li>
+      <li>Which hurts more: a missed change, or a false alarm you have to clear?</li>
+      <li>What does “mid-teens” mean on your desk? Is it the same for every analyst?</li>
+      <li>Do you want the brief at the end of the call, or after the results release numbers are in?</li>
+      <li>Who signs off a number before it goes into the model?</li>
+    </ul>
+  </div>
+</section>
+
+<section id="limits">
+  <div class="kicker">Limits</div>
+  <h2>What this is not</h2>
+  <ul class="tight">
+    <li>The corpus is tiny (18 short calls, 91 lines) and written by me. Real calls run an hour, have messy speaker labels, and put guidance in slides and tables too.</li>
+    <li>The careful extractor is a rule set tuned to this corpus. Section 4 shows how badly it does on lines it hasn’t seen. The point is the test set, the checks and the ledger logic, not the rules.</li>
+    <li>The runtime checks were also written against this corpus. They catch every naive error here; I would expect them to catch fewer on real output, which is why the review queue exists.</li>
+    <li>Verbal-range conventions vary by house. The defaults here are mine.</li>
+    <li>Cost figures are placeholders, not any vendor’s price list.</li>
+  </ul>
+</section>
+
+<footer class="foot">
+  <div class="grid g2">
+    <div>
+      <h3>About me</h3>
+      <p class="small">I’m Aditya Mathur, in Bengaluru. I was an APM on acquiring at EnKash, and before that I spent a year at Stripe on AML and financial-crimes operations (US market), where I built the SQL dashboards and the AI knowledge hub my team ran on. At SMBC I reviewed 50+ credit portfolios. My bank-performance index paper won Best Paper at Ashoka University’s Journal of Economic Review.</p>
+      <p class="small">I build with AI daily: Claude Code for prototypes like this one, evals before anything ships, and a habit of writing down what broke.</p>
+    </div>
+    <div>
+      <h3>Links</h3>
+      <p class="small"><a href="resume.pdf">Resume (PDF)</a> · <a href="https://www.linkedin.com/in/adityaamathur">LinkedIn</a> · <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a> · <a href="https://adimathur-creates.github.io/">More work</a></p>
+      <p class="small muted">Built in plain JavaScript with no backend. 74 automated tests cover parsing, grading, the ledger and the brief.</p>
+    </div>
+  </div>
+</footer>
+</div>
+<script>
+// DATA: a small, fictional research corpus. Three made-up Indian listed companies, six quarterly earnings calls each
+// (Q1 FY26 to Q2 FY27), plus results releases with reported actuals. Every management guidance statement carries a
+// hand-written gold record, and the text plants the traps that trip up extraction: units (crore vs billion), Indian
+// fiscal periods, ranges vs "mid-teens", adjusted vs reported, segment vs company, analysts' numbers, hedged non-answers,
+// and guidance that quietly disappears. Company names are fictional. Nothing here is real company data.
+var DATA = (function () {
+  'use strict';
+  var CALLS = [
+    { id: 'Q1FY26', date: '2025-08-07' }, { id: 'Q2FY26', date: '2025-11-06' }, { id: 'Q3FY26', date: '2026-02-05' },
+    { id: 'Q4FY26', date: '2026-05-14' }, { id: 'Q1FY27', date: '2026-08-06' }, { id: 'Q2FY27', date: '2026-11-05' }
+  ];
+  var COMPANIES = [
+    { id: 'DCL', name: 'Deccan Cement Ltd', sector: 'Cement', cfo: 'Ramesh Iyer (CFO)', ceo: 'Anjali Rao (MD)' },
+    { id: 'LSS', name: 'Lumen Software Services', sector: 'IT services', cfo: 'Karan Mehta (CFO)', ceo: 'Sunil Das (CEO)' },
+    { id: 'VAC', name: 'Vardhan Auto Components', sector: 'Auto components', cfo: 'Priya Nair (CFO)', ceo: 'Vikram Vardhan (MD)' }
+  ];
+  // g: gold guidance record(s) for that line. tags name the trap the line plants.
+  // metric ids: vol_growth, ebitda_per_t, capex, rev_growth_cc, ebit_margin, rev, ebitda_margin, seg_growth, h2_margin_uplift
+  var T = {
+    DCL: {
+      Q1FY26: [
+        ['m', 'ceo', 'Good evening. Demand in the South held up well despite an early monsoon.'],
+        ['m', 'cfo', 'For FY26 we expect volume growth of 8 to 10 percent.', { metric: 'vol_growth', period: 'FY26', low: 8, high: 10, unit: '%', basis: 'company' }],
+        ['m', 'cfo', 'We are guiding to EBITDA of ₹1,100 to ₹1,200 per tonne for FY26 as fuel costs ease.', { metric: 'ebitda_per_t', period: 'FY26', low: 1100, high: 1200, unit: '₹/t', basis: 'company' }],
+        ['a', 'Analyst, Prism Capital', 'Can you comment on pricing in the East?'],
+        ['m', 'ceo', 'Pricing in the East remains competitive; we will not chase volume there.']
+      ],
+      Q2FY26: [
+        ['m', 'ceo', 'A softer quarter on demand, but our cost programme is on track.'],
+        ['m', 'cfo', 'We maintain FY26 volume growth guidance of 8 to 10 percent.', { metric: 'vol_growth', period: 'FY26', low: 8, high: 10, unit: '%', basis: 'company' }],
+        ['m', 'cfo', 'EBITDA per tonne should be in the ₹1,100 to ₹1,200 range for FY26.', { metric: 'ebitda_per_t', period: 'FY26', low: 1100, high: 1200, unit: '₹/t', basis: 'company' }],
+        ['a', 'Analyst, Northbridge AMC', 'Should we assume 12 percent volume growth for FY27 in our models?', null, ['analyst-number']],
+        ['m', 'cfo', 'We will not give a number for FY27 yet, but we are confident of beating industry growth.', null, ['hedge']]
+      ],
+      Q3FY26: [
+        ['m', 'ceo', 'An extended monsoon hit construction activity across our core markets.'],
+        ['m', 'cfo', 'We now expect FY26 volume growth of 6 to 7 percent.', { metric: 'vol_growth', period: 'FY26', low: 6, high: 7, unit: '%', basis: 'company' }, ['revised']],
+        ['m', 'cfo', 'Fuel costs have been volatile and we are focused on cost discipline.', null, ['silent-drop']],
+        ['a', 'Analyst, Prism Capital', 'Thank you. What is the capex plan for next year?'],
+        ['m', 'ceo', 'We will share the capex plan with the Q4 results.']
+      ],
+      Q4FY26: [
+        ['m', 'ceo', 'FY26 volumes grew 6.4 percent, in line with our revised view.'],
+        ['m', 'cfo', 'For FY27 we expect double-digit volume growth as the new grinding unit ramps up.', { metric: 'vol_growth', period: 'FY27', low: 10, high: null, unit: '%', basis: 'company' }, ['floor']],
+        ['m', 'cfo', 'Capex for FY27 will be about ₹2,500 crore, mostly the Karnataka plant.', { metric: 'capex', period: 'FY27', low: 2500, high: 2500, unit: '₹ cr', basis: 'company' }],
+        ['a', 'Analyst, Northbridge AMC', 'And EBITDA per tonne for FY27?'],
+        ['m', 'cfo', 'We would rather not guide on per-tonne profitability given fuel volatility.', null, ['hedge']]
+      ],
+      Q1FY27: [
+        ['m', 'ceo', 'Strong start to the year with the new unit stabilising early.'],
+        ['m', 'cfo', 'We reiterate double-digit volume growth for FY27.', { metric: 'vol_growth', period: 'FY27', low: 10, high: null, unit: '%', basis: 'company' }, ['floor']],
+        ['m', 'cfo', 'FY27 capex remains about ₹25 billion.', { metric: 'capex', period: 'FY27', low: 2500, high: 2500, unit: '₹ cr', basis: 'company' }, ['unit']],
+        ['a', 'Analyst, Prism Capital', 'Any update on the dividend policy?'],
+        ['m', 'ceo', 'The board will review it in October.']
+      ],
+      Q2FY27: [
+        ['m', 'ceo', 'Demand was patchy in September, and we lost some share in Andhra Pradesh.'],
+        ['m', 'cfo', 'We now see FY27 volume growth in the high single digits.', { metric: 'vol_growth', period: 'FY27', low: 7, high: 9, unit: '%', basis: 'company' }, ['revised', 'verbal-range']],
+        ['m', 'cfo', 'We are raising FY27 capex to ₹2,800 crore to bring forward the second kiln.', { metric: 'capex', period: 'FY27', low: 2800, high: 2800, unit: '₹ cr', basis: 'company' }, ['revised']],
+        ['a', 'Analyst, Northbridge AMC', 'Is the margin pressure structural?'],
+        ['m', 'cfo', 'We do not think so; it is mostly fuel and freight.']
+      ]
+    },
+    LSS: {
+      Q1FY26: [
+        ['m', 'ceo', 'Deal wins were broad-based across verticals this quarter.'],
+        ['m', 'cfo', 'We are guiding to FY26 revenue growth of 12 to 14 percent in constant currency.', { metric: 'rev_growth_cc', period: 'FY26', low: 12, high: 14, unit: '%', basis: 'company' }],
+        ['m', 'cfo', 'We expect FY26 EBIT margin of 21 to 22 percent.', { metric: 'ebit_margin', period: 'FY26', low: 21, high: 22, unit: '%', basis: 'company' }],
+        ['m', 'ceo', 'Our BFSI vertical should grow over 20 percent this year.', { metric: 'seg_growth', period: 'FY26', low: 20, high: null, unit: '%', basis: 'segment:BFSI' }, ['segment']],
+        ['a', 'Analyst, Coastline Investments', 'How is attrition trending?'],
+        ['m', 'ceo', 'Attrition is down to 13 percent on an annualised basis.']
+      ],
+      Q2FY26: [
+        ['m', 'ceo', 'Two large deals closed early, which lifts our full-year view.'],
+        ['m', 'cfo', 'We are raising FY26 constant currency revenue growth guidance to 14 to 16 percent.', { metric: 'rev_growth_cc', period: 'FY26', low: 14, high: 16, unit: '%', basis: 'company' }, ['revised']],
+        ['m', 'cfo', 'FY26 EBIT margin guidance stays at 21 to 22 percent.', { metric: 'ebit_margin', period: 'FY26', low: 21, high: 22, unit: '%', basis: 'company' }],
+        ['a', 'Analyst, Coastline Investments', 'Could margins reach 24 percent next year?', null, ['analyst-number']],
+        ['m', 'cfo', 'That would be speculative at this point.', null, ['hedge']]
+      ],
+      Q3FY26: [
+        ['m', 'ceo', 'We took a one-time restructuring charge to consolidate two delivery centres.'],
+        ['m', 'cfo', 'We continue to expect mid-teens constant currency growth for FY26.', { metric: 'rev_growth_cc', period: 'FY26', low: 14, high: 16, unit: '%', basis: 'company' }, ['verbal-range']],
+        ['m', 'cfo', 'Excluding the one-time restructuring charge, we expect FY26 EBIT margin of 21 to 22 percent.', { metric: 'ebit_margin', period: 'FY26', low: 21, high: 22, unit: '%', basis: 'adjusted' }, ['adjusted']],
+        ['a', 'Analyst, Harbor Lane Capital', 'What is the deal pipeline looking like?'],
+        ['m', 'ceo', 'The pipeline is at a record high.']
+      ],
+      Q4FY26: [
+        ['m', 'ceo', 'FY26 constant currency growth came in at 15.1 percent.'],
+        ['m', 'cfo', 'For FY27 we are guiding to low double-digit constant currency revenue growth.', { metric: 'rev_growth_cc', period: 'FY27', low: 10, high: 13, unit: '%', basis: 'company' }, ['verbal-range']],
+        ['m', 'cfo', 'We expect FY27 EBIT margin of 21 to 23 percent.', { metric: 'ebit_margin', period: 'FY27', low: 21, high: 23, unit: '%', basis: 'company' }],
+        ['a', 'Analyst, Coastline Investments', 'And the BFSI vertical?'],
+        ['m', 'ceo', 'BFSI remains our fastest growing vertical.']
+      ],
+      Q1FY27: [
+        ['m', 'ceo', 'A steady quarter with healthy renewals.'],
+        ['m', 'cfo', 'We reiterate low double-digit constant currency revenue growth for FY27.', { metric: 'rev_growth_cc', period: 'FY27', low: 10, high: 13, unit: '%', basis: 'company' }, ['verbal-range']],
+        ['m', 'cfo', 'FY27 EBIT margin guidance is unchanged at 21 to 23 percent.', { metric: 'ebit_margin', period: 'FY27', low: 21, high: 23, unit: '%', basis: 'company' }],
+        ['a', 'Analyst, Harbor Lane Capital', 'Any change in pricing from clients?'],
+        ['m', 'ceo', 'Some clients are asking for productivity pass-backs.']
+      ],
+      Q2FY27: [
+        ['m', 'ceo', 'Decision-making slowed at two large clients, but the pipeline is healthy.'],
+        ['m', 'cfo', 'We remain comfortable with FY27 EBIT margin of 21 to 23 percent.', { metric: 'ebit_margin', period: 'FY27', low: 21, high: 23, unit: '%', basis: 'company' }],
+        ['m', 'ceo', 'We are focused on converting the pipeline and will update you as deals close.', null, ['silent-drop']],
+        ['a', 'Analyst, Coastline Investments', 'Should we take 9 percent growth for FY27?', null, ['analyst-number']],
+        ['m', 'cfo', 'I would not want to put a number on it today.', null, ['hedge']]
+      ]
+    },
+    VAC: {
+      Q1FY26: [
+        ['m', 'ceo', 'Exports picked up as two European customers ramped up.'],
+        ['m', 'cfo', 'We expect FY26 revenue of around ₹4,500 crore.', { metric: 'rev', period: 'FY26', low: 4500, high: 4500, unit: '₹ cr', basis: 'company' }],
+        ['m', 'cfo', 'We are targeting an EBITDA margin of 14 percent for FY26.', { metric: 'ebitda_margin', period: 'FY26', low: 14, high: 14, unit: '%', basis: 'company' }],
+        ['m', 'ceo', 'We aspire to take exports to 35 percent of revenue over the next few years.', null, ['aspiration']],
+        ['a', 'Analyst, Prism Capital', 'How are steel prices affecting you?'],
+        ['m', 'cfo', 'We pass through steel with a one-quarter lag.']
+      ],
+      Q2FY26: [
+        ['m', 'ceo', 'A good quarter on volumes; the new Pune line is fully loaded.'],
+        ['m', 'cfo', 'We now see FY26 revenue of ₹4,500 to ₹4,700 crore.', { metric: 'rev', period: 'FY26', low: 4500, high: 4700, unit: '₹ cr', basis: 'company' }, ['revised']],
+        ['m', 'cfo', 'FY26 EBITDA margin should be around 14 percent.', { metric: 'ebitda_margin', period: 'FY26', low: 14, high: 14, unit: '%', basis: 'company' }],
+        ['a', 'Analyst, Harbor Lane Capital', 'Is ₹5,000 crore possible next year?', null, ['analyst-number']],
+        ['m', 'ceo', 'Let us get through this year first.', null, ['hedge']]
+      ],
+      Q3FY26: [
+        ['m', 'ceo', 'Steel costs rose faster than we could pass them through.'],
+        ['m', 'cfo', 'FY26 revenue guidance is unchanged at ₹4,500 to ₹4,700 crore.', { metric: 'rev', period: 'FY26', low: 4500, high: 4700, unit: '₹ cr', basis: 'company' }],
+        ['m', 'cfo', 'We now expect FY26 EBITDA margin of 13.5 to 14 percent.', { metric: 'ebitda_margin', period: 'FY26', low: 13.5, high: 14, unit: '%', basis: 'company' }, ['revised']],
+        ['a', 'Analyst, Prism Capital', 'Any exports update?'],
+        ['m', 'ceo', 'Exports are now 27 percent of revenue.']
+      ],
+      Q4FY26: [
+        ['m', 'ceo', 'FY26 revenue was ₹4,620 crore.'],
+        ['m', 'cfo', 'Note that FY25 revenue is restated to ₹3,980 crore from ₹4,010 crore after the sale of the castings unit.', null, ['restated']],
+        ['m', 'cfo', 'For FY27 we expect revenue growth of 12 to 15 percent.', { metric: 'rev_growth', period: 'FY27', low: 12, high: 15, unit: '%', basis: 'company' }],
+        ['m', 'cfo', 'We expect H2 FY27 EBITDA margin to be about 150 basis points higher than H1.', { metric: 'h2_margin_uplift', period: 'H2FY27', low: 150, high: 150, unit: 'bps', basis: 'company' }, ['relative']],
+        ['a', 'Analyst, Coastline Investments', 'Thank you, that is helpful.']
+      ],
+      Q1FY27: [
+        ['m', 'ceo', 'A slow start because of a supplier fire, now resolved.'],
+        ['m', 'cfo', 'We maintain FY27 revenue growth guidance of 12 to 15 percent.', { metric: 'rev_growth', period: 'FY27', low: 12, high: 15, unit: '%', basis: 'company' }],
+        ['m', 'cfo', 'H2 FY27 margins should still be about 150 basis points above H1.', { metric: 'h2_margin_uplift', period: 'H2FY27', low: 150, high: 150, unit: 'bps', basis: 'company' }, ['relative']],
+        ['a', 'Analyst, Prism Capital', 'Any capex change?'],
+        ['m', 'cfo', 'No change to capex.']
+      ],
+      Q2FY27: [
+        ['m', 'ceo', 'Volumes recovered strongly in September.'],
+        ['m', 'cfo', 'We are lowering FY27 revenue growth guidance to 10 to 12 percent because of the lost quarter.', { metric: 'rev_growth', period: 'FY27', low: 10, high: 12, unit: '%', basis: 'company' }, ['revised']],
+        ['m', 'cfo', 'We still expect H2 FY27 margins roughly 150 basis points above H1.', { metric: 'h2_margin_uplift', period: 'H2FY27', low: 150, high: 150, unit: 'bps', basis: 'company' }, ['relative']],
+        ['a', 'Analyst, Harbor Lane Capital', 'Thank you.']
+      ]
+    }
+  };
+  // Reported actuals, from each company's results release (period end → value). FY ends 31 March.
+  var ACTUALS = {
+    DCL: [{ metric: 'vol_growth', period: 'FY26', value: 6.4, unit: '%', source: 'Q4FY26 results release' }, { metric: 'ebitda_per_t', period: 'FY26', value: 980, unit: '₹/t', source: 'Q4FY26 results release' }],
+    LSS: [{ metric: 'rev_growth_cc', period: 'FY26', value: 15.1, unit: '%', source: 'Q4FY26 results release' }, { metric: 'ebit_margin', period: 'FY26', value: 19.8, unit: '%', basis: 'company', source: 'Q4FY26 results release (reported)' }, { metric: 'ebit_margin', period: 'FY26', value: 21.3, unit: '%', basis: 'adjusted', source: 'Q4FY26 results release (excluding restructuring)' }, { metric: 'seg_growth', period: 'FY26', value: 22.5, unit: '%', basis: 'segment:BFSI', source: 'Q4FY26 investor presentation' }],
+    VAC: [{ metric: 'rev', period: 'FY26', value: 4620, unit: '₹ cr', source: 'Q4FY26 results release' }, { metric: 'ebitda_margin', period: 'FY26', value: 13.2, unit: '%', source: 'Q4FY26 results release' }]
+  };
+  var METRICS = {
+    vol_growth: 'Volume growth', ebitda_per_t: 'EBITDA per tonne', capex: 'Capex', rev_growth_cc: 'Revenue growth (constant currency)', ebit_margin: 'EBIT margin',
+    seg_growth: 'Segment growth', rev: 'Revenue', ebitda_margin: 'EBITDA margin', rev_growth: 'Revenue growth', h2_margin_uplift: 'H2 vs H1 margin uplift'
+  };
+
+  function build() {
+    var docs = [], gold = [];
+    COMPANIES.forEach(function (co) {
+      CALLS.forEach(function (call) {
+        var lines = T[co.id][call.id].map(function (r, i) {
+          var who = r[0] === 'a' ? r[1] : (r[1] === 'cfo' ? co.cfo : co.ceo);
+          var ln = { n: i + 1, role: r[0] === 'a' ? 'analyst' : 'management', speaker: who, text: r[2], tags: r[4] || [] };
+          if (r[3]) gold.push(Object.assign({ company: co.id, call: call.id, line: i + 1, quote: r[2], tags: r[4] || [] }, r[3]));
+          return ln;
+        });
+        docs.push({ id: co.id + '-' + call.id, company: co.id, call: call.id, date: call.date, type: 'Earnings call transcript', lines: lines });
+      });
+    });
+    return { companies: COMPANIES, calls: CALLS, docs: docs, gold: gold, actuals: ACTUALS, metrics: METRICS, heldout: HELDOUT };
+  }
+  // UNSEEN LINES: written after the rules were frozen, phrased the way management often talks. Not used to tune anything.
+  var HELDOUT = [
+    { id: 'U1', call: 'Q1FY27', text: "We'd be disappointed with anything below 9 percent volume growth in FY27.", gold: { metric: 'vol_growth', period: 'FY27', low: 9, high: null, unit: '%', basis: 'company' } },
+    { id: 'U2', call: 'Q4FY26', text: 'Our capex outlay for the coming year is pencilled in at roughly ₹1,800 crore.', gold: { metric: 'capex', period: 'FY27', low: 1800, high: 1800, unit: '₹ cr', basis: 'company' } },
+    { id: 'U3', call: 'Q1FY27', text: 'Revenue growth in constant currency terms, we think, lands somewhere between 9 and 11 percent for FY27.', gold: { metric: 'rev_growth_cc', period: 'FY27', low: 9, high: 11, unit: '%', basis: 'company' } },
+    { id: 'U4', call: 'Q2FY27', text: 'Last year we grew revenue 14 percent and we expect to do better than that in FY27.', gold: { metric: 'rev_growth', period: 'FY27', low: 14, high: null, unit: '%', basis: 'company' } },
+    { id: 'U5', call: 'Q1FY27', text: 'An EBITDA margin of 18 to 19 percent is our working range for FY27.', gold: { metric: 'ebitda_margin', period: 'FY27', low: 18, high: 19, unit: '%', basis: 'company' } },
+    { id: 'U6', call: 'Q1FY27', text: 'We expect FY27 EBITDA margin of 15 to 16 percent, excluding forex gains.', gold: { metric: 'ebitda_margin', period: 'FY27', low: 15, high: 16, unit: '%', basis: 'adjusted' } },
+    { id: 'U7', call: 'Q4FY26', text: 'We are not providing FY27 guidance until the merger closes.', gold: null },
+    { id: 'U8', call: 'Q1FY27', text: 'Volume growth for the year ending March 2027 should be 8 to 10 percent.', gold: { metric: 'vol_growth', period: 'FY27', low: 8, high: 10, unit: '%', basis: 'company' } },
+    { id: 'U9', call: 'Q1FY27', text: 'We see capex of ₹3.2 billion this year.', gold: { metric: 'capex', period: 'FY27', low: 320, high: 320, unit: '₹ cr', basis: 'company' } },
+    { id: 'U10', call: 'Q2FY27', text: 'Our medium-term ambition is a 25 percent EBIT margin.', gold: null },
+    { id: 'U11', call: 'Q2FY27', text: 'Yes, 12 percent is a fair number for FY27 volume growth.', gold: { metric: 'vol_growth', period: 'FY27', low: 12, high: 12, unit: '%', basis: 'company' } },
+    { id: 'U12', call: 'Q2FY27', text: 'We are trimming FY27 revenue growth guidance by a point, to 11 to 13 percent.', gold: { metric: 'rev_growth', period: 'FY27', low: 11, high: 13, unit: '%', basis: 'company' } }
+  ];
+  return { build: build, CALLS: CALLS, COMPANIES: COMPANIES, METRICS: METRICS };
+})();
+if (typeof module !== 'undefined') module.exports = DATA;
+
+// GL: guidance ledger engine. Pure functions, no DOM. Extraction (careful rules and a naive baseline), runtime checks,
+// grading against gold, the ledger (revisions, quiet cuts, silent drops, basis shifts, beat/miss), the analyst brief,
+// pre-filter routing and a cost/time model.
+var GL = (function () {
+  'use strict';
+  var UNITS = { vol_growth: '%', ebitda_per_t: '₹/t', capex: '₹ cr', rev_growth_cc: '%', ebit_margin: '%', seg_growth: '%', rev: '₹ cr', ebitda_margin: '%', rev_growth: '%', h2_margin_uplift: 'bps' };
+  var BANDS = { '%': [-50, 100], '₹/t': [100, 5000], '₹ cr': [10, 1e6], bps: [-1000, 1000] };
+  // House convention for verbal ranges. Editable in a real product; shown on the page.
+  var VERBAL = [
+    { re: /high single[- ]digit/i, low: 7, high: 9, label: 'high single digits' },
+    { re: /mid[- ]single[- ]digit/i, low: 4, high: 6, label: 'mid single digits' },
+    { re: /low single[- ]digit/i, low: 1, high: 3, label: 'low single digits' },
+    { re: /mid[- ]teens/i, low: 14, high: 16, label: 'mid-teens' },
+    { re: /high[- ]teens/i, low: 17, high: 19, label: 'high teens' },
+    { re: /low[- ]teens/i, low: 11, high: 13, label: 'low teens' },
+    { re: /low double[- ]digit/i, low: 10, high: 13, label: 'low double digits' },
+    { re: /double[- ]digit/i, low: 10, high: null, label: 'double digits' }
+  ];
+  var FORWARD = /\b(expect|guid|maintain|reiterate|now see|we see|raising|raise|lowering|lower|target|should|will be|remains about|stays at|remain comfortable|continue to expect|unchanged|still expect)/i;
+  var DECLINE = /(will not give|would rather not|not want to put a number|speculative|will share|will update|let us get through)/i;
+  var ASPIRE = /(aspire|aspiration|ambition|over the next few years|medium[- ]term)/i;
+  var FLOOR = /\b(over|above|at least|more than|better than)\s+₹?\s*\d/i;
+
+  function num(s) { return parseFloat(String(s).replace(/,/g, '')); }
+  function callIndex(D, id) { for (var i = 0; i < D.calls.length; i++) if (D.calls[i].id === id) return i; return -1; }
+  function fyOf(callId) { var m = /Q([1-4])FY(\d{2})/.exec(callId); if (!m) return null; var fy = +m[2] + (m[1] === '4' ? 1 : 0); return 'FY' + fy; }
+  function nextFy(fy) { return 'FY' + (+fy.slice(2) + 1); }
+  function strip(t) { return t.replace(/\bH[12]\s*FY\d{2}\b/g, ' ').replace(/\bFY\d{2}\b/g, ' ').replace(/\bH[12]\b/g, ' ').replace(/\bQ[1-4]\b/g, ' ').replace(/\b(19|20)\d{2}\b/g, ' '); }
+
+  function detectMetric(text) {
+    var t = text.toLowerCase();
+    if (/basis points/.test(t) && /\bh2\b/.test(t)) return 'h2_margin_uplift';
+    if (/per tonne/.test(t)) return 'ebitda_per_t';
+    if (/volume growth/.test(t)) return 'vol_growth';
+    if (/capex|capital expenditure/.test(t)) return 'capex';
+    if (/constant currency/.test(t)) return 'rev_growth_cc';
+    if (/ebitda margin/.test(t)) return 'ebitda_margin';
+    if (/ebit margin/.test(t)) return 'ebit_margin';
+    if (/(bfsi|vertical)/.test(t) && /grow/.test(t)) return 'seg_growth';
+    if (/revenue growth/.test(t)) return 'rev_growth';
+    if (/revenue/.test(t) && /(crore|billion|₹)/.test(t)) return 'rev';
+    return null;
+  }
+  function detectPeriod(text, callId) {
+    var m = /\bH([12])\s*FY(\d{2})\b/.exec(text); if (m) return 'H' + m[1] + 'FY' + m[2];
+    m = /\bFY(\d{2})\b/.exec(text); if (m) return 'FY' + m[1];
+    if (/(this year|full year|current year)/i.test(text)) return fyOf(callId);
+    if (/(next year|coming year)/i.test(text)) { var f = fyOf(callId); return f && nextFy(f); }
+    return null;
+  }
+  function detectBasis(text) {
+    if (/(excluding|one-time|exceptional|adjusted)/i.test(text)) return 'adjusted';
+    if (/bfsi/i.test(text)) return 'segment:BFSI';
+    return 'company';
+  }
+  function detectUnit(text) {
+    if (/per tonne/i.test(text)) return { unit: '₹/t', mult: 1 };
+    if (/billion/i.test(text)) return { unit: '₹ cr', mult: 100 };
+    if (/crore/i.test(text)) return { unit: '₹ cr', mult: 1 };
+    if (/basis points/i.test(text)) return { unit: 'bps', mult: 1 };
+    if (/(percent|%)/i.test(text)) return { unit: '%', mult: 1 };
+    return { unit: null, mult: 1 };
+  }
+  // Careful number parsing: verbal ranges, ranges, floors, unit conversion, period tokens removed first.
+  function parseNumbers(text) {
+    for (var i = 0; i < VERBAL.length; i++) if (VERBAL[i].re.test(text)) return { low: VERBAL[i].low, high: VERBAL[i].high, unit: '%', verbal: VERBAL[i].label };
+    var t = strip(text), u = detectUnit(text);
+    var r = /(\d[\d,]*(?:\.\d+)?)\s*(?:to|–|-|and)\s*₹?\s*(\d[\d,]*(?:\.\d+)?)/.exec(t);
+    if (r) return { low: num(r[1]) * u.mult, high: num(r[2]) * u.mult, unit: u.unit, verbal: null };
+    var f = /\b(?:over|above|at least|more than|better than)\s+₹?\s*(\d[\d,]*(?:\.\d+)?)/i.exec(t);
+    if (f) return { low: num(f[1]) * u.mult, high: null, unit: u.unit, verbal: null };
+    var s = /(\d[\d,]*(?:\.\d+)?)/.exec(t);
+    if (s) return { low: num(s[1]) * u.mult, high: num(s[1]) * u.mult, unit: u.unit, verbal: null };
+    return { low: null, high: null, unit: u.unit, verbal: null };
+  }
+  function isForward(t) { return FORWARD.test(t) && !DECLINE.test(t) && !ASPIRE.test(t); }
+
+  function lines(D) { var out = []; D.docs.forEach(function (d) { d.lines.forEach(function (l) { out.push({ doc: d, company: d.company, call: d.call, line: l }); }); }); return out; }
+  function findLine(D, company, call, n) {
+    for (var i = 0; i < D.docs.length; i++) { var d = D.docs[i]; if (d.company === company && d.call === call) return d.lines[n - 1] || null; }
+    return null;
+  }
+
+  function extractLine(text, callId) {
+    if (DECLINE.test(text) || ASPIRE.test(text) || !FORWARD.test(text)) return null;
+    var metric = detectMetric(text); if (!metric) return null;
+    var p = parseNumbers(text); if (p.low === null) return null;
+    return { metric: metric, period: detectPeriod(text, callId), low: p.low, high: p.high, unit: p.unit || UNITS[metric], basis: detectBasis(text), verbal: p.verbal };
+  }
+  function extractCareful(D) {
+    var out = [];
+    lines(D).forEach(function (x) {
+      if (x.line.role !== 'management') return;
+      var r = extractLine(x.line.text, x.call); if (!r) return;
+      out.push(Object.assign({ company: x.company, call: x.call, line: x.line.n, quote: x.line.text }, r));
+    });
+    return out;
+  }
+  // The baseline makes the classic mistakes on purpose: any speaker, any number with a unit, literal units,
+  // no verbal ranges, FYxx-only periods, everything "company" basis.
+  function extractNaive(D) {
+    var out = [];
+    lines(D).forEach(function (x) {
+      var text = x.line.text, t = text.replace(/\bFY\d{2}\b/g, ' ');
+      if (!/\d/.test(t) || !/(percent|%|₹|crore|billion|basis points)/i.test(t)) return;
+      var r = /(\d[\d,]*(?:\.\d+)?)\s*(?:to|–|-|and)\s*₹?\s*(\d[\d,]*(?:\.\d+)?)/.exec(t), s = /(\d[\d,]*(?:\.\d+)?)/.exec(t);
+      var low = r ? num(r[1]) : num(s[1]), high = r ? num(r[2]) : low;
+      var unit = /per tonne/i.test(text) ? '₹/t' : /billion/i.test(text) ? '₹ bn' : /crore/i.test(text) ? '₹ cr' : /basis points/i.test(text) ? 'bps' : '%';
+      var pm = /\bFY(\d{2})\b/.exec(text);
+      out.push({ company: x.company, call: x.call, line: x.line.n, quote: text, metric: detectMetric(text) || 'unknown', period: pm ? 'FY' + pm[1] : null, low: low, high: high, unit: unit, basis: 'company', verbal: null });
+    });
+    return out;
+  }
+
+  // ---------- runtime checks (no answer key needed) ----------
+  function lineNumbers(text) {
+    var set = [], t = strip(text), m, re = /(\d[\d,]*(?:\.\d+)?)/g, mult = /billion/i.test(text) ? 100 : 1;
+    while ((m = re.exec(t))) { set.push(num(m[1])); if (mult !== 1) set.push(num(m[1]) * mult); }
+    VERBAL.forEach(function (v) { if (v.re.test(text)) { set.push(v.low); if (v.high !== null) set.push(v.high); } });
+    return set;
+  }
+  function grounded(D, rec) {
+    var l = findLine(D, rec.company, rec.call, rec.line); if (!l) return false;
+    var set = lineNumbers(l.text);
+    return set.some(function (v) { return Math.abs(v - rec.low) < 1e-9; }) && (rec.high === null || rec.high === undefined || set.some(function (v) { return Math.abs(v - rec.high) < 1e-9; }));
+  }
+  function checks(D, rec) {
+    var fails = [], l = findLine(D, rec.company, rec.call, rec.line);
+    if (!l) return ['citation'];
+    var text = l.text;
+    if (!grounded(D, rec)) fails.push('citation');
+    if (l.role !== 'management') fails.push('speaker');
+    if (!isForward(text)) fails.push('forward-looking');
+    var unit = UNITS[rec.metric];
+    if (!unit || rec.unit !== unit) fails.push('unit');
+    else { var b = BANDS[unit]; if (rec.low < b[0] || rec.low > b[1] || (rec.high !== null && rec.high !== undefined && (rec.high < b[0] || rec.high > b[1]))) fails.push('unit'); }
+    var hasH = /\bH[12]\b/.test(text), fy = /\bFY(\d{2})\b/.exec(text);
+    if (!rec.period || (hasH && !/^H[12]FY/.test(rec.period)) || (!hasH && fy && rec.period !== 'FY' + fy[1]) || (!fy && rec.period !== detectPeriod(text, rec.call))) fails.push('period');
+    if ((rec.basis || 'company') !== detectBasis(text)) fails.push('basis');
+    var open = FLOOR.test(strip(text)) || (/double[- ]digit/i.test(text) && !/low double/i.test(text));
+    if (open !== (rec.high === null || rec.high === undefined)) fails.push('open-ended');
+    return fails;
+  }
+  // Soft cases go to an analyst for one-click confirmation even when every check passes.
+  function needsReview(rec) { return !!rec.verbal || rec.high === null || rec.unit === 'bps' || rec.basis !== 'company'; }
+
+  // ---------- grading against gold ----------
+  var SEVERITY = { 'analyst-number': 'critical', aspiration: 'critical', 'actual-as-guidance': 'critical', 'unit-error': 'critical', 'wrong-number': 'critical', 'wrong-period': 'critical', 'wrong-basis': 'critical', 'wrong-metric': 'critical', 'not-guidance': 'major', missed: 'major' };
+  var LABEL = { 'analyst-number': 'Analyst’s number recorded as guidance', aspiration: 'Aspiration recorded as guidance', 'actual-as-guidance': 'Reported or restated figure recorded as guidance', 'unit-error': 'Unit error (crore vs billion)', 'wrong-number': 'Wrong number', 'wrong-period': 'Wrong period', 'wrong-basis': 'Wrong basis (reported vs adjusted, segment vs company)', 'wrong-metric': 'Wrong metric', 'not-guidance': 'A number that is not guidance', missed: 'Guidance missed' };
+  function eq(a, b) { if (a === null || a === undefined) return b === null || b === undefined; if (b === null || b === undefined) return false; return Math.abs(a - b) < 1e-6; }
+  function classifyFp(D, rec) {
+    var l = findLine(D, rec.company, rec.call, rec.line);
+    if (!l) return 'not-guidance';
+    if (l.role === 'analyst') return 'analyst-number';
+    if (l.tags.indexOf('aspiration') >= 0 || ASPIRE.test(l.text)) return 'aspiration';
+    if (l.tags.indexOf('restated') >= 0 || /\b(grew|came in|was ₹|restated)\b/i.test(l.text)) return 'actual-as-guidance';
+    return 'not-guidance';
+  }
+  function grade(D, recs, gold) {
+    gold = gold || D.gold;
+    var used = {}, errors = [], tp = 0, matched = 0;
+    var byKey = {}; gold.forEach(function (g, i) { byKey[g.company + '|' + g.call + '|' + g.line] = i; });
+    recs.forEach(function (r) {
+      var gi = byKey[r.company + '|' + r.call + '|' + r.line];
+      if (gi === undefined || used[gi]) { errors.push({ type: classifyFp(D, r), rec: r }); return; }
+      used[gi] = true; matched++;
+      var g = gold[gi], errs = [];
+      if (r.metric !== g.metric) errs.push('wrong-metric');
+      else {
+        if (!eq(r.low, g.low) || !eq(r.high, g.high)) {
+          var ratio = g.low ? r.low / g.low : 0;
+          errs.push(Math.abs(ratio - 0.01) < 1e-6 || Math.abs(ratio - 100) < 1e-6 || r.unit !== g.unit ? 'unit-error' : 'wrong-number');
+        }
+        if (r.period !== g.period) errs.push('wrong-period');
+        if ((r.basis || 'company') !== g.basis) errs.push('wrong-basis');
+      }
+      if (!errs.length) tp++;
+      errs.forEach(function (e) { errors.push({ type: e, rec: r, gold: g }); });
+    });
+    gold.forEach(function (g, i) { if (!used[i]) errors.push({ type: 'missed', gold: g }); });
+    errors.forEach(function (e) { e.severity = SEVERITY[e.type]; e.label = LABEL[e.type]; });
+    var byType = {}; errors.forEach(function (e) { byType[e.type] = (byType[e.type] || 0) + 1; });
+    var critical = errors.filter(function (e) { return e.severity === 'critical'; });
+    var g = recs.filter(function (r) { return grounded(D, r); }).length;
+    var caught = critical.filter(function (e) { return e.rec && checks(D, e.rec).length > 0; }).length;
+    return { n: recs.length, gold: gold.length, tp: tp, matched: matched, precision: recs.length ? tp / recs.length : 0, recall: gold.length ? matched / gold.length : 0,
+      exact: gold.length ? tp / gold.length : 0, critical: critical.length, caughtByChecks: caught, grounded: recs.length ? g / recs.length : 0, errors: errors, byType: byType };
+  }
+  function gates(s) {
+    return [
+      { name: 'Zero wrong numbers (critical errors)', pass: s.critical === 0, value: s.critical },
+      { name: 'Recall at least 95%', pass: s.recall >= 0.95, value: Math.round(s.recall * 100) + '%' },
+      { name: 'Precision at least 98%', pass: s.precision >= 0.98, value: Math.round(s.precision * 100) + '%' },
+      { name: 'Every figure grounded in its cited line', pass: s.grounded === 1, value: Math.round(s.grounded * 100) + '%' }
+    ];
+  }
+
+  // ---------- the ledger ----------
+  function mid(r) { return r.high === null || r.high === undefined ? r.low : (r.low + r.high) / 2; }
+  function width(r) { return r.high === null || r.high === undefined ? Infinity : r.high - r.low; }
+  function revision(prev, cur) {
+    if (eq(prev.low, cur.low) && eq(prev.high, cur.high)) return 'maintained';
+    var d = mid(cur) - mid(prev);
+    if (d > 1e-9) return 'raised';
+    if (d < -1e-9) return 'lowered';
+    return width(cur) < width(prev) ? 'narrowed' : 'widened';
+  }
+  function closeCall(period) { var m = /^(H[12])?FY(\d{2})$/.exec(period || ''); if (!m) return null; return m[1] === 'H1' ? 'Q2FY' + m[2] : 'Q4FY' + m[2]; }
+  function fmt(r, unit) {
+    unit = unit || r.unit;
+    function n(v) { return unit === '₹ cr' || unit === '₹/t' ? Math.round(v).toLocaleString('en-IN') : String(+v.toFixed(2)); }
+    var core = r.high === null || r.high === undefined ? '≥' + n(r.low) : eq(r.low, r.high) ? n(r.low) : n(r.low) + '–' + n(r.high);
+    if (unit === '%') return core + '%';
+    if (unit === '₹ cr') return '₹' + core + ' cr';
+    if (unit === '₹/t') return '₹' + core + '/t';
+    if (unit === 'bps') return '+' + core + ' bps';
+    return core + ' ' + (unit || '');
+  }
+  function actualVerdict(value, g) {
+    if (value < g.low - 1e-9) return 'miss';
+    if (g.high === null || g.high === undefined) return 'met';
+    if (value > g.high + 1e-9) return 'beat';
+    return 'in line';
+  }
+  function ledger(D, recs) {
+    var rows = {}, order = D.calls.map(function (c) { return c.id; });
+    recs.forEach(function (r) {
+      if (!r.metric || r.metric === 'unknown' || !r.period) return;
+      var k = r.company + '|' + r.metric + '|' + r.period;
+      (rows[k] = rows[k] || { company: r.company, metric: r.metric, period: r.period, recs: {} });
+      if (!rows[k].recs[r.call]) rows[k].recs[r.call] = r;
+    });
+    return Object.keys(rows).sort().map(function (k) {
+      var row = rows[k], cells = {}, prev = null, mentions = 0, first = null, close = closeCall(row.period), ci = close ? order.indexOf(close) : -1, flags = [], history = [];
+      order.forEach(function (c, i) {
+        var r = row.recs[c];
+        if (r) {
+          if (first === null) first = i;
+          var st = prev ? revision(prev, r) : 'new', f = [];
+          var q = r.quote || ((findLine(D, r.company, r.call, r.line) || {}).text) || '';
+          if (st === 'lowered' && !/(lower|cut|reduc|revis|trim)/i.test(q)) { f.push('quiet cut'); flags.push({ type: 'quiet cut', call: c, text: 'Cut from ' + fmt(prev) + ' to ' + fmt(r) + ' without saying “lower”' }); }
+          if (prev && (prev.basis || 'company') !== (r.basis || 'company')) { f.push('basis shift'); flags.push({ type: 'basis shift', call: c, text: 'Basis moved from ' + basisLabel(prev.basis) + ' to ' + basisLabel(r.basis) + ', same range' }); }
+          if (ci >= 0 && i >= ci) f.push('after period end');
+          cells[c] = { status: st, rec: r, flags: f }; prev = r; mentions++; history.push(r);
+        } else if (first !== null && (ci < 0 || i < ci)) {
+          var sev = mentions >= 2 ? 'high' : 'low';
+          cells[c] = { status: 'silent', flags: [sev], since: prev };
+          if (!(cells[order[i - 1]] && cells[order[i - 1]].status === 'silent')) flags.push({ type: sev === 'high' ? 'silent drop' : 'not repeated', call: c, text: (sev === 'high' ? 'Guided in ' + mentions + ' straight calls, then not mentioned' : 'Guided once, not repeated') + ' (last: ' + fmt(prev) + ')' });
+        } else if (ci >= 0 && i === ci && first !== null) {
+          cells[c] = { status: 'reported' };
+        }
+      });
+      // reported actuals vs the last guidance on the same basis, and vs the first guidance
+      var acts = (D.actuals[row.company] || []).filter(function (a) { return a.metric === row.metric && a.period === row.period; });
+      var verdicts = acts.map(function (a) {
+        var basis = a.basis || 'company', same = history.filter(function (h) { return (h.basis || 'company') === basis; });
+        var last = same.length ? same[same.length - 1] : null, firstG = history[0];
+        return { value: a.value, basis: basis, source: a.source, last: last, verdict: last ? actualVerdict(a.value, last) : 'no guidance on this basis', vsFirst: firstG ? actualVerdict(a.value, firstG) : null, first: firstG };
+      });
+      if (ci >= 0 && cells[close] && cells[close].status === 'reported') cells[close].verdicts = verdicts;
+      return { company: row.company, metric: row.metric, period: row.period, cells: cells, flags: flags, verdicts: verdicts, mentions: mentions };
+    });
+  }
+  function cellSig(cell) { if (!cell) return ''; return cell.status + (cell.rec ? ':' + fmt(cell.rec) + ':' + (cell.rec.basis || 'company') : '') + (cell.flags ? ':' + cell.flags.filter(function (f) { return f !== 'after period end'; }).join(',') : ''); }
+  function ledgerDiff(D, a, b) {
+    var map = function (L) { var m = {}; L.forEach(function (r) { D.calls.forEach(function (c) { var s = cellSig(r.cells[c.id]); if (s) m[r.company + '|' + r.metric + '|' + r.period + '|' + c.id] = s; }); }); return m; };
+    var A = map(a), B = map(b), keys = {}, diff = [];
+    Object.keys(A).concat(Object.keys(B)).forEach(function (k) { keys[k] = 1; });
+    Object.keys(keys).forEach(function (k) { if (A[k] !== B[k]) diff.push({ key: k, gold: A[k] || '(empty)', got: B[k] || '(empty)' }); });
+    var flagSet = function (L) { var s = {}; L.forEach(function (r) { r.flags.forEach(function (f) { s[r.company + '|' + r.metric + '|' + r.period + '|' + f.call + '|' + f.type] = f; }); }); return s; };
+    var FA = flagSet(a), FB = flagSet(b);
+    return { cells: diff, falseFlags: Object.keys(FB).filter(function (k) { return !FA[k]; }), missedFlags: Object.keys(FA).filter(function (k) { return !FB[k]; }) };
+  }
+
+  // ---------- the brief: what changed on this call ----------
+  function basisLabel(b) { return b === 'adjusted' ? 'adjusted, excluding one-offs' : b === 'company' ? 'reported' : /^segment:/.test(b) ? b.slice(8) + ' segment' : b; }
+  function metricLabel(D, r) { return (/^segment:/.test(r.basis || '') ? r.basis.slice(8) + ' vertical growth' : D.metrics[r.metric]) + ' ' + r.period.replace(/^H([12])FY/, 'H$1 FY'); }
+  function brief(D, recs, company, call) {
+    var L = ledger(D, recs).filter(function (r) { return r.company === company; }), out = [], kept = [];
+    var M = function (r) { var any = null; Object.keys(r.cells).forEach(function (k) { if (r.cells[k].rec && !any) any = r.cells[k].rec; }); return metricLabel(D, any || r); };
+    L.forEach(function (r) {
+      var c = r.cells[call]; if (!c) return;
+      if (c.status === 'silent' && c.flags[0] === 'high') {
+        var prevCall = D.calls[callIndex(D, call) - 1];
+        if (prevCall && r.cells[prevCall.id] && r.cells[prevCall.id].status !== 'silent') out.push({ kind: 'drop', text: M(r) + ': not mentioned this call, after ' + r.mentions + ' calls in a row. Last said: ' + fmt(c.since) + '.', ref: c.since });
+      } else if (c.status === 'reported') {
+        (c.verdicts || []).forEach(function (v) {
+          var basis = v.basis === 'company' || /^segment:/.test(v.basis) ? '' : ' (' + basisLabel(v.basis) + ')';
+          var firstNote = v.first && v.last && fmt(v.first) !== fmt(v.last) ? ' (first guided ' + fmt(v.first) + ': ' + v.vsFirst + ')' : '';
+          var shift = v.verdict === 'miss' && r.flags.some(function (f) { return f.type === 'basis shift'; }) ? ' Mid-year, management moved this guidance to an adjusted basis; on that basis the same year reads “in line”.' : '';
+          out.push({ kind: v.verdict === 'miss' ? 'miss' : 'reported', text: M(r) + basis + ': came in at ' + fmt({ low: v.value, high: v.value }, r.cells[Object.keys(r.cells).filter(function (k) { return r.cells[k].rec; })[0]].rec.unit) + (v.last ? ', ' + v.verdict + ' vs the last guidance of ' + fmt(v.last) : ', ' + v.verdict) + firstNote + '.' + shift + (r.flags.some(function (f) { return f.type === 'silent drop'; }) ? ' Management had stopped mentioning it.' : '') });
+        });
+      } else if (c.rec) {
+        if (c.status === 'maintained' && !c.flags.length) { kept.push(M(r) + ' ' + fmt(c.rec)); return; }
+        if (c.flags.indexOf('after period end') >= 0) return;
+        var prev = null; D.calls.slice(0, callIndex(D, call)).forEach(function (x) { if (r.cells[x.id] && r.cells[x.id].rec) prev = r.cells[x.id].rec; });
+        var verb = { new: 'new guidance', raised: 'raised', lowered: 'lowered', narrowed: 'narrowed', widened: 'widened', maintained: 'kept' }[c.status];
+        var txt = c.status === 'maintained' ? M(r) + ': kept at ' + fmt(c.rec) + '.' : M(r) + ': ' + verb + (prev ? ' from ' + fmt(prev) + ' to ' : ' at ') + fmt(c.rec) + '.';
+        if (c.flags.indexOf('quiet cut') >= 0) txt += ' A cut, though the word “lower” was never used.';
+        if (c.flags.indexOf('basis shift') >= 0) txt += ' Same number, but now ' + basisLabel(c.rec.basis) + ' (was ' + basisLabel(prev.basis || 'company') + '): the goalposts moved.';
+        out.push({ kind: c.status === 'lowered' || c.flags.length ? 'cut' : c.status === 'raised' ? 'up' : 'new', text: txt, ref: c.rec });
+      }
+    });
+    var doc = D.docs.filter(function (d) { return d.company === company && d.call === call; })[0], answered = {};
+    if (doc) doc.lines.forEach(function (l, i) { if (l.role === 'management' && DECLINE.test(l.text) && i > 0 && doc.lines[i - 1].role === 'analyst') answered[i - 1] = true; });
+    if (doc) doc.lines.forEach(function (l, i) {
+      if (l.role === 'management' && DECLINE.test(l.text) && !/(will share|will update|let us get through)/i.test(l.text) && i > 0 && doc.lines[i - 1].role === 'analyst')
+        out.push({ kind: 'decline', text: 'Declined to guide when asked. Q: “' + doc.lines[i - 1].text + '” A: “' + l.text + '”' + (/\d/.test(strip(doc.lines[i - 1].text)) ? ' The analyst’s number stays out of the ledger.' : ''), ref: { company: company, call: call, line: l.n } });
+      if (l.role === 'management' && /restated/i.test(l.text)) out.push({ kind: 'restated', text: 'Restatement: ' + l.text + ' Growth rates now run off the new base.', ref: { company: company, call: call, line: l.n } });
+      if (l.role === 'analyst' && !answered[i] && /\d/.test(strip(l.text))) out.push({ kind: 'analyst', text: l.speaker.replace(/^Analyst, /, '') + ' floated a number (“' + l.text + '”). Management did not endorse it, so it is not in the ledger.', ref: { company: company, call: call, line: l.n } });
+    });
+    if (kept.length) out.push({ kind: 'kept', text: 'Unchanged: ' + kept.join('; ') + '.' });
+    var rank = { miss: 0, drop: 1, cut: 2, decline: 3, restated: 4, up: 5, new: 6, reported: 7, analyst: 8, kept: 9 };
+    return out.sort(function (a, b) { return rank[a.kind] - rank[b.kind]; });
+  }
+  function allFlags(D, recs) { var out = []; ledger(D, recs).forEach(function (r) { r.flags.forEach(function (f) { out.push(Object.assign({ company: r.company, metric: r.metric, period: r.period }, f)); }); }); return out; }
+
+  // ---------- routing ----------
+  function prefilter(D) {
+    var all = lines(D), passed = all.filter(function (x) { return x.line.role === 'management' && (/\d/.test(strip(x.line.text)) || VERBAL.some(function (v) { return v.re.test(x.line.text); })); });
+    var keys = {}; passed.forEach(function (x) { keys[x.company + '|' + x.call + '|' + x.line.n] = 1; });
+    var hit = D.gold.filter(function (g) { return keys[g.company + '|' + g.call + '|' + g.line]; }).length;
+    return { lines: all.length, passed: passed.length, share: passed.length / all.length, recall: hit / D.gold.length };
+  }
+  function heldout(D) {
+    var rows = D.heldout.map(function (h) {
+      var r = extractLine(h.text, h.call), g = h.gold, out;
+      if (!g && !r) out = 'correctly ignored';
+      else if (!g && r) out = 'false guidance';
+      else if (g && !r) out = 'missed';
+      else out = r.metric === g.metric && eq(r.low, g.low) && eq(r.high, g.high) && r.period === g.period && r.basis === g.basis ? 'correct' : 'wrong';
+      var pass = /\d/.test(strip(h.text)) || VERBAL.some(function (v) { return v.re.test(h.text); });
+      return { id: h.id, text: h.text, call: h.call, gold: g, got: r, outcome: out, prefilter: pass };
+    });
+    var pos = rows.filter(function (r) { return r.gold; });
+    return { rows: rows, recall: pos.filter(function (r) { return r.got; }).length / pos.length, correct: rows.filter(function (r) { return r.outcome === 'correct' || r.outcome === 'correctly ignored'; }).length,
+      critical: rows.filter(function (r) { return r.outcome === 'wrong' || r.outcome === 'false guidance'; }).length, prefilterRecall: pos.filter(function (r) { return r.prefilter; }).length / pos.length };
+  }
+  // All inputs are assumptions the user can change on the page.
+  function cost(p) {
+    var tok = p.calls * p.tokensPerCall;
+    var allBig = tok * p.bigPrice / 1e6;
+    var routed = tok * p.smallPrice / 1e6 + tok * p.flaggedShare * p.contextMult * p.bigPrice / 1e6 + p.calls * p.verifyTokens * p.bigPrice / 1e6;
+    var manualHrs = p.calls * p.manualMin / 60, reviewHrs = p.calls * p.reviewMin / 60;
+    return { allBig: allBig, routed: routed, saving: allBig ? 1 - routed / allBig : 0, perCall: routed / p.calls, manualHrs: manualHrs, reviewHrs: reviewHrs, hoursBack: manualHrs - reviewHrs };
+  }
+
+  // ---------- pasted model output ----------
+  function parseModelOutput(text) {
+    var t = String(text || '').trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+    var s = t.indexOf('['), e = t.lastIndexOf(']');
+    if (s < 0 || e < s) return { error: 'Expected a JSON array of records.' };
+    var arr; try { arr = JSON.parse(t.slice(s, e + 1)); } catch (err) { return { error: 'Not valid JSON: ' + err.message }; }
+    var recs = [], bad = 0;
+    arr.forEach(function (o) {
+      if (!o || !o.company || !o.call || !o.line || !o.metric) { bad++; return; }
+      var hi = o.high === undefined || o.high === '' ? null : o.high;
+      recs.push({ company: String(o.company).toUpperCase(), call: String(o.call).toUpperCase().replace(/\s/g, ''), line: +o.line, metric: String(o.metric), period: o.period ? String(o.period).toUpperCase().replace(/\s/g, '') : null,
+        low: o.low === null || o.low === undefined ? null : +o.low, high: hi === null ? null : +hi, unit: o.unit || UNITS[o.metric] || null, basis: o.basis || 'company', verbal: o.verbal || null, quote: o.quote || '' });
+    });
+    return { recs: recs, skipped: bad };
+  }
+  function corpusText(D) {
+    return D.docs.map(function (d) {
+      var co = D.companies.filter(function (c) { return c.id === d.company; })[0];
+      return '=== ' + d.company + ' | ' + co.name + ' | ' + d.call + ' | ' + d.date + ' | ' + d.type + ' ===\n' + d.lines.map(function (l) { return l.n + '. [' + l.speaker + '] ' + l.text; }).join('\n');
+    }).join('\n\n');
+  }
+  function toCSV(rows, cols) { return [cols.join(',')].concat(rows.map(function (r) { return cols.map(function (c) { var v = r[c] === null || r[c] === undefined ? '' : String(r[c]); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); })).join('\n'); }
+
+  return { UNITS: UNITS, VERBAL: VERBAL, LABEL: LABEL, SEVERITY: SEVERITY, detectMetric: detectMetric, detectPeriod: detectPeriod, detectBasis: detectBasis, parseNumbers: parseNumbers, isForward: isForward,
+    extractLine: extractLine, extractCareful: extractCareful, extractNaive: extractNaive, grounded: grounded, checks: checks, needsReview: needsReview, grade: grade, gates: gates,
+    revision: revision, closeCall: closeCall, fmt: fmt, ledger: ledger, ledgerDiff: ledgerDiff, brief: brief, allFlags: allFlags, prefilter: prefilter, heldout: heldout, cost: cost,
+    parseModelOutput: parseModelOutput, basisLabel: basisLabel, metricLabel: metricLabel, corpusText: corpusText, toCSV: toCSV, findLine: findLine, fyOf: fyOf };
+})();
+if (typeof module !== 'undefined') module.exports = GL;
+
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function download(name, text, type) { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: type || 'text/plain' })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); }, 300); }
+  function pct(x) { return Math.round(x * 100) + '%'; }
+
+  // theme
+  (function () {
+    var root = document.documentElement, saved = null;
+    try { saved = localStorage.getItem('gl-theme'); } catch (e) {}
+    if (saved) root.setAttribute('data-theme', saved);
+    $('theme').onclick = function () {
+      var dark = root.getAttribute('data-theme') ? root.getAttribute('data-theme') === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var next = dark ? 'light' : 'dark'; root.setAttribute('data-theme', next);
+      try { localStorage.setItem('gl-theme', next); } catch (e) {}
+    };
+  })();
+
+  var D = DATA.build(), C = GL.extractCareful(D), N = GL.extractNaive(D);
+  var SC = GL.grade(D, C), SN = GL.grade(D, N), LG = GL.ledger(D, D.gold), LC = GL.ledger(D, C), DN = GL.ledgerDiff(D, LG, GL.ledger(D, N));
+  var FL = GL.allFlags(D, C), coName = {}; D.companies.forEach(function (c) { coName[c.id] = c.name; });
+  function count(type) { return FL.filter(function (f) { return f.type === type; }).length; }
+  var bigFlags = count('quiet cut') + count('silent drop') + count('basis shift');
+
+  // ---------- stats ----------
+  $('s1').textContent = D.docs.length + ' calls';
+  $('s1s').textContent = D.gold.length + ' guided numbers across three fictional companies and six quarters';
+  $('s2').textContent = bigFlags + ' red flags';
+  $('s2s').textContent = count('quiet cut') + ' quiet cuts, ' + count('silent drop') + ' silent drops and ' + count('basis shift') + ' basis shift that a call summary would not show';
+  $('s3').textContent = SN.critical + ' wrong numbers';
+  $('s3s').textContent = 'from a naive extractor, corrupting ' + DN.cells.length + ' ledger cells and raising ' + DN.falseFlags.length + ' false alarms';
+  $('s4').textContent = SC.critical + ' wrong numbers';
+  $('s4s').textContent = 'from the careful pipeline: ' + pct(SC.recall) + ' recall, every figure traced to its line';
+
+  // ---------- source panel ----------
+  function showSource(company, call, line, note) {
+    var d = D.docs.filter(function (x) { return x.company === company && x.call === call; })[0]; if (!d) return;
+    $('src').innerHTML = '<div class="controls" style="justify-content:space-between;margin-bottom:6px"><div><b>' + esc(coName[company]) + '</b> · ' + call + ' earnings call · ' + d.date + '</div><span class="small muted">' + (note ? esc(note) : line ? 'Line ' + line + ' highlighted' : '') + '</span></div>' +
+      d.lines.map(function (l) { return '<div class="ln ' + l.role + (l.n === line ? ' hl' : '') + '"><span class="mono muted">' + l.n + '</span><div><div class="who">' + esc(l.speaker) + '</div>' + esc(l.text) + '</div></div>'; }).join('');
+  }
+  function goSource(company, call, line, note) { showSource(company, call, line, note); $('src').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+
+  // ---------- brief ----------
+  var KIND = { miss: ['Miss', 'p-bad'], drop: ['Silent drop', 'p-warn'], cut: ['Cut', 'p-bad'], decline: ['Declined', 'p-mute'], restated: ['Restated', 'p-warn'], up: ['Raised', 'p-ok'], new: ['New', 'p-new'], reported: ['Reported', 'p-acc'], analyst: ['Analyst', 'p-mute'], kept: ['Unchanged', 'p-mute'] };
+  var curCo = 'DCL', curCall = 'Q2FY27';
+  $('coTabs').innerHTML = D.companies.map(function (c) { return '<button data-co="' + c.id + '" aria-pressed="' + (c.id === curCo) + '">' + esc(c.name) + '</button>'; }).join('');
+  $('callSel').innerHTML = D.calls.map(function (c) { return '<option value="' + c.id + '"' + (c.id === curCall ? ' selected' : '') + '>' + c.id + ' call · ' + c.date + '</option>'; }).join('');
+  Array.prototype.forEach.call($('coTabs').querySelectorAll('button'), function (b) {
+    b.onclick = function () { curCo = b.getAttribute('data-co'); Array.prototype.forEach.call($('coTabs').querySelectorAll('button'), function (x) { x.setAttribute('aria-pressed', String(x === b)); }); renderBrief(); };
+  });
+  $('callSel').onchange = function () { curCall = this.value; renderBrief(); };
+  function renderBrief() {
+    var items = GL.brief(D, C, curCo, curCall);
+    if (!items.length) { $('briefList').innerHTML = '<li><span></span><span class="muted">No guidance on this call.</span><span></span></li>'; return; }
+    $('briefList').innerHTML = items.map(function (it, i) {
+      var k = KIND[it.kind]; if (/goalposts/.test(it.text)) k = ['Basis shift', 'p-warn'];
+      var btn = it.ref && it.ref.line ? '<button class="linkbtn" data-i="' + i + '">' + (it.kind === 'drop' ? 'Last mention' : 'See the line') + ' →</button>' : '<span></span>';
+      return '<li><span><span class="pill ' + k[1] + '">' + k[0] + '</span></span><span>' + esc(it.text) + '</span>' + btn + '</li>';
+    }).join('');
+    Array.prototype.forEach.call($('briefList').querySelectorAll('button[data-i]'), function (b) {
+      var it = items[+b.getAttribute('data-i')]; b.onclick = function () { goSource(it.ref.company, it.ref.call, it.ref.line); };
+    });
+  }
+  renderBrief();
+
+  // ---------- ledger ----------
+  $('ledCo').innerHTML = D.companies.map(function (c) { return '<option value="' + c.id + '">' + esc(c.name) + ' · ' + c.sector + '</option>'; }).join('');
+  function pillFor(cell) {
+    if (cell.status === 'silent') return cell.flags[0] === 'high' ? '<span class="pill p-warn">silent drop</span>' : '<span class="pill p-mute">not repeated</span>';
+    if (cell.status === 'reported') return '<span class="pill p-acc">reported</span>';
+    var map = { new: ['new', 'p-new'], maintained: ['kept', 'p-mute'], raised: ['raised', 'p-ok'], lowered: ['lowered', 'p-bad'], narrowed: ['narrowed', 'p-acc'], widened: ['widened', 'p-acc'] }[cell.status];
+    var out = '<span class="pill ' + map[1] + '">' + (cell.flags.indexOf('quiet cut') >= 0 ? 'quiet cut' : map[0]) + '</span>';
+    if (cell.flags.indexOf('basis shift') >= 0) out += ' <span class="pill p-warn">basis shift</span>';
+    return out;
+  }
+  function renderLedger() {
+    var co = $('ledCo').value, rows = LC.filter(function (r) { return r.company === co; });
+    var head = '<tr><th>Guidance item</th>' + D.calls.map(function (c) { return '<th>' + c.id + '</th>'; }).join('') + '<th>Actual vs guide</th></tr>';
+    var body = rows.map(function (r, ri) {
+      var first = null; D.calls.forEach(function (c) { if (!first && r.cells[c.id] && r.cells[c.id].rec) first = r.cells[c.id].rec; });
+      var cells = D.calls.map(function (c) {
+        var cell = r.cells[c.id]; if (!cell) return '<td></td>';
+        var range = cell.rec ? '<span class="r">' + esc(GL.fmt(cell.rec)) + (cell.rec.basis === 'adjusted' ? ' adj.' : '') + '</span>' : '';
+        return '<td><button class="cell" data-r="' + ri + '" data-c="' + c.id + '">' + pillFor(cell) + range + '</button></td>';
+      }).join('');
+      var v = r.verdicts.length ? r.verdicts.map(function (x) {
+        var cls = x.verdict === 'miss' ? 'p-bad' : x.verdict === 'beat' ? 'p-ok' : 'p-acc';
+        return '<div style="margin-bottom:6px"><span class="mono">' + esc(GL.fmt({ low: x.value, high: x.value, unit: first.unit })) + '</span>' + (x.basis !== 'company' && !/^segment/.test(x.basis) ? ' <span class="small muted">' + esc(GL.basisLabel(x.basis)) + '</span>' : '') + '<br><span class="pill ' + cls + '">' + x.verdict + '</span></div>';
+      }).join('') : '<span class="small muted">' + (GL.closeCall(r.period) && D.calls.some(function (c) { return c.id === GL.closeCall(r.period); }) ? '' : 'period still open') + '</span>';
+      return '<tr><td><b>' + esc(GL.metricLabel(D, first)) + '</b>' + (r.flags.length ? '<div class="small warn">' + r.flags.length + ' flag' + (r.flags.length > 1 ? 's' : '') + '</div>' : '') + '</td>' + cells + '<td>' + v + '</td></tr>';
+    }).join('');
+    $('ledTable').innerHTML = head + body;
+    $('ledNote').textContent = rows.length + ' guidance items, ' + rows.reduce(function (a, r) { return a + r.flags.length; }, 0) + ' flags';
+    Array.prototype.forEach.call($('ledTable').querySelectorAll('button.cell'), function (b) {
+      b.onclick = function () {
+        var r = rows[+b.getAttribute('data-r')], c = b.getAttribute('data-c'), cell = r.cells[c];
+        if (cell.rec) goSource(r.company, c, cell.rec.line);
+        else if (cell.status === 'silent') goSource(r.company, c, null, 'Not mentioned on this call. Last said: ' + GL.fmt(cell.since));
+        else goSource(r.company, c, null, 'Results call for the period');
+      };
+    });
+  }
+  $('ledCo').onchange = renderLedger; renderLedger();
+  showSource('DCL', 'Q3FY26', null, 'EBITDA per tonne is missing from this call. It was guided in the two before it.');
+
+  // ---------- eval ----------
+  function scoreCard(title, s, sub) {
+    function r(a, b, cls) { return '<div class="gate"><span>' + a + '</span><span class="mono ' + (cls || '') + '">' + b + '</span></div>'; }
+    return '<div class="card"><h3>' + title + '</h3><p class="small muted">' + sub + '</p>' +
+      r('Records returned', s.n) + r('Precision (exactly right / returned)', pct(s.precision), s.precision === 1 ? 'good' : 'bad') + r('Recall (gold statements found)', pct(s.recall), s.recall >= 0.95 ? 'good' : 'bad') +
+      r('Critical errors (wrong number in the model)', s.critical, s.critical ? 'bad' : 'good') + r('Figures grounded in the cited line', pct(s.grounded), s.grounded === 1 ? 'good' : 'bad') +
+      '<h3 style="margin-top:14px;font-size:15px">Ship gates</h3>' + GL.gates(s).map(function (g) { return '<div class="gate"><span>' + g.name + '</span><span class="pill ' + (g.pass ? 'p-ok' : 'p-bad') + '">' + (g.pass ? 'pass' : 'fail') + ' · ' + g.value + '</span></div>'; }).join('') + '</div>';
+  }
+  $('duel').innerHTML = scoreCard('Careful pipeline', SC, 'Management lines only, forward-looking language, verbal ranges, floors, unit conversion, fiscal periods, basis.') +
+    scoreCard('Naive extractor', SN, 'Any speaker, any number with a unit, literal units, no verbal ranges, “FYxx” periods only, everything on reported basis.');
+  function errRows(S) {
+    var groups = {}, usedEx = []; S.errors.forEach(function (e) { (groups[e.type] = groups[e.type] || []).push(e); });
+    return Object.keys(groups).sort(function (a, b) { return (GL.SEVERITY[a] === 'critical' ? 0 : 1) - (GL.SEVERITY[b] === 'critical' ? 0 : 1) || groups[b].length - groups[a].length; }).map(function (k) {
+      var e = groups[k].filter(function (x) { return !x.rec || S.errors.filter(function (y) { return y.rec === x.rec; }).length === 1; })[0] || groups[k].filter(function (x) { return usedEx.indexOf(x.rec) < 0; })[0] || groups[k][0], ex;
+      if (e.rec) usedEx.push(e.rec);
+      var q = function (r) { return r.quote || ((GL.findLine(D, r.company, r.call, r.line) || {}).text) || ('line ' + r.line); };
+      if (e.rec && e.gold) ex = '“' + esc(q(e.rec)) + '” → recorded <span class="mono">' + esc(GL.fmt(e.rec) + ' ' + (e.rec.period || 'no period') + ' ' + e.rec.basis) + '</span>, should be <span class="mono">' + esc(GL.fmt(e.gold) + ' ' + e.gold.period + ' ' + e.gold.basis) + '</span>';
+      else if (e.rec) ex = '“' + esc(q(e.rec)) + '” → recorded as guidance';
+      else ex = '“' + esc(e.gold.quote) + '” → not extracted';
+      return '<tr><td><b>' + esc(GL.LABEL[k]) + '</b></td><td><span class="pill ' + (GL.SEVERITY[k] === 'critical' ? 'p-bad' : 'p-warn') + '">' + GL.SEVERITY[k] + '</span></td><td class="n">' + groups[k].length + '</td><td class="err-ex">' + ex + '</td></tr>';
+    }).join('');
+  }
+  $('errTable').innerHTML = '<tr><th>Error</th><th>Severity</th><th>Count</th><th>Example</th></tr>' + errRows(SN);
+  function flagText(k) {
+    var p = k.split('|'), lbl = { quiet_cut: 1 };
+    var name = (p[1] === 'seg_growth' ? 'BFSI vertical growth' : (D.metrics[p[1]] || p[1])) + ' ' + p[2];
+    return '<b>' + esc(coName[p[0]]) + '</b> · ' + esc(name) + ' · ' + p[3] + ': <span class="pill p-warn">' + esc(p[4]) + '</span>';
+  }
+  var why = {
+    'DCL|capex|FY27|Q1FY27|quiet cut': '₹25 billion read as ₹25 crore, so capex looks cut by 99%.',
+    'LSS|rev_growth_cc|FY26|Q3FY26|silent drop': '“mid-teens” was skipped, so a maintained guide looks abandoned.',
+    'DCL|vol_growth|FY27|Q3FY26|not repeated': 'An analyst’s “should we assume 12%?” became guidance.',
+    'VAC|rev|FY25|Q1FY27|not repeated': 'A restated past figure became a forecast.',
+    'DCL|vol_growth|FY27|Q2FY27|quiet cut': '“high single digits” was skipped, so the cut vanished.',
+    'LSS|ebit_margin|FY26|Q3FY26|basis shift': 'Everything was read as reported basis.',
+    'LSS|rev_growth_cc|FY27|Q2FY27|silent drop': '“low double-digit” was never captured, so there was nothing to drop.',
+    'LSS|seg_growth|FY26|Q2FY26|not repeated': 'The BFSI floor became an exact number with no period.'
+  };
+  $('damageLead').textContent = 'The naive output gets ' + DN.cells.length + ' ledger cells wrong. That is bad, but the flags are worse: it raises ' + DN.falseFlags.length + ' false alarms and misses ' + DN.missedFlags.length + ' real ones. An analyst would stop trusting the flags inside a week.';
+  function flagList(keys) { return keys.map(function (k) { return '<li>' + flagText(k) + (why[k] ? '<div class="small muted">' + esc(why[k]) + '</div>' : '') + '</li>'; }).join(''); }
+  $('damage').innerHTML = '<div class="card"><h3 class="bad">False alarms</h3><ul class="tight small">' + flagList(DN.falseFlags) + '</ul></div><div class="card"><h3 class="warn">Real flags it missed</h3><ul class="tight small">' + flagList(DN.missedFlags) + '</ul></div>';
+  $('checksNote').innerHTML = '<b>In production there is no answer key.</b> So the same naive output was run through the seven runtime checks, which only look at the transcript. They block <b>' + SN.caughtByChecks + ' of ' + SN.critical + '</b> critical errors here. The checks were written against this corpus too, so treat that as a ceiling, not a promise.';
+
+  // ---------- unseen ----------
+  var H = GL.heldout(D);
+  $('unseenLead').innerHTML = 'Twelve lines written after the rules were frozen, phrased the way management often talks. On these the rule extractor finds <b>' + pct(H.recall) + '</b> of the guidance and gets one period wrong. The cheap pre-filter still keeps <b>' + pct(H.prefilterRecall) + '</b> of the guidance lines, which is the job it actually has.';
+  var OUT = { correct: 'p-ok', 'correctly ignored': 'p-ok', missed: 'p-warn', wrong: 'p-bad', 'false guidance': 'p-bad' };
+  $('unseenTable').innerHTML = '<tr><th>Line (call)</th><th>Gold</th><th>Rules returned</th><th>Outcome</th></tr>' + H.rows.map(function (r) {
+    return '<tr><td>' + esc(r.text) + ' <span class="small muted">(' + r.call + ')</span></td><td class="mono">' + (r.gold ? esc(GL.fmt(r.gold) + ' ' + r.gold.period) : 'not guidance') + '</td><td class="mono">' + (r.got ? esc(GL.fmt(r.got) + ' ' + (r.got.period || 'no period')) : '–') + '</td><td><span class="pill ' + OUT[r.outcome] + '">' + r.outcome + '</span>' + (r.outcome === 'wrong' ? '<div class="small muted">blocked by the period check</div>' : '') + '</td></tr>';
+  }).join('');
+
+  // ---------- grade your own ----------
+  var PROMPT = [
+    'You are extracting forward-looking financial guidance from earnings call transcripts.',
+    'Return ONLY a JSON array, one object per guidance statement:',
+    '{"company": "DCL" | "LSS" | "VAC", "call": "Q1FY26", "line": <line number>, "metric": one of [' + Object.keys(GL.UNITS).join(', ') + '], "period": "FY27" or "H2FY27", "low": number, "high": number or null if open-ended, "unit": "%" | "₹ cr" | "₹/t" | "bps", "basis": "company" | "adjusted" | "segment:BFSI"}',
+    '',
+    'Rules:',
+    '- Only statements by management about the future. Not analysts’ numbers, not reported results, not aspirations.',
+    '- Indian fiscal years: FY27 runs April 2026 to March 2027. "This year" means the fiscal year in progress; on a Q4 call (held after March) it means the new year.',
+    '- Convert money to crore: ₹1 billion = ₹100 crore.',
+    '- Verbal ranges: high single digits = 7–9, mid-teens = 14–16, low double digits = 10–13. "Double-digit" or "over X" is open-ended: high = null.',
+    '- Guidance that excludes one-time items has basis "adjusted". Guidance for a segment or vertical has basis "segment:<NAME>".',
+    '- Cite the exact line number the figure appears on.'
+  ].join('\n');
+  $('prompt').value = PROMPT;
+  $('copyPrompt').onclick = function () {
+    var b = this; function done() { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy prompt'; }, 1500); }
+    if (navigator.clipboard) navigator.clipboard.writeText(PROMPT).then(done, function () { $('prompt').select(); }); else { $('prompt').select(); }
+  };
+  $('dlCorpus').onclick = function () { download('guidance-ledger-transcripts.txt', GL.corpusText(D)); };
+  $('dlGold').onclick = function () { download('guidance-ledger-gold.csv', GL.toCSV(D.gold, ['company', 'call', 'line', 'metric', 'period', 'low', 'high', 'unit', 'basis', 'quote']), 'text/csv'); };
+  $('loadNaive').onclick = function () { $('paste').value = JSON.stringify(N.map(function (r) { return { company: r.company, call: r.call, line: r.line, metric: r.metric, period: r.period, low: r.low, high: r.high, unit: r.unit, basis: r.basis }; }), null, 1); };
+  $('gradeBtn').onclick = function () {
+    var p = GL.parseModelOutput($('paste').value);
+    if (p.error) { $('byoOut').innerHTML = '<span class="bad">' + esc(p.error) + '</span>'; return; }
+    var s = GL.grade(D, p.recs), dd = GL.ledgerDiff(D, LG, GL.ledger(D, p.recs));
+    var blocked = p.recs.filter(function (r) { return GL.checks(D, r).length; }).length;
+    $('byoOut').innerHTML = '<div class="grid g2" style="margin-top:8px">' + scoreCard('Your model', s, p.recs.length + ' records read' + (p.skipped ? ', ' + p.skipped + ' skipped (missing fields)' : '') + '.') +
+      '<div class="card"><h3>What it does downstream</h3><div class="gate"><span>Ledger cells that differ from gold</span><span class="mono ' + (dd.cells.length ? 'bad' : 'good') + '">' + dd.cells.length + '</span></div>' +
+      '<div class="gate"><span>False alarms raised</span><span class="mono ' + (dd.falseFlags.length ? 'bad' : 'good') + '">' + dd.falseFlags.length + '</span></div><div class="gate"><span>Real flags missed</span><span class="mono ' + (dd.missedFlags.length ? 'bad' : 'good') + '">' + dd.missedFlags.length + '</span></div>' +
+      '<div class="gate"><span>Records blocked by runtime checks</span><span class="mono">' + blocked + '</span></div><div class="gate"><span>Critical errors those checks catch</span><span class="mono">' + s.caughtByChecks + ' of ' + s.critical + '</span></div></div></div>' +
+      (s.errors.length ? '<div class="tw" style="margin-top:12px"><table><tr><th>Error</th><th>Severity</th><th>Count</th><th>Example</th></tr>' + errRows(s) + '</table></div>' : '<p class="good" style="margin-top:12px"><b>Clean run.</b> Every gold statement found, nothing extra, every figure grounded.</p>');
+  };
+
+  // ---------- traps ----------
+  var TRAPS = [
+    ['Analyst’s number', 'Should we assume 12 percent volume growth for FY27 in our models?', 'Logged as guidance; the model now carries a number management never gave.', 'Speaker check; the brief says it was floated and not endorsed.'],
+    ['Hedged non-answer', 'We will not give a number for FY27 yet, but we are confident of beating industry growth.', 'Read as guidance, or silently ignored.', 'Flagged as “declined to guide” next to the question.'],
+    ['Crore vs billion', 'FY27 capex remains about ₹25 billion. (Last call: ₹2,500 crore.)', '100× error, which then shows up as a 99% capex cut.', 'Convert to crore; plausible-range check per unit.'],
+    ['Verbal range', 'We continue to expect mid-teens constant currency growth.', 'Skipped, so a maintained guide looks dropped.', 'House convention (editable); goes to one-click review.'],
+    ['Open-ended', 'For FY27 we expect double-digit volume growth.', 'Recorded as exactly 10%, which hides the later cut to 7–9%.', 'Floor with no upper bound; floor-vs-range check.'],
+    ['Fiscal period', 'Our BFSI vertical should grow over 20 percent this year. (Q1 call)', '“This year” means a different FY on a Q4 call.', 'Period rule tied to the call date; period check.'],
+    ['Half-year, relative', 'H2 FY27 margins about 150 basis points above H1.', 'Read as an FY margin of 150, or of 1.5%.', 'Basis-point unit and H2 period; held until both halves report.'],
+    ['Adjusted vs reported', 'Excluding the one-time restructuring charge, we expect FY26 EBIT margin of 21 to 22 percent.', 'Reported 19.8% compared with an adjusted guide: the miss disappears.', 'Basis is part of the record; one verdict per basis.'],
+    ['Segment vs company', 'Our BFSI vertical should grow over 20 percent this year.', 'Logged as company growth.', 'Segment basis on the record.'],
+    ['Past actual', 'FY26 volumes grew 6.4 percent, in line with our revised view.', 'Last year’s result logged as next year’s target.', 'Forward-looking language check.'],
+    ['Restatement', 'FY25 revenue is restated to ₹3,980 crore from ₹4,010 crore.', 'Growth computed off the old base.', 'Surfaced in the brief; not logged as guidance.'],
+    ['Quiet cut', 'We now see FY27 volume growth in the high single digits.', 'Reads as neutral. It is a cut from double-digit.', 'Compared with the last guide; flagged when “lower” is never said.'],
+    ['Silent drop', 'EBITDA per tonne: guided in Q1 and Q2, absent in Q3, then reported 11% below the low end.', 'Invisible in any single-call summary.', 'Ledger tracks every open period, call by call.'],
+    ['Aspiration', 'We aspire to take exports to 35 percent of revenue over the next few years.', 'Logged as a target with no period.', 'Aspiration filter.']
+  ];
+  $('trapTable').innerHTML = '<tr><th>Trap</th><th>Line in the test set</th><th>What goes wrong</th><th>How it’s handled</th></tr>' + TRAPS.map(function (t) { return '<tr><td><b>' + esc(t[0]) + '</b></td><td class="small">“' + esc(t[1]) + '”</td><td class="small">' + esc(t[2]) + '</td><td class="small">' + esc(t[3]) + '</td></tr>'; }).join('');
+
+  // ---------- production ----------
+  var PF = GL.prefilter(D), review = C.filter(GL.needsReview).length;
+  $('f1').textContent = 'A cheap pass keeps only management lines with a number or a verbal range: ' + pct(PF.share) + ' of lines here, with ' + pct(PF.recall) + ' of guidance kept. On a real hour-long call the share is far smaller.';
+  $('f4').textContent = 'Verbal ranges, open-ended floors, basis changes and half-year items go to the analyst with the line highlighted: ' + review + ' of ' + C.length + ' records here. The rest are accepted automatically.';
+  var INPUTS = [
+    ['calls', 'Calls per quarter (team coverage)', 100, 1], ['tokensPerCall', 'Transcript tokens per call', 12000, 500], ['flaggedShare', 'Share of tokens the filter keeps', 0.1, 0.01],
+    ['contextMult', 'Context around each flagged line (×)', 3, 0.5], ['bigPrice', 'Large model, $ per million tokens', 3, 0.25], ['smallPrice', 'Small model, $ per million tokens', 0.25, 0.05],
+    ['verifyTokens', 'Verification-pass tokens per call', 1500, 100], ['manualMin', 'Analyst minutes per call today', 40, 5], ['reviewMin', 'Minutes to review the brief', 8, 1]
+  ];
+  $('calc').innerHTML = INPUTS.map(function (i) { return '<label>' + i[1] + '<input type="number" id="in_' + i[0] + '" value="' + i[2] + '" step="' + i[3] + '" min="0"></label>'; }).join('');
+  function calc() {
+    var p = {}; INPUTS.forEach(function (i) { p[i[0]] = Math.max(0, parseFloat($('in_' + i[0]).value) || 0); });
+    if (!p.calls) { $('calcOut').innerHTML = '<p class="muted">Enter at least one call.</p>'; return; }
+    var r = GL.cost(p);
+    function g(a, b, cls) { return '<div class="gate"><span>' + a + '</span><span class="mono ' + (cls || '') + '">' + b + '</span></div>'; }
+    $('calcOut').innerHTML = '<h3>Per quarter</h3>' + g('Model cost: one large model reads every transcript', '$' + r.allBig.toFixed(2)) + g('Model cost: filter, extract, then verify', '$' + r.routed.toFixed(2), 'good') +
+      g('Analyst hours today', r.manualHrs.toFixed(0) + ' h') + g('Analyst hours with the brief', r.reviewHrs.toFixed(0) + ' h') + g('Analyst hours back', r.hoursBack.toFixed(0) + ' h', 'good') +
+      '<p class="small" style="margin-top:10px">At these assumptions the model bill is a rounding error next to analyst time. So routing is not mainly about cost. It keeps the extractor on a few lines at a time, which means fewer blended answers, and it pays for a second verification pass.</p>';
+  }
+  Array.prototype.forEach.call($('calc').querySelectorAll('input'), function (el) { el.oninput = calc; });
+  calc();
+})();
+
+</script>
+
+</body>
+</html>
