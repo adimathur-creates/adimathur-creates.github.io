@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Stop the coin farms, not the NeuCard holders: a real-time NeuCoin abuse policy replay for Tata Neu. Synthetic data.">
+</head><body>
+<title>Stop the Farms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter+Tight:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* A risk memo with the engine inside it. Dark ink, one violet accent, red for harm, green for saved. */
+:root{
+  --paper:#F6F5F2; --panel:#FFFFFF; --ink:#17161A; --muted:#5F5D66; --rule:#E1DFE6; --soft:#EEECF2;
+  --acc:#5B2BD6; --acc-soft:#ECE6FC; --ok:#16794C; --ok-soft:#DFF2E7; --bad:#C2372B; --bad-soft:#F9E2DF; --warn:#98620A; --warn-soft:#F7ECD8;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"Inter Tight","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111014; --panel:#19181D; --ink:#ECEAF0; --muted:#A3A0AC; --rule:#2C2A32; --soft:#211F26;
+  --acc:#A98BFF; --acc-soft:#251C40; --ok:#5DCB8F; --ok-soft:#14291D; --bad:#F07B6E; --bad-soft:#371A17; --warn:#E5B04E; --warn-soft:#30250F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111014; --panel:#19181D; --ink:#ECEAF0; --muted:#A3A0AC; --rule:#2C2A32; --soft:#211F26;
+  --acc:#A98BFF; --acc-soft:#251C40; --ok:#5DCB8F; --ok-soft:#14291D; --bad:#F07B6E; --bad-soft:#371A17; --warn:#E5B04E; --warn-soft:#30250F; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6;margin:0;padding-inline:16px;padding-block:30px 80px}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2{font-family:var(--f-display);line-height:1.05;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:clamp(2.5rem,9vw,4.4rem);letter-spacing:-.02em}
+h2{font-size:clamp(1.5rem,4.6vw,2.1rem);font-weight:500}
+h3{font-size:.98rem;margin:0}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.k{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.sec{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:var(--acc)}
+.lede{font-size:1.12rem;max-width:66ch}
+.muted,.status{color:var(--muted);font-size:.88rem}
+a{color:var(--acc)}
+.exec{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--acc);border-radius:8px;padding:18px 20px}
+.exec ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 15px;display:flex;flex-direction:column;gap:7px}
+.card p{font-size:.9rem}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:.66rem;letter-spacing:.04em;padding:2px 7px;border-radius:3px;text-transform:uppercase;white-space:nowrap}
+.tag.bad{background:var(--bad-soft);color:var(--bad)} .tag.ok{background:var(--ok-soft);color:var(--ok)} .tag.acc{background:var(--acc-soft);color:var(--acc)} .tag.warn{background:var(--warn-soft);color:var(--warn)}
+.sheet{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:18px 16px;display:flex;flex-direction:column;gap:16px}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+.controls input[type=number],.controls select{font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);color:var(--ink);width:120px}
+.controls input[type=range]{width:180px;accent-color:var(--acc)}
+.controls output{font-family:var(--f-mono);font-size:.8rem;color:var(--ink)}
+button{font:inherit;font-size:.86rem;font-weight:600;padding:9px 13px;border-radius:7px;border:1px solid var(--rule);background:var(--soft);color:var(--ink);cursor:pointer}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) button.primary{color:#120c22}}
+.duel{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:660px){.duel{grid-template-columns:1fr}}
+.col{border:1px solid var(--rule);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.big{font-family:var(--f-display);font-size:2.4rem;line-height:1;font-weight:700}
+.big small{font-family:var(--f-body);font-size:.88rem;color:var(--muted);font-weight:400}
+.row{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;border-bottom:1px dashed var(--rule);padding:4px 0}
+.row span:last-child{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.good{color:var(--ok)} .harm{color:var(--bad)}
+.tbl{width:100%;border-collapse:collapse;font-size:.86rem}
+.tbl th,.tbl td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+.tbl th{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.tbl td.n,.tbl th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl tr.click{cursor:pointer} .tbl tr.click:hover td{background:var(--soft)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.kpi{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi .v{font-family:var(--f-display);font-size:1.7rem;line-height:1.1;font-weight:700}
+.kpi .s{font-size:.78rem;color:var(--muted)}
+.ladder{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+@media (max-width:700px){.ladder{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rung{border-radius:8px;padding:10px;font-size:.82rem;display:flex;flex-direction:column;gap:4px;border:1px solid var(--rule);background:var(--panel)}
+.rung b{font-size:.88rem}
+.case{border:1px solid var(--rule);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--paper)}
+.tl{display:flex;flex-direction:column;gap:3px;font-family:var(--f-mono);font-size:.76rem;max-height:220px;overflow:auto}
+.msg{background:var(--acc-soft);border-radius:10px;padding:10px 12px;font-size:.88rem}
+ol.plain,ul.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:7px}
+footer{border-top:1px solid var(--rule);padding-top:22px;display:flex;flex-direction:column;gap:10px;font-size:.88rem;color:var(--muted)}
+</style>
+
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:16px">
+  <span class="k">Product Manager, Fraud Risk &amp; Abuse Prevention · Tata Neu · work sample by Aditya Mathur</span>
+  <h1>Stop the coin farms. Not the NeuCard holders.</h1>
+  <p class="lede">Tata Neu is betting on loyalty and financial services. That makes NeuCoins worth stealing, and makes your best customers expensive to get wrong. This page replays 60 days of a synthetic NeuCoin ledger through two risk policies, event by event, and scores each on the coins it saves and the good customers it hurts.</p>
+  <p class="muted">Independent work on synthetic data. Not affiliated with Tata Digital. The “blunt rules” are a hypothetical starting point, not a description of Tata Neu’s actual controls.</p>
+</header>
+
+<section class="exec">
+  <span class="k">The short version</span>
+  <ol>
+    <li><strong>Abuse here isn’t one problem. It’s five:</strong> referral farms, earn-and-return, account takeover, UPI coin cycling, and look-alikes that are actually genuine (phone upgraders, people moving city, shop owners who return damaged stock).</li>
+    <li><strong>Single-signal rules</strong> catch <span id="sBs">…</span> of abused coins but restrict <span id="sBg">…</span> genuine customers, <span id="sBn">…</span> of them NeuCard holders. Once customer harm is priced in, they lose money.</li>
+    <li><strong>A layered policy</strong> gives each pattern its own response, using the least friction that stops the loss: withhold the bonus, hold the coins until the return window closes, cap UPI coins, verify the person, or send the order to a human. It saves <span id="sLs">…</span> and restricts <span id="sLg">…</span> genuine customers.</li>
+    <li><strong>Tenured NeuCard holders are never auto-restricted.</strong> Their risky orders wait for a human review with a 24-hour SLA (<span id="sLr">…</span> cases), so a takeover still can’t spend the coins.</li>
+    <li><strong>What it still misses is on the page:</strong> rings that share nothing visible, and earn-and-return orders just under the hold threshold.</li>
+  </ol>
+</section>
+
+<section>
+  <span class="sec">01 · Why this problem</span>
+  <h2>Every NeuCoin is ₹1, and the people complaining loudest are your best customers.</h2>
+  <div class="grid">
+    <div class="card"><span class="k">The bet</span><p>Tata Digital is refocusing Tata Neu on loyalty and financial services (ETRetail, April 2026). More coins flowing through co-brand cards and UPI means more value to farm.</p></div>
+    <div class="card"><span class="k">The money</span><p>Tata Digital reported a loss of about ₹4,974 Cr in FY26. NeuCoins are worth ₹1 each with no minimum order, so leaked coins are cash.</p></div>
+    <div class="card"><span class="k">The other side</span><p>Customers publicly complain about restricted accounts and blocked NeuCoins, and Tata Digital’s help desk has a dedicated path: “Restricted Account (NeuCard Holder): escalate to TN_Risk.” False positives already cost support time and trust.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="sec">02 · What’s in the ledger</span>
+  <h2>Five ways to steal coins, three ways to look guilty while innocent.</h2>
+  <div class="grid" id="patterns"></div>
+</section>
+
+<section>
+  <span class="sec">03 · The policy duel</span>
+  <h2>Same 60 days, same people. Two policies, run in real time.</h2>
+  <p>Each event (order, return, bonus, UPI payment, device change, coin burn) is processed in order, and the policy only sees what has happened so far. That’s how a live risk engine works, and it’s why a return-based rule fires after the coins are already gone.</p>
+  <div class="sheet">
+    <div class="controls">
+      <label>Accounts<select id="n"><option>2000</option><option selected>5000</option><option>10000</option></select></label>
+      <label>Seed<input type="number" id="seed" value="3"></label>
+      <button class="primary" id="go">Run both</button>
+    </div>
+    <div class="duel"><div class="col" id="colB"></div><div class="col" id="colL"></div></div>
+    <div class="scroll"><table class="tbl" id="byType"></table></div>
+    <div>
+      <h3 style="margin-bottom:8px">Put a price on customer harm</h3>
+      <div class="controls">
+        <label>₹ per genuine customer restricted<input type="number" id="cg" value="1500"></label>
+        <label>₹ per NeuCard holder restricted<input type="number" id="cn" value="8000"></label>
+        <label>₹ per human review<input type="number" id="cr" value="60"></label>
+      </div>
+      <p class="status" style="margin-top:6px">The costs are assumptions covering support contacts, appeals and the chance a good customer leaves. A NeuCard holder costs more because they bring card spend and fees with them. Replace these with Tata Neu’s numbers.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="sec">04 · Tune the layered policy</span>
+  <h2>Every threshold trades coins saved against customer friction.</h2>
+  <div class="sheet">
+    <div class="controls">
+      <label>Hold coins on orders over ₹<output id="oHold">10,000</output><input type="range" id="hold" min="3000" max="30000" step="1000" value="10000"></label>
+      <label>Withhold bonus at ring size<output id="oRing">3</output><input type="range" id="ring" min="2" max="8" step="1" value="3"></label>
+      <label>UPI coins stop after payments to one merchant<output id="oUpi">15</output><input type="range" id="upi" min="5" max="40" step="1" value="15"></label>
+      <label>Protect NeuCard holders after days<output id="oProt">180</output><input type="range" id="prot" min="0" max="1000" step="30" value="180"></label>
+    </div>
+    <div class="kpis" id="tuneOut"></div>
+  </div>
+</section>
+
+<section>
+  <span class="sec">05 · The review queue</span>
+  <h2>What an analyst sees, and what the customer hears.</h2>
+  <p>Human reviews come first, then restrictions, biggest coin value first. Click a row for the timeline, the reason codes, and the message the customer gets.</p>
+  <div class="sheet">
+    <div class="scroll"><table class="tbl" id="queue"></table></div>
+    <div id="caseView"></div>
+  </div>
+</section>
+
+<section>
+  <span class="sec">06 · The response ladder</span>
+  <h2>Use the least friction that stops the loss.</h2>
+  <div class="ladder">
+    <div class="rung"><span class="tag ok">1</span><b>Allow</b><span class="muted">Most activity.</span></div>
+    <div class="rung"><span class="tag acc">2</span><b>Hold coins</b><span class="muted">Big orders, until the return window closes. Nothing is “wrong.”</span></div>
+    <div class="rung"><span class="tag acc">3</span><b>Don’t pay</b><span class="muted">Withhold a farmed bonus, cap repeated UPI coins. No block.</span></div>
+    <div class="rung"><span class="tag warn">4</span><b>Verify</b><span class="muted">New device + new number + new address: confirm on the old number.</span></div>
+    <div class="rung"><span class="tag warn">5</span><b>Human review</b><span class="muted">Tenured NeuCard holders. That order waits, the account doesn’t.</span></div>
+    <div class="rung"><span class="tag bad">6</span><b>Restrict</b><span class="muted">Only proven rings. Always with an appeal path.</span></div>
+  </div>
+</section>
+
+<section>
+  <span class="sec">07 · If I joined</span>
+  <h2>First 90 days, and the scorecard I’d report weekly.</h2>
+  <ol class="plain">
+    <li><strong>Weeks 1–3: size the losses, honestly.</strong> Coins lost by pattern, and the false positives: restricted accounts later reinstated on appeal, and support tickets tagged “NeuCoins blocked.” Both sides get a number before anything changes.</li>
+    <li><strong>Weeks 4–6: ship the cheapest fixes first.</strong> Holds on high-value orders until the return window closes, and capping repeated UPI coins. These save money without blocking anyone.</li>
+    <li><strong>Weeks 7–10: the NeuCard review lane</strong> with a 24-hour SLA, and step-up verification on the takeover pattern. Run it on 10% of traffic against a control.</li>
+    <li><strong>Weeks 11–13: graph signals for rings</strong>, starting with shared devices and addresses, then payment instruments. Write the restriction policy and appeal flow with Legal and Customer Support.</li>
+  </ol>
+  <div class="scroll"><table class="tbl">
+    <tr><th>Weekly scorecard</th><th>Why</th></tr>
+    <tr><td>Coins lost to abuse as a share of coins issued, by pattern</td><td>The outcome. Reporting it by pattern shows where to build next.</td></tr>
+    <tr><td>Genuine accounts restricted per 10,000 active</td><td>The cost. Reported alongside losses, every week, never alone.</td></tr>
+    <tr><td>NeuCard holders restricted</td><td>Target zero automated restrictions. Each one gets a written root cause.</td></tr>
+    <tr><td>Appeal overturn rate</td><td>If many restrictions are overturned, the rule is wrong, not the customer.</td></tr>
+    <tr><td>Review SLA met and step-up pass rate</td><td>Friction that genuine people clear quickly is the right friction.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <span class="sec">08 · What it still misses</span>
+  <h2>Where this design is weak.</h2>
+  <ul class="plain">
+    <li><strong>Rings that share nothing visible</strong> (fresh devices, scattered addresses). Next signals: payment instruments, KYC name similarity, and sign-up timing.</li>
+    <li><strong>Earn-and-return just under the hold threshold.</strong> Lower the threshold and you delay more genuine buyers. The slider in section 04 shows the trade.</li>
+    <li><strong>Takeovers that phish the OTP on the real number</strong> skip the strongest signal. They’re caught here only by the large-burn-after-new-device rule.</li>
+    <li><strong>The simulation sets its own rates.</strong> It shows the mechanism and the trade-offs, not Tata Neu’s actual loss numbers.</li>
+  </ul>
+</section>
+
+<footer>
+  <p><strong style="color:var(--ink)">Why me.</strong> I spent a year on Stripe’s fraud and anti-money-laundering team (US market), working a 3x caseload at 0% error. I saw first-hand that most alerts were false positives, and that every one cost an analyst’s time and a customer’s patience. Then I was a payments APM at EnKash (checkout, payment links, refunds, settlement). I built this page with Claude Code; 35 automated tests cover the replay engine, the policies and the scoring.</p>
+  <p>Aditya Mathur · Bengaluru · <a href="mailto:adityamathur2004@gmail.com">adityamathur2004@gmail.com</a> · +91 95354 25442 · <a href="https://linkedin.com/in/adityaamathur">LinkedIn</a> · <a href="https://adimathur-creates.github.io/">Other work</a></p>
+  <p>Sources: NeuCoins rules (CardAdvisor guide, HDFC Bank card pages); Tata Digital FY26 results (Inc42); Tata Neu strategy (ETRetail via Pulse, Apr 2026); Tata Digital help desk article on restricted NeuCard accounts. All accounts and events on this page are synthetic.</p>
+</footer>
+</div>
+
+<script>
+// DATA: a synthetic loyalty ledger with genuine customers and five planted abuse patterns.
+// Every account carries a hidden truth label so policies can be scored. Nothing here is Tata Neu data;
+// coin rules are simplified from public NeuCoins terms (1 coin = ₹1, earn on orders, sign-up/referral bonuses, a return window).
+var DATA = (function () {
+  'use strict';
+  function rng(seed) { var s = seed >>> 0 || 1; return function () { s = (s + 0x6D2B79F5) >>> 0; var t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  var BRANDS = ['BigBasket', 'Croma', 'Tata CLiQ', 'Tata 1mg', 'Westside', 'Titan', 'IHCL'];
+  var RESALE = { Croma: 1, Titan: 1, 'Tata CLiQ': 0.5 };   // brands where coin burns turn into resellable goods
+
+  var TYPES = {
+    genuine:      { label: 'Genuine customer' },
+    neucard:      { label: 'Genuine NeuCard holder (high value)' },
+    reseller:     { label: 'Genuine heavy buyer (small shop owner)' },
+    referral_ring:{ label: 'Referral farm', abuse: true },
+    earn_return:  { label: 'Earn-and-return', abuse: true },
+    ato:          { label: 'Account takeover', abuse: true },
+    upi_cycle:    { label: 'UPI coin cycling', abuse: true }
+  };
+
+  // n accounts over a 60-day window. mix: share of each type.
+  function build(n, seed, mix) {
+    mix = mix || { genuine: 0.72, neucard: 0.14, reseller: 0.03, referral_ring: 0.05, earn_return: 0.025, ato: 0.01, upi_cycle: 0.025 };
+    var r = rng(seed || 3), A = [], E = [], dev = 0, addr = 0, pi = 0;
+    function nd() { return 'D' + (++dev); } function na() { return 'A' + (++addr); } function np() { return 'P' + (++pi); }
+    function pick(a) { return a[Math.floor(r() * a.length)]; }
+    function ev(o) { E.push(o); }
+    var keys = Object.keys(mix), tot = keys.reduce(function (s, k) { return s + mix[k]; }, 0);
+    var counts = {}; keys.forEach(function (k) { counts[k] = Math.round(n * mix[k] / tot); });
+    var id = 0;
+    function acct(type, o) { id++; var a = Object.assign({ id: 'U' + String(id).padStart(5, '0'), type: type, abuse: !!TYPES[type].abuse, age: 0, devices: [], addresses: [], instruments: [], neucard: false, kycName: 'n' + id }, o); A.push(a); return a; }
+    // ---- genuine customers
+    for (var i = 0; i < counts.genuine; i++) {
+      var a = acct('genuine', { age: 30 + Math.floor(r() * 900), devices: [nd()], addresses: [na()], instruments: [np()] });
+      if (r() < 0.25) a.devices.push(nd());                      // a second phone
+      if (r() < 0.03 && A.length > 10) { var mate = A[A.length - 2]; if (mate.type === 'genuine') { a.devices[0] = mate.devices[0]; a.addresses[0] = mate.addresses[0]; } }   // couple sharing a tablet and a home
+      if (r() < 0.02) { for (var u = 0; u < 35; u++) ev({ acct: a.id, day: Math.floor(r() * 60), kind: 'upi', amount: 40 + Math.floor(r() * 400), merchant: 'M' + (100 + Math.floor(r() * 400)), earn: 0 }); }   // pays everything by UPI
+      if (r() < 0.06) a.addresses.push(A.length > 50 ? pick(A.slice(-50)).addresses[0] : na());   // family member at the same address
+      var orders = 1 + Math.floor(r() * 6);
+      for (var k = 0; k < orders; k++) { var amt = 300 + Math.round(r() * 4000), b = pick(BRANDS); ev({ acct: a.id, day: Math.floor(r() * 60), kind: 'order', brand: b, amount: amt, earn: Math.round(amt * 0.02), device: pick(a.devices), address: a.addresses[0] }); if (r() < 0.07) ev({ acct: a.id, day: Math.min(59, Math.floor(r() * 60) + 3), kind: 'return', brand: b, amount: amt, clawback: true }); }
+      if (r() < 0.5) ev({ acct: a.id, day: Math.floor(r() * 60), kind: 'burn', brand: pick(BRANDS), coins: 20 + Math.floor(r() * 300), device: a.devices[0], address: a.addresses[0] });
+      if (r() < 0.04) ev({ acct: a.id, day: Math.floor(r() * 60), kind: 'device_change', device: nd() });   // new phone, normal
+    }
+    // ---- NeuCard holders: high spend, high coin balances, big burns on electronics (looks like ATO to a blunt rule)
+    for (i = 0; i < counts.neucard; i++) {
+      a = acct('neucard', { age: 200 + Math.floor(r() * 900), devices: [nd()], addresses: [na()], instruments: [np()], neucard: true });
+      for (k = 0; k < 8 + Math.floor(r() * 10); k++) { amt = r() < 0.06 ? 12000 + Math.round(r() * 60000) : 800 + Math.round(r() * 9000); b = pick(BRANDS); ev({ acct: a.id, day: Math.floor(r() * 60), kind: 'order', brand: b, amount: amt, earn: Math.round(amt * 0.07), device: a.devices[0], address: a.addresses[0] }); }
+      if (r() < 0.6) ev({ acct: a.id, day: 40 + Math.floor(r() * 20), kind: 'burn', brand: pick(['Croma', 'Titan', 'IHCL']), coins: 2000 + Math.floor(r() * 6000), device: a.devices[0], address: a.addresses[0] });
+      if (r() < 0.12) { var d2 = nd(), dc = 30 + Math.floor(r() * 25); a.devices.push(d2); ev({ acct: a.id, day: dc, kind: 'device_change', device: d2 }); if (r() < 0.5) ev({ acct: a.id, day: dc + Math.floor(r() * 4), kind: 'burn', brand: 'Croma', coins: 2500 + Math.floor(r() * 4000), device: d2, address: a.addresses[0] }); }   // upgraded phone, then a big buy
+      if (r() < 0.015) { var d3 = nd(), a3 = na(), dm = 20 + Math.floor(r() * 35); a.devices.push(d3); a.addresses.push(a3); ev({ acct: a.id, day: dm, kind: 'device_change', device: d3 }); ev({ acct: a.id, day: dm, kind: 'contact_change', field: 'phone' }); ev({ acct: a.id, day: dm, kind: 'burn', brand: 'Croma', coins: 1500 + Math.floor(r() * 3000), device: d3, address: a3 }); }   // moved city: new phone, new number, new address, big buy
+      if (r() < 0.08) ev({ acct: a.id, day: Math.floor(r() * 60), kind: 'return', brand: 'Croma', amount: 5000, clawback: true });
+    }
+    // ---- heavy buyers: many orders, many returns of damaged stock, one address — legit but noisy
+    for (i = 0; i < counts.reseller; i++) {
+      a = acct('reseller', { age: 100 + Math.floor(r() * 600), devices: [nd()], addresses: [na()], instruments: [np(), np()] });
+      for (k = 0; k < 20 + Math.floor(r() * 15); k++) { amt = 500 + Math.round(r() * 3000); ev({ acct: a.id, day: Math.floor(r() * 60), kind: 'order', brand: 'BigBasket', amount: amt, earn: Math.round(amt * 0.02), device: a.devices[0], address: a.addresses[0] }); if (r() < 0.15) ev({ acct: a.id, day: Math.floor(r() * 60), kind: 'return', brand: 'BigBasket', amount: amt, clawback: true }); }
+    }
+    // ---- referral farms: rings of 6–14 new accounts on 1–2 devices and an address or two, each claims the bonus and burns it fast on resellable goods
+    var left = counts.referral_ring;
+    while (left > 0) {
+      var size = Math.min(left, 6 + Math.floor(r() * 9)), ringDev = [nd(), nd()], ringAddr = [na()], parent = null, emu = r() < 0.5, spread = r() < 0.2;
+      if (r() < 0.5) ringAddr.push(na());
+      for (k = 0; k < size; k++) {
+        a = acct('referral_ring', { age: Math.floor(r() * 10), devices: [emu ? nd() : pick(ringDev)], addresses: [spread ? na() : pick(ringAddr)], instruments: [np()], ring: 'R' + id });   // spread rings share nothing we can see
+        var d0 = Math.floor(r() * 50);
+        ev({ acct: a.id, day: d0, kind: 'signup_bonus', coins: 500, referrer: parent, device: a.devices[0] });
+        ev({ acct: a.id, day: d0 + Math.floor(r() * 2), kind: 'burn', brand: pick(['Croma', 'Titan', 'Croma']), coins: 480 + Math.floor(r() * 20), device: a.devices[0], address: a.addresses[0] });
+        parent = parent || a.id;
+      }
+      left -= size;
+    }
+    // ---- earn-and-return: big orders earn coins, coins burned immediately, then the order is returned before clawback lands
+    for (i = 0; i < counts.earn_return; i++) {
+      a = acct('earn_return', { age: 20 + Math.floor(r() * 300), devices: [nd()], addresses: [na()], instruments: [np()] });
+      for (k = 0; k < 3 + Math.floor(r() * 4); k++) {
+        amt = (i % 3 === 0) ? 7000 + Math.round(r() * 2900) : 15000 + Math.round(r() * 40000); var dd = Math.floor(r() * 50);   // a third stay under ₹10k
+        ev({ acct: a.id, day: dd, kind: 'order', brand: 'Croma', amount: amt, earn: Math.round(amt * 0.05), device: a.devices[0], address: a.addresses[0] });
+        ev({ acct: a.id, day: dd + 1, kind: 'burn', brand: pick(['Titan', 'Tata CLiQ', 'Westside']), coins: Math.round(amt * 0.05), device: a.devices[0], address: a.addresses[0] });
+        ev({ acct: a.id, day: dd + 4 + Math.floor(r() * 4), kind: 'return', brand: 'Croma', amount: amt, clawback: false });   // coins already spent: clawback fails
+      }
+    }
+    // ---- account takeover: established account, sudden new device + OTP-number change, full balance burned to a new address within hours
+    for (i = 0; i < counts.ato; i++) {
+      a = acct('ato', { age: 200 + Math.floor(r() * 800), devices: [nd()], addresses: [na()], instruments: [np()], neucard: r() < 0.5 });
+      for (k = 0; k < 6; k++) { amt = 1000 + Math.round(r() * 5000); ev({ acct: a.id, day: Math.floor(r() * 40), kind: 'order', brand: pick(BRANDS), amount: amt, earn: Math.round(amt * 0.05), device: a.devices[0], address: a.addresses[0] }); }
+      var t = 45 + Math.floor(r() * 12), bad = nd(), badAddr = na(); a.devices.push(bad); a.addresses.push(badAddr);
+      ev({ acct: a.id, day: t, kind: 'device_change', device: bad });
+      if (r() < 0.6) ev({ acct: a.id, day: t, kind: 'contact_change', field: 'phone' });   // the rest phished the OTP on the real number
+      ev({ acct: a.id, day: t, kind: 'burn', brand: 'Croma', coins: 1500 + Math.floor(r() * 4000), device: bad, address: badAddr, full: true });
+    }
+    // ---- UPI coin cycling: dozens of tiny UPI payments to a handful of linked merchants to hit the monthly UPI coin cap, then burn
+    for (i = 0; i < counts.upi_cycle; i++) {
+      a = acct('upi_cycle', { age: 15 + Math.floor(r() * 200), devices: [nd()], addresses: [na()], instruments: [np()] });
+      var mer = 'M' + Math.floor(r() * 6);
+      for (k = 0; k < 40 + Math.floor(r() * 40); k++) ev({ acct: a.id, day: Math.floor(r() * 60), kind: 'upi', amount: 100 + Math.floor(r() * 150), merchant: mer, earn: 12 });
+      ev({ acct: a.id, day: 58, kind: 'burn', brand: 'Croma', coins: 480 + Math.floor(r() * 20), device: a.devices[0], address: a.addresses[0] });
+    }
+    // Genuine UPI users too (a few small payments to many merchants)
+    A.filter(function (x) { return x.type === 'genuine' || x.type === 'neucard'; }).forEach(function (x) { if (r() < 0.35) for (var j = 0; j < 3 + Math.floor(r() * 12); j++) ev({ acct: x.id, day: Math.floor(r() * 60), kind: 'upi', amount: 50 + Math.floor(r() * 2000), merchant: 'M' + (100 + Math.floor(r() * 400)), earn: 0 }); });
+    E.sort(function (p, q) { return p.day - q.day; });
+    return { accounts: A, events: E, types: TYPES };
+  }
+  return { rng: rng, build: build, TYPES: TYPES, RESALE: RESALE };
+})();
+
+
+// NR: NeuCoin risk. Replays a loyalty ledger event by event and applies a policy in real time,
+// the way a risk engine would see it: only what has happened so far. Scores every policy on
+// coins saved, genuine customers restricted, high-value NeuCard holders hit, friction and review load.
+// Pure functions, no network. Browser and Node.
+var NR = (function () {
+  'use strict';
+
+  // ---------- union-find over shared devices and addresses ----------
+  function Clusters() { this.p = {}; this.size = {}; this.members = {}; }
+  Clusters.prototype.find = function (x) { if (this.p[x] === undefined) { this.p[x] = x; this.size[x] = 1; this.members[x] = [x]; } while (this.p[x] !== x) { this.p[x] = this.p[this.p[x]]; x = this.p[x]; } return x; };
+  Clusters.prototype.union = function (a, b) { a = this.find(a); b = this.find(b); if (a === b) return a; if (this.size[a] < this.size[b]) { var t = a; a = b; b = t; } this.p[b] = a; this.size[a] += this.size[b]; this.members[a] = this.members[a].concat(this.members[b]); return a; };
+
+  // ---------- policies ----------
+  // Blunt: the kind of single-signal rules a young risk stack starts with. Hypothetical, not Tata Neu's rules.
+  var BLUNT = { name: 'Blunt rules', kind: 'blunt', bigBurn: 2000, bigBurnDaysAfterDevice: 7, maxReturns: 3, sharedDevice: true, maxUpi: 30 };
+  // Layered: one targeted response per abuse pattern, with the least friction that stops the loss.
+  var LAYERED = { name: 'Layered policy', kind: 'layered', ringSize: 3, ringMaxAge: 30, holdOver: 10000, holdDays: 10, upiPerMerchant: 15, protectTenure: 180, atoStepUp: true, spikeBurn: 1500, spikeDays: 7 };
+
+  function newState(acc) { return { acc: acc, restricted: false, review: false, stepUps: 0, held: [], earned: 0, upiByMerchant: {}, upiCount: 0, upiEarned: 0, withheld: 0, returns: 0, lastDevChange: -99, lastContactChange: -99, reasons: [], firstAction: null }; }
+
+  // Run a policy over the ledger. Returns per-account outcomes and totals.
+  function run(data, policy) {
+    var accs = {}, cl = new Clusters(), byDev = {}, byAddr = {}, st = {};
+    data.accounts.forEach(function (a) {
+      accs[a.id] = a; st[a.id] = newState(a);
+      a.devices.slice(0, 1).concat(a.addresses.slice(0, 1)).forEach(function (k) { cl.union(a.id, 'k:' + k); });
+      (byDev[a.devices[0]] = byDev[a.devices[0]] || []).push(a.id);
+      (byAddr[a.addresses[0]] = byAddr[a.addresses[0]] || []).push(a.id);
+    });
+    function clusterAccounts(id) { return cl.members[cl.find(id)].filter(function (m) { return m.charAt(0) === 'U'; }); }
+    function act(s, kind, day, why) {
+      if (kind === 'restrict' && !s.restricted) { s.restricted = true; s.reasons.push(why); if (!s.firstAction) s.firstAction = { kind: kind, day: day }; }
+      else if (kind === 'review' && !s.review) { s.review = true; s.reasons.push(why); if (!s.firstAction) s.firstAction = { kind: kind, day: day }; }
+      else if (kind === 'stepup') { s.stepUps++; s.reasons.push(why); if (!s.firstAction) s.firstAction = { kind: kind, day: day }; }
+      else if (kind === 'hold' || kind === 'nocoin' || kind === 'nobonus') { if (s.reasons.indexOf(why) < 0) s.reasons.push(why); if (!s.firstAction) s.firstAction = { kind: kind, day: day }; }
+    }
+    function protectedAcc(a) { return policy.kind === 'layered' && a.neucard && a.age >= policy.protectTenure; }
+    // Restrict, unless the account is a tenured NeuCard holder: those go to a human with an SLA instead.
+    function restrictOrReview(s, day, why) { if (protectedAcc(s.acc) && !s.acc.abuseConfirmed) act(s, 'review', day, why + ' → human review (protected NeuCard holder)'); else act(s, 'restrict', day, why); }
+
+    var T = { exposure: 0, saved: 0, lost: 0, genuineFrozen: 0, genuineDelayed: 0 };
+    data.events.forEach(function (e) {
+      var s = st[e.acct], a = s.acc;
+      if (e.kind === 'device_change') { s.lastDevChange = e.day; return; }
+      if (e.kind === 'contact_change') { s.lastContactChange = e.day; return; }
+      if (e.kind === 'order') {
+        if (s.restricted) return;
+        if (policy.kind === 'layered' && e.amount >= policy.holdOver) { s.withheld += e.earn; s.held.push({ until: e.day + policy.holdDays, coins: e.earn }); act(s, 'hold', e.day, 'Coins from a ₹' + Math.round(e.amount).toLocaleString('en-IN') + ' order held until the return window closes'); }
+        else s.earned += e.earn;
+        return;
+      }
+      if (e.kind === 'return') {
+        s.returns++;
+        if (policy.kind === 'blunt' && s.returns >= policy.maxReturns) restrictOrReview(s, e.day, s.returns + ' returns');
+        return;
+      }
+      if (e.kind === 'signup_bonus') {
+        if (policy.kind === 'blunt') {
+          if (policy.sharedDevice && byDev[a.devices[0]].length > 1) restrictOrReview(s, e.day, 'Device shared with another account');
+          if (!s.restricted) s.earned += e.coins;
+        } else {
+          var ring = clusterAccounts(a.id).filter(function (m) { return accs[m].age <= policy.ringMaxAge; });
+          if (ring.length >= policy.ringSize) { s.withheld += e.coins; act(s, 'nobonus', e.day, 'Sign-up bonus withheld: ' + ring.length + ' new accounts share devices or addresses'); if (ring.length >= policy.ringSize * 2) act(s, 'restrict', e.day, 'Part of a ' + ring.length + '-account referral ring'); }
+          else s.earned += e.coins;
+        }
+        return;
+      }
+      if (e.kind === 'upi') {
+        s.upiCount++; s.upiByMerchant[e.merchant] = (s.upiByMerchant[e.merchant] || 0) + 1;
+        if (policy.kind === 'blunt') { if (s.upiCount === policy.maxUpi) restrictOrReview(s, e.day, policy.maxUpi + '+ UPI payments in the period'); if (!s.restricted) s.earned += e.earn; }
+        else { if (s.upiByMerchant[e.merchant] > policy.upiPerMerchant) { if (e.earn) { s.withheld += e.earn; act(s, 'nocoin', e.day, 'No coins after ' + policy.upiPerMerchant + ' UPI payments to the same merchant'); } } else s.earned += e.earn; }
+        return;
+      }
+      if (e.kind === 'burn') {
+        // release holds whose window has passed
+        s.held = s.held.filter(function (h) { if (h.until <= e.day) { s.earned += h.coins; return false; } return true; });
+        if (a.abuse) T.exposure += e.coins;
+        var blocked = false, why = '';
+        if (s.restricted) { blocked = true; why = 'restricted'; }
+        if (!blocked && policy.kind === 'blunt' && e.coins >= policy.bigBurn && e.day - s.lastDevChange <= policy.bigBurnDaysAfterDevice) { restrictOrReview(s, e.day, 'Burned ' + e.coins + ' coins within ' + policy.bigBurnDaysAfterDevice + ' days of a new device'); blocked = s.restricted; }
+        if (!blocked && policy.kind === 'layered' && policy.atoStepUp && e.day === s.lastDevChange && e.day === s.lastContactChange && a.addresses.indexOf(e.address) > 0) {
+          act(s, 'stepup', e.day, 'New device + new phone number + new delivery address on the same day as a large burn → re-verify on the old number');
+          if (a.abuse) blocked = true;   // a takeover can't pass verification on the owner's old number; the owner can
+        } else if (!blocked && policy.kind === 'layered' && e.coins >= policy.spikeBurn && e.day - s.lastDevChange <= policy.spikeDays && s.lastDevChange >= 0) {
+          // Big burn soon after a new device, without the full takeover pattern: step-up for most, human review for tenured NeuCard holders.
+          if (protectedAcc(a)) { act(s, 'review', e.day, 'Large burn within ' + policy.spikeDays + ' days of a new device → this order waits for a human review (protected NeuCard holder)'); if (a.abuse) blocked = true; else T.genuineDelayed += e.coins; }
+          else { act(s, 'stepup', e.day, 'Large burn within ' + policy.spikeDays + ' days of a new device → verify with a selfie or the old number'); if (a.abuse) blocked = true; }
+        }
+        // coin balance check: a burn bigger than released coins fails (this is where holds and withheld bonuses bite)
+        var heldCoins = s.held.reduce(function (x, h) { return x + h.coins; }, 0);
+        var balance = a.type === 'neucard' || a.type === 'genuine' || a.type === 'reseller' || a.type === 'ato' ? Infinity : s.earned;   // genuine and taken-over accounts carry prior balances
+        // A burn fails for lack of coins only when the policy withheld coins; with no policy, abusers have what they earned.
+        if (!blocked && s.withheld > 0 && e.coins > balance + 1) { blocked = true; why = heldCoins ? 'coins on hold' : 'coins not available'; }
+        if (blocked) { if (a.abuse) T.saved += e.coins; else T.genuineFrozen += e.coins; }
+        else { if (a.abuse) T.lost += e.coins; else s.earned -= Math.min(s.earned, e.coins); }
+        if (!a.abuse && heldCoins && !blocked) T.genuineDelayed += heldCoins;
+        return;
+      }
+    });
+    // ---- score
+    var out = { policy: policy, accounts: st, totals: T, byType: {} };
+    var g = { restricted: 0, review: 0, stepUps: 0, held: 0, n: 0 }, nc = { restricted: 0, review: 0, n: 0 }, ab = { caught: 0, n: 0 };
+    data.accounts.forEach(function (acc) {
+      var s = st[acc.id], bt = out.byType[acc.type] = out.byType[acc.type] || { n: 0, restricted: 0, review: 0, touched: 0 };
+      bt.n++; if (s.restricted) bt.restricted++; if (s.review) bt.review++; if (s.firstAction) bt.touched++;
+      if (acc.abuse) { ab.n++; if (s.firstAction) ab.caught++; }
+      else { g.n++; if (s.restricted) g.restricted++; if (s.review) g.review++; g.stepUps += s.stepUps; if (s.reasons.some(function (r) { return /held/.test(r); })) g.held++; }
+      if (acc.type === 'neucard') { nc.n++; if (s.restricted) nc.restricted++; if (s.review) nc.review++; }
+    });
+    out.genuine = g; out.neucard = nc; out.abuse = ab;
+    out.reviewQueue = data.accounts.filter(function (acc) { return st[acc.id].review; }).length;
+    out.savedShare = T.exposure ? T.saved / T.exposure : 0;
+    return out;
+  }
+  function none() { return { name: 'No policy', kind: 'none' }; }
+
+  // ---------- money ----------
+  // a: { costPerGoodRestrict: ₹ (support contacts, churn of a good customer), costPerReview: ₹ analyst time }
+  function money(res, a) {
+    a = a || {}; var cg = a.costPerGoodRestrict !== undefined ? a.costPerGoodRestrict : 1500, cn = a.costPerNeuRestrict !== undefined ? a.costPerNeuRestrict : 8000, cr = a.costPerReview !== undefined ? a.costPerReview : 60;
+    var goodRestricts = res.genuine.restricted - res.neucard.restricted;
+    var cost = goodRestricts * cg + res.neucard.restricted * cn + res.reviewQueue * cr;
+    return { saved: res.totals.saved, harm: cost, net: res.totals.saved - cost, goodRestricts: goodRestricts };
+  }
+
+  // ---------- explain one account ----------
+  function explain(data, res, id) {
+    var s = res.accounts[id], evs = data.events.filter(function (e) { return e.acct === id; });
+    return { account: s.acc, reasons: s.reasons, restricted: s.restricted, review: s.review, stepUps: s.stepUps, timeline: evs };
+  }
+
+  // ---------- review queue, ordered for an analyst ----------
+  function queue(data, res) {
+    return data.accounts.filter(function (a) { return res.accounts[a.id].review || res.accounts[a.id].restricted; }).map(function (a) {
+      var s = res.accounts[a.id], burns = data.events.filter(function (e) { return e.acct === a.id && e.kind === 'burn'; }).reduce(function (x, e) { return x + e.coins; }, 0);
+      var key = s.review ? /review/ : /ring|shared|returns|UPI|Burned|restrict/i;
+      var why = s.reasons.filter(function (r) { return key.test(r); })[0] || s.reasons[0] || '';
+      return { id: a.id, status: s.review ? 'Review' : 'Restricted', neucard: a.neucard, tenure: a.age, coins: burns, why: why, truth: a.type };
+    }).sort(function (x, y) { return (y.status === 'Review') - (x.status === 'Review') || y.coins - x.coins; });
+  }
+
+  // ---------- customer message for a restriction (honest, specific, with a way out) ----------
+  function message(reason) {
+    if (/held/.test(reason)) return 'Your NeuCoins from this order will be ready to use once the return window closes. Nothing is wrong with your account.';
+    if (/re-verify|step/.test(reason)) return 'We noticed a new phone and a new number on your account. Please confirm it’s you on your registered number before using your NeuCoins.';
+    if (/review/.test(reason)) return 'We’re checking some recent activity on your account. A specialist will review it within 24 hours; your NeuCoins are safe and you can keep shopping.';
+    if (/bonus/.test(reason)) return 'This sign-up bonus couldn’t be added because several new accounts were created from this device.';
+    if (/UPI/.test(reason)) return 'NeuCoins on repeated payments to the same merchant are capped this month. Your other UPI payments still earn.';
+    return 'We’ve paused NeuCoin use on this account. Reply to this message to tell us what happened, and we’ll review it.';
+  }
+
+  return { BLUNT: BLUNT, LAYERED: LAYERED, none: none, run: run, money: money, explain: explain, queue: queue, message: message, Clusters: Clusters };
+})();
+
+
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function inr(x) { var neg = x < 0; x = Math.abs(Math.round(x)); return (neg ? '−' : '') + '₹' + x.toLocaleString('en-IN'); }
+  function pct(x) { return (x * 100).toFixed(0) + '%'; }
+  var D = null, RB = null, RL = null;
+
+  var PAT = [
+    ['referral_ring', 'bad', 'Referral farm', 'Rings of new accounts claim the sign-up bonus and burn it within a day on resellable electronics. Half use a fresh device per account and share only an address; a fifth share nothing visible.'],
+    ['earn_return', 'bad', 'Earn-and-return', 'A big Croma order earns coins, the coins are spent the next day, then the order is returned. The clawback finds an empty balance.'],
+    ['ato', 'bad', 'Account takeover', 'An established account gets a new device, often a new phone number, and the whole balance is spent to a new address in one go. 40% phish the OTP on the real number instead.'],
+    ['upi_cycle', 'bad', 'UPI coin cycling', 'Dozens of tiny UPI payments to a handful of linked merchants to hit the monthly UPI coin cap, then burn.'],
+    ['neucard', 'ok', 'NeuCard holder (genuine)', 'High spend and big balances. Upgrades phones, buys TVs, sometimes moves city with a new number and address. Looks like a takeover to a blunt rule.'],
+    ['reseller', 'ok', 'Shop owner (genuine)', 'Many BigBasket orders, many returns of damaged stock, one address. Looks like earn-and-return to a blunt rule.'],
+    ['genuine', 'ok', 'Everyday customer (genuine)', 'A few orders, occasional returns. Some couples share a tablet and a home, and some pay everything by UPI.']
+  ];
+  $('patterns').innerHTML = PAT.map(function (p) { return '<div class="card"><span class="tag ' + p[1] + '">' + (p[1] === 'bad' ? 'abuse' : 'genuine') + '</span><h3>' + esc(p[2]) + '</h3><p>' + esc(p[3]) + '</p></div>'; }).join('');
+
+  function costs() { return { costPerGoodRestrict: +$('cg').value, costPerNeuRestrict: +$('cn').value, costPerReview: +$('cr').value }; }
+  function col(el, r, title) {
+    var m = NR.money(r, costs());
+    $(el).innerHTML = '<h3>' + esc(title) + '</h3><div class="big">' + pct(r.savedShare) + '<small> of abused coins stopped</small></div>' +
+      row('Coins saved', inr(r.totals.saved), 'good') + row('Genuine customers restricted', r.genuine.restricted.toLocaleString('en-IN'), r.genuine.restricted ? 'harm' : 'good') +
+      row('…of them NeuCard holders', r.neucard.restricted.toLocaleString('en-IN'), r.neucard.restricted ? 'harm' : 'good') + row('Sent to human review', r.reviewQueue.toLocaleString('en-IN'), '') +
+      row('Genuine customers asked to verify', r.genuine.stepUps.toLocaleString('en-IN'), '') + row('Genuine customers whose coins were held', r.genuine.held.toLocaleString('en-IN'), '') +
+      row('Net after pricing harm', inr(m.net), m.net >= 0 ? 'good' : 'harm');
+  }
+  function row(a, b, cls) { return '<div class="row"><span>' + esc(a) + '</span><span class="' + cls + '">' + b + '</span></div>'; }
+
+  function run() {
+    $('go').disabled = true; $('go').textContent = 'Running…';
+    setTimeout(function () {
+      D = DATA.build(+$('n').value, +$('seed').value || 3);
+      RB = NR.run(D, NR.BLUNT); RL = NR.run(D, layered());
+      render(); $('go').disabled = false; $('go').textContent = 'Run both';
+    }, 20);
+  }
+  function layered() { return Object.assign({}, NR.LAYERED, { holdOver: +$('hold').value, ringSize: +$('ring').value, upiPerMerchant: +$('upi').value, protectTenure: +$('prot').value }); }
+  function render() {
+    col('colB', RB, 'Blunt rules'); col('colL', RL, 'Layered policy');
+    var order = ['referral_ring', 'earn_return', 'ato', 'upi_cycle', 'neucard', 'reseller', 'genuine'];
+    $('byType').innerHTML = '<tr><th>Account type</th><th class="n">Accounts</th><th class="n">Blunt: restricted</th><th class="n">Layered: acted on</th><th class="n">Layered: restricted</th><th class="n">Layered: review</th></tr>' + order.map(function (t) {
+      var b = RB.byType[t] || { n: 0, restricted: 0 }, l = RL.byType[t] || { n: 0, restricted: 0, touched: 0, review: 0 }, ab = DATA.TYPES[t].abuse;
+      return '<tr><td>' + esc(DATA.TYPES[t].label) + ' ' + (ab ? '<span class="tag bad">abuse</span>' : '<span class="tag ok">genuine</span>') + '</td><td class="n">' + b.n + '</td><td class="n ' + (ab ? '' : b.restricted ? 'harm' : '') + '">' + b.restricted + '</td><td class="n">' + l.touched + '</td><td class="n ' + (ab ? '' : l.restricted ? 'harm' : '') + '">' + l.restricted + '</td><td class="n">' + l.review + '</td></tr>';
+    }).join('');
+    $('sBs').textContent = pct(RB.savedShare); $('sBg').textContent = RB.genuine.restricted.toLocaleString('en-IN'); $('sBn').textContent = RB.neucard.restricted.toLocaleString('en-IN');
+    $('sLs').textContent = pct(RL.savedShare); $('sLg').textContent = RL.genuine.restricted.toLocaleString('en-IN'); $('sLr').textContent = RL.reviewQueue.toLocaleString('en-IN');
+    renderTune(); renderQueue();
+  }
+  function renderTune() {
+    var m = NR.money(RL, costs());
+    function k(l, v, s, cls) { return '<div class="kpi"><span class="k">' + l + '</span><span class="v ' + (cls || '') + '">' + v + '</span><span class="s">' + s + '</span></div>'; }
+    $('tuneOut').innerHTML = k('Abused coins stopped', pct(RL.savedShare), inr(RL.totals.saved), 'good') +
+      k('Genuine restricted', RL.genuine.restricted, 'of ' + RL.genuine.n.toLocaleString('en-IN'), RL.genuine.restricted ? 'harm' : 'good') +
+      k('Coins held (genuine)', RL.genuine.held, 'customers waited for coins') + k('Human reviews', RL.reviewQueue, 'cases at 24h SLA') +
+      k('Net after harm', inr(m.net), 'vs blunt ' + inr(NR.money(RB, costs()).net), m.net >= 0 ? 'good' : 'harm');
+  }
+  function renderQueue() {
+    var all = NR.queue(D, RL), q = all.filter(function (x) { return x.status === 'Review'; }).slice(0, 7).concat(all.filter(function (x) { return x.status === 'Restricted'; }).slice(0, 7));
+    $('queue').innerHTML = '<tr><th>Account</th><th>Status</th><th class="n">Tenure</th><th class="n">Coins burned</th><th>First reason</th><th>Truth (hidden from analyst)</th></tr>' + q.map(function (x) {
+      return '<tr class="click" data-id="' + x.id + '"><td class="mono">' + x.id + (x.neucard ? ' <span class="tag acc">NeuCard</span>' : '') + '</td><td>' + (x.status === 'Review' ? '<span class="tag warn">review</span>' : '<span class="tag bad">restricted</span>') + '</td><td class="n">' + x.tenure + 'd</td><td class="n">' + x.coins.toLocaleString('en-IN') + '</td><td>' + esc(x.why) + '</td><td>' + (DATA.TYPES[x.truth].abuse ? '<span class="tag bad">' : '<span class="tag ok">') + esc(DATA.TYPES[x.truth].label) + '</span></td></tr>';
+    }).join('');
+    Array.prototype.forEach.call($('queue').querySelectorAll('tr.click'), function (tr) { tr.onclick = function () { showCase(tr.getAttribute('data-id')); }; });
+    if (q.length) showCase(q[0].id);
+  }
+  function showCase(id) {
+    var ex = NR.explain(D, RL, id), qrow = NR.queue(D, RL).filter(function (x) { return x.id === id; })[0];
+    $('caseView').innerHTML = '<div class="case"><h3>' + id + ' · ' + esc(DATA.TYPES[ex.account.type].label) + (ex.account.neucard ? ' · NeuCard holder' : '') + ' · tenure ' + ex.account.age + ' days</h3>' +
+      '<div>' + ex.reasons.map(function (r) { return '<div>• ' + esc(r) + '</div>'; }).join('') + '</div>' +
+      '<div class="tl">' + ex.timeline.slice(-24).map(function (e) { return '<div>day ' + e.day + ' · ' + e.kind + (e.brand ? ' · ' + e.brand : '') + (e.amount ? ' · ₹' + e.amount.toLocaleString('en-IN') : '') + (e.coins ? ' · ' + e.coins + ' coins' : '') + '</div>'; }).join('') + '</div>' +
+      '<span class="k">What the customer sees</span><div class="msg">' + esc(NR.message((qrow && qrow.why) || ex.reasons[0] || '')) + '</div></div>';
+  }
+
+  $('go').onclick = run;
+  ['cg', 'cn', 'cr'].forEach(function (id) { $(id).addEventListener('input', function () { if (RB) { col('colB', RB, 'Blunt rules'); col('colL', RL, 'Layered policy'); renderTune(); } }); });
+  var tt = null;
+  [['hold', 'oHold', function (v) { return (+v).toLocaleString('en-IN'); }], ['ring', 'oRing'], ['upi', 'oUpi'], ['prot', 'oProt']].forEach(function (x) {
+    $(x[0]).addEventListener('input', function () { $(x[1]).textContent = x[2] ? x[2]($(x[0]).value) : $(x[0]).value; clearTimeout(tt); tt = setTimeout(function () { if (!D) return; RL = NR.run(D, layered()); render(); }, 150); });
+  });
+  run();
+})();
+
+</script>
+
+</body></html>
