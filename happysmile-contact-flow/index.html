@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HappySmile contact flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: shipped product, plainly annotated, like a PM's review board
+   IDEA: two real screens pinned to a wall, with the reasoning written beside them
+   PICTURE: the patient's phone + what happens in the next minutes; the front desk's console
+   COLOUR and TYPE: white, ink, HappySmile teal, coral only for "needs a person"; Plus Jakarta Sans
+   LAYOUT: one band per scenario: screen first, numbered notes beside it */
+:root{color-scheme:light dark;--bg:light-dark(#f3f5f6,#0e1417);--ink:light-dark(#13212b,#e6edf0);--mute:light-dark(#5b6b75,#9aabb4);--card:light-dark(#fff,#162026);--line:light-dark(#dfe5e8,#26343c);
+--teal:#0b7a75;--teal2:#e3f3f1;--coral:#e8573a;--coral2:#fdeee9;--amber:#b7791f;--amber2:#fdf4e3;--wa:#d9fdd3;--sink:#13212b;--smute:#5b6b75;--sline:#e3e8eb}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Plus Jakarta Sans",system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(28px,4vw,56px) max(4vw,16px);max-width:1320px;margin:0 auto}
+header.band{padding-bottom:8px}
+h1{font-size:clamp(28px,4vw,40px);line-height:1.08;margin:0 0 8px;text-wrap:balance}
+h2{font-size:22px;line-height:1.2;margin:0 0 4px}
+.sub{color:var(--mute);margin:0;max-width:70ch}
+.tag{display:inline-block;font-size:13px;font-weight:600;color:var(--teal);margin-bottom:6px}
+.wall{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;margin-top:20px;align-items:start}
+.notes{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 18px 8px}
+.notes h3{font-size:15px;margin:0 0 10px}
+.notes ol{list-style:none;margin:0;padding:0}
+.notes li{display:grid;grid-template-columns:26px 1fr;gap:8px;font-size:14.5px;line-height:1.5;margin-bottom:14px}
+.pin{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--sink);color:#fff;font-size:12px;font-weight:700;flex:none;vertical-align:middle}
+.pin.c{background:var(--coral)}
+/* --- scenario 1 --- */
+.s1{display:grid;grid-template-columns:350px minmax(0,1fr);gap:28px;align-items:start}
+.phone{width:350px;background:#0d1418;border-radius:40px;padding:12px;box-shadow:0 20px 40px -18px rgba(0,0,0,.45)}
+.scr{background:#fff;color:var(--sink);border-radius:30px;overflow:hidden}
+.bar{display:flex;justify-content:space-between;font-size:12px;font-weight:600;padding:10px 22px 4px}
+.ph{padding:6px 20px 22px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--teal);font-size:15px}
+.logo{width:26px;height:26px;border-radius:8px;background:var(--teal);display:grid;place-items:center}
+.ph h4{font-size:21px;line-height:1.2;margin:14px 0 2px}
+.ph .hint{font-size:13px;color:var(--smute);margin:0 0 12px}
+.fld{border:1px solid var(--sline);border-radius:10px;padding:7px 11px;margin-bottom:8px;font-size:14px}
+.fld small{display:block;font-size:11px;color:var(--smute)}
+.lbl{font-size:12px;font-weight:600;color:var(--smute);margin:10px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:13px;border:1px solid var(--sline);border-radius:99px;padding:5px 10px}
+.chip.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.opt{display:grid;grid-template-columns:18px 1fr;gap:9px;border:1px solid var(--sline);border-radius:10px;padding:8px 10px;margin-bottom:6px;font-size:13.5px;line-height:1.35}
+.opt.on{border-color:var(--teal);background:var(--teal2)}
+.rad{width:16px;height:16px;border-radius:50%;border:2px solid #9fb0b8;margin-top:1px}
+.on .rad{border:5px solid var(--teal)}
+.opt small{color:var(--smute);font-size:12px}
+.consent{display:grid;grid-template-columns:18px 1fr;gap:9px;font-size:12px;line-height:1.45;color:var(--smute);margin:10px 0 12px}
+.box{width:16px;height:16px;border-radius:4px;background:var(--teal);color:#fff;font-size:11px;display:grid;place-items:center;margin-top:1px}
+.cta{background:var(--teal);color:#fff;border-radius:12px;text-align:center;font-weight:700;padding:12px;font-size:15px}
+.em{font-size:12px;color:var(--smute);text-align:center;margin-top:8px}
+.tl{position:relative;padding-left:22px}
+.tl:before{content:"";position:absolute;left:6px;top:8px;bottom:8px;width:2px;background:var(--line)}
+.step{position:relative;margin-bottom:18px}
+.step:before{content:"";position:absolute;left:-21px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--card);border:2px solid var(--teal)}
+.when{font-size:13px;font-weight:700;color:var(--teal)}
+.what{font-size:14px;color:var(--mute);margin:0 0 6px}
+.wa{background:var(--wa);color:var(--sink);border-radius:4px 12px 12px 12px;padding:9px 12px;font-size:14px;max-width:460px;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+.wa b{display:block;font-size:12px;color:#1f7a4d}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.btns span{background:#fff;border-radius:8px;padding:5px 10px;font-size:13px;color:#0b6b9e;font-weight:600}
+.call{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;max-width:520px;font-size:14px}
+.call p{margin:0 0 6px}
+.who{font-size:11px;font-weight:700;color:var(--mute);margin-right:6px}
+.flag{display:inline-block;font-size:12px;font-weight:600;border-radius:6px;padding:2px 8px;margin-top:2px}
+.flag.c{background:var(--coral2);color:#a5361f}.flag.t{background:var(--teal2);color:#075d59}
+/* --- scenario 2 --- */
+.desk{background:#fff;color:var(--sink);border-radius:14px;border:1px solid var(--line);overflow:hidden;box-shadow:0 20px 40px -24px rgba(0,0,0,.35)}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;border-bottom:1px solid var(--sline)}
+.top .brand{color:var(--teal)}
+.who2{font-size:13px;color:var(--smute)}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-bottom:1px solid var(--sline)}
+.kpi{padding:12px 18px;border-right:1px solid var(--sline)}
+.kpi:last-child{border-right:0}
+.kpi .n{font-size:24px;font-weight:700;line-height:1.1}
+.kpi .l{font-size:12px;color:var(--smute);line-height:1.35}
+.kpi.c .n{color:var(--coral)}
+.cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+.col{padding:14px 18px}
+.col+.col{border-left:1px solid var(--sline);background:#fafbfc}
+.ch{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;margin:0 0 10px}
+.cnt{font-size:12px;font-weight:700;border-radius:99px;padding:1px 8px;background:var(--coral2);color:#a5361f}
+.cnt.t{background:var(--teal2);color:#075d59}.cnt.g{background:#eef1f3;color:var(--smute)}
+.card{border:1px solid var(--sline);border-left:3px solid var(--coral);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#fff}
+.card.u{border-left-color:#c0392b;background:#fff8f6}
+.card .r1{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.nm{font-weight:700;font-size:14.5px}
+.tr{font-size:13px;color:var(--smute)}
+.due{font-size:12px;font-weight:700;color:#a5361f;white-space:nowrap}
+.why{font-size:13px;margin:6px 0 4px}
+.why em{font-style:normal;font-weight:700}
+.sum{font-size:13px;color:#33454f;margin:0 0 8px;line-height:1.45}
+.q{font-size:13px;margin:0 0 6px;padding:5px 9px;border-left:2px solid #c9d4d9;background:#f6f8f9;color:#33454f;font-style:italic}
+.q span{font-style:normal;font-size:11.5px;color:var(--smute);margin-left:4px}
+.cal{font-weight:600;color:#075d59}
+.esc{font-size:12px;font-weight:700;color:#a5361f;margin:0 0 8px}
+.acts{display:flex;flex-wrap:wrap;gap:6px}
+.acts span{font-size:12.5px;font-weight:600;border:1px solid var(--sline);border-radius:8px;padding:4px 10px}
+.acts .p{background:var(--teal);border-color:var(--teal);color:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11.5px;color:var(--smute);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--sline)}
+td{padding:7px 6px;border-bottom:1px solid var(--sline);vertical-align:top}
+td.nw{white-space:nowrap}
+.ok{color:#0b7a4b;font-weight:600;white-space:nowrap}
+.warn{background:var(--amber2)}
+.warn .ok{color:var(--amber)}
+.mini{font-size:12px;color:var(--smute)}
+.sec{margin-top:16px}
+.pilot{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;padding:10px 18px;border-top:1px solid var(--sline);font-size:13px;background:#f6faf9}
+.pilot b{font-size:15px}
+.sample{font-size:12px;color:var(--mute);margin-top:10px}
+footer.band{padding-top:0;color:var(--mute);font-size:13px}
+@media(max-width:1100px){.wall{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:820px){.s1{grid-template-columns:minmax(0,1fr)}.phone{margin:0 auto}.cols{grid-template-columns:minmax(0,1fr)}.col+.col{border-left:0;border-top:1px solid var(--sline)}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{border-bottom:1px solid var(--sline)}}
+@media(max-width:400px){.phone{width:100%;border-radius:30px;padding:8px}}
+</style>
+</head>
+<body>
+
+<header class="band">
+  <span class="tag">HappySmile Dental · AI call-back for web enquiries</span>
+  <h1>Two screens: the patient asking to be contacted, and what the clinic sees after</h1>
+  <p class="sub">Pilot version (weeks 1 to 4, two clinics). Numbered pins match the notes beside each screen. Aditya Mathur, Shiprocket AI PM assignment.</p>
+</header>
+
+<section class="band">
+  <span class="tag">Screen 1</span>
+  <h2>The moment someone asks to be contacted</h2>
+  <p class="sub">Neha fills the form at 6:12 pm on a Tuesday. On the right: what she gets over the next few minutes.</p>
+  <div class="wall">
+    <div class="s1">
+      <div class="phone"><div class="scr">
+        <div class="bar"><span>6:12</span><span>5G ▮▮▮</span></div>
+        <div class="ph">
+          <div class="brand"><span class="logo"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M7 3c-2.8 0-4.5 2.3-4 5.4.4 2.6 1.6 4.3 2.2 7 .6 2.9 1 5.6 2.6 5.6 1.5 0 1.7-2.6 2.3-4.7.4-1.4 1-2 1.9-2s1.5.6 1.9 2c.6 2.1.8 4.7 2.3 4.7 1.6 0 2-2.7 2.6-5.6.6-2.7 1.8-4.4 2.2-7C21.5 5.3 19.8 3 17 3c-2.1 0-3.2 1.2-5 1.2S9.1 3 7 3z"/></svg></span>HappySmile</div>
+          <h4>Book a consultation</h4>
+          <p class="hint">12 clinics · open till 8 pm</p>
+          <div class="fld"><small>Name</small>Neha Kulkarni</div>
+          <div class="fld"><small>Mobile</small>+91 98450 41207</div>
+          <div class="lbl">What is it about?</div>
+          <div class="chips"><span class="chip on">Braces / aligners</span><span class="chip">Implants</span><span class="chip">Whitening</span><span class="chip">Pain or swelling</span><span class="chip">Not sure</span></div>
+          <div class="fld" style="margin-top:10px"><small>Nearest clinic</small>Indiranagar ▾</div>
+          <div class="lbl">How should we reach you? <span class="pin">1</span></div>
+          <div class="opt on"><span class="rad"></span><span>Call me now<br><small>Our assistant calls within a minute</small></span></div>
+          <div class="opt"><span class="rad"></span><span>Call me at a time I pick</span></div>
+          <div class="opt"><span class="rad"></span><span>WhatsApp only, no call</span></div>
+          <div class="consent"><span class="box">✓</span><span>HappySmile's AI assistant will call from <b>080 4718 2200</b> and will say it's an AI. Say "talk to a person" at any point. <span class="pin">2</span></span></div>
+          <div class="cta">Request a call</div>
+          <p class="em">Severe pain or swelling? Call the clinic: 080 4718 2210</p>
+        </div>
+      </div></div>
+
+      <div class="tl">
+        <div class="step"><div class="when">+15 sec · WhatsApp <span class="pin">3</span></div>
+          <div class="wa"><b>HappySmile Dental</b>Hi Neha, got your request about braces/aligners. Our AI assistant will call you from 080 4718 2200 in about a minute.
+            <div class="btns"><span>Call me later</span><span>I'd rather talk to a person</span></div></div></div>
+
+        <div class="step"><div class="when">+60 sec · Call (2 min 14 sec)</div>
+          <div class="call">
+            <p><span class="who">ASSISTANT</span>Hi Neha, I'm HappySmile's AI assistant. You asked us to call about aligners. Is now a good time? You can ask for a person anytime.</p>
+            <p><span class="who">NEHA</span>Haan, okay. Aligners ka kitna lagega?</p>
+            <p><span class="who">ASSISTANT</span>The dentist confirms the cost at the consult, after seeing your teeth. I can book a consult, have our front desk call you with a price range, or both. What would you like? <span class="pin c">4</span></p>
+            <p><span class="who">NEHA</span>Both.</p>
+            <p><span class="who">ASSISTANT</span>At Indiranagar I have Thursday 6:30 pm or Saturday 11 am. Which suits you? <span class="pin">5</span></p>
+            <p><span class="who">NEHA</span>Thursday evening.</p>
+            <p><span class="who">ASSISTANT</span>So that's Neha Kulkarni, aligners consult, Indiranagar, Thursday 26 November at 6:30 pm. Shall I book it?</p>
+            <p><span class="who">NEHA</span>Haan, book kar do.</p>
+            <span class="flag t">Booked · calendar ref HS-48213</span> <span class="flag c">Front-desk callback with price range by 7:30 pm · Priya</span>
+          </div></div>
+
+        <div class="step"><div class="when">+3 min · WhatsApp <span class="pin">6</span></div>
+          <div class="wa"><b>HappySmile Dental</b>Your consult is booked ✓<br>Thu 26 Nov, 6:30 pm · HappySmile Indiranagar, 100 Ft Rd<br>Ref HS-48213. Priya from our front desk will call you by 7:30 pm with a price range. We'll remind you a day before and 2 hours before.
+            <div class="btns"><span>Directions</span><span>Ask the clinic to change time</span></div></div></div>
+      </div>
+    </div>
+
+    <aside class="notes">
+      <h3>Why it looks like this</h3>
+      <ol>
+        <li><span class="pin">1</span><span>Filling a form isn't the same as wanting a surprise call. "Later" and "WhatsApp only" keep the lead instead of burning it with an unwanted call.</span></li>
+        <li><span class="pin">2</span><span>The AI is disclosed three times: here, on WhatsApp, and in the first line of the call. This is my answer to the founder's "nobody should know it's a bot".</span></li>
+        <li><span class="pin">3</span><span>A heads-up with the exact number, so an unknown 080 number isn't ignored as spam. The two buttons are the off-ramps.</span></li>
+        <li><span class="pin c">4</span><span>A price question gets a choice: a consult, a callback with a price range, or both. The assistant never quotes a price, and it doesn't push the booking past the question.</span></li>
+        <li><span class="pin">5</span><span>Only two real slots, pulled live from the clinic calendar. It reads the booking back and books only after a clear yes. If the calendar doesn't answer, it never says "booked": the case goes to staff as pending.</span></li>
+        <li><span class="pin">6</span><span>The reminders do the no-show work. My success metric is visits completed, not bookings made.</span></li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<section class="band">
+  <span class="tag">Screen 2</span>
+  <h2>What HappySmile sees afterwards</h2>
+  <p class="sub">The front desk's screen at Indiranagar, 6:40 pm the same day. The clinic closes at 8.</p>
+  <div class="wall">
+    <div class="desk">
+      <div class="top"><div class="brand"><span class="logo"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M7 3c-2.8 0-4.5 2.3-4 5.4.4 2.6 1.6 4.3 2.2 7 .6 2.9 1 5.6 2.6 5.6 1.5 0 1.7-2.6 2.3-4.7.4-1.4 1-2 1.9-2s1.5.6 1.9 2c.6 2.1.8 4.7 2.3 4.7 1.6 0 2-2.7 2.6-5.6.6-2.7 1.8-4.4 2.2-7C21.5 5.3 19.8 3 17 3c-2.1 0-3.2 1.2-5 1.2S9.1 3 7 3z"/></svg></span>HappySmile · Indiranagar</div><span class="who2">Tue 24 Nov · Front desk: Priya, Sandeep</span></div>
+      <div class="kpis">
+        <div class="kpi"><div class="n">27</div><div class="l">New enquiries today</div></div>
+        <div class="kpi"><div class="n">22</div><div class="l">Spoken to within 2 min</div></div>
+        <div class="kpi"><div class="n">9</div><div class="l">Consults booked, calendar-confirmed <span class="pin">C</span></div></div>
+        <div class="kpi c"><div class="n">4</div><div class="l">Waiting on you · 1 urgent now</div></div>
+        <div class="kpi"><div class="n">31/33</div><div class="l">Callbacks done on time, this week <span class="pin">E</span></div></div>
+      </div>
+      <div class="cols">
+        <div class="col">
+          <div class="ch">Needs you <span class="cnt">4</span> <span class="pin c">A</span></div>
+          <div class="card u"><div class="r1"><span class="nm">Rahul Menon</span><span class="due">Urgent · Sandeep · not picked up 4 min</span></div>
+            <div class="tr">Toothache, lower left · not booked</div>
+            <p class="why"><em>Why you:</em> mentioned swelling and fever <span class="pin c">B</span></p>
+            <p class="q">"Dard aur swelling hai, kal se bukhaar bhi. Pehle doctor se baat karni hai." <span>0:22</span></p>
+            <p class="sum">Asked to speak to a dentist. Live transfer at 6:36 got no answer, so it was routed to Sandeep under the clinic's urgent protocol. The assistant read the standard urgent-care advice and offered no slot.</p>
+            <p class="esc">Moves to Priya if not picked up by 6:41</p>
+            <div class="acts"><span class="p">Call</span><span>Play from 0:22</span><span>Done</span></div></div>
+          <div class="card"><div class="r1"><span class="nm">Neha Kulkarni</span><span class="due">By 7:30 pm · Priya</span></div>
+            <div class="tr">Aligners · <span class="cal">Consult Thu 26 Nov, 6:30 pm · HS-48213</span></div>
+            <p class="why"><em>Why you:</em> asked about price</p>
+            <p class="q">"Aligners ka kitna lagega?" <span>0:31</span></p>
+            <p class="sum">Neha asked how much aligners cost. She chose Thursday evening and agreed to book. The assistant offered a front-desk callback with a price range.</p>
+            <div class="acts"><span class="p">Call</span><span>Play from 0:31</span><span>Done</span></div></div>
+          <div class="card"><div class="r1"><span class="nm">Lakshmi Gowda</span><span class="due">By 7:45 pm · Sandeep</span></div>
+            <div class="tr">Whitening · not booked</div>
+            <p class="why"><em>Why you:</em> switched to Kannada</p>
+            <p class="q">"Kannadadalli maathadi." <span>0:09</span></p>
+            <p class="sum">The assistant handles English and Hindi in the pilot. Call back in Kannada.</p>
+            <div class="acts"><span class="p">Call</span><span>Play from 0:09</span><span>Done</span></div></div>
+          <div class="card"><div class="r1"><span class="nm">Fatima Sheikh</span><span class="due">Tomorrow 10 am · Priya</span></div>
+            <div class="tr">Implants · not booked</div>
+            <p class="why"><em>Why you:</em> asked for a person</p>
+            <p class="q">"My implant failed at another clinic in 2023. I'd like to talk to a person first." <span>0:40</span></p>
+            <p class="sum">Asked for a person before booking. Agreed to a call tomorrow at 10 am.</p>
+            <div class="acts"><span class="p">Call</span><span>Play from 0:40</span><span>Done</span></div></div>
+        </div>
+        <div class="col">
+          <div class="ch">Booking activity <span class="cnt t">11</span></div>
+          <p class="mini" style="margin:-4px 0 8px"><b style="color:#0b7a4b">9 confirmed</b> · 1 pending · 1 clash</p>
+          <table>
+            <thead><tr><th>Patient</th><th>For</th><th>Slot</th><th>Calendar</th></tr></thead>
+            <tbody>
+              <tr class="warn"><td class="nw">Suresh P</td><td>Whitening</td><td class="nw">Wed 4:00</td><td><span class="ok">⚠ Clash</span><br><span class="mini">Also booked at desk · <u>Fix</u></span> <span class="pin">D</span></td></tr>
+              <tr class="warn"><td class="nw">Arjun T</td><td>Check-up</td><td class="nw">Fri 12:00</td><td><span class="ok">⏳ Pending</span><br><span class="mini">Calendar didn't confirm · <u>Check</u></span></td></tr>
+              <tr><td class="nw">Kavya S</td><td>Cleaning</td><td class="nw">Wed 10:00</td><td class="ok">HS-48190 ✓</td></tr>
+              <tr><td class="nw">Imran K</td><td>Braces consult</td><td class="nw">Wed 5:30</td><td class="ok">HS-48194 ✓</td></tr>
+              <tr><td class="nw">Neha K</td><td>Aligners consult</td><td class="nw">Thu 6:30</td><td class="ok">HS-48213 ✓</td></tr>
+              <tr><td class="nw">Vikram J</td><td>Braces consult<br><span class="mini">via WhatsApp link</span></td><td class="nw">Sat 11:00</td><td class="ok">HS-48222 ✓</td></tr>
+            </tbody>
+          </table>
+          <p class="mini" style="margin:6px 0 0">+ 5 more confirmed · reminders scheduled for every confirmed booking</p>
+          <div class="sec ch">Not reached on a call <span class="cnt g">2</span></div>
+          <table>
+            <tbody>
+              <tr><td class="nw">Ananya R<br><span class="mini">Implants</span></td><td class="mini">2 calls missed (5:52, 6:14). Self-booking link sent on WhatsApp. No more calls.</td></tr>
+              <tr><td class="nw">Pooja M<br><span class="mini">Check-up</span></td><td class="mini">Number on DND. No call made, WhatsApp sent.</td></tr>
+            </tbody>
+          </table>
+          <p class="mini sec">Review queue: 2 calls flagged for possible mishearing ("RCT", clinic name). Checked weekly with the front-desk lead.</p>
+        </div>
+      </div>
+      <div class="pilot"><span>Pilot (clinic manager) · eligible enquiries split at random within each clinic · <b>first visits within 14 days per 100 assigned</b>, unanswered included</span><span>Assistant <b>29</b></span><span>Current process <b>23</b></span><span>Difference <b>+6</b> <span class="mini">(likely range −1 to +13)</span></span><span class="mini">Only cohorts that have had 14 days to attend. About 350 enquiries per group: promising, not yet a decision.</span></div>
+    </div>
+
+    <aside class="notes">
+      <h3>Why it looks like this</h3>
+      <ol>
+        <li><span class="pin c">A</span><span>Urgent first, then by the time we promised the patient. Callbacks are only offered inside staffed hours and each has a named owner. An urgent handoff nobody picks up in 5 minutes moves to the next person.</span></li>
+        <li><span class="pin c">B</span><span>Every handoff shows the patient's own words with a timestamp, and the summary may only restate what was said. The model writes for a person here, so it must not add a budget or a preference nobody mentioned.</span></li>
+        <li><span class="pin">C</span><span>A booking only counts if the calendar returned a reference. The assistant can't "say" a booking into existence.</span></li>
+        <li><span class="pin">D</span><span>Clashes and unconfirmed bookings are shown, not hidden. If the calendar times out, the assistant doesn't retry blindly or tell the patient "booked". Staff check it first.</span></li>
+        <li><span class="pin">E</span><span>The desk is measured on callbacks done on time, which they control. Consult-to-treatment stays a clinic number, since the dentist, price and case mix drive it.</span></li>
+        <li><span class="pin">·</span><span>There's no "calls made" counter anywhere on this screen. That's deliberate: it rises whether or not anyone walks in.</span></li>
+      </ol>
+    </aside>
+  </div>
+  <p class="sample">All names, numbers and pilot figures on this page are sample data for illustration.</p>
+</section>
+
+<footer class="band">Built as a static mockup. Clinic timings, numbers and the calendar reference format are placeholders.</footer>
+</body>
+</html>

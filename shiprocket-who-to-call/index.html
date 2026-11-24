@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who should TwentyTwo call? A COD confirmation call policy</title>
+<style>
+  :root { --ink:#1d1d1b; --soft:#5b5b57; --line:#e3e1da; --bg:#fbfaf7; --card:#fff; --accent:#1f5f8b; --bad:#a23b2a; --good:#2f6b3a; --warn:#8a6411; }
+  * { box-sizing:border-box; min-width:0; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.6 Georgia, "Iowan Old Style", "Times New Roman", serif; overflow-x:clip; }
+  .banner { background:#2b2b28; color:#fff; font:600 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; padding:12px 20px; text-align:center; }
+  .banner span { font-weight:400; opacity:.85; }
+  main { max-width:880px; margin:0 auto; padding:28px 20px 80px; }
+  h1 { font-size:clamp(28px,4vw,36px); line-height:1.15; margin:18px 0 8px; text-wrap:balance; }
+  h2 { font-size:24px; line-height:1.25; margin:52px 0 10px; padding-top:18px; border-top:1px solid var(--line); }
+  h3 { font-size:18px; margin:26px 0 6px; }
+  p, li { max-width:720px; }
+  .byline { color:var(--soft); font:14px/1.5 system-ui, sans-serif; }
+  .ui, button, select, input, label, table, .note, code, .kpi, .chip { font-family:system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .short { background:var(--card); border:1px solid var(--line); padding:8px 22px 14px; margin:22px 0; }
+  .short h3 { margin-top:14px; }
+  .short li { margin:8px 0; }
+  .note { font-size:14px; color:var(--soft); background:#f2f0ea; border-left:3px solid #c9c5b8; padding:10px 14px; margin:14px 0; }
+  .kpis { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:18px 0; }
+  .kpi { background:var(--card); border:1px solid var(--line); padding:12px 14px; }
+  .kpi b { display:block; font-size:24px; line-height:1.15; }
+  .kpi span { font-size:13px; color:var(--soft); }
+  table { border-collapse:collapse; width:100%; font-size:14px; background:var(--card); }
+  th, td { border-bottom:1px solid var(--line); padding:8px 8px; text-align:left; vertical-align:top; }
+  th { font-weight:600; color:var(--soft); font-size:12.5px; }
+  td.n, th.n { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .scroll { overflow-x:auto; }
+  .pos { color:var(--good); font-weight:600; } .neg { color:var(--bad); font-weight:600; }
+  .best td { background:#eef5ef; }
+  .sim { background:var(--card); border:1px solid var(--line); padding:16px; margin:16px 0; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px 18px; }
+  .grid label { font-size:13px; color:var(--soft); display:block; }
+  .grid output { font-weight:600; color:var(--ink); }
+  input[type=range] { width:100%; accent-color:var(--accent); height:28px; }
+  input[type=number] { width:70px; font-size:15px; padding:4px 6px; border:1px solid var(--line); border-radius:4px; }
+  input:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  button { font-size:14px; padding:8px 12px; border:1px solid var(--line); background:#fff; border-radius:6px; cursor:pointer; min-height:40px; }
+  .flow { list-style:none; padding:0; margin:12px 0; }
+  .flow li { background:var(--card); border:1px solid var(--line); padding:12px 14px; margin:10px 0; }
+  .flow .step { font:700 13px system-ui, sans-serif; color:var(--accent); }
+  .say { display:block; font-style:italic; color:#33332f; margin:4px 0; }
+  .rule { display:block; font:14px/1.5 system-ui, sans-serif; color:var(--soft); }
+  .chip { display:inline-block; font-size:12px; font-weight:600; padding:2px 8px; border-radius:99px; background:#e8eef3; color:var(--accent); margin:2px 4px 2px 0; }
+  .chip.bad { background:#f6e6e2; color:var(--bad); }
+  code { font-size:13px; background:#f2f0ea; padding:1px 5px; border-radius:3px; }
+  footer { color:var(--soft); font:13px/1.5 system-ui, sans-serif; margin-top:40px; }
+  @media (max-width:640px) { .kpis { grid-template-columns:minmax(0,1fr); } }
+</style>
+</head>
+<body>
+<div class="banner">Self-directed product spec for Shiprocket TwentyTwo <span>· illustrative assumptions, no Shiprocket data · every number below can be changed in the simulator</span></div>
+<main>
+  <p class="byline">Aditya Mathur · November 2026 · written while applying for the AI Product Manager role at Shiprocket</p>
+  <h1>Who should TwentyTwo call? Deciding which cash-on-delivery orders deserve a confirmation call</h1>
+  <p>TwentyTwo lists COD confirmation as its commerce use case. Every voice vendor sells it the same way: call every COD order, report the share that confirmed. This page argues that the confirmation rate ranks the work backwards, sets out a call policy based on what each call is worth, designs the call itself, and says how I would prove it on real sellers.</p>
+
+  <div class="short">
+    <h3>The short version</h3>
+    <ul>
+      <li><b>Problem:</b> a seller judges a COD call by delivered orders and RTO cost. A vendor reports confirmations. If TwentyTwo calls every COD order, the seller pays for calls that change nothing and loses a few buyers who would have accepted delivery.</li>
+      <li><b>Finding (default assumptions):</b> on a confirmation-rate dashboard, the low-risk band looks best (97% confirmed) while each call there loses about Rs 3. The high-risk band looks worst (72%) and earns about Rs 57 per call.</li>
+      <li><b>Policy:</b> call an order only when its predicted RTO risk is above a break-even point worked out from two numbers the seller knows: margin per order and cost of an RTO. At defaults that point is about 10%. Skipping the low band halves call spend, nearly halves genuine buyers lost, and nets about 10% more than calling everyone.</li>
+      <li><b>Proof:</b> a holdout inside each risk band, measured on delivered COD orders net of call spend. A holdout of about 365 orders per arm in the medium band detects the expected effect. The holdout stays on after launch, at 10%, so the seller report is a measurement, not a claim.</li>
+    </ul>
+  </div>
+
+  <h2>1. The problem, stated narrowly</h2>
+  <p>COD still decides whether an Indian D2C order makes money. Published benchmarks put COD RTO far above prepaid: ClickPost's FY2026 D2C network saw 37.5% of COD orders end as RTO against 5.3% for prepaid, and Meesho's FY25 prospectus reported 22.3% vs 2.7%. Shiprocket's own blog puts COD RTO at 25 to 35%.</p>
+  <p>A pre-dispatch call can help in three ways: a buyer who never meant to accept cancels before the parcel ships, an address gets fixed, or a doubtful buyer is reassured or moves to prepaid. It can also hurt in one way that nobody's dashboard shows: a buyer who would have accepted the parcel hears a robot asking "do you still want this?" and says no.</p>
+  <p><b>Problem statement:</b> for a seller on Shiprocket, decide which COD orders TwentyTwo should call, what the call should do, and how to show the seller the value in delivered orders and rupees, so that the product pays for itself per seller rather than per call.</p>
+  <p class="note">Out of scope: NDR calls after a failed delivery attempt (a different moment with different economics), COD-to-prepaid at checkout, and pricing TwentyTwo itself.</p>
+
+  <h2>2. Why the confirmation rate ranks the work backwards</h2>
+  <p>A confirmation-rate dashboard counts everyone who didn't cancel. It mixes up three different things: would-be RTOs that the call caught, genuine buyers it lost, and calls that changed nothing. The band with the fewest RTOs has the most "confirmations" and the least to gain.</p>
+  <div class="scroll"><table id="backwards"></table></div>
+  <p class="note">Default assumptions, per 100 COD orders in each band. Net value counts RTO cost avoided, margin from deliveries the call saved, margin lost on genuine buyers who cancelled, and call spend.</p>
+
+  <h2>3. The simulator</h2>
+  <p>Change any input. Everything on this page that depends on it updates, including the break-even risk and the pilot sizes. The defaults are illustrative, chosen to sit inside public benchmarks. They are not Shiprocket data.</p>
+  <div class="sim ui">
+    <div class="grid" id="globals"></div>
+    <h3 style="font-family:Georgia,serif">Risk bands and call effects</h3>
+    <div class="scroll"><table id="bandsIn"></table></div>
+    <p style="font-size:13px;color:var(--soft)">Catch rate: of would-be RTOs who answer, the share who cancel before dispatch. Save rate: of the remaining would-be RTOs who answer, the share the call turns into a delivery. Genuine cancel: of buyers who would have accepted delivery and answer, the share the call talks out of the order.</p>
+    <button type="button" id="reset">Reset to defaults</button>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="scroll"><table id="policyTable"></table></div>
+  <p class="note" id="sens"></p>
+
+  <h2>4. The decision rule</h2>
+  <p>The value of calling one order rises in a straight line with its RTO risk, so there is a single risk level where a call breaks even. For each seller, TwentyTwo works it out from two numbers the seller already knows (margin per order and what an RTO costs them) plus the call effects the pilot measures. It then calls only orders above that level.</p>
+  <p id="beText"></p>
+  <h3>Where the risk score comes from</h3>
+  <p>This is the part a standalone voice vendor can't copy. Shiprocket already has the inputs: the Sense RTO prediction and address-quality APIs, Checkout's check of the buyer's last successful delivery address, pincode and courier performance from Radar, and the buyer's history across sellers on the network (a phone number that refused three COD parcels last month elsewhere). TwentyTwo's commerce advantage is deciding <i>who</i> to call. The voice is the cheaper part.</p>
+  <p class="note">The bands here are the simplest version. Once pilot data exists, the same rule applies per order to the Sense score itself, and the call effects can be estimated by segment (first-time buyer, category, order value).</p>
+
+  <h2>5. The call itself</h2>
+  <p>A COD confirmation call has one job: find out whether this person will accept this parcel, and fix what would stop them. These are the steps and the rules that govern each. The lines are Hinglish because that's how most of these buyers answer.</p>
+  <ul class="flow">
+    <li><span class="step">1 · Open, say it's AI, check it's the buyer</span>
+      <span class="say">"Namaste, main {brand} ki AI assistant bol rahi hoon. Kya meri baat {name} se ho rahi hai?"</span>
+      <span class="rule">If someone else answers, don't name the product or the amount. COD parcels are often gifts. Ask when the buyer can be reached and end the call.</span></li>
+    <li><span class="step">2 · Intent, asked so the answer has to carry information</span>
+      <span class="say">"Aapka order, {product}, {amount} rupaye cash on delivery, kal ya parson tak aayega. Aap kis time ghar par milenge?"</span>
+      <span class="rule">"Haan" on its own is not a confirmation. A time, a person who will collect it, or a landmark is. A bare yes is logged as <code>confirmed_vague</code>, the order still ships, and a WhatsApp message with the delivery window follows.</span></li>
+    <li><span class="step">3 · Address check (only when Sense flags the address)</span>
+      <span class="say">"Address mein landmark nahi hai. Ghar ke paas koi landmark bata sakte hain?"</span>
+      <span class="rule">The correction goes through the address API and is read back before it's saved.</span></li>
+    <li><span class="step">4 · Prepaid offer: once, after intent, only if the seller has switched it on</span>
+      <span class="say">"Abhi UPI se pay karein toh {offer} off milega. Link WhatsApp par bhej doon?"</span>
+      <span class="rule">Asked once. A no ends the topic. The link goes on WhatsApp; no payment details are taken on the call.</span></li>
+    <li><span class="step">5 · Cancel only on an explicit request</span>
+      <span class="say">"Theek hai, kya main order cancel kar doon?"</span>
+      <span class="rule">Silence, confusion or "abhi nahi pata" is never a cancellation. A cancel is confirmed once, then written to the order system with the order ID as the idempotency key. If that write times out, the agent checks the order's status before saying anything, and never retries blindly.</span></li>
+    <li><span class="step">6 · Unreachable</span>
+      <span class="rule">Two attempts inside the calling window, then WhatsApp. What happens to an unconfirmed order is the seller's setting, per band: default ship for low and medium risk, hold up to 24 hours for high risk.</span></li>
+  </ul>
+  <p><b>Outcomes written back:</b> <span class="chip">confirmed_detail</span><span class="chip">confirmed_vague</span><span class="chip">address_fixed</span><span class="chip">prepaid_link_sent</span><span class="chip">cancelled_explicit</span><span class="chip">wrong_person</span><span class="chip">unreachable</span>. Only <code>cancelled_explicit</code> changes the order. Everything else is information.</p>
+
+  <h2>6. What must pass before a real buyer is called</h2>
+  <p>An eval set of about 40 scripted calls across eight types: clear yes, bare "haan", gift recipient answering, wrong number, address fix, prepaid accepted, explicit cancel, and a buyer who changes their mind mid-call. Each runs in Hindi, English and mixed speech, with interruptions.</p>
+  <p><span class="chip bad">Blocks launch</span> any cancellation without an explicit request · product or amount told to someone who isn't the buyer · the prepaid offer repeated after a no · an order-system write that can't be matched to its order ID.</p>
+  <p><span class="chip">Tracked, doesn't block</span> share of vague confirmations, call length, early hang-ups, language switches handled.</p>
+
+  <h2>7. The pilot</h2>
+  <p>The catch, save and genuine-cancel rates are the numbers this whole policy rests on, and no one has them for Shiprocket sellers yet. You also can't see a lost genuine buyer directly: you only see a cancellation. So the pilot doesn't try to measure them one by one. It measures what the seller cares about against a holdout.</p>
+  <ul>
+    <li><b>Design:</b> 5 to 10 consenting sellers. Inside each seller, eligible COD orders are randomly assigned to a call or to no call, separately within each risk band, including the low band. Calling the low band in the pilot is the only way to learn whether skipping it is right.</li>
+    <li><b>Primary metric:</b> net value per 100 COD orders placed = delivered orders × margin − RTOs × RTO cost − call spend, compared with the holdout in the same band.</li>
+    <li><b>Ignored as a target:</b> confirmation rate. It's logged, never optimised.</li>
+    <li><b>Guardrails:</b> buyer complaints, seller opt-outs, and buyers who cancel on a call and reorder the same item within 14 days (the closest visible sign of a genuine buyer lost).</li>
+    <li><b>Size:</b> <span id="pilotN"></span></li>
+    <li><b>Decision:</b> per band, call if the lift in net value is positive with a lower bound above zero, extend if it's unclear, stop calling the band if it's negative. Any blocking failure from section 6 pauses calls immediately.</li>
+  </ul>
+
+  <h2>8. What this changes in TwentyTwo</h2>
+  <ul>
+    <li><b>Default setting:</b> "Call where it pays", not "call every COD order". The seller enters margin and RTO cost once; TwentyTwo sets the threshold and shows it.</li>
+    <li><b>Seller report:</b> delivered COD orders and rupees against the holdout, by band. Not "orders confirmed". This is also TwentyTwo's best sales asset: a number the seller can check.</li>
+    <li><b>Always-on holdout:</b> 10% of eligible orders are never called. It costs a little value and keeps every claim measurable as categories, seasons and buyer behaviour change.</li>
+    <li><b>Pricing, later:</b> per-call pricing is honest while the effects are uncertain. Pricing per saved RTO only makes sense once the holdout numbers are stable.</li>
+  </ul>
+
+  <h2>9. What I'd want to know from inside Shiprocket</h2>
+  <ul>
+    <li>How well calibrated is the Sense RTO score by band? The rule needs a probability, not just a ranking.</li>
+    <li>What do sellers do today with unconfirmed COD orders: ship, hold or cancel? That default drives most of the value.</li>
+    <li>Is there existing call or IVR data (the NDR voice bot) that shows cancellation rates by risk band? It would set better priors than mine.</li>
+  </ul>
+
+  <h2>Assumptions and sources</h2>
+  <div class="scroll"><table>
+    <tr><th>Input</th><th>Default</th><th>Basis</th></tr>
+    <tr><td>COD RTO by band</td><td>8% / 28% / 60%, blended ~24%</td><td>Chosen to sit inside public COD RTO benchmarks of roughly 22% to 37% (ClickPost FY2026 network, Meesho FY25 prospectus, Shiprocket blog)</td></tr>
+    <tr><td>Cost of one RTO</td><td>Rs 250</td><td>Forward plus return freight plus handling. ClickPost's 90-day playbook uses Rs 350; rate cards put a 500g parcel at about Rs 32 to Rs 90 each way</td></tr>
+    <tr><td>Margin per delivered COD order</td><td>Rs 300</td><td>Assumption: about 25% of a Rs 1,200 order after product cost and forward freight</td></tr>
+    <tr><td>Call cost and attempts</td><td>Rs 5 per attempt, 1.5 attempts</td><td>Assumption for a short outbound call; change it in the simulator</td></tr>
+    <tr><td>Answer rate</td><td>70%</td><td>Assumption</td></tr>
+    <tr><td>Catch, save, genuine cancel</td><td>See simulator</td><td>Assumptions. These are exactly what the pilot replaces</td></tr>
+  </table></div>
+  <ul style="font-size:14px">
+    <li>Shiprocket, "Shiprocket TwentyTwo: The AI Voice Platform Built for Indian Business", June 2026: shiprocket.in/blog/shiprocket-twentytwo-ai-voice-platform</li>
+    <li>ClickPost, "Ecommerce RTO Statistics India 2026": clickpost.ai/blog/ecommerce-rto-statistics-india</li>
+    <li>ClickPost, "Ecommerce Shipping Cost Statistics India 2026" and "The 90-Day RTO Reduction Playbook"</li>
+    <li>Shiprocket blog, "Order Value Recovery Strategies for eCommerce" (COD RTO 25 to 35%)</li>
+    <li>Business Standard, Aug 2026, on Shiprocket's AI across checkout, courier allocation and last mile (RTOs down nearly 20%)</li>
+    <li>Shiprocket product highlights, March 2026 (Radar, Sense Listen and Read APIs)</li>
+  </ul>
+  <footer>Model and tests: <code>model.js</code>, <code>tests/model.test.js</code> (16 tests, run with <code>node tests/model.test.js</code>). Built by Aditya Mathur. Not affiliated with Shiprocket; no internal data used.</footer>
+</main>
+
+<script src="model.js"></script>
+<script>
+{
+  const M = window.CodModel;
+  let P = M.clone(M.DEFAULTS);
+  const rs = v => (v < 0 ? '−' : '') + 'Rs ' + Math.round(Math.abs(v)).toLocaleString('en-IN');
+  const pct = (v, d = 0) => (v * 100).toFixed(d) + '%';
+  const cls = v => v > 0.5 ? 'pos' : (v < -0.5 ? 'neg' : '');
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  const G = [
+    { k: 'margin', label: 'Margin per delivered order (Rs)', min: 50, max: 800, step: 10, f: v => 'Rs ' + v },
+    { k: 'rtoCost', label: 'Cost of one RTO (Rs)', min: 100, max: 600, step: 10, f: v => 'Rs ' + v },
+    { k: 'costPerAttempt', label: 'Cost per dial attempt (Rs)', min: 1, max: 25, step: 0.5, f: v => 'Rs ' + v },
+    { k: 'attempts', label: 'Attempts per called order', min: 1, max: 3, step: 0.1, f: v => v.toFixed(1) },
+    { k: 'connect', label: 'Answer rate', min: 0.3, max: 0.95, step: 0.01, f: v => pct(v) }
+  ];
+  const BF = [
+    { k: 'share', label: 'Share of COD orders' }, { k: 'rto', label: 'RTO without a call' },
+    { k: 'catchRate', label: 'Catch rate' }, { k: 'saveRate', label: 'Save rate' }, { k: 'genuineCancel', label: 'Genuine cancel', d: 1 }
+  ];
+
+  function buildInputs() {
+    document.getElementById('globals').innerHTML = G.map(g =>
+      `<label for="g-${g.k}">${g.label}: <output id="o-${g.k}">${g.f(P[g.k])}</output>
+       <input type="range" id="g-${g.k}" min="${g.min}" max="${g.max}" step="${g.step}" value="${P[g.k]}"></label>`).join('');
+    document.getElementById('bandsIn').innerHTML =
+      `<tr><th>Band</th>${BF.map(f => `<th class="n">${f.label} (%)</th>`).join('')}</tr>` +
+      P.bands.map((b, i) => `<tr><td>${esc(b.name)}</td>${BF.map(f =>
+        `<td class="n"><input type="number" aria-label="${esc(b.name)} ${f.label}" data-b="${i}" data-k="${f.k}" min="0" max="100" step="${f.d ? 0.1 : 1}" value="${+(b[f.k] * 100).toFixed(f.d ? 1 : 0)}"></td>`).join('')}</tr>`).join('');
+    G.forEach(g => document.getElementById('g-' + g.k).addEventListener('input', e => {
+      P[g.k] = +e.target.value; document.getElementById('o-' + g.k).textContent = g.f(P[g.k]); render();
+    }));
+    document.querySelectorAll('#bandsIn input').forEach(inp => inp.addEventListener('input', e => {
+      const v = Math.max(0, Math.min(100, +e.target.value || 0)) / 100;
+      P.bands[+e.target.dataset.b][e.target.dataset.k] = v; render();
+    }));
+  }
+
+  function render() {
+    const share = P.bands.reduce((s, b) => s + b.share, 0);
+    // backwards table
+    document.getElementById('backwards').innerHTML =
+      '<tr><th>Band</th><th class="n">RTO without a call</th><th class="n">Confirmation rate</th><th class="n">Net value of calling, per 100 orders</th></tr>' +
+      P.bands.map(b => { const v = M.perOrder(P, b).value * 100;
+        return `<tr><td>${esc(b.name)}</td><td class="n">${pct(b.rto)}</td><td class="n">${pct(M.confirmationRate(P, b))}</td><td class="n ${cls(v)}">${rs(v)}</td></tr>`; }).join('');
+    // policies
+    const ps = M.policies(P);
+    const best = ps.reduce((a, b) => b.result.value > a.result.value ? b : a);
+    document.getElementById('policyTable').innerHTML =
+      '<tr><th>Policy, per 100 COD orders</th><th class="n">Orders called</th><th class="n">RTOs</th><th class="n">Genuine buyers lost</th><th class="n">Call spend</th><th class="n">Net value</th></tr>' +
+      ps.map(x => `<tr class="${x === best && x.result.value > 0 ? 'best' : ''}"><td>${x.label}</td><td class="n">${x.result.calls.toFixed(0)}</td><td class="n">${x.result.rtoBase.toFixed(1)} → ${x.result.rtoAfter.toFixed(1)}</td><td class="n">${x.result.lost.toFixed(2)}</td><td class="n">${rs(x.result.spend)}</td><td class="n ${cls(x.result.value)}">${rs(x.result.value)}</td></tr>`).join('');
+    const all = ps.find(x => x.key === 'all').result, pays = ps.find(x => x.key === 'pays').result;
+    document.getElementById('kpis').innerHTML =
+      `<div class="kpi"><b>${rs(pays.value)}</b><span>net per 100 COD orders, calling only where it pays</span></div>
+       <div class="kpi"><b>${rs(all.value)}</b><span>net per 100 COD orders, calling everyone</span></div>
+       <div class="kpi"><b>${all.spend > 0 ? pct(1 - pays.spend / all.spend) : '0%'}</b><span>less call spend with the targeted policy</span></div>`;
+    // sensitivity on low band genuine cancel
+    const low = P.bands[0];
+    const zeroG = M.perOrder(P, Object.assign({}, low, { genuineCancel: 0 })).value * 100;
+    document.getElementById('sens').textContent = share > 1.001 || share < 0.999
+      ? 'Band shares add up to ' + pct(share) + ', not 100%. Results are scaled to what you entered.'
+      : 'Sensitivity: even if calls in the ' + low.name.toLowerCase() + ' band never lost a genuine buyer, calling it would be worth ' + rs(zeroG) + ' per 100 orders there. The genuine-cancel rate decides the sign in the middle band; the call cost decides it in the low one.';
+    // break-even
+    const be = M.breakEvenRisk(P, P.bands[1]);
+    document.getElementById('beText').innerHTML = be === null
+      ? 'With these inputs a call never pays for itself, at any risk level.'
+      : `With the inputs above, using the medium band's call effects, a call pays for itself once an order's predicted RTO risk is above <b>${pct(be, 1)}</b>. At Rs ${P.costPerAttempt} a dial and ${P.attempts.toFixed(1)} attempts, that is where Rs ${(P.costPerAttempt * P.attempts).toFixed(1)} of call spend is covered by what the call is expected to recover.`;
+    // pilot
+    const sizes = P.bands.map(b => { const d = M.perOrder(P, b).rtoDrop; return { b, d, n: M.sampleSize(b.rto, Math.max(0, b.rto - d)) }; });
+    document.getElementById('pilotN').innerHTML = sizes.map(s =>
+      `${esc(s.b.name)}: RTO ${pct(s.b.rto)} → ${pct(Math.max(0, s.b.rto - s.d), 1)} expected, about <b>${isFinite(s.n) ? s.n.toLocaleString('en-IN') : '∞'}</b> orders per arm`).join(' · ') +
+      '. Small effects in the low band need far more orders, which is itself a reason to treat that band as "prove it pays before calling".';
+  }
+
+  document.getElementById('reset').addEventListener('click', () => { P = M.clone(M.DEFAULTS); buildInputs(); render(); });
+  buildInputs(); render();
+}
+</script>
+</body>
+</html>
