@@ -97,7 +97,7 @@
   <p>The value of calling one order rises in a straight line with its RTO risk, so there is a single risk level where a call breaks even. For each seller, TwentyTwo works it out from two numbers the seller already knows (margin per order and what an RTO costs them) plus the call effects the pilot measures. It then calls only orders above that level.</p>
   <p id="beText"></p>
   <h3>Where the risk score comes from</h3>
-  <p>This is the part a standalone voice vendor can't copy. Shiprocket already has the inputs: the Sense RTO prediction and address-quality APIs, Checkout's check of the buyer's last successful delivery address, pincode and courier performance from Radar, and the buyer's history across sellers on the network (a phone number that refused three COD parcels last month elsewhere). TwentyTwo's commerce advantage is deciding <i>who</i> to call. The voice is the cheaper part.</p>
+  <p>This is the part a standalone voice vendor can't copy. Shiprocket already has the inputs: the Sense RTO prediction and address-quality APIs, Checkout's check of the buyer's last successful delivery address, pincode and courier performance from Radar, the RTO-risk attribute Fastrr Signals has added to every Engage shopper profile since September, and the buyer's history across sellers on the network (a phone number that refused three COD parcels last month elsewhere). TwentyTwo's commerce advantage is deciding <i>who</i> to call. The voice is the cheaper part.</p>
   <p class="note">The bands here are the simplest version. Once pilot data exists, the same rule applies per order to the Sense score itself, and the call effects can be estimated by segment (first-time buyer, category, order value).</p>
 
   <h2>5. The call itself</h2>
@@ -127,6 +127,17 @@
   <p>An eval set of about 40 scripted calls across eight types: clear yes, bare "haan", gift recipient answering, wrong number, address fix, prepaid accepted, explicit cancel, and a buyer who changes their mind mid-call. Each runs in Hindi, English and mixed speech, with interruptions.</p>
   <p><span class="chip bad">Blocks launch</span> any cancellation without an explicit request · product or amount told to someone who isn't the buyer · the prepaid offer repeated after a no · an order-system write that can't be matched to its order ID.</p>
   <p><span class="chip">Tracked, doesn't block</span> share of vague confirmations, call length, early hang-ups, language switches handled.</p>
+  <h3>The numbers behind the gate</h3>
+  <div class="scroll"><table>
+    <thead><tr><th>Metric</th><th>Measured as</th><th>Bar</th></tr></thead>
+    <tbody>
+      <tr><td>Wrongful cancellation</td><td><code>cancelled_explicit</code> where the buyer never asked to cancel, against a human label</td><td>0 in the eval set; ≤ 0.5% in the live sample. Blocks.</td></tr>
+      <tr><td>Outcome accuracy</td><td>The agent's outcome matches the human label, across all 7 outcomes</td><td>≥ 95%</td></tr>
+      <tr><td>Address accuracy</td><td>Pincode and landmark match exactly after read-back</td><td>≥ 97%</td></tr>
+      <tr><td>Correct containment</td><td>Connected calls resolved without a person <i>and</i> labelled correctly</td><td>Tracked. Plain containment rewards an agent that never escalates, so it's never the target.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">After launch, people label 5% of live calls each week, weighted towards cancellations and address changes, so these rates are measured on real buyers rather than carried over from the test set.</p>
 
   <h2>7. The pilot</h2>
   <p>The catch, save and genuine-cancel rates are the numbers this whole policy rests on, and no one has them for Shiprocket sellers yet. You also can't see a lost genuine buyer directly: you only see a cancellation. So the pilot doesn't try to measure them one by one. It measures what the seller cares about against a holdout.</p>
@@ -144,6 +155,8 @@
     <li><b>Default setting:</b> "Call where it pays", not "call every COD order". The seller enters margin and RTO cost once; TwentyTwo sets the threshold and shows it.</li>
     <li><b>Seller report:</b> delivered COD orders and rupees against the holdout, by band. Not "orders confirmed". This is also TwentyTwo's best sales asset: a number the seller can check.</li>
     <li><b>Always-on holdout:</b> 10% of eligible orders are never called. It costs a little value and keeps every claim measurable as categories, seasons and buyer behaviour change.</li>
+    <li><b>WhatsApp first, voice second:</b> Engage already sells WhatsApp order confirmation at ₹2.49 an order. Voice should take the orders that don't reply and clear the break-even risk, not compete with Engage for the same order.</li>
+    <li><b>Eval-gated publish:</b> TwentyTwo shipped "edit after publishing" in September. That's the fastest way to improve a live agent and also the fastest way to break one. The eval set from section 6 should run automatically before an edit goes live, and a blocking regression should stop the publish.</li>
     <li><b>Pricing, later:</b> per-call pricing is honest while the effects are uncertain. Pricing per saved RTO only makes sense once the holdout numbers are stable.</li>
   </ul>
 
@@ -171,6 +184,8 @@
     <li>Shiprocket blog, "Order Value Recovery Strategies for eCommerce" (COD RTO 25 to 35%)</li>
     <li>Business Standard, Aug 2026, on Shiprocket's AI across checkout, courier allocation and last mile (RTOs down nearly 20%)</li>
     <li>Shiprocket product highlights, March 2026 (Radar, Sense Listen and Read APIs)</li>
+    <li>Shiprocket product highlights, August and September 2026 (Fastrr Voice, Fastrr Signals, TwentyTwo inbound, edit after publishing, human hand-off)</li>
+    <li>Shiprocket Engage on the Shopify App Store: Rs 2.49 per order for order confirmation, address verification and COD-to-prepaid</li>
   </ul>
   <footer>Model and tests: <code>model.js</code>, <code>tests/model.test.js</code> (16 tests, run with <code>node tests/model.test.js</code>). Built by Aditya Mathur. Not affiliated with Shiprocket; no internal data used.</footer>
 </main>
