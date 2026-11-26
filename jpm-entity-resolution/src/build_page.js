@@ -242,9 +242,9 @@ ${vendor.map((v) => `<tr${!v.drop ? ' class="top"' : ""}><td><b>${v.drop ? esc(D
 </table></div>
 <p class="note">Match recall is measured over the records that remain, so it is only comparable within a row. The front-office CRM is left out: removing it removes the noisiest records rather than a capability.</p>
 <ul>
-<li><b>Commercial vendor:</b> worth ${pct(base.acc - vb.acc)} points of profile accuracy, mostly industry and parent. Match recall barely notices. A vendor bake-off that only measured match rate would wrongly call it marginal.</li>
-<li><b>LEI registry:</b> free, and worth ${pct(base.acc - lr.acc)} points plus ${n0(lr.review - base.review)} fewer review questions a run, because a shared valid LEI settles a pair without a person.</li>
-<li><b>Credit system:</b> adds ${pct(base.acc - cr.acc)} points. It matters for exposure, not for the profile; don't let it win any profile attribute.</li>
+<li><b>Commercial vendor:</b> worth ${((base.acc - vb.acc) * 100).toFixed(1)} points of profile accuracy, mostly industry and parent. Match recall barely notices. A vendor bake-off that only measured match rate would wrongly call it marginal.</li>
+<li><b>LEI registry:</b> free, and worth ${((base.acc - lr.acc) * 100).toFixed(1)} points plus ${n0(lr.review - base.review)} fewer review questions a run, because a shared valid LEI settles a pair without a person.</li>
+<li><b>Credit system:</b> adds ${((base.acc - cr.acc) * 100).toFixed(1)} points. It matters for exposure, not for the profile; don't let it win any profile attribute.</li>
 </ul>
 
 <h2><span class="n">6</span>Tested and parked: learning the weights</h2>
