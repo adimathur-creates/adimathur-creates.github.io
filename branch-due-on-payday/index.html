@@ -65,13 +65,13 @@ code{font-size:13px;background:var(--tag);padding:1px 5px;border-radius:4px}.sou
 <div class="callout"><b>The pattern elsewhere.</b> In a study of small-business borrowers in Mexico, 80% of those who missed a scheduled payment paid within 10 days <a class="src" href="https://advanced-hindsight.com/wp-content/uploads/2024/04/CCL-Mastercard-Report-2-KONFIO-240109.pdf">[source]</a>. That's the signature of a timing problem. The market Branch competes in is also under scrutiny: fintechs hold 56.8% of personal loans under ₹50,000, and their delinquency in that segment is 6.4% <a class="src" href="https://visionias.in/current-affairs/upsc-daily-news-summary/article/2026-07-01/the-economic-times/economy/fintechs-capture-57-share-of-small-personal-loans-as-stress-mounts-rbi-report">[source]</a>.</div>
 
 <h2><span class="n">2</span>The feature: try the due-date engine</h2>
-<p>Pick a disbursal date and how the borrower is paid. The first instalment can move up to 15 days either side of the standard date, so it can always reach a monthly payday. Interest is charged per day held, so a later date costs a little more and an earlier one a little less. The borrower sees the exact dates and amounts before signing, as the Key Facts Statement requires.</p>
+<p>Pick a disbursal date and how the borrower is paid. The first instalment can move up to 15 days either side of the standard date, so it can always reach a monthly payday. Branch charges a flat rate on the original amount; here it is charged per day held, so a later date costs a little more and an earlier one a little less. The borrower sees the exact dates and amounts before signing, as the Key Facts Statement requires.</p>
 <div class="planner" id="planner">
 <div class="prow">
 <label>Disbursal date<input type="date" id="pdate" value="2026-11-26"></label>
 <label>Income pattern<select id="ptype"><option value="last">Salary, last working day</option><option value="1">Salary, 1st of month</option><option value="7">Salary, 7th</option><option value="15">Salary, 15th</option><option value="w5">Weekly, Friday</option><option value="irr">Irregular</option></select></label>
 <label>Loan (₹)<input type="number" id="pamt" value="20000" step="1000" min="1000"></label>
-<label>Interest per month, on balance<input type="number" id="prate" value="3" step="0.25" min="0.5"></label>
+<label>Flat interest per month<input type="number" id="prate" value="3" step="0.25" min="0.5"></label>
 </div>
 <div class="kfs"><div class="card"><h3>Today: 30 days after disbursal</h3><div id="kstd"></div></div><div class="card"><h3>Proposed: day after payday</h3><div id="kali"></div></div></div>
 <p class="note" id="pnote" style="margin-top:10px"></p>
@@ -155,6 +155,7 @@ code{font-size:13px;background:var(--tag);padding:1px 5px;border-radius:4px}.sou
 <li><a href="https://advanced-hindsight.com/wp-content/uploads/2024/04/CCL-Mastercard-Report-2-KONFIO-240109.pdf">Common Cents Lab and Konfio, "Can aligning loan payments with income support small businesses in Mexico?"</a> — 80% of late payers paid within 10 days</li>
 <li><a href="https://visionias.in/current-affairs/upsc-daily-news-summary/article/2026-07-01/the-economic-times/economy/fintechs-capture-57-share-of-small-personal-loans-as-stress-mounts-rbi-report">RBI Financial Stability Report coverage, July 2026</a> — fintech share and delinquency in loans under ₹50,000</li>
 <li><a href="https://www.rbi.org.in/Scripts/BS_CircularIndexDisplay.aspx?Id=12848">RBI (Digital Lending) Directions, 2025</a> — KFS, cooling-off period, data access rules</li>
+<li><a href="https://branchapp.in/faq">Branch FAQ</a> — interest is a flat rate that does not amortise</li>
 <li><a href="https://cbinsights.com/company/branch-international">CB Insights, Branch International profile</a> — company's stated 50,000 loans a day in India</li>
 </ol>
 <p class="note">Built by Aditya Mathur. <a href="../">More work</a>.</p>
@@ -227,7 +228,7 @@ code{font-size:13px;background:var(--tag);padding:1px 5px;border-radius:4px}.sou
   function pattern(v){ if (v === "irr") return { type: "irregular" }; if (v === "w5") return { type: "weekly", weekday: 5 }; return { type: "monthly", day: v === "last" ? "last" : +v }; }
   function kfs(rows, disb, amt, rate, el){
     const n = rows.length, prin = amt / n; let prev = disb, tot = 0, html = '<table style="margin:0"><tr><th>#</th><th>Due</th><th class="num">Days</th><th class="num">Pay</th></tr>';
-    rows.forEach((r, i) => { const due = new Date(r.due + "T00:00:00Z"), days = D.diff(prev, due), bal = amt - prin * i, intr = D.interest(bal, rate, days), pay = prin + intr; tot += pay;
+    rows.forEach((r, i) => { const due = new Date(r.due + "T00:00:00Z"), days = D.diff(prev, due), intr = D.interest(amt, rate, days), pay = prin + intr; tot += pay;
       html += '<tr><td>' + r.k + '</td><td>' + fmt(r.due) + (r.aligned ? ' <span class="pill">day after pay</span>' : '') + '</td><td class="num">' + days + '</td><td class="num">' + inr(pay) + '</td></tr>'; prev = due; });
     html += '</table><p style="margin:8px 0 0"><span class="note">Total repaid</span> <span class="big">' + inr(tot) + '</span></p>'; el.innerHTML = html; return tot;
   }
