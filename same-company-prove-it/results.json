@@ -1,0 +1,2253 @@
+{
+ "note": "Simulation on fictional data. Not J.P. Morgan data, systems or process. Built with Claude.",
+ "thresholds": {
+  "auto_match": 0.7,
+  "review_floor": 0.5,
+  "auto_precision_target": 0.995,
+  "assumptions": {
+   "steward_minutes_per_pair": 3.0,
+   "steward_accuracy": 0.98
+  }
+ },
+ "universe": {
+  "entities": 1204,
+  "kinds": {
+   "sponsor": 22,
+   "holding": 291,
+   "operating": 891
+  },
+  "renamed": 90,
+  "moved": 202,
+  "records_by_source": {
+   "KYC_ONBOARDING": 927,
+   "CREDIT": 650,
+   "MARKETS": 469,
+   "PAYMENTS": 555,
+   "VENDOR_A": 919,
+   "VENDOR_B": 1250
+  }
+ },
+ "blocking": {
+  "records": 4770,
+  "all_pairs": 11374065,
+  "candidate_pairs": 66251,
+  "true_pairs_total": 7404,
+  "true_pairs_in_blocks": 7396,
+  "blocking_recall": 0.9989195029713668
+ },
+ "model": {
+  "weights": {
+   "name_jw": 0.404,
+   "token_jaccard": 1.627,
+   "lei_match": 0.857,
+   "lei_conflict": -0.929,
+   "reg_match": 0.844,
+   "reg_conflict": -1.017,
+   "form_match": 0.452,
+   "form_conflict": -0.692,
+   "country_match": -0.082,
+   "city_match": 0.918,
+   "postcode_match": 1.881,
+   "holding_diff": -0.652,
+   "distinct_token_diff": -1.195
+  },
+  "bias": -1.921,
+  "train_pairs": 12732,
+  "test_pairs": 24854
+ },
+ "threshold_sweep_test": [
+  {
+   "t_auto": 0.5,
+   "auto_precision": 0.9614,
+   "auto_recall": 0.9445,
+   "false_auto_merges": 164,
+   "review_pairs": 253,
+   "missed_without_review": 38
+  },
+  {
+   "t_auto": 0.6,
+   "auto_precision": 0.9924,
+   "auto_recall": 0.9409,
+   "false_auto_merges": 31,
+   "review_pairs": 402,
+   "missed_without_review": 38
+  },
+  {
+   "t_auto": 0.7,
+   "auto_precision": 0.9998,
+   "auto_recall": 0.9288,
+   "false_auto_merges": 1,
+   "review_pairs": 484,
+   "missed_without_review": 38
+  },
+  {
+   "t_auto": 0.8,
+   "auto_precision": 0.9997,
+   "auto_recall": 0.9041,
+   "false_auto_merges": 1,
+   "review_pairs": 591,
+   "missed_without_review": 38
+  },
+  {
+   "t_auto": 0.85,
+   "auto_precision": 1.0,
+   "auto_recall": 0.8512,
+   "false_auto_merges": 0,
+   "review_pairs": 821,
+   "missed_without_review": 38
+  },
+  {
+   "t_auto": 0.9,
+   "auto_precision": 1.0,
+   "auto_recall": 0.8415,
+   "false_auto_merges": 0,
+   "review_pairs": 863,
+   "missed_without_review": 38
+  },
+  {
+   "t_auto": 0.93,
+   "auto_precision": 1.0,
+   "auto_recall": 0.8177,
+   "false_auto_merges": 0,
+   "review_pairs": 966,
+   "missed_without_review": 38
+  },
+  {
+   "t_auto": 0.95,
+   "auto_precision": 1.0,
+   "auto_recall": 0.7994,
+   "false_auto_merges": 0,
+   "review_pairs": 1045,
+   "missed_without_review": 38
+  },
+  {
+   "t_auto": 0.97,
+   "auto_precision": 1.0,
+   "auto_recall": 0.5857,
+   "false_auto_merges": 0,
+   "review_pairs": 1970,
+   "missed_without_review": 38
+  },
+  {
+   "t_auto": 0.98,
+   "auto_precision": 1.0,
+   "auto_recall": 0.5857,
+   "false_auto_merges": 0,
+   "review_pairs": 1970,
+   "missed_without_review": 38
+  },
+  {
+   "t_auto": 0.99,
+   "auto_precision": 1.0,
+   "auto_recall": 0.5857,
+   "false_auto_merges": 0,
+   "review_pairs": 1970,
+   "missed_without_review": 38
+  },
+  {
+   "t_auto": 0.995,
+   "auto_precision": 1.0,
+   "auto_recall": 0.5857,
+   "false_auto_merges": 0,
+   "review_pairs": 1970,
+   "missed_without_review": 38
+  }
+ ],
+ "decision_rules": {
+  "R2": 1594,
+  "R1": 2754,
+  "M3": 44908,
+  "C3": 281,
+  "V1": 13490,
+  "M1": 2493,
+  "M2": 574,
+  "C1": 105,
+  "C4": 48,
+  "C2": 4
+ },
+ "resolution": {
+  "records": 4770,
+  "clusters": 1376,
+  "true_entities": 1359,
+  "pair_precision": 1.0,
+  "pair_recall": 0.9932,
+  "false_merge_clusters": 0,
+  "split_entities": 17,
+  "duplicate_rate": 0.0141
+ },
+ "review_pairs": 1012,
+ "baselines": {
+  "B0 exact name + country": {
+   "records": 4770,
+   "clusters": 1842,
+   "true_entities": 1359,
+   "pair_precision": 0.9717,
+   "pair_recall": 0.7731,
+   "false_merge_clusters": 32,
+   "split_entities": 443,
+   "duplicate_rate": 0.3682
+  },
+  "B1 fuzzy name >= 0.92 + country": {
+   "records": 4770,
+   "clusters": 1072,
+   "true_entities": 1359,
+   "pair_precision": 0.4562,
+   "pair_recall": 0.9561,
+   "false_merge_clusters": 215,
+   "split_entities": 81,
+   "duplicate_rate": 0.0673
+  },
+  "B2 shared ID only": {
+   "records": 4770,
+   "clusters": 2042,
+   "true_entities": 1359,
+   "pair_precision": 0.9389,
+   "pair_recall": 0.7,
+   "false_merge_clusters": 32,
+   "split_entities": 568,
+   "duplicate_rate": 0.4722
+  }
+ },
+ "review_budget": [
+  {
+   "review_floor": 0.3,
+   "review_pairs": 2851,
+   "steward_hours": 142.6,
+   "false_merge_clusters": 0,
+   "split_entities": 13,
+   "pair_precision": 1.0,
+   "pair_recall": 0.9938
+  },
+  {
+   "review_floor": 0.4,
+   "review_pairs": 1350,
+   "steward_hours": 67.5,
+   "false_merge_clusters": 1,
+   "split_entities": 20,
+   "pair_precision": 0.9978,
+   "pair_recall": 0.9905
+  },
+  {
+   "review_floor": 0.5,
+   "review_pairs": 1012,
+   "steward_hours": 50.6,
+   "false_merge_clusters": 0,
+   "split_entities": 17,
+   "pair_precision": 1.0,
+   "pair_recall": 0.9932
+  },
+  {
+   "review_floor": 0.6,
+   "review_pairs": 608,
+   "steward_hours": 30.4,
+   "false_merge_clusters": 0,
+   "split_entities": 22,
+   "pair_precision": 1.0,
+   "pair_recall": 0.9897
+  },
+  {
+   "review_floor": 0.7,
+   "review_pairs": 438,
+   "steward_hours": 21.9,
+   "false_merge_clusters": 1,
+   "split_entities": 29,
+   "pair_precision": 0.9993,
+   "pair_recall": 0.9884
+  }
+ ],
+ "arbitration": {
+  "priority": {
+   "legal_name": {
+    "accuracy_when_filled": 0.9139344262295082,
+    "fill": 1.0,
+    "n": 1220
+   },
+   "city": {
+    "accuracy_when_filled": 0.921311475409836,
+    "fill": 1.0,
+    "n": 1220
+   },
+   "industry": {
+    "accuracy_when_filled": 0.9163934426229509,
+    "fill": 1.0,
+    "n": 1220
+   },
+   "parent_lei": {
+    "accuracy_when_filled": 0.9610027855153204,
+    "fill": 0.9276485788113695,
+    "n": 774
+   },
+   "lei": {
+    "accuracy_when_filled": 0.9855687606112055,
+    "fill": 0.9655737704918033,
+    "n": 1220
+   }
+  },
+  "recency": {
+   "legal_name": {
+    "accuracy_when_filled": 0.8614754098360655,
+    "fill": 1.0,
+    "n": 1220
+   },
+   "city": {
+    "accuracy_when_filled": 0.9754098360655737,
+    "fill": 1.0,
+    "n": 1220
+   },
+   "industry": {
+    "accuracy_when_filled": 0.8680327868852459,
+    "fill": 1.0,
+    "n": 1220
+   },
+   "parent_lei": {
+    "accuracy_when_filled": 0.935933147632312,
+    "fill": 0.9276485788113695,
+    "n": 774
+   },
+   "lei": {
+    "accuracy_when_filled": 0.9898132427843803,
+    "fill": 0.9655737704918033,
+    "n": 1220
+   }
+  },
+  "consensus": {
+   "legal_name": {
+    "accuracy_when_filled": 0.95,
+    "fill": 1.0,
+    "n": 1220
+   },
+   "city": {
+    "accuracy_when_filled": 0.9475409836065574,
+    "fill": 1.0,
+    "n": 1220
+   },
+   "industry": {
+    "accuracy_when_filled": 0.9778688524590164,
+    "fill": 1.0,
+    "n": 1220
+   },
+   "parent_lei": {
+    "accuracy_when_filled": 0.9610027855153204,
+    "fill": 0.9276485788113695,
+    "n": 774
+   },
+   "lei": {
+    "accuracy_when_filled": 0.9932088285229203,
+    "fill": 0.9655737704918033,
+    "n": 1220
+   }
+  },
+  "configured": {
+   "legal_name": {
+    "accuracy_when_filled": 0.95,
+    "fill": 1.0,
+    "n": 1220
+   },
+   "city": {
+    "accuracy_when_filled": 0.9754098360655737,
+    "fill": 1.0,
+    "n": 1220
+   },
+   "industry": {
+    "accuracy_when_filled": 0.9778688524590164,
+    "fill": 1.0,
+    "n": 1220
+   },
+   "parent_lei": {
+    "accuracy_when_filled": 0.9610027855153204,
+    "fill": 0.9276485788113695,
+    "n": 774
+   },
+   "lei": {
+    "accuracy_when_filled": 0.9932088285229203,
+    "fill": 0.9655737704918033,
+    "n": 1220
+   }
+  },
+  "consensus + registry check": {
+   "legal_name": {
+    "accuracy_when_filled": 0.9598360655737705,
+    "fill": 1.0,
+    "n": 1220,
+    "flagged_for_review": 61
+   }
+  }
+ },
+ "arbitration_renamed_only": {
+  "priority": {
+   "right": 77,
+   "n": 96
+  },
+  "recency": {
+   "right": 66,
+   "n": 96
+  },
+  "consensus": {
+   "right": 69,
+   "n": 96
+  }
+ },
+ "dq": {
+  "completeness_core_attributes": 0.966,
+  "id_format_validity": 1.0,
+  "uniqueness_duplicate_rate": 0.0141,
+  "false_merge_clusters": 0,
+  "hierarchy": {
+   "orphan_parent_refs": 49,
+   "self_parent": 0,
+   "nodes_in_cycles": 0,
+   "linked_to_parent": 669
+  }
+ },
+ "vendors": {
+  "VENDOR_A": {
+   "rows": 919,
+   "client_coverage": 0.73,
+   "rows_outside_client_universe": 0.094,
+   "attached_to_a_client_record": 0.905,
+   "lei_fill": 0.946,
+   "lei_correct_when_filled": 0.986,
+   "reg_fill": 0.929,
+   "current_legal_name": 0.93,
+   "parent_fill": 0.779,
+   "parent_correct_when_filled": 0.988,
+   "city_current": 0.904,
+   "median_value_date": "2025-05-04"
+  },
+  "VENDOR_B": {
+   "rows": 1250,
+   "client_coverage": 0.929,
+   "rows_outside_client_universe": 0.145,
+   "attached_to_a_client_record": 0.851,
+   "lei_fill": 0.627,
+   "lei_correct_when_filled": 0.984,
+   "reg_fill": 0.703,
+   "current_legal_name": 0.888,
+   "parent_fill": 0.928,
+   "parent_correct_when_filled": 0.921,
+   "city_current": 0.955,
+   "median_value_date": "2026-04-23"
+  }
+ },
+ "explained_pairs": [
+  {
+   "rule": "R1",
+   "decision": "match",
+   "score": 0.993,
+   "why": [
+    "Same entity ID, same country, name agrees"
+   ],
+   "same_entity_in_truth": true,
+   "a": {
+    "rec_id": "KYC-00755",
+    "source": "KYC_ONBOARDING",
+    "name": "Hesta Clearpoint Textiles Pte. Ltd.",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "FXLPEUDU3KZC5Z55N559",
+    "reg_no": "SG8V4YZN6Q"
+   },
+   "b": {
+    "rec_id": "VNB-04429",
+    "source": "VENDOR_B",
+    "name": "Hesta-Clearpoint Textiles PTE LTD",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "FXLPEUDU3KZC5Z55N559",
+    "reg_no": "SG8V4YZN6Q"
+   },
+   "contributions": {
+    "name_jw": 0.404,
+    "token_jaccard": 1.627,
+    "lei_match": 0.857,
+    "reg_match": 0.844,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918,
+    "postcode_match": 1.881
+   },
+   "features": {
+    "name_jw": 1.0,
+    "token_jaccard": 1.0,
+    "lei_match": 1,
+    "lei_conflict": 0,
+    "reg_match": 1,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 1,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "R1",
+   "decision": "match",
+   "score": 0.993,
+   "why": [
+    "Same entity ID, same country, name agrees"
+   ],
+   "same_entity_in_truth": true,
+   "a": {
+    "rec_id": "CRD-01019",
+    "source": "CREDIT",
+    "name": "Istara Oakfield Infra Pte. Ltd.",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "FXLGDCSI7GEUK80KPLY1",
+    "reg_no": "SGVXHP39HF"
+   },
+   "b": {
+    "rec_id": "VNA-02721",
+    "source": "VENDOR_A",
+    "name": "Istara Oakfield Infra Pte Ltd",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "FXLGDCSI7GEUK80KPLY1",
+    "reg_no": "SGVXHP39HF"
+   },
+   "contributions": {
+    "name_jw": 0.404,
+    "token_jaccard": 1.627,
+    "lei_match": 0.857,
+    "reg_match": 0.844,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918,
+    "postcode_match": 1.881
+   },
+   "features": {
+    "name_jw": 1.0,
+    "token_jaccard": 1.0,
+    "lei_match": 1,
+    "lei_conflict": 0,
+    "reg_match": 1,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 1,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "R2",
+   "decision": "match",
+   "score": 0.984,
+   "why": [
+    "Same registration number and country"
+   ],
+   "same_entity_in_truth": true,
+   "a": {
+    "rec_id": "KYC-00240",
+    "source": "KYC_ONBOARDING",
+    "name": "Aldane Clearpoint Chemicals Public Limited Company",
+    "country": "GB",
+    "city": "London",
+    "lei": "FXLFGWE2BCMUUJAFA7Z7",
+    "reg_no": "GB0LWNQLV2"
+   },
+   "b": {
+    "rec_id": "PAY-02189",
+    "source": "PAYMENTS",
+    "name": "Aldane Clearpoint Chemicals Public Limited Company",
+    "country": "GB",
+    "city": "London",
+    "lei": "",
+    "reg_no": "GB0LWNQLV2"
+   },
+   "contributions": {
+    "name_jw": 0.404,
+    "token_jaccard": 1.627,
+    "reg_match": 0.844,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918,
+    "postcode_match": 1.881
+   },
+   "features": {
+    "name_jw": 1.0,
+    "token_jaccard": 1.0,
+    "lei_match": 0,
+    "lei_conflict": 0,
+    "reg_match": 1,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 1,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "R2",
+   "decision": "match",
+   "score": 0.984,
+   "why": [
+    "Same registration number and country"
+   ],
+   "same_entity_in_truth": true,
+   "a": {
+    "rec_id": "VNA-03012",
+    "source": "VENDOR_A",
+    "name": "Norvel Larkspur Textiles P Ltd",
+    "country": "IN",
+    "city": "Pune",
+    "lei": "FXLLRPE9W46Q8JAKI1TV",
+    "reg_no": "INXE6D4LC5"
+   },
+   "b": {
+    "rec_id": "VNB-04042",
+    "source": "VENDOR_B",
+    "name": "Norvel Larkspur Textiles PRIVATE LIMITED",
+    "country": "IN",
+    "city": "Pune",
+    "lei": "",
+    "reg_no": "INXE6D4LC5"
+   },
+   "contributions": {
+    "name_jw": 0.404,
+    "token_jaccard": 1.627,
+    "reg_match": 0.844,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918,
+    "postcode_match": 1.881
+   },
+   "features": {
+    "name_jw": 1.0,
+    "token_jaccard": 1.0,
+    "lei_match": 0,
+    "lei_conflict": 0,
+    "reg_match": 1,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 1,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "M1",
+   "decision": "match",
+   "score": 0.964,
+   "why": [
+    "Model score 0.964 at or above auto-match threshold 0.7"
+   ],
+   "same_entity_in_truth": true,
+   "a": {
+    "rec_id": "MKT-01761",
+    "source": "MARKETS",
+    "name": "ESTREL CLEARPOINT SHIPPING FZE",
+    "country": "AE",
+    "city": "Dubai",
+    "lei": "FXLL5PNQSPE07OIKDETU",
+    "reg_no": ""
+   },
+   "b": {
+    "rec_id": "VNB-03974",
+    "source": "VENDOR_B",
+    "name": "Estrel Clearpoint Shipping FZE",
+    "country": "AE",
+    "city": "Dubai",
+    "lei": "",
+    "reg_no": "AEWPC70JP9"
+   },
+   "contributions": {
+    "name_jw": 0.404,
+    "token_jaccard": 1.627,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918,
+    "postcode_match": 1.881
+   },
+   "features": {
+    "name_jw": 1.0,
+    "token_jaccard": 1.0,
+    "lei_match": 0,
+    "lei_conflict": 0,
+    "reg_match": 0,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 1,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "M1",
+   "decision": "match",
+   "score": 0.964,
+   "why": [
+    "Model score 0.964 at or above auto-match threshold 0.7"
+   ],
+   "same_entity_in_truth": true,
+   "a": {
+    "rec_id": "PAY-02141",
+    "source": "PAYMENTS",
+    "name": "Arvel Bluestone Retail GmbH",
+    "country": "DE",
+    "city": "Frankfurt",
+    "lei": "",
+    "reg_no": ""
+   },
+   "b": {
+    "rec_id": "VNB-03706",
+    "source": "VENDOR_B",
+    "name": "ARVEL BLUESTONE RETAIL GMBH",
+    "country": "DE",
+    "city": "Frankfurt",
+    "lei": "",
+    "reg_no": "DEBY2U7OVE"
+   },
+   "contributions": {
+    "name_jw": 0.404,
+    "token_jaccard": 1.627,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918,
+    "postcode_match": 1.881
+   },
+   "features": {
+    "name_jw": 1.0,
+    "token_jaccard": 1.0,
+    "lei_match": 0,
+    "lei_conflict": 0,
+    "reg_match": 0,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 1,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "M2",
+   "decision": "review",
+   "score": 0.697,
+   "why": [
+    "Model score 0.697 in the review band [0.5, 0.7)"
+   ],
+   "same_entity_in_truth": true,
+   "a": {
+    "rec_id": "CRD-01189",
+    "source": "CREDIT",
+    "name": "Ulmera Brightwater Retail Limited",
+    "country": "IN",
+    "city": "Bengaluru",
+    "lei": "FXLYK0QLPE568M3ZAXBE",
+    "reg_no": ""
+   },
+   "b": {
+    "rec_id": "VNB-03980",
+    "source": "VENDOR_B",
+    "name": "Ulmera Brightwater LIMITED",
+    "country": "IN",
+    "city": "Bengaluru",
+    "lei": "",
+    "reg_no": "INWR3M8IQT"
+   },
+   "contributions": {
+    "name_jw": 0.382,
+    "token_jaccard": 1.085,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918
+   },
+   "features": {
+    "name_jw": 0.944,
+    "token_jaccard": 0.667,
+    "lei_match": 0,
+    "lei_conflict": 0,
+    "reg_match": 0,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 0,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "M2",
+   "decision": "review",
+   "score": 0.697,
+   "why": [
+    "Model score 0.697 in the review band [0.5, 0.7)"
+   ],
+   "same_entity_in_truth": true,
+   "a": {
+    "rec_id": "CRD-01221",
+    "source": "CREDIT",
+    "name": "Quorra Bluestone P Ltd",
+    "country": "IN",
+    "city": "Pune",
+    "lei": "FXLJML9B48HXW54P0YWS",
+    "reg_no": ""
+   },
+   "b": {
+    "rec_id": "VNA-03007",
+    "source": "VENDOR_A",
+    "name": "Quorra Bluestone Power P Ltd",
+    "country": "IN",
+    "city": "Pune",
+    "lei": "",
+    "reg_no": "IN5J82DVJV"
+   },
+   "contributions": {
+    "name_jw": 0.382,
+    "token_jaccard": 1.085,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918
+   },
+   "features": {
+    "name_jw": 0.945,
+    "token_jaccard": 0.667,
+    "lei_match": 0,
+    "lei_conflict": 0,
+    "reg_match": 0,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 0,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "C1",
+   "decision": "review",
+   "score": 0.958,
+   "why": [
+    "Identifiers disagree: one matches, the other conflicts"
+   ],
+   "same_entity_in_truth": true,
+   "a": {
+    "rec_id": "KYC-00182",
+    "source": "KYC_ONBOARDING",
+    "name": "Istara Pinecrest Foods L.L.C.",
+    "country": "US",
+    "city": "New York",
+    "lei": "FXL5MM86H3OGVJGM9UXF",
+    "reg_no": "US0G8CTY34"
+   },
+   "b": {
+    "rec_id": "VNB-03732",
+    "source": "VENDOR_B",
+    "name": "Istara Pinecrest Foods L.L.C.",
+    "country": "US",
+    "city": "New York",
+    "lei": "FXL5MM86H3OGVJGM9UXF",
+    "reg_no": "U0G8CTY34"
+   },
+   "contributions": {
+    "name_jw": 0.404,
+    "token_jaccard": 1.627,
+    "lei_match": 0.857,
+    "reg_conflict": -1.017,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918,
+    "postcode_match": 1.881
+   },
+   "features": {
+    "name_jw": 1.0,
+    "token_jaccard": 1.0,
+    "lei_match": 1,
+    "lei_conflict": 0,
+    "reg_match": 0,
+    "reg_conflict": 1,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 1,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "C1",
+   "decision": "review",
+   "score": 0.961,
+   "why": [
+    "Identifiers disagree: one matches, the other conflicts"
+   ],
+   "same_entity_in_truth": true,
+   "a": {
+    "rec_id": "KYC-00065",
+    "source": "KYC_ONBOARDING",
+    "name": "Estrel Redfern Textiles plc",
+    "country": "GB",
+    "city": "Bristol",
+    "lei": "FXL3WCW2AE7OG0X6Z9JM",
+    "reg_no": "GB05Z2V7FK"
+   },
+   "b": {
+    "rec_id": "VNA-02659",
+    "source": "VENDOR_A",
+    "name": "Estrel Redfern Textiles Public Limited Company",
+    "country": "GB",
+    "city": "Bristol",
+    "lei": "FXL3FP3AOZGM0F8SXVPR",
+    "reg_no": "GB05Z2V7FK"
+   },
+   "contributions": {
+    "name_jw": 0.404,
+    "token_jaccard": 1.627,
+    "lei_conflict": -0.929,
+    "reg_match": 0.844,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918,
+    "postcode_match": 1.881
+   },
+   "features": {
+    "name_jw": 1.0,
+    "token_jaccard": 1.0,
+    "lei_match": 0,
+    "lei_conflict": 1,
+    "reg_match": 1,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 1,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "C2",
+   "decision": "review",
+   "score": 0.481,
+   "why": [
+    "Same entity ID but the name differs: possible rename or a wrong ID"
+   ],
+   "same_entity_in_truth": false,
+   "a": {
+    "rec_id": "VNB-03589",
+    "source": "VENDOR_B",
+    "name": "Tavira Bluestone Holdings Limited",
+    "country": "IN",
+    "city": "Bengaluru",
+    "lei": "FXL8J2H6IS0SRPF8S3OY",
+    "reg_no": "INM9X39T44"
+   },
+   "b": {
+    "rec_id": "VNB-04073",
+    "source": "VENDOR_B",
+    "name": "The Corvell Clearpoint Holdings LIMITED",
+    "country": "IN",
+    "city": "Hyderabad",
+    "lei": "FXL8J2H6IS0SRPF8S3OY",
+    "reg_no": ""
+   },
+   "contributions": {
+    "name_jw": 0.292,
+    "token_jaccard": 0.325,
+    "lei_match": 0.857,
+    "form_match": 0.452,
+    "country_match": -0.082
+   },
+   "features": {
+    "name_jw": 0.722,
+    "token_jaccard": 0.2,
+    "lei_match": 1,
+    "lei_conflict": 0,
+    "reg_match": 0,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 0,
+    "postcode_match": 0,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "C2",
+   "decision": "review",
+   "score": 0.481,
+   "why": [
+    "Same entity ID but the name differs: possible rename or a wrong ID"
+   ],
+   "same_entity_in_truth": false,
+   "a": {
+    "rec_id": "VNA-02655",
+    "source": "VENDOR_A",
+    "name": "Tavira Bluestone Holdings LIMITED",
+    "country": "IN",
+    "city": "Bengaluru",
+    "lei": "FXL8J2H6IS0SRPF8S3OY",
+    "reg_no": "INM9X39T44"
+   },
+   "b": {
+    "rec_id": "VNB-04073",
+    "source": "VENDOR_B",
+    "name": "The Corvell Clearpoint Holdings LIMITED",
+    "country": "IN",
+    "city": "Hyderabad",
+    "lei": "FXL8J2H6IS0SRPF8S3OY",
+    "reg_no": ""
+   },
+   "contributions": {
+    "name_jw": 0.292,
+    "token_jaccard": 0.325,
+    "lei_match": 0.857,
+    "form_match": 0.452,
+    "country_match": -0.082
+   },
+   "features": {
+    "name_jw": 0.722,
+    "token_jaccard": 0.2,
+    "lei_match": 1,
+    "lei_conflict": 0,
+    "reg_match": 0,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 0,
+    "postcode_match": 0,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "C3",
+   "decision": "review",
+   "score": 0.949,
+   "why": [
+    "Same entity ID, but the names point to different businesses or legal forms"
+   ],
+   "same_entity_in_truth": true,
+   "a": {
+    "rec_id": "CRD-01233",
+    "source": "CREDIT",
+    "name": "Estrel Stonebridge Textiles PTE LTD",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "FXL7BM3OHET5H7L9QVY2",
+    "reg_no": "SGUNPRY67G"
+   },
+   "b": {
+    "rec_id": "VNA-03021",
+    "source": "VENDOR_A",
+    "name": "Estrel Goldcrest Textiles Pte Ltd",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "FXL7BM3OHET5H7L9QVY2",
+    "reg_no": "SGUNPRY67G"
+   },
+   "contributions": {
+    "name_jw": 0.359,
+    "token_jaccard": 0.813,
+    "lei_match": 0.857,
+    "reg_match": 0.844,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918,
+    "postcode_match": 1.881,
+    "distinct_token_diff": -1.195
+   },
+   "features": {
+    "name_jw": 0.889,
+    "token_jaccard": 0.5,
+    "lei_match": 1,
+    "lei_conflict": 0,
+    "reg_match": 1,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 1,
+    "holding_diff": 0,
+    "distinct_token_diff": 1
+   }
+  },
+  {
+   "rule": "C3",
+   "decision": "review",
+   "score": 0.893,
+   "why": [
+    "Same entity ID, but the names point to different businesses or legal forms"
+   ],
+   "same_entity_in_truth": true,
+   "a": {
+    "rec_id": "KYC-00291",
+    "source": "KYC_ONBOARDING",
+    "name": "Hesta Goldcrest Shiping Pte. Ltd.",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "FXL17I4UOCM2GFVVPY1R",
+    "reg_no": "SGWT1L8HTS"
+   },
+   "b": {
+    "rec_id": "CRD-01145",
+    "source": "CREDIT",
+    "name": "HESTA GOLDCREST SHIPPING PTE LTD",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "FXL17I4UOCM2GFVVPY1R",
+    "reg_no": ""
+   },
+   "contributions": {
+    "name_jw": 0.401,
+    "token_jaccard": 0.813,
+    "lei_match": 0.857,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918,
+    "postcode_match": 1.881,
+    "distinct_token_diff": -1.195
+   },
+   "features": {
+    "name_jw": 0.992,
+    "token_jaccard": 0.5,
+    "lei_match": 1,
+    "lei_conflict": 0,
+    "reg_match": 0,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 1,
+    "holding_diff": 0,
+    "distinct_token_diff": 1
+   }
+  },
+  {
+   "rule": "C4",
+   "decision": "review",
+   "score": 0.144,
+   "why": [
+    "Same identifier recorded in two different countries: one of them is wrong"
+   ],
+   "same_entity_in_truth": false,
+   "a": {
+    "rec_id": "CRD-01231",
+    "source": "CREDIT",
+    "name": "Estrel Stonebridge Textiles Public Limited Company",
+    "country": "GB",
+    "city": "Bristol",
+    "lei": "FXL9P7WGUXKME74J7TOS",
+    "reg_no": ""
+   },
+   "b": {
+    "rec_id": "PAY-02306",
+    "source": "PAYMENTS",
+    "name": "Estrel Goldcrest Textiles Pte Ltd",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "FXL9P7WGUXKME74J7TOS",
+    "reg_no": "SGUNPRY67G"
+   },
+   "contributions": {
+    "name_jw": 0.359,
+    "token_jaccard": 0.813,
+    "lei_match": 0.857,
+    "form_conflict": -0.692,
+    "distinct_token_diff": -1.195
+   },
+   "features": {
+    "name_jw": 0.889,
+    "token_jaccard": 0.5,
+    "lei_match": 1,
+    "lei_conflict": 0,
+    "reg_match": 0,
+    "reg_conflict": 0,
+    "form_match": 0,
+    "form_conflict": 1,
+    "country_match": 0,
+    "city_match": 0,
+    "postcode_match": 0,
+    "holding_diff": 0,
+    "distinct_token_diff": 1
+   }
+  },
+  {
+   "rule": "C4",
+   "decision": "review",
+   "score": 0.187,
+   "why": [
+    "Same identifier recorded in two different countries: one of them is wrong"
+   ],
+   "same_entity_in_truth": false,
+   "a": {
+    "rec_id": "MKT-02011",
+    "source": "MARKETS",
+    "name": "ORVANE BLUESTONE PHARMA L.L.C.",
+    "country": "AE",
+    "city": "Abu Dhabi",
+    "lei": "FXLNJDLHR2GJNFIPZS5E",
+    "reg_no": ""
+   },
+   "b": {
+    "rec_id": "VNA-02867",
+    "source": "VENDOR_A",
+    "name": "The Ilvane Fairhaven Retail Pvt. Ltd.",
+    "country": "IN",
+    "city": "Chennai",
+    "lei": "FXLNJDLHR2GJNFIPZS5E",
+    "reg_no": "IN5O0397GP"
+   },
+   "contributions": {
+    "name_jw": 0.284,
+    "lei_match": 0.857,
+    "form_conflict": -0.692
+   },
+   "features": {
+    "name_jw": 0.703,
+    "token_jaccard": 0.0,
+    "lei_match": 1,
+    "lei_conflict": 0,
+    "reg_match": 0,
+    "reg_conflict": 0,
+    "form_match": 0,
+    "form_conflict": 1,
+    "country_match": 0,
+    "city_match": 0,
+    "postcode_match": 0,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "V1",
+   "decision": "cannot_link",
+   "score": 0.023,
+   "why": [
+    "Both identifiers present and different"
+   ],
+   "same_entity_in_truth": false,
+   "a": {
+    "rec_id": "VNA-02684",
+    "source": "VENDOR_A",
+    "name": "Ravelle Westbrook Holdings Pte Ltd",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "FXLJAIX57PX7VYQB9MAQ",
+    "reg_no": "SGDLT8RUQP"
+   },
+   "b": {
+    "rec_id": "VNB-04058",
+    "source": "VENDOR_B",
+    "name": "Ravelle Silverline Logistics PTE LTD",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "FXLML5LK56GD72SL43KV",
+    "reg_no": "SG86FGCS58"
+   },
+   "contributions": {
+    "name_jw": 0.333,
+    "token_jaccard": 0.325,
+    "lei_conflict": -0.929,
+    "reg_conflict": -1.017,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918,
+    "holding_diff": -0.652,
+    "distinct_token_diff": -1.195
+   },
+   "features": {
+    "name_jw": 0.824,
+    "token_jaccard": 0.2,
+    "lei_match": 0,
+    "lei_conflict": 1,
+    "reg_match": 0,
+    "reg_conflict": 1,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 0,
+    "holding_diff": 1,
+    "distinct_token_diff": 1
+   }
+  },
+  {
+   "rule": "V1",
+   "decision": "cannot_link",
+   "score": 0.009,
+   "why": [
+    "Both identifiers present and different"
+   ],
+   "same_entity_in_truth": false,
+   "a": {
+    "rec_id": "CRD-00981",
+    "source": "CREDIT",
+    "name": "Wexmoor Brightwater Shipping Incorporated",
+    "country": "US",
+    "city": "New York",
+    "lei": "FXL6F8RYBJTAYFLOUMGE",
+    "reg_no": "US9X6TMETF"
+   },
+   "b": {
+    "rec_id": "MKT-01738",
+    "source": "MARKETS",
+    "name": "WEXMOOR PINECREST HOLDINGS INC.",
+    "country": "US",
+    "city": "Jersey City",
+    "lei": "FXLTG91O8O2VTMXUSGDT",
+    "reg_no": "USGH75I7SU"
+   },
+   "contributions": {
+    "name_jw": 0.33,
+    "token_jaccard": 0.325,
+    "lei_conflict": -0.929,
+    "reg_conflict": -1.017,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "holding_diff": -0.652,
+    "distinct_token_diff": -1.195
+   },
+   "features": {
+    "name_jw": 0.817,
+    "token_jaccard": 0.2,
+    "lei_match": 0,
+    "lei_conflict": 1,
+    "reg_match": 0,
+    "reg_conflict": 1,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 0,
+    "postcode_match": 0,
+    "holding_diff": 1,
+    "distinct_token_diff": 1
+   }
+  },
+  {
+   "rule": "M3",
+   "decision": "no_match",
+   "score": 0.309,
+   "why": [
+    "Model score 0.309 below review threshold 0.5"
+   ],
+   "same_entity_in_truth": false,
+   "a": {
+    "rec_id": "CRD-00977",
+    "source": "CREDIT",
+    "name": "Tavira Bluestone LIMITED",
+    "country": "GB",
+    "city": "Leeds",
+    "lei": "",
+    "reg_no": ""
+   },
+   "b": {
+    "rec_id": "VNB-03932",
+    "source": "VENDOR_B",
+    "name": "Tavira Eastlake Power Ltd",
+    "country": "GB",
+    "city": "Bristol",
+    "lei": "FXLNV59VULHKGNG8EFGW",
+    "reg_no": ""
+   },
+   "contributions": {
+    "name_jw": 0.34,
+    "token_jaccard": 0.407,
+    "form_match": 0.452,
+    "country_match": -0.082
+   },
+   "features": {
+    "name_jw": 0.84,
+    "token_jaccard": 0.25,
+    "lei_match": 0,
+    "lei_conflict": 0,
+    "reg_match": 0,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 0,
+    "postcode_match": 0,
+    "holding_diff": 0,
+    "distinct_token_diff": 0
+   }
+  },
+  {
+   "rule": "M3",
+   "decision": "no_match",
+   "score": 0.34,
+   "why": [
+    "Model score 0.340 below review threshold 0.5"
+   ],
+   "same_entity_in_truth": false,
+   "a": {
+    "rec_id": "PAY-02510",
+    "source": "PAYMENTS",
+    "name": "Sarnath Rivverbend Retail PTE LTD",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "",
+    "reg_no": ""
+   },
+   "b": {
+    "rec_id": "VNB-03832",
+    "source": "VENDOR_B",
+    "name": "Sarnath Brightwater Retail Pte Ltd",
+    "country": "SG",
+    "city": "Singapore",
+    "lei": "",
+    "reg_no": ""
+   },
+   "contributions": {
+    "name_jw": 0.351,
+    "token_jaccard": 0.813,
+    "form_match": 0.452,
+    "country_match": -0.082,
+    "city_match": 0.918,
+    "distinct_token_diff": -1.195
+   },
+   "features": {
+    "name_jw": 0.869,
+    "token_jaccard": 0.5,
+    "lei_match": 0,
+    "lei_conflict": 0,
+    "reg_match": 0,
+    "reg_conflict": 0,
+    "form_match": 1,
+    "form_conflict": 0,
+    "country_match": 1,
+    "city_match": 1,
+    "postcode_match": 0,
+    "holding_diff": 0,
+    "distinct_token_diff": 1
+   }
+  }
+ ],
+ "lineage_examples": [
+  {
+   "truth_name": "Zentrel Brightwater Retail FZE",
+   "renamed_from": "Zentrel Goldcrest Logistics FZE",
+   "records": [
+    {
+     "rec_id": "KYC-00512",
+     "source": "KYC_ONBOARDING",
+     "name": "Zentrel-Brightwater Retail FZE",
+     "country": "AE",
+     "city": "Dubai",
+     "lei": "FXL0S4G2MBS64EBP1TFC",
+     "reg_no": "AEZKXI47DB",
+     "industry": "4711",
+     "parent_lei": "",
+     "as_of": "2026-01-19"
+    },
+    {
+     "rec_id": "CRD-01288",
+     "source": "CREDIT",
+     "name": "The Zentrel Brightwater Retail FZE",
+     "country": "AE",
+     "city": "Dubai",
+     "lei": "FXL0S4G2MBS64EBP1TFC",
+     "reg_no": "",
+     "industry": "4711",
+     "parent_lei": "",
+     "as_of": "2026-09-18"
+    },
+    {
+     "rec_id": "MKT-01825",
+     "source": "MARKETS",
+     "name": "Zentrel Goldcrest Logistics FZE",
+     "country": "AE",
+     "city": "Dubai",
+     "lei": "FXL0S4G2MBS64EBP1TFC",
+     "reg_no": "AEZKXI47DB",
+     "industry": "4711",
+     "parent_lei": "",
+     "as_of": "2026-04-08"
+    },
+    {
+     "rec_id": "PAY-02356",
+     "source": "PAYMENTS",
+     "name": "Zentrel Goldcrest Logistics FZE",
+     "country": "AE",
+     "city": "Dubai",
+     "lei": "",
+     "reg_no": "",
+     "industry": "4711",
+     "parent_lei": "",
+     "as_of": "2026-04-02"
+    },
+    {
+     "rec_id": "PAY-02357",
+     "source": "PAYMENTS",
+     "name": "Zentrel Brightwater Retail FZE",
+     "country": "AE",
+     "city": "Dubai",
+     "lei": "",
+     "reg_no": "AEZKXI47DB",
+     "industry": "4711",
+     "parent_lei": "",
+     "as_of": "2026-02-28"
+    },
+    {
+     "rec_id": "VNA-03091",
+     "source": "VENDOR_A",
+     "name": "ZENTREL GOLDCREST LOGISTICS FZE",
+     "country": "AE",
+     "city": "Dubai",
+     "lei": "FXL0S4G2MBS64EBP1TFC",
+     "reg_no": "AEZKXI47DB",
+     "industry": "4711",
+     "parent_lei": "",
+     "as_of": "2024-11-18"
+    },
+    {
+     "rec_id": "VNB-04149",
+     "source": "VENDOR_B",
+     "name": "Zentrel Brightwater Retail FZE",
+     "country": "AE",
+     "city": "Dubai",
+     "lei": "",
+     "reg_no": "AEZKXI47DB",
+     "industry": "4711",
+     "parent_lei": "",
+     "as_of": "2026-06-17"
+    }
+   ],
+   "golden": {
+    "legal_name": {
+     "value": "zentrel brightwater retail fze",
+     "source": "KYC_ONBOARDING",
+     "rec_id": "KYC-00512",
+     "as_of": "2026-01-19",
+     "rule": "consensus",
+     "alternatives": [
+      [
+       "zentrel brightwater retail fze",
+       4
+      ],
+      [
+       "zentrel goldcrest logistics fze",
+       3
+      ]
+     ]
+    },
+    "city": {
+     "value": "Dubai",
+     "source": "CREDIT",
+     "rec_id": "CRD-01288",
+     "as_of": "2026-09-18",
+     "rule": "recency",
+     "alternatives": [
+      [
+       "Dubai",
+       7
+      ]
+     ]
+    },
+    "industry": {
+     "value": "4711",
+     "source": "VENDOR_A",
+     "rec_id": "VNA-03091",
+     "as_of": "2024-11-18",
+     "rule": "consensus",
+     "alternatives": [
+      [
+       "4711",
+       7
+      ]
+     ]
+    },
+    "parent_lei": {
+     "value": null,
+     "source": null,
+     "rec_id": null,
+     "as_of": null,
+     "rule": "priority",
+     "alternatives": []
+    },
+    "lei": {
+     "value": "FXL0S4G2MBS64EBP1TFC",
+     "source": "VENDOR_A",
+     "rec_id": "VNA-03091",
+     "as_of": "2024-11-18",
+     "rule": "consensus",
+     "alternatives": [
+      [
+       "FXL0S4G2MBS64EBP1TFC",
+       4
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "truth_name": "Hesta Silverline Infra LLC",
+   "renamed_from": null,
+   "records": [
+    {
+     "rec_id": "KYC-00693",
+     "source": "KYC_ONBOARDING",
+     "name": "Hesta Silverline Infra llc",
+     "country": "AE",
+     "city": "Abu Dhabi",
+     "lei": "",
+     "reg_no": "",
+     "industry": "4290",
+     "parent_lei": "",
+     "as_of": "2026-01-22"
+    },
+    {
+     "rec_id": "KYC-00694",
+     "source": "KYC_ONBOARDING",
+     "name": "Hesta Silverline Infra L.L.C.",
+     "country": "AE",
+     "city": "Abu Dhabi",
+     "lei": "",
+     "reg_no": "AE7AVWSAYT",
+     "industry": "4290",
+     "parent_lei": "",
+     "as_of": "2026-06-04"
+    },
+    {
+     "rec_id": "CRD-01408",
+     "source": "CREDIT",
+     "name": "Hesta Silverline Infra L.L.C.",
+     "country": "AE",
+     "city": "Abu Dhabi",
+     "lei": "FXLF85PS4H41PUQRZXHW",
+     "reg_no": "AE7AVWSAYT",
+     "industry": "4290",
+     "parent_lei": "",
+     "as_of": "2026-01-11"
+    },
+    {
+     "rec_id": "MKT-01912",
+     "source": "MARKETS",
+     "name": "Hesta Silverline Infra L.L.C.",
+     "country": "AE",
+     "city": "Dubai",
+     "lei": "FXLF85PS4H41PUQRZXHW",
+     "reg_no": "",
+     "industry": "4290",
+     "parent_lei": "",
+     "as_of": "2026-03-02"
+    },
+    {
+     "rec_id": "PAY-02457",
+     "source": "PAYMENTS",
+     "name": "Hesta Silverline Infra L.L.C.",
+     "country": "AE",
+     "city": "Dubai",
+     "lei": "",
+     "reg_no": "AE7AVWSAYT",
+     "industry": "4290",
+     "parent_lei": "",
+     "as_of": "2026-05-12"
+    },
+    {
+     "rec_id": "VNA-03251",
+     "source": "VENDOR_A",
+     "name": "Hesta Silverline Infra LLC",
+     "country": "AE",
+     "city": "Dubai",
+     "lei": "FXLF85PS4H41PUQRZXHW",
+     "reg_no": "AE7AVWSAYT",
+     "industry": "4290",
+     "parent_lei": "",
+     "as_of": "2024-01-25"
+    },
+    {
+     "rec_id": "VNB-04358",
+     "source": "VENDOR_B",
+     "name": "Hesta Silverline Infra LLC",
+     "country": "AE",
+     "city": "Abu Dhabi",
+     "lei": "FXLF85PS4H41PUQRZXHW",
+     "reg_no": "",
+     "industry": "4290",
+     "parent_lei": "FXL9RLFI08WHRATELFPD",
+     "as_of": "2026-10-02"
+    }
+   ],
+   "golden": {
+    "legal_name": {
+     "value": "hesta silverline infra llc",
+     "source": "VENDOR_A",
+     "rec_id": "VNA-03251",
+     "as_of": "2024-01-25",
+     "rule": "consensus",
+     "alternatives": [
+      [
+       "hesta silverline infra llc",
+       7
+      ]
+     ]
+    },
+    "city": {
+     "value": "Abu Dhabi",
+     "source": "VENDOR_B",
+     "rec_id": "VNB-04358",
+     "as_of": "2026-10-02",
+     "rule": "recency",
+     "alternatives": [
+      [
+       "Abu Dhabi",
+       4
+      ],
+      [
+       "Dubai",
+       3
+      ]
+     ]
+    },
+    "industry": {
+     "value": "4290",
+     "source": "VENDOR_A",
+     "rec_id": "VNA-03251",
+     "as_of": "2024-01-25",
+     "rule": "consensus",
+     "alternatives": [
+      [
+       "4290",
+       7
+      ]
+     ]
+    },
+    "parent_lei": {
+     "value": "FXL9RLFI08WHRATELFPD",
+     "source": "VENDOR_B",
+     "rec_id": "VNB-04358",
+     "as_of": "2026-10-02",
+     "rule": "priority",
+     "alternatives": [
+      [
+       "FXL9RLFI08WHRATELFPD",
+       1
+      ]
+     ]
+    },
+    "lei": {
+     "value": "FXLF85PS4H41PUQRZXHW",
+     "source": "VENDOR_A",
+     "rec_id": "VNA-03251",
+     "as_of": "2024-01-25",
+     "rule": "consensus",
+     "alternatives": [
+      [
+       "FXLF85PS4H41PUQRZXHW",
+       4
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "truth_name": "Riverbend Capital Partners Fund IV LP",
+   "renamed_from": null,
+   "records": [
+    {
+     "rec_id": "KYC-00002",
+     "source": "KYC_ONBOARDING",
+     "name": "Riverbend Capital Partners Fund LP",
+     "country": "US",
+     "city": "Jersey City",
+     "lei": "FXLLGMXG9EDN581U33XT",
+     "reg_no": "USPLPFT75V",
+     "industry": "6430",
+     "parent_lei": "",
+     "as_of": "2026-03-20"
+    },
+    {
+     "rec_id": "MKT-01578",
+     "source": "MARKETS",
+     "name": "Riverbend Capital Partners Fund IV LP",
+     "country": "US",
+     "city": "Jersey City",
+     "lei": "FXLLGMXG9EDN581U33XT",
+     "reg_no": "USPLPFT75V",
+     "industry": "6430",
+     "parent_lei": "",
+     "as_of": "2026-05-19"
+    },
+    {
+     "rec_id": "PAY-02047",
+     "source": "PAYMENTS",
+     "name": "Riverbend Capital Partners Fund IV L.P.",
+     "country": "US",
+     "city": "Jersey City",
+     "lei": "FXLLGMXG9EDN581U33XT",
+     "reg_no": "",
+     "industry": "6430",
+     "parent_lei": "",
+     "as_of": "2026-07-05"
+    },
+    {
+     "rec_id": "VNA-02603",
+     "source": "VENDOR_A",
+     "name": "Riverbend Capital Partners Fund IV LP",
+     "country": "US",
+     "city": "Jersey City",
+     "lei": "FXLLGMXG9EDN581U33XT",
+     "reg_no": "",
+     "industry": "6430",
+     "parent_lei": "",
+     "as_of": "2024-11-16"
+    },
+    {
+     "rec_id": "VNB-03522",
+     "source": "VENDOR_B",
+     "name": "Riverbend Capital Partners Fund IV LP",
+     "country": "US",
+     "city": "Jersey City",
+     "lei": "",
+     "reg_no": "USPLPFT75V",
+     "industry": "6430",
+     "parent_lei": "",
+     "as_of": "2025-05-13"
+    }
+   ],
+   "golden": {
+    "legal_name": {
+     "value": "riverbend capital partners fund iv lp",
+     "source": "VENDOR_A",
+     "rec_id": "VNA-02603",
+     "as_of": "2024-11-16",
+     "rule": "consensus",
+     "alternatives": [
+      [
+       "riverbend capital partners fund iv lp",
+       3
+      ],
+      [
+       "riverbend capital partners fund lp",
+       1
+      ],
+      [
+       "riverbend capital partners fund iv l p ",
+       1
+      ]
+     ]
+    },
+    "city": {
+     "value": "Jersey City",
+     "source": "PAYMENTS",
+     "rec_id": "PAY-02047",
+     "as_of": "2026-07-05",
+     "rule": "recency",
+     "alternatives": [
+      [
+       "Jersey City",
+       5
+      ]
+     ]
+    },
+    "industry": {
+     "value": "6430",
+     "source": "VENDOR_A",
+     "rec_id": "VNA-02603",
+     "as_of": "2024-11-16",
+     "rule": "consensus",
+     "alternatives": [
+      [
+       "6430",
+       5
+      ]
+     ]
+    },
+    "parent_lei": {
+     "value": null,
+     "source": null,
+     "rec_id": null,
+     "as_of": null,
+     "rule": "priority",
+     "alternatives": []
+    },
+    "lei": {
+     "value": "FXLLGMXG9EDN581U33XT",
+     "source": "VENDOR_A",
+     "rec_id": "VNA-02603",
+     "as_of": "2024-11-16",
+     "rule": "consensus",
+     "alternatives": [
+      [
+       "FXLLGMXG9EDN581U33XT",
+       4
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "truth_name": "Lorvane Northgate Logistics GmbH",
+   "renamed_from": null,
+   "records": [
+    {
+     "rec_id": "KYC-00111",
+     "source": "KYC_ONBOARDING",
+     "name": "Lorvane Northgate Logistics GmbH",
+     "country": "DE",
+     "city": "Frankfurt",
+     "lei": "",
+     "reg_no": "DEHN8YBAF3",
+     "industry": "4920",
+     "parent_lei": "",
+     "as_of": "2026-02-12"
+    },
+    {
+     "rec_id": "CRD-01006",
+     "source": "CREDIT",
+     "name": "Lorvane Northgate Logistics GMBH",
+     "country": "DE",
+     "city": "Frankfurt",
+     "lei": "FXLQ6YNWQBMR71YK1IIA",
+     "reg_no": "DEHN8YBAF3",
+     "industry": "4920",
+     "parent_lei": "",
+     "as_of": "2026-06-27"
+    },
+    {
+     "rec_id": "CRD-01007",
+     "source": "CREDIT",
+     "name": "Lorvane Northgate Logistics GmbH",
+     "country": "DE",
+     "city": "Frankfurt",
+     "lei": "",
+     "reg_no": "DEHN8YBAF3",
+     "industry": "4920",
+     "parent_lei": "",
+     "as_of": "2026-09-05"
+    },
+    {
+     "rec_id": "MKT-01628",
+     "source": "MARKETS",
+     "name": "Lorvane Northgate Logistics GMBH",
+     "country": "DE",
+     "city": "Frankfurt",
+     "lei": "FXLQ6YNWQBMR71YK1IIA",
+     "reg_no": "",
+     "industry": "4920",
+     "parent_lei": "",
+     "as_of": "2026-05-05"
+    },
+    {
+     "rec_id": "PAY-02107",
+     "source": "PAYMENTS",
+     "name": "The Lorvane Northgate Logistics GMBH",
+     "country": "DE",
+     "city": "Frankfurt",
+     "lei": "",
+     "reg_no": "",
+     "industry": "4920",
+     "parent_lei": "",
+     "as_of": "2026-03-09"
+    },
+    {
+     "rec_id": "VNA-02703",
+     "source": "VENDOR_A",
+     "name": "Lorvane-Northgate GMBH",
+     "country": "DE",
+     "city": "Frankfurt",
+     "lei": "FXLQ6YNWQBMR71YK1IIA",
+     "reg_no": "DEHN8YBAF3",
+     "industry": "4920",
+     "parent_lei": "FXLVV7ON9NS8BOLB6R1X",
+     "as_of": "2025-10-21"
+    },
+    {
+     "rec_id": "VNB-03647",
+     "source": "VENDOR_B",
+     "name": "Lorvane Northgate Logistics GMBH",
+     "country": "DE",
+     "city": "Frankfurt",
+     "lei": "FXLQ6YNWQBMR71YK1IIA",
+     "reg_no": "DEHN8YBAF3",
+     "industry": "4920",
+     "parent_lei": "FXLVV7ON9NS8BOLB6R1X",
+     "as_of": "2026-08-12"
+    }
+   ],
+   "golden": {
+    "legal_name": {
+     "value": "lorvane northgate logistics gmbh",
+     "source": "KYC_ONBOARDING",
+     "rec_id": "KYC-00111",
+     "as_of": "2026-02-12",
+     "rule": "consensus",
+     "alternatives": [
+      [
+       "lorvane northgate logistics gmbh",
+       6
+      ],
+      [
+       "lorvane northgate gmbh",
+       1
+      ]
+     ]
+    },
+    "city": {
+     "value": "Frankfurt",
+     "source": "CREDIT",
+     "rec_id": "CRD-01007",
+     "as_of": "2026-09-05",
+     "rule": "recency",
+     "alternatives": [
+      [
+       "Frankfurt",
+       7
+      ]
+     ]
+    },
+    "industry": {
+     "value": "4920",
+     "source": "VENDOR_A",
+     "rec_id": "VNA-02703",
+     "as_of": "2025-10-21",
+     "rule": "consensus",
+     "alternatives": [
+      [
+       "4920",
+       7
+      ]
+     ]
+    },
+    "parent_lei": {
+     "value": "FXLVV7ON9NS8BOLB6R1X",
+     "source": "VENDOR_A",
+     "rec_id": "VNA-02703",
+     "as_of": "2025-10-21",
+     "rule": "priority",
+     "alternatives": [
+      [
+       "FXLVV7ON9NS8BOLB6R1X",
+       2
+      ]
+     ]
+    },
+    "lei": {
+     "value": "FXLQ6YNWQBMR71YK1IIA",
+     "source": "VENDOR_A",
+     "rec_id": "VNA-02703",
+     "as_of": "2025-10-21",
+     "rule": "consensus",
+     "alternatives": [
+      [
+       "FXLQ6YNWQBMR71YK1IIA",
+       4
+      ]
+     ]
+    }
+   }
+  }
+ ],
+ "refresh": {
+  "day0_review_decisions_stored": 1012,
+  "merge_overrides": 17,
+  "parent_overrides": 28,
+  "acquisitions_after_override": 14,
+  "acquired_among_overridden": 6,
+  "records_day30": 4766,
+  "modes": [
+   {
+    "mode": "stateless",
+    "review_pairs_for_stewards": 1075,
+    "steward_hours": 53.8,
+    "merge_fixes_undone": 7,
+    "merge_conflicts_flagged": 0,
+    "merge_fixes_total": 17,
+    "parent_fixes_undone": 7,
+    "parent_fixes_total": 28,
+    "stale_overrides_applied_silently": 0,
+    "overrides_reopened_for_review": 0,
+    "pair_precision": 0.9989,
+    "pair_recall": 0.995,
+    "false_merge_clusters": 1,
+    "split_entities": 12,
+    "parent_accuracy": 0.8731
+   },
+   {
+    "mode": "sticky",
+    "review_pairs_for_stewards": 368,
+    "steward_hours": 18.4,
+    "merge_fixes_undone": 1,
+    "merge_conflicts_flagged": 0,
+    "merge_fixes_total": 17,
+    "parent_fixes_undone": 0,
+    "parent_fixes_total": 28,
+    "stale_overrides_applied_silently": 6,
+    "overrides_reopened_for_review": 0,
+    "pair_precision": 1.0,
+    "pair_recall": 0.9958,
+    "false_merge_clusters": 0,
+    "split_entities": 9,
+    "parent_accuracy": 0.8801
+   },
+   {
+    "mode": "governed",
+    "review_pairs_for_stewards": 368,
+    "steward_hours": 18.7,
+    "merge_fixes_undone": 0,
+    "merge_conflicts_flagged": 1,
+    "merge_fixes_total": 17,
+    "parent_fixes_undone": 0,
+    "parent_fixes_total": 28,
+    "stale_overrides_applied_silently": 0,
+    "overrides_reopened_for_review": 6,
+    "pair_precision": 1.0,
+    "pair_recall": 0.9958,
+    "false_merge_clusters": 0,
+    "split_entities": 9,
+    "parent_accuracy": 0.8879
+   }
+  ],
+  "override_examples": {
+   "merge": [
+    {
+     "type": "merge",
+     "a": "KYC-00018",
+     "b": "PAY-02056",
+     "truth": "E00021",
+     "reason": "Same legal entity: registry extract attached",
+     "maker": "steward_01",
+     "checker": "steward_07",
+     "date": "2026-11-20"
+    },
+    {
+     "type": "merge",
+     "a": "KYC-00019",
+     "b": "PAY-02057",
+     "truth": "E00022",
+     "reason": "Same legal entity: registry extract attached",
+     "maker": "steward_01",
+     "checker": "steward_07",
+     "date": "2026-11-20"
+    }
+   ],
+   "parent": [
+    {
+     "type": "attribute",
+     "attr": "parent_lei",
+     "anchor": "CRD-00943",
+     "value": "FXLPT49ZHKKEN659O2V2",
+     "was": "FXLDTTPY18QTMIDN8X35",
+     "truth": "E00026",
+     "reason": "Parent confirmed from annual report",
+     "maker": "steward_03",
+     "checker": "steward_07",
+     "date": "2026-11-20"
+    },
+    {
+     "type": "attribute",
+     "attr": "parent_lei",
+     "anchor": "CRD-01073",
+     "value": "FXLAOUT95CX1I2I7VA59",
+     "was": "FXLPSE7G002ZDV2XRO47",
+     "truth": "E00249",
+     "reason": "Parent confirmed from annual report",
+     "maker": "steward_03",
+     "checker": "steward_07",
+     "date": "2026-11-20"
+    }
+   ]
+  }
+ },
+ "robustness": [
+  {
+   "seeds": [
+    7,
+    11
+   ],
+   "t_auto": 0.7,
+   "review_pairs": 1012,
+   "records": 4770,
+   "clusters": 1376,
+   "true_entities": 1359,
+   "pair_precision": 1.0,
+   "pair_recall": 0.9932,
+   "false_merge_clusters": 0,
+   "split_entities": 17,
+   "duplicate_rate": 0.0141
+  },
+  {
+   "seeds": [
+    17,
+    23
+   ],
+   "t_auto": 0.7,
+   "review_pairs": 975,
+   "records": 4586,
+   "clusters": 1319,
+   "true_entities": 1306,
+   "pair_precision": 0.9996,
+   "pair_recall": 0.9928,
+   "false_merge_clusters": 1,
+   "split_entities": 14,
+   "duplicate_rate": 0.0121
+  },
+  {
+   "seeds": [
+    29,
+    31
+   ],
+   "t_auto": 0.7,
+   "review_pairs": 932,
+   "records": 4449,
+   "clusters": 1289,
+   "true_entities": 1272,
+   "pair_precision": 0.9994,
+   "pair_recall": 0.991,
+   "false_merge_clusters": 1,
+   "split_entities": 18,
+   "duplicate_rate": 0.016
+  },
+  {
+   "seeds": [
+    41,
+    43
+   ],
+   "t_auto": 0.7,
+   "review_pairs": 753,
+   "records": 4793,
+   "clusters": 1368,
+   "true_entities": 1357,
+   "pair_precision": 1.0,
+   "pair_recall": 0.9956,
+   "false_merge_clusters": 0,
+   "split_entities": 11,
+   "duplicate_rate": 0.0092
+  },
+  {
+   "seeds": [
+    53,
+    59
+   ],
+   "t_auto": 0.8,
+   "review_pairs": 1186,
+   "records": 4510,
+   "clusters": 1312,
+   "true_entities": 1297,
+   "pair_precision": 1.0,
+   "pair_recall": 0.9923,
+   "false_merge_clusters": 0,
+   "split_entities": 15,
+   "duplicate_rate": 0.0131
+  }
+ ]
+}
