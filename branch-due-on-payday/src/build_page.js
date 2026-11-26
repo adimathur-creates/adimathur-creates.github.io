@@ -110,7 +110,7 @@ code{font-size:13px;background:var(--tag);padding:1px 5px;border-radius:4px}.sou
 </div>
 
 <h2><span class="n">3</span>What it does to repayment (simulated)</h2>
-<p>${S.ASSUME.borrowers.toLocaleString("en-IN")} borrowers per run, ${N} runs, 3 monthly instalments each. Every borrower has an income pattern, a few days of cash after each inflow, and a fixed ${pct(S.ASSUME.wontPay, 1)} chance of never paying under any schedule. All four arms see the same borrowers.</p>
+<p>20,000 borrowers per run, ${N} runs, 3 monthly instalments each. Every borrower has an income pattern, a few days of cash after each inflow, and a fixed ${pct(S.ASSUME.wontPay, 1)} chance of never paying under any schedule. All four arms see the same borrowers.</p>
 <figure class="chart" id="c1"><div class="tip"></div></figure>
 <div class="legend">${S.POLICIES.map((p, i) => `<span><i style="background:var(--s${i + 1})"></i>${esc(NAMES[p])}</span>`).join("")}</div>
 <figcaption>Lower is better on all three. Averages over ${N} runs.</figcaption>
