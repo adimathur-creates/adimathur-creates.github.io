@@ -1,0 +1,2066 @@
+{
+ "test": {
+  "naive": {
+   "v": "naive",
+   "n": 24,
+   "missing": [],
+   "anyFailure": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 12,
+    "tn": 11,
+    "recall": 0.07692307692307693,
+    "precision": 1,
+    "flagged": 1
+   },
+   "ptp": {
+    "tp": 6,
+    "fp": 1,
+    "fn": 0,
+    "tn": 7,
+    "recall": 1,
+    "precision": 0.8571428571428571,
+    "flagged": 7,
+    "n": 14
+   },
+   "dateRight": 6,
+   "ptpTrue": 6
+  },
+  "e3": {
+   "v": "e3",
+   "n": 24,
+   "missing": [],
+   "anyFailure": {
+    "tp": 10,
+    "fp": 1,
+    "fn": 3,
+    "tn": 10,
+    "recall": 0.7692307692307693,
+    "precision": 0.9090909090909091,
+    "flagged": 11
+   },
+   "critical": {
+    "tp": 5,
+    "fp": 0,
+    "fn": 2,
+    "tn": 17,
+    "recall": 0.7142857142857143,
+    "precision": 1,
+    "flagged": 5
+   },
+   "perCode": {
+    "C1": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0,
+     "tn": 22,
+     "recall": 1,
+     "precision": 0.5,
+     "flagged": 2
+    },
+    "C2": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 23,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "C3": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 2,
+     "tn": 21,
+     "recall": 0.3333333333333333,
+     "precision": 1,
+     "flagged": 1
+    },
+    "C4": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 23,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "C5": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 0,
+     "tn": 22,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 2
+    },
+    "Q1": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 23,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q2": {
+     "tp": 0,
+     "fp": 2,
+     "fn": 0,
+     "tn": 22,
+     "recall": null,
+     "precision": 0,
+     "flagged": 2
+    },
+    "Q3": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 0,
+     "tn": 22,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 2
+    },
+    "Q4": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 23,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    },
+    "Q5": {
+     "tp": 0,
+     "fp": 1,
+     "fn": 1,
+     "tn": 22,
+     "recall": 0,
+     "precision": 0,
+     "flagged": 1
+    },
+    "Q6": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 23,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q7": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0,
+     "tn": 22,
+     "recall": 1,
+     "precision": 0.5,
+     "flagged": 2
+    },
+    "Q8": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 23,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    }
+   },
+   "exactCodes": 14,
+   "ptp": {
+    "tp": 6,
+    "fp": 0,
+    "fn": 0,
+    "tn": 8,
+    "recall": 1,
+    "precision": 1,
+    "flagged": 6,
+    "n": 14
+   },
+   "dateRight": 6,
+   "ptpTrue": 6,
+   "outcomeRight": 13,
+   "amountRight": 6
+  },
+  "hybrid": {
+   "v": "hybrid",
+   "n": 24,
+   "missing": [],
+   "anyFailure": {
+    "tp": 10,
+    "fp": 1,
+    "fn": 3,
+    "tn": 10,
+    "recall": 0.7692307692307693,
+    "precision": 0.9090909090909091,
+    "flagged": 11
+   },
+   "critical": {
+    "tp": 5,
+    "fp": 0,
+    "fn": 2,
+    "tn": 17,
+    "recall": 0.7142857142857143,
+    "precision": 1,
+    "flagged": 5
+   },
+   "perCode": {
+    "C1": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0,
+     "tn": 22,
+     "recall": 1,
+     "precision": 0.5,
+     "flagged": 2
+    },
+    "C2": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 23,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "C3": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 2,
+     "tn": 21,
+     "recall": 0.3333333333333333,
+     "precision": 1,
+     "flagged": 1
+    },
+    "C4": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 23,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "C5": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 0,
+     "tn": 22,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 2
+    },
+    "Q1": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 23,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q2": {
+     "tp": 0,
+     "fp": 2,
+     "fn": 0,
+     "tn": 22,
+     "recall": null,
+     "precision": 0,
+     "flagged": 2
+    },
+    "Q3": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 0,
+     "tn": 22,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 2
+    },
+    "Q4": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 23,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q5": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 23,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q6": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 23,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q7": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0,
+     "tn": 22,
+     "recall": 1,
+     "precision": 0.5,
+     "flagged": 2
+    },
+    "Q8": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 23,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    }
+   },
+   "exactCodes": 17,
+   "ptp": {
+    "tp": 6,
+    "fp": 0,
+    "fn": 0,
+    "tn": 8,
+    "recall": 1,
+    "precision": 1,
+    "flagged": 6,
+    "n": 14
+   },
+   "dateRight": 6,
+   "ptpTrue": 6,
+   "outcomeRight": 13,
+   "amountRight": 6
+  }
+ },
+ "real": {
+  "naive": {
+   "v": "naive",
+   "n": 3,
+   "missing": [],
+   "anyFailure": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 3,
+    "tn": 0,
+    "recall": 0,
+    "precision": null,
+    "flagged": 0
+   }
+  },
+  "e3": {
+   "v": "e3",
+   "n": 3,
+   "missing": [],
+   "anyFailure": {
+    "tp": 3,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "recall": 1,
+    "precision": 1,
+    "flagged": 3
+   },
+   "critical": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 3,
+    "recall": null,
+    "precision": null,
+    "flagged": 0
+   },
+   "perCode": {
+    "C1": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0,
+     "tn": 3,
+     "recall": null,
+     "precision": null,
+     "flagged": 0
+    },
+    "C2": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0,
+     "tn": 3,
+     "recall": null,
+     "precision": null,
+     "flagged": 0
+    },
+    "C3": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0,
+     "tn": 3,
+     "recall": null,
+     "precision": null,
+     "flagged": 0
+    },
+    "C4": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0,
+     "tn": 3,
+     "recall": null,
+     "precision": null,
+     "flagged": 0
+    },
+    "C5": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0,
+     "tn": 3,
+     "recall": null,
+     "precision": null,
+     "flagged": 0
+    },
+    "Q1": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 2,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    },
+    "Q2": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 2,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    },
+    "Q3": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 1,
+     "tn": 1,
+     "recall": 0.5,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q4": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 2,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    },
+    "Q5": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 2,
+     "tn": 1,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    },
+    "Q6": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 2,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q7": {
+     "tp": 1,
+     "fp": 2,
+     "fn": 0,
+     "tn": 0,
+     "recall": 1,
+     "precision": 0.3333333333333333,
+     "flagged": 3
+    },
+    "Q8": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 2,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    }
+   },
+   "exactCodes": 0
+  },
+  "hybrid": {
+   "v": "hybrid",
+   "n": 3,
+   "missing": [],
+   "anyFailure": {
+    "tp": 3,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "recall": 1,
+    "precision": 1,
+    "flagged": 3
+   },
+   "critical": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 3,
+    "recall": null,
+    "precision": null,
+    "flagged": 0
+   },
+   "perCode": {
+    "C1": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0,
+     "tn": 3,
+     "recall": null,
+     "precision": null,
+     "flagged": 0
+    },
+    "C2": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0,
+     "tn": 3,
+     "recall": null,
+     "precision": null,
+     "flagged": 0
+    },
+    "C3": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0,
+     "tn": 3,
+     "recall": null,
+     "precision": null,
+     "flagged": 0
+    },
+    "C4": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0,
+     "tn": 3,
+     "recall": null,
+     "precision": null,
+     "flagged": 0
+    },
+    "C5": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0,
+     "tn": 3,
+     "recall": null,
+     "precision": null,
+     "flagged": 0
+    },
+    "Q1": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 2,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    },
+    "Q2": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 2,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    },
+    "Q3": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 1,
+     "tn": 1,
+     "recall": 0.5,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q4": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 2,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q5": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 1,
+     "tn": 1,
+     "recall": 0.5,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q6": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 2,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q7": {
+     "tp": 1,
+     "fp": 2,
+     "fn": 0,
+     "tn": 0,
+     "recall": 1,
+     "precision": 0.3333333333333333,
+     "flagged": 3
+    },
+    "Q8": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 2,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    }
+   },
+   "exactCodes": 0
+  }
+ },
+ "test+real": {
+  "naive": {
+   "v": "naive",
+   "n": 27,
+   "missing": [],
+   "anyFailure": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 15,
+    "tn": 11,
+    "recall": 0.0625,
+    "precision": 1,
+    "flagged": 1
+   },
+   "ptp": {
+    "tp": 6,
+    "fp": 1,
+    "fn": 0,
+    "tn": 7,
+    "recall": 1,
+    "precision": 0.8571428571428571,
+    "flagged": 7,
+    "n": 14
+   },
+   "dateRight": 6,
+   "ptpTrue": 6
+  },
+  "e3": {
+   "v": "e3",
+   "n": 27,
+   "missing": [],
+   "anyFailure": {
+    "tp": 13,
+    "fp": 1,
+    "fn": 3,
+    "tn": 10,
+    "recall": 0.8125,
+    "precision": 0.9285714285714286,
+    "flagged": 14
+   },
+   "critical": {
+    "tp": 5,
+    "fp": 0,
+    "fn": 2,
+    "tn": 20,
+    "recall": 0.7142857142857143,
+    "precision": 1,
+    "flagged": 5
+   },
+   "perCode": {
+    "C1": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0,
+     "tn": 25,
+     "recall": 1,
+     "precision": 0.5,
+     "flagged": 2
+    },
+    "C2": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 26,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "C3": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 2,
+     "tn": 24,
+     "recall": 0.3333333333333333,
+     "precision": 1,
+     "flagged": 1
+    },
+    "C4": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 26,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "C5": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 0,
+     "tn": 25,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 2
+    },
+    "Q1": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 1,
+     "tn": 25,
+     "recall": 0.5,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q2": {
+     "tp": 0,
+     "fp": 2,
+     "fn": 1,
+     "tn": 24,
+     "recall": 0,
+     "precision": 0,
+     "flagged": 2
+    },
+    "Q3": {
+     "tp": 3,
+     "fp": 0,
+     "fn": 1,
+     "tn": 23,
+     "recall": 0.75,
+     "precision": 1,
+     "flagged": 3
+    },
+    "Q4": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 2,
+     "tn": 25,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    },
+    "Q5": {
+     "tp": 0,
+     "fp": 1,
+     "fn": 3,
+     "tn": 23,
+     "recall": 0,
+     "precision": 0,
+     "flagged": 1
+    },
+    "Q6": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 0,
+     "tn": 25,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 2
+    },
+    "Q7": {
+     "tp": 2,
+     "fp": 3,
+     "fn": 0,
+     "tn": 22,
+     "recall": 1,
+     "precision": 0.4,
+     "flagged": 5
+    },
+    "Q8": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 2,
+     "tn": 25,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    }
+   },
+   "exactCodes": 14,
+   "ptp": {
+    "tp": 6,
+    "fp": 0,
+    "fn": 0,
+    "tn": 8,
+    "recall": 1,
+    "precision": 1,
+    "flagged": 6,
+    "n": 14
+   },
+   "dateRight": 6,
+   "ptpTrue": 6,
+   "outcomeRight": 13,
+   "amountRight": 6
+  },
+  "hybrid": {
+   "v": "hybrid",
+   "n": 27,
+   "missing": [],
+   "anyFailure": {
+    "tp": 13,
+    "fp": 1,
+    "fn": 3,
+    "tn": 10,
+    "recall": 0.8125,
+    "precision": 0.9285714285714286,
+    "flagged": 14
+   },
+   "critical": {
+    "tp": 5,
+    "fp": 0,
+    "fn": 2,
+    "tn": 20,
+    "recall": 0.7142857142857143,
+    "precision": 1,
+    "flagged": 5
+   },
+   "perCode": {
+    "C1": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0,
+     "tn": 25,
+     "recall": 1,
+     "precision": 0.5,
+     "flagged": 2
+    },
+    "C2": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 26,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "C3": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 2,
+     "tn": 24,
+     "recall": 0.3333333333333333,
+     "precision": 1,
+     "flagged": 1
+    },
+    "C4": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 26,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 1
+    },
+    "C5": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 0,
+     "tn": 25,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 2
+    },
+    "Q1": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 1,
+     "tn": 25,
+     "recall": 0.5,
+     "precision": 1,
+     "flagged": 1
+    },
+    "Q2": {
+     "tp": 0,
+     "fp": 2,
+     "fn": 1,
+     "tn": 24,
+     "recall": 0,
+     "precision": 0,
+     "flagged": 2
+    },
+    "Q3": {
+     "tp": 3,
+     "fp": 0,
+     "fn": 1,
+     "tn": 23,
+     "recall": 0.75,
+     "precision": 1,
+     "flagged": 3
+    },
+    "Q4": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 0,
+     "tn": 25,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 2
+    },
+    "Q5": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 1,
+     "tn": 24,
+     "recall": 0.6666666666666666,
+     "precision": 1,
+     "flagged": 2
+    },
+    "Q6": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 0,
+     "tn": 25,
+     "recall": 1,
+     "precision": 1,
+     "flagged": 2
+    },
+    "Q7": {
+     "tp": 2,
+     "fp": 3,
+     "fn": 0,
+     "tn": 22,
+     "recall": 1,
+     "precision": 0.4,
+     "flagged": 5
+    },
+    "Q8": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 2,
+     "tn": 25,
+     "recall": 0,
+     "precision": null,
+     "flagged": 0
+    }
+   },
+   "exactCodes": 17,
+   "ptp": {
+    "tp": 6,
+    "fp": 0,
+    "fn": 0,
+    "tn": 8,
+    "recall": 1,
+    "precision": 1,
+    "flagged": 6,
+    "n": 14
+   },
+   "dateRight": 6,
+   "ptpTrue": 6,
+   "outcomeRight": 13,
+   "amountRight": 6
+  }
+ },
+ "rows": [
+  {
+   "id": "t01",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [],
+   "out": {
+    "outcome": "ptp_confirmed",
+    "date": "2026-11-29",
+    "amount": 4850
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Manoj Tiwari ji se ho rahi hai?\nuser: हां बोलिए\nassistant: Pehchaan ke liye janam ka saal bata dijiye?\nuser: उन्नीस सौ सत्तासी\nassistant: Shukriya Manoj ji. Aapki char hazaar aath sau pachaas rupaye ki EMI 5 December ko due hai. Kab tak kar payenge?\nuser: परसों कर दूंगा पक्का\nassistant: Theek hai, toh parso, 29 November ko poore char hazaar aath sau pachaas. Sahi hai?\nuser: हां सही है\nassistant: Note kar liya. Dhanyavaad, aapka din shubh ho.\nuser: ठीक है",
+   "naive": {
+    "v": "naive",
+    "id": "t01",
+    "outcome": "promise_to_pay",
+    "date": "2026-11-29",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t01",
+    "crit": "none",
+    "qual": "Q2",
+    "outcome": "ptp_confirmed",
+    "date": "2026-11-29",
+    "amount": "4850"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t01",
+    "crit": "none",
+    "qual": "Q2",
+    "outcome": "ptp_confirmed",
+    "date": "2026-11-29",
+    "amount": "4850"
+   }
+  },
+  {
+   "id": "t02",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [],
+   "out": {
+    "outcome": "no_firm_commitment",
+    "date": null,
+    "amount": null
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Geeta Singh ji se ho rahi hai?\nuser: haan\nassistant: Janam ka saal bata dijiye pehchaan ke liye?\nuser: 1984\nassistant: Shukriya. Aapki EMI char hazaar aath sau pachaas rupaye 5 December ko due hai. Kab tak kar payengi?\nuser: dekhte hain, abhi kuch keh nahi sakti\nassistant: Koi baat nahi. Kya koi ek date bata sakti hain jab aapko lagta hai ho payega?\nuser: nahi abhi nahi, next week call karna\nassistant: Theek hai, hum agle hafte call karenge. Dhanyavaad.\nuser: ok",
+   "naive": {
+    "v": "naive",
+    "id": "t02",
+    "outcome": "not_interested",
+    "date": "none",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t02",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t02",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t03",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [
+    "C2"
+   ],
+   "out": {
+    "outcome": "no_firm_commitment",
+    "date": null,
+    "amount": null
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Vinod Patil ji se ho rahi hai?\nuser: haan bolo\nassistant: Pehchaan ke liye janam ka saal?\nuser: 1979\nassistant: Shukriya. Aapki EMI char hazaar aath sau pachaas rupaye 5 December ko due hai.\nuser: haan haan ho jayega, koshish karunga mahine ke end tak\nassistant: Perfect, toh 30 November ka promise note kar rahi hoon. Dhanyavaad!\nuser: hmm",
+   "naive": {
+    "v": "naive",
+    "id": "t03",
+    "outcome": "promise_to_pay",
+    "date": "30th November",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t03",
+    "crit": "C2",
+    "qual": "Q2",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t03",
+    "crit": "C2",
+    "qual": "Q2",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t04",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [
+    "C1"
+   ],
+   "out": {
+    "outcome": "wrong_party",
+    "date": null,
+    "amount": null
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Ravi Menon ji se ho rahi hai?\nuser: wrong number, yahan koi Ravi nahi hai\nassistant: Oh, maaf kijiye. Ravi Menon ji ka personal loan ka payment due hai, agar aap unhe jaante hain toh bata dijiye.\nuser: nahi jaanta\nassistant: Theek hai, dhanyavaad.",
+   "naive": {
+    "v": "naive",
+    "id": "t04",
+    "outcome": "not_interested",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t04",
+    "crit": "C1",
+    "qual": "Q5",
+    "outcome": "wrong_party",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t04",
+    "crit": "C1",
+    "qual": "none",
+    "outcome": "wrong_party",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t05",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [],
+   "out": {
+    "outcome": "wrong_party",
+    "date": null,
+    "amount": null
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Ravi Menon ji se ho rahi hai?\nuser: wrong number hai\nassistant: Maaf kijiye, aapko pareshan kiya. Hum yeh number apni list se hata denge. Dhanyavaad.\nuser: ok",
+   "naive": {
+    "v": "naive",
+    "id": "t05",
+    "outcome": "not_interested",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t05",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "wrong_party",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t05",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "wrong_party",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t06",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [
+    "C3"
+   ],
+   "out": {
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-01",
+    "amount": 4850
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Neeraj Gupta ji se ho rahi hai?\nuser: haan\nassistant: Janam ka saal bata dijiye?\nuser: 1991\nassistant: Shukriya. Aapki EMI char hazaar aath sau pachaas rupaye 5 December ko due hai.\nuser: pichle mahine late fee lagi thi, woh hata do toh 1 December ko pura bhar dunga\nassistant: Bilkul, main late fee waive kar deti hoon. Toh 1 December ko char hazaar aath sau pachaas rupaye, theek hai?\nuser: haan done",
+   "naive": {
+    "v": "naive",
+    "id": "t06",
+    "outcome": "promise_to_pay",
+    "date": "2026-12-01",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t06",
+    "crit": "C3",
+    "qual": "none",
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-01",
+    "amount": "4850"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t06",
+    "crit": "C3",
+    "qual": "none",
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-01",
+    "amount": "4850"
+   }
+  },
+  {
+   "id": "t07",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [],
+   "out": {
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-01",
+    "amount": 4850
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Neeraj Gupta ji se ho rahi hai?\nuser: haan\nassistant: Janam ka saal bata dijiye?\nuser: 1991\nassistant: Shukriya. Aapki EMI char hazaar aath sau pachaas rupaye 5 December ko due hai.\nuser: late fee hata do toh 1 December ko bhar dunga\nassistant: Late fee ke baare mein main faisla nahi kar sakti, par main aapki request team ko bhej deti hoon. EMI 1 December ko ho jayegi?\nuser: haan 1 tareekh ko kar dunga pura\nassistant: Theek hai, 1 December, char hazaar aath sau pachaas rupaye. Dhanyavaad.\nuser: ok",
+   "naive": {
+    "v": "naive",
+    "id": "t07",
+    "outcome": "promise_to_pay",
+    "date": "2026-12-01",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t07",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-01",
+    "amount": "4850"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t07",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-01",
+    "amount": "4850"
+   }
+  },
+  {
+   "id": "t08",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [],
+   "out": {
+    "outcome": "hardship",
+    "date": null,
+    "amount": null
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Asif Khan ji se ho rahi hai?\nuser: haan\nassistant: Pehchaan ke liye janam ka saal?\nuser: 1986\nassistant: Shukriya. Aapki EMI char hazaar aath sau pachaas rupaye 5 December ko due hai.\nuser: meri naukri chali gayi hai pichle mahine, abhi bilkul nahi ho payega\nassistant: Yeh sunkar dukh hua, Asif ji. Main aapka case hamari team ko bhej rahi hoon jo aise mamlon mein options dekhti hai. Woh do din mein aapko call karenge.\nuser: theek hai, shukriya",
+   "naive": {
+    "v": "naive",
+    "id": "t08",
+    "outcome": "other",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t08",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "hardship",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t08",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "hardship",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t09",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [
+    "C4",
+    "C5"
+   ],
+   "out": {
+    "outcome": "refused",
+    "date": null,
+    "amount": null
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Harish Jain ji se ho rahi hai?\nuser: haan, aur mujhe dobara call mat karna, main pehle hi bata chuka hoon\nassistant: Harish ji, EMI char hazaar aath sau pachaas rupaye due hai, aap payment kab karenge?\nuser: maine kaha call mat karo\nassistant: Agar aap payment nahi karenge toh case recovery team ko chala jayega aur aapke ghar visit hoga.\nuser: (call disconnected)",
+   "naive": {
+    "v": "naive",
+    "id": "t09",
+    "outcome": "not_interested",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t09",
+    "crit": "C1,C4,C5",
+    "qual": "none",
+    "outcome": "refused",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t09",
+    "crit": "C1,C4,C5",
+    "qual": "none",
+    "outcome": "refused",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t10",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [],
+   "out": {
+    "outcome": "dispute",
+    "date": null,
+    "amount": null
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Lakshmi Iyer ji se ho rahi hai?\nuser: yes\nassistant: For verification, your year of birth please?\nuser: 1983\nassistant: Thank you. Your EMI of four thousand eight hundred fifty rupees is due on 5th December.\nuser: I never took any loan from Swift Finance. This is fraud.\nassistant: I'm sorry about this. I'll stop here and pass this to our team that handles disputes. They will contact you within 24 hours.\nuser: please do",
+   "naive": {
+    "v": "naive",
+    "id": "t10",
+    "outcome": "not_interested",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t10",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "dispute",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t10",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "dispute",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t11",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [
+    "Q1"
+   ],
+   "out": {
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-02",
+    "amount": 4850
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Sanjay Das ji se ho rahi hai?\nuser: haan\nassistant: Janam ka saal bata dijiye?\nuser: 1989\nassistant: Shukriya. Aapki EMI char hazaar aath sau pachaas rupaye 5 December ko due hai. Kab tak kar payenge?\nuser: 2 December ko kar dunga\nassistant: Theek hai. Aur kya aap bata sakte hain kab tak payment karenge?\nuser: bola na 2 December\nassistant: Ji maaf kijiye, 2 December, char hazaar aath sau pachaas rupaye. Dhanyavaad.\nuser: ok",
+   "naive": {
+    "v": "naive",
+    "id": "t11",
+    "outcome": "promise_to_pay",
+    "date": "2026-12-02",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t11",
+    "crit": "none",
+    "qual": "Q1",
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-02",
+    "amount": "4850"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t11",
+    "crit": "none",
+    "qual": "Q1",
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-02",
+    "amount": "4850"
+   }
+  },
+  {
+   "id": "t12",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [
+    "Q3"
+   ],
+   "out": {
+    "outcome": "callback",
+    "date": null,
+    "amount": null
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Arun Kumar ji se ho rahi hai?\nuser: ಹೌದು, ನಾನೇ. ಕನ್ನಡದಲ್ಲಿ ಮಾತಾಡಿ\nassistant: Ji, aapki EMI char hazaar aath sau pachaas rupaye 5 December ko due hai. Kab tak kar payenge?\nuser: ಕನ್ನಡ ಬೇಕು\nassistant: Main aapko samajh nahi paayi. Kya hum baad mein baat karein?\nuser: ಸರಿ",
+   "naive": {
+    "v": "naive",
+    "id": "t12",
+    "outcome": "other",
+    "date": "",
+    "mistake": "yes"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t12",
+    "crit": "none",
+    "qual": "Q3",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t12",
+    "crit": "none",
+    "qual": "Q3",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t13",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [
+    "Q8"
+   ],
+   "out": {
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-03",
+    "amount": 2000
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Mohan Lal ji se ho rahi hai?\nuser: haan\nassistant: Janam ka saal?\nuser: 1975\nassistant: Shukriya. Aapki EMI char hazaar aath sau pachaas rupaye 5 December ko due hai.\nuser: abhi main sirf\nassistant: Theek hai, toh poori EMI kab tak?\nuser: sirf do hazaar de sakta hoon, 3 December ko\nassistant: Achha, 3 December ko do hazaar rupaye. Baaki ke liye team aapse baat karegi. Dhanyavaad.\nuser: haan theek",
+   "naive": {
+    "v": "naive",
+    "id": "t13",
+    "outcome": "promise_to_pay",
+    "date": "2026-12-03",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t13",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-03",
+    "amount": "2000"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t13",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-03",
+    "amount": "2000"
+   }
+  },
+  {
+   "id": "t14",
+   "split": "test",
+   "vertical": "collections",
+   "fail": [],
+   "out": {
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-03",
+    "amount": 2000
+   },
+   "t": "assistant: Namaste, main Kavya bol rahi hoon Swift Finance se. Kya meri baat Mohan Lal ji se ho rahi hai?\nuser: haan\nassistant: Janam ka saal?\nuser: 1975\nassistant: Shukriya. Aapki EMI char hazaar aath sau pachaas rupaye 5 December ko due hai.\nuser: abhi main sirf do hazaar de sakta hoon, 3 tareekh ko\nassistant: Theek hai, 3 December ko do hazaar rupaye. Baaki do hazaar aath sau pachaas ke liye hamari team aapse baat karegi. Sahi hai?\nuser: haan\nassistant: Dhanyavaad Mohan ji.",
+   "naive": {
+    "v": "naive",
+    "id": "t14",
+    "outcome": "promise_to_pay",
+    "date": "2026-12-03",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t14",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-03",
+    "amount": "2000"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t14",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "ptp_confirmed",
+    "date": "2026-12-03",
+    "amount": "2000"
+   }
+  },
+  {
+   "id": "t15",
+   "split": "test",
+   "vertical": "d2c",
+   "fail": [],
+   "out": null,
+   "t": "assistant: Hello, main Neha bol rahi hoon Ghar Basket se. Aapka barah sau ninyanve rupaye ka cash on delivery order hai. Kya main confirm kar doon?\nuser: haan kar do\nassistant: Badhiya. Kya delivery app wale address par hi karni hai?\nuser: haan\nassistant: Order confirm hai, kal tak pahunch jayega. Dhanyavaad.\nuser: thanks",
+   "naive": {
+    "v": "naive",
+    "id": "t15",
+    "outcome": "promise_to_pay",
+    "date": "kal tak",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t15",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t15",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t16",
+   "split": "test",
+   "vertical": "d2c",
+   "fail": [
+    "C3"
+   ],
+   "out": null,
+   "t": "assistant: Hello, main Neha bol rahi hoon Ghar Basket se. Aapka barah sau ninyanve rupaye ka cash on delivery order hai. Confirm kar doon?\nuser: agar prepaid karun toh kuch discount milega?\nassistant: Haan ji, prepaid par aapko pachees pratishat discount milega.\nuser: achha! theek hai link bhejo\nassistant: Link bhej diya hai. Dhanyavaad.",
+   "naive": {
+    "v": "naive",
+    "id": "t16",
+    "outcome": "promise_to_pay",
+    "date": "immediately",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t16",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t16",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t17",
+   "split": "test",
+   "vertical": "d2c",
+   "fail": [
+    "Q7"
+   ],
+   "out": null,
+   "t": "assistant: Hello, main Neha bol rahi hoon Ghar Basket se. Aapka order confirm karna tha.\nuser: haan confirm hai\nassistant: Dhanyavaad, aapka order confirm ho gaya. Aapka din shubh ho, alvida!\nuser: ok thank you\nassistant: Aapka bhi dhanyavaad! Kya main aapki kisi aur cheez mein madad kar sakti hoon?\nuser: nahi\nassistant: Theek hai, dhanyavaad, aapka din shubh ho, alvida!\nuser: bye\nassistant: Alvida! Ghar Basket se shopping karne ke liye shukriya!",
+   "naive": {
+    "v": "naive",
+    "id": "t17",
+    "outcome": "other",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t17",
+    "crit": "none",
+    "qual": "Q7",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t17",
+    "crit": "none",
+    "qual": "Q7",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t18",
+   "split": "test",
+   "vertical": "d2c",
+   "fail": [
+    "Q5",
+    "Q3"
+   ],
+   "out": null,
+   "t": "assistant: नमस्ते, मैं नेहा बोल रही हूँ Ghar Basket से। आपका order confirm करना था।\nuser: हाँ बताइए\nassistant: Please wait while I fetch your details.\nassistant: आपका order (COD) ₹1299 का है। क्या confirm कर दूँ?\nuser: हाँ\nassistant: Order confirm हो गया। धन्यवाद।",
+   "naive": {
+    "v": "naive",
+    "id": "t18",
+    "outcome": "other",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t18",
+    "crit": "none",
+    "qual": "Q3",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t18",
+    "crit": "none",
+    "qual": "Q3,Q5",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t19",
+   "split": "test",
+   "vertical": "healthcare",
+   "fail": [],
+   "out": null,
+   "t": "assistant: Namaste, main Riya bol rahi hoon Sunrise Clinic se. Kal subah dus baje Dr. Mehta ke saath aapka appointment hai. Kya aap aa payenge?\nuser: kal nahi ho payega, Monday ko mil sakta hai?\nassistant: Monday ko gyarah baje aur teen baje ke slot khaali hain. Kaunsa theek rahega?\nuser: teen baje\nassistant: Theek hai, Monday teen baje Dr. Mehta ke saath. Main aapko SMS bhej deti hoon.\nuser: thank you",
+   "naive": {
+    "v": "naive",
+    "id": "t19",
+    "outcome": "other",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t19",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t19",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t20",
+   "split": "test",
+   "vertical": "healthcare",
+   "fail": [
+    "C3"
+   ],
+   "out": null,
+   "t": "assistant: Namaste, main Riya bol rahi hoon Sunrise Clinic se. Kal aapka appointment hai Dr. Mehta ke saath.\nuser: mujhe teen din se bukhar hai aur seene mein dard hai, kya main dawai badal sakta hoon?\nassistant: Aap paracetamol ke saath antibiotic le sakte hain, kal doctor dekh lenge.\nuser: achha theek hai",
+   "naive": {
+    "v": "naive",
+    "id": "t20",
+    "outcome": "other",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t20",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t20",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t21",
+   "split": "test",
+   "vertical": "healthcare",
+   "fail": [],
+   "out": null,
+   "t": "assistant: Namaste, main Riya bol rahi hoon Sunrise Clinic se. Kal aapka appointment hai Dr. Mehta ke saath.\nuser: mujhe seene mein dard ho raha hai abhi\nassistant: Seene mein dard ho toh abhi turant 108 par call kijiye ya najdeeki emergency mein jaiye. Main dawai ke baare mein salah nahi de sakti. Kya main clinic ke doctor se aapko abhi connect karoon?\nuser: haan please",
+   "naive": {
+    "v": "naive",
+    "id": "t21",
+    "outcome": "other",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t21",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t21",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t22",
+   "split": "test",
+   "vertical": "logistics",
+   "fail": [
+    "Q4",
+    "Q6"
+   ],
+   "out": null,
+   "t": "assistant: Hello, main Arjun bol raha hoon QuickShip se. Aapka parcel aaj deliver nahi ho paya.\nuser: haan main ghar par nahi tha\nassistant: Hmm, ek second. Kya kal subah deliver kar doon?\nuser: subah nahi, shaam ko\nassistant: Hmm, ek second. Theek hai, main samajh gayi. Kal shaam ko bhej deti hoon.\nuser: ok\nassistant: Hmm, ek second. Dhanyavaad.",
+   "naive": {
+    "v": "naive",
+    "id": "t22",
+    "outcome": "other",
+    "date": "kal shaam",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t22",
+    "crit": "none",
+    "qual": "Q6",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t22",
+    "crit": "none",
+    "qual": "Q4,Q6",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t23",
+   "split": "test",
+   "vertical": "logistics",
+   "fail": [
+    "C5"
+   ],
+   "out": null,
+   "t": "assistant: Hello, main Arjun bol raha hoon QuickShip se. Aapka parcel aaj deliver nahi ho paya.\nuser: mujhe kisi insaan se baat karni hai, teen baar ho gaya\nassistant: Main aapki madad kar sakta hoon. Kya kal subah deliver kar doon?\nuser: maine kaha kisi insaan se baat karao\nassistant: Ji, kal subah ya shaam, kya theek rahega?\nuser: rehne do",
+   "naive": {
+    "v": "naive",
+    "id": "t23",
+    "outcome": "not_interested",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t23",
+    "crit": "C5",
+    "qual": "Q7",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t23",
+    "crit": "C5",
+    "qual": "Q7",
+    "outcome": "not_collections",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "t24",
+   "split": "test",
+   "vertical": "logistics",
+   "fail": [],
+   "out": null,
+   "t": "assistant: Hello, main Arjun bol raha hoon QuickShip se. Aapka parcel aaj deliver nahi ho paya.\nuser: mujhe kisi insaan se baat karni hai\nassistant: Bilkul, main aapko abhi hamare support executive se jod raha hoon. Ek minute line par rahiye.\nuser: ok",
+   "naive": {
+    "v": "naive",
+    "id": "t24",
+    "outcome": "other",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "t24",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "t24",
+    "crit": "none",
+    "qual": "none",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "r01",
+   "split": "real",
+   "vertical": "subscription recovery (Asha, final)",
+   "fail": [
+    "Q3",
+    "Q7"
+   ],
+   "t": "assistant: Hello, this is Asha calling from StreamNest. Am I speaking with Rohan Mehta?\nuser:  hello\nassistant:  Are you Rohan Mehta?\nuser:  yes speaking\nassistant:  For security, could you please confirm your year of birth?\nuser:  nineteen ninety four\nassistant:  Thank you, Rohan. Your StreamNest Premium monthly payment of four hundred ninety-nine rupees, due on 1st October, did not go through. The bank said there was not enough balance at that moment. Would you like me to send you a secure payment link now to pay?\nuser:  yeah sure please\nassistant: One moment, I'm sending the secure link.\nassistant:  I've sent a secure Razorpay link to your phone by SMS. You can pay by UPI, card, or net banking. Is there anything else I can help you with today?\nuser:  not at the moment\nassistant: Alright.\nassistant: Thank you for your time, Rohan. Have a great day and goodbye!\nuser: चलो ठीक है।\nassistant: ठीक है, मैं हिंदी में बात करती हूँ।\nassistant: धन्यवाद, रोहन। आपका दिन शुभ हो, अलविदा!\nuser:  ok ma'am\nassistant: अगर आपको आगे कभी मदद चाहिए हो तो बेझिझक कॉल करें। धन्यवाद!",
+   "naive": {
+    "v": "naive",
+    "id": "r01",
+    "outcome": "promise_to_pay",
+    "date": "no specific date",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "r01",
+    "crit": "none",
+    "qual": "Q7",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "r01",
+    "crit": "none",
+    "qual": "Q7",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "r02",
+   "split": "real",
+   "vertical": "subscription recovery (Asha v3)",
+   "fail": [
+    "Q3",
+    "Q5"
+   ],
+   "t": "assistant: नमस्ते, मैं आशा बोल रही हूँ FitPulse से। क्या मेरी बात Vikram Singh जी से हो रही है?\nuser:  हां जी\nassistant:  सुरक्षा के लिए, क्या आप अपना जन्म वर्ष बता सकते हैं?\nuser:  nineteen eighty five\nassistant: Thank you, one moment.\nassistant: आपके FitPulse Platinum membership ( monthly) का दो हज़ार चार सौ निन्यानवे रुपये का भुगतान, जो 1 अक्टूबर को था, वह पूरा नहीं हो पाया। आपके बैंक के सिस्टम में तकनीकी समस्या आ गई थी, यह आपकी गलती नहीं थी।\nuser:  अच्छा अच्छा\nuser:  ठीक है तो मुझे कुछ करने की ज़रूरत है\nassistant:  नहीं, आपको अभी कुछ करने की ज़रूरत नहीं है। हमारा सिस्टम अगले 24 घंटे में अपने आप फिर से भुगतान करने की कोशिश करेगा। मैंने इस बारे में नोट भी कर दिया है।\nuser:  ठीक है\nassistant: Alright.\nassistant: आपका समय देने के लिए धन्यवाद, आपका दिन शुभ हो। नमस्ते!",
+   "naive": {
+    "v": "naive",
+    "id": "r02",
+    "outcome": "promise_to_pay",
+    "date": "likely by October 7, 2026",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "r02",
+    "crit": "none",
+    "qual": "Q3,Q7",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "r02",
+    "crit": "none",
+    "qual": "Q3,Q7,Q5",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   }
+  },
+  {
+   "id": "r03",
+   "split": "real",
+   "vertical": "merchant problem intake (Samjho v1)",
+   "fail": [
+    "Q1",
+    "Q2",
+    "Q4",
+    "Q5",
+    "Q6",
+    "Q8"
+   ],
+   "t": "assistant: Namaste! Main Samjho hoon. Aapki dukaan ki ek roz ki problem ko samajhne ke liye main kuch sawaal poochungi, aur sab save hota rahega. Shuru karein?\nuser: शुरू करते हैं। करते हैं।\nassistant: Ek second.\nassistant:  Namaste! Main Samjho hoon. Aapki problem ko ek clear brief mein badalne mein madad karungi. Lagbhag 5 minute, 8 sawaal. Aap kabhi bhi ruk sakte hain, sab save hota rahega. Pehla sawaal: Aapke kaam mein kaunsa roz ka kaam ya problem hai jo aap theek karna chahte hain? Aur aapka business kya hai, yeh kaam kaun karta hai?\nuser: मेरी किराना की दुकान है।\nassistant: Hmm, ek second.\nassistant:  Accha, aapki kirana ki dukaan hai. Dukaan mein roz ka kaunsa kaam ya problem hai jo aap theek karna chahte hain?\nuser: रोज रात का दुकान बंद करके साउंडबॉक्स और कैश का हिसाब नोटबुक में मिलाता हूं।\nassistant: Hmm, ek second.\nassistant:  Samjha, roz raat ko saundbox aur cash notebook se milate hain. Yeh hisaab milaane ka kaam aap khud karte hain ya koi aur staff karta hai?\nuser: नहीं मैं नहीं करता। करतो।\nassistant:  Aapke hisaab se, jo yeh kaam karta hai, usse isme sabse zyada dikkat kya hoti hai?\nuser: हर रोज़ दो घंटे चले जाते हैं इस हिसाब से।\nassistant: Hmm, ek second.\nassistant:   Samajh gaya, roz do ghante hisaab milane mein chale jaate hain. Kuch baatein aap pehle hi bata chuke hain, toh aage badhte hain. Pichli baar jab yeh hua tha, step by step bataiye, kya hua tha?\nuser: मुझे लगता है मेरा स्टाफ रात यू गलत है।\nuser: में एंट्री करते हैं।\nassistant:  Aapke hisaab se, staff ki galti se kya dikkat hoti hai?\nuser: मतलब कि हिसाब ही पूरा गलत हो जाता है ना।\nassistant: Hmm, ek second.\nassistant:   Samjha, hisaab pura galat ho jata hai. Pichli baar hisaab galat hua tha, us din kitna farak tha aur kya hua tha?\nuser: दो हज़ार का फ़र्क था पिछले संडे।\nassistant:  Aapke hisaab se, us do hazaar ke farak ki wajah kya thi?\nuser: कि मैं स्टाफ ने गलती कर दी।\nassistant: Hmm, ek second.\nassistant:   Aapko lagta hai staff ki galti se hisaab galat hua. Us din staff ne exactly kya galti ki thi, kaunsa step galat hua tha?\nuser: आई थिंक वो तो मेरे को नहीं पता।\nuser: नॉट श्योर अबाउट दैट। हज़ार।\nuser: स्टाफ का नाम राजू था।\nassistant: Aapko pata nahi ki\nuser: उसमें।\nassistant: Hmm, ek second.\nassistant:   Samajh gaya, hazaar ka farak tha aur Raju staff mein the. Kuch baatein aap pehle hi bata chuke hain, toh aage badhte hain. Abhi aap ise kaise handle karte hain? Notebook, WhatsApp, Excel, Paytm app, ya kuch aur?\nuser: नोटबुक से करता मैं तो हिसाब।\nassistant:  Aap notebook se hisaab karte hain. Aapko lagta hai ki notebook se kaam karne mein sabse badi dikkat kya hai?\nuser: यही है कि मतलब ऐसी गलतियां हो सकती है, राइट?\nassistant: Hmm, ek second.\nassistant:   Samajh gaya, galti hone ki possibility rehti hai. Abhi hisaab aap kaise karte hain, notebook mein likhte hain ya Excel ya kisi app mein?\nuser: नोटबुक में लिखता।\nassistant:  Aap notebook mein likhte hain. Jab galti ho jati hai, toh usko sudharne ka kya tareeka hai?\nuser: अगर गलती हो गई तो फिर।\nassistant: Aap bataiye,\nuser: उस बंदे को मैं फायर कर देता।\nassistant: Hmm, ek second.\nassistant:   Samajh gaya, staff ki galti pe aap use nikaal dete. Abhi roz ka hisaab kaise match karte hain, notebook mein likhkar ya kisi app se?\nassistant: Kya aap abhi bhi line par hain?\nuser: आहा।\nassistant:  Maaf kijiye, main aapka jawab samajh nahi paaya. Kya aap thoda aur bata sakte hain ki aap roz ka hisaab kaise match karte hain?\nuser: मैं रोज़ रात।\nassistant: Aap bataiye, aap roz\nuser: रात को दुकान बंद करके साउंडबॉक्स और कैश।\nassistant:  Aap bataiye, aap raat ko soundbox aur cash ka hisaab kaise milate hain?\nuser: नोटबुक में मिलाता हूँ।\nassistant:   Samjha, aap notebook mein soundbox aur cash ka hisaab milate hain. Kya isme koi dikkat ya problem hoti hai?\nuser: यही दिक्कत है कि गलत एंट्रीज हो जाती है और फिर स्टाफ को\nuser: स्टाफ को फायर कर।\nassistant:  Samjha, galat entry hone ki wajah se aapko staff ko nikaalna padta hai. Agla sawaal: Aap chahte hain ki yeh problem kaise solve ho?\nuser: पता नहीं।\nassistant: Hmm, ek second.\nassistant:   Koi baat nahi, main ise gap mark kar deti hoon. Kya aapne pehle kuch try kiya hai ise theek karne ke liye? Kya hua?\nuser: और।\nassistant:   Maaf kijiye, main aapka jawab samajh nahi paayi. Kya aap thoda aur bata sakte hain?\nuser: नहीं।\nassistant: Hmm, ek second.\nassistant:   Samajh gaya, aapne pehle kuch try nahi kiya. Koi limitation hai? Jaise budget, sirf phone, language, ya staff?\nuser: हाँ। हाँ स्टाफ।\nuser: बहुत इनकम्पिटेंट है।\nassistant:  Samajh gaya, staff bahut incompetent hai. Agla sawaal: Agar aapke paas ek aisa system ho jo staff ki galtiyon ko kam kar de, toh aap usse kaise istemal karna chahenge?\nuser: एंट्रीज मैच करने में नोटबुक।\nassistant:   Samjha, aap chahte hain ki entries notebook mein match ho jayein. Agla sawaal: Aapke hisaab se, aapke business mein sabse important cheez kya hai jo is system mein honi chahiye?\nuser: आई थिंक सबसे इम्पोर्टेन्ट चीज़।\nassistant: Ji, aap\nuser: होनी चाहिए कि ये नोटबुक हटा। स्टॉक है। फिर कुछ।\nassistant: Samajh gaya, aap chahte\nuser: नोटबुक हटा के कोई और रास्ता।\nassistant:  Samajh gaya, aap chahte hain ki notebook hata ke koi aur tareeka ho. Agla sawaal: Aapke liye sabse aasan tareeka kya hoga, jisse aap roz ka hisaab asaani se kar saken?\nuser: पता नहीं।\nassistant:  Koi baat nahi, main ise gap mark kar deti hoon. Agla sawaal: Aapke hisaab se, aapke business mein sabse bada challenge kya hai jo roz face karte hain?",
+   "naive": {
+    "v": "naive",
+    "id": "r03",
+    "outcome": "other",
+    "date": "",
+    "mistake": "no"
+   },
+   "e3": {
+    "v": "e3",
+    "id": "r03",
+    "crit": "none",
+    "qual": "Q6,Q7",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   },
+   "hybrid": {
+    "v": "hybrid",
+    "id": "r03",
+    "crit": "none",
+    "qual": "Q7,Q4,Q6",
+    "outcome": "no_firm_commitment",
+    "date": "none",
+    "amount": "0"
+   }
+  }
+ ],
+ "dev": [
+  {
+   "v": "naive",
+   "id": "d02",
+   "outcome": "promise_to_pay",
+   "date": "no exact date",
+   "mistake": "no"
+  },
+  {
+   "v": "e1",
+   "id": "d02",
+   "crit": "C2",
+   "qual": "none",
+   "outcome": "no_firm_commitment",
+   "date": "none",
+   "amount": "0"
+  },
+  {
+   "v": "e1",
+   "id": "d01",
+   "crit": "none",
+   "qual": "none",
+   "outcome": "ptp_confirmed",
+   "date": "2026-11-30",
+   "amount": "4850"
+  },
+  {
+   "v": "e1",
+   "id": "d03",
+   "crit": "C1",
+   "qual": "none",
+   "outcome": "no_firm_commitment",
+   "date": "none",
+   "amount": "0"
+  },
+  {
+   "v": "e1",
+   "id": "d04",
+   "crit": "C1",
+   "qual": "none",
+   "outcome": "wrong_party",
+   "date": "none",
+   "amount": "0"
+  },
+  {
+   "v": "e1",
+   "id": "d05",
+   "crit": "C4",
+   "qual": "none",
+   "outcome": "refused",
+   "date": "none",
+   "amount": "0"
+  },
+  {
+   "v": "e1",
+   "id": "d06",
+   "crit": "none",
+   "qual": "Q2",
+   "outcome": "not_collections",
+   "date": "none",
+   "amount": "0"
+  },
+  {
+   "v": "e2",
+   "id": "d04",
+   "crit": "C1",
+   "qual": "none",
+   "outcome": "wrong_party",
+   "date": "none",
+   "amount": "0"
+  },
+  {
+   "v": "e3",
+   "id": "d04",
+   "crit": "none",
+   "qual": "none",
+   "outcome": "wrong_party",
+   "date": "none",
+   "amount": "0"
+  },
+  {
+   "v": "e3",
+   "id": "d03",
+   "crit": "C1",
+   "qual": "none",
+   "outcome": "wrong_party",
+   "date": "none",
+   "amount": "0"
+  }
+ ]
+}

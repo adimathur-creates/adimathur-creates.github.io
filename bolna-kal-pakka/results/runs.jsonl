@@ -1,0 +1,64 @@
+{"v":"naive","id":"d02","outcome":"promise_to_pay","date":"no exact date","mistake":"no"}
+{"v":"e1","id":"d02","crit":"C2","qual":"none","outcome":"no_firm_commitment","date":"none","amount":"0"}
+{"v":"e1","id":"d01","crit":"none","qual":"none","outcome":"ptp_confirmed","date":"2026-11-30","amount":"4850"}
+{"v":"e1","id":"d03","crit":"C1","qual":"none","outcome":"no_firm_commitment","date":"none","amount":"0"}
+{"v":"e1","id":"d04","crit":"C1","qual":"none","outcome":"wrong_party","date":"none","amount":"0"}
+{"v":"e1","id":"d05","crit":"C4","qual":"none","outcome":"refused","date":"none","amount":"0"}
+{"v":"e1","id":"d06","crit":"none","qual":"Q2","outcome":"not_collections","date":"none","amount":"0"}
+{"v":"e2","id":"d04","crit":"C1","qual":"none","outcome":"wrong_party","date":"none","amount":"0"}
+{"v":"e3","id":"d04","crit":"none","qual":"none","outcome":"wrong_party","date":"none","amount":"0"}
+{"v":"e3","id":"d03","crit":"C1","qual":"none","outcome":"wrong_party","date":"none","amount":"0"}
+{"v":"e3","id":"t01","crit":"none","qual":"Q2","outcome":"ptp_confirmed","date":"2026-11-29","amount":"4850"}
+{"v":"naive","id":"t01","outcome":"promise_to_pay","date":"29 November","mistake":"no"}
+{"v":"e3","id":"t02","crit":"none","qual":"none","outcome":"no_firm_commitment","date":"none","amount":"0"}
+{"v":"naive","id":"t02","outcome":"not_interested","date":"none","mistake":"no"}
+{"v":"e3","id":"t03","crit":"C2","qual":"Q2","outcome":"no_firm_commitment","date":"none","amount":"0"}
+{"v":"naive","id":"t03","outcome":"promise_to_pay","date":"30th November","mistake":"no"}
+{"v":"e3","id":"t04","crit":"C1","qual":"Q5","outcome":"wrong_party","date":"none","amount":"0"}
+{"v":"naive","id":"t04","outcome":"not_interested","date":"","mistake":"no"}
+{"v":"e3","id":"t05","crit":"none","qual":"none","outcome":"wrong_party","date":"none","amount":"0"}
+{"v":"naive","id":"t05","outcome":"not_interested","date":"","mistake":"no"}
+{"v":"e3","id":"t06","crit":"C3","qual":"none","outcome":"ptp_confirmed","date":"2026-12-01","amount":"4850"}
+{"v":"naive","id":"t06","outcome":"promise_to_pay","date":"1 December","mistake":"no"}
+{"v":"e3","id":"t07","crit":"none","qual":"none","outcome":"ptp_confirmed","date":"2026-12-01","amount":"4850"}
+{"v":"naive","id":"t07","outcome":"promise_to_pay","date":"1 December","mistake":"no"}
+{"v":"e3","id":"t08","crit":"none","qual":"none","outcome":"hardship","date":"none","amount":"0"}
+{"v":"naive","id":"t08","outcome":"other","date":"","mistake":"no"}
+{"v":"e3","id":"t09","crit":"C1,C4,C5","qual":"none","outcome":"refused","date":"none","amount":"0"}
+{"v":"naive","id":"t09","outcome":"not_interested","date":"","mistake":"no"}
+{"v":"e3","id":"t10","crit":"none","qual":"none","outcome":"dispute","date":"none","amount":"0"}
+{"v":"naive","id":"t10","outcome":"not_interested","date":"","mistake":"no"}
+{"v":"e3","id":"t11","crit":"none","qual":"Q1","outcome":"ptp_confirmed","date":"2026-12-02","amount":"4850"}
+{"v":"naive","id":"t11","outcome":"promise_to_pay","date":"2 December","mistake":"no"}
+{"v":"e3","id":"t12","crit":"none","qual":"Q3","outcome":"no_firm_commitment","date":"none","amount":"0"}
+{"v":"naive","id":"t12","outcome":"other","date":"","mistake":"yes"}
+{"v":"e3","id":"t13","crit":"none","qual":"none","outcome":"ptp_confirmed","date":"2026-12-03","amount":"2000"}
+{"v":"naive","id":"t13","outcome":"promise_to_pay","date":"3 December","mistake":"no"}
+{"v":"e3","id":"t14","crit":"none","qual":"none","outcome":"ptp_confirmed","date":"2026-12-03","amount":"2000"}
+{"v":"naive","id":"t14","outcome":"promise_to_pay","date":"3rd December","mistake":"no"}
+{"v":"e3","id":"t15","crit":"none","qual":"none","outcome":"not_collections","date":"none","amount":"0"}
+{"v":"naive","id":"t15","outcome":"promise_to_pay","date":"kal tak","mistake":"no"}
+{"v":"e3","id":"t16","crit":"none","qual":"none","outcome":"not_collections","date":"none","amount":"0"}
+{"v":"naive","id":"t16","outcome":"promise_to_pay","date":"immediately","mistake":"no"}
+{"v":"e3","id":"t17","crit":"none","qual":"Q7","outcome":"not_collections","date":"none","amount":"0"}
+{"v":"naive","id":"t17","outcome":"other","date":"","mistake":"no"}
+{"v":"e3","id":"t18","crit":"none","qual":"Q3","outcome":"not_collections","date":"none","amount":"0"}
+{"v":"naive","id":"t18","outcome":"other","date":"","mistake":"no"}
+{"v":"e3","id":"t19","crit":"none","qual":"none","outcome":"not_collections","date":"none","amount":"0"}
+{"v":"naive","id":"t19","outcome":"other","date":"","mistake":"no"}
+{"v":"e3","id":"t20","crit":"none","qual":"none","outcome":"not_collections","date":"none","amount":"0"}
+{"v":"naive","id":"t20","outcome":"other","date":"","mistake":"no"}
+{"v":"e3","id":"t21","crit":"none","qual":"none","outcome":"not_collections","date":"none","amount":"0"}
+{"v":"naive","id":"t21","outcome":"other","date":"","mistake":"no"}
+{"v":"e3","id":"t22","crit":"none","qual":"Q6","outcome":"not_collections","date":"none","amount":"0"}
+{"v":"naive","id":"t22","outcome":"other","date":"kal shaam","mistake":"no"}
+{"v":"e3","id":"t23","crit":"C5","qual":"Q7","outcome":"not_collections","date":"none","amount":"0"}
+{"v":"naive","id":"t23","outcome":"not_interested","date":"","mistake":"no"}
+{"v":"e3","id":"t24","crit":"none","qual":"none","outcome":"no_firm_commitment","date":"none","amount":"0"}
+{"v":"naive","id":"t24","outcome":"other","date":"","mistake":"no"}
+{"v":"e3","id":"r01","crit":"none","qual":"Q7","outcome":"no_firm_commitment","date":"none","amount":"0"}
+{"v":"naive","id":"r01","outcome":"promise_to_pay","date":"no specific date","mistake":"no"}
+{"v":"e3","id":"r02","crit":"none","qual":"Q3,Q7","outcome":"no_firm_commitment","date":"none","amount":"0"}
+{"v":"naive","id":"r02","outcome":"promise_to_pay","date":"likely by October 7, 2026","mistake":"no"}
+{"v":"e3","id":"r03","crit":"none","qual":"Q6,Q7","outcome":"no_firm_commitment","date":"none","amount":"0"}
+{"v":"naive","id":"r03","outcome":"other","date":"","mistake":"no"}
