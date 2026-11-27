@@ -107,10 +107,11 @@ code{font-size:13px;background:var(--tag);padding:1px 5px;border-radius:4px}.sou
 <li>Forward-deployed engineers start with one workflow and an agreed metric, deploy on live operations, and stay until it works reliably at scale <a class="src" href="https://indiantelevision.com/mam/cars24-launches-deployment-inc-with-5m-to-build-enterprise-ai-systems/">[source]</a>.</li>
 <li>It grew out of Cars24, where more than 45 agents run across support, sales, financing, inspections, payments and internal operations <a class="src" href="https://www.mediainfoline.com/brand/cars24-launches-deployment-inc-indias-first-forward-deployed-ai-company-invests-5-million">[source]</a>. Cars24 is also its first customer <a class="src" href="https://inc42.com/buzz/cars24-launches-enterprise-ai-company-deployment-inc-invests-5-mn/">[source]</a>.</li>
 <li>Target sectors include BFSI, healthcare, manufacturing and logistics <a class="src" href="https://inc42.com/buzz/cars24-launches-enterprise-ai-company-deployment-inc-invests-5-mn/">[source]</a>. There, a wrong approval costs real money and an unproven saving doesn't renew.</li></ul></div>
-<div class="card"><h3>What nobody has published yet</h3><ul>
+<div class="card"><h3>What the public story leaves out</h3><ul>
 <li>OpenAI's Cars24 case study reports outcomes: over a million conversation minutes a month, 12% of lost seller leads recovered, 50% higher support resolution <a class="src" href="https://openai.com/index/cars24">[source]</a>. It doesn't describe how agents are evaluated or monitored after launch.</li>
 <li>Pre-launch reliability now has a vocabulary: consistency across runs, robustness to rephrasing, tolerance of tool failures <a class="src" href="https://arxiv.org/html/2601.06112v1">[source]</a>. Post-launch assurance doesn't. As a firm goes from 3 deployments to 30, it can't run on FDE memory.</li>
-<li>Every claimed result is a sales asset. A result measured against a holdout survives a client's CFO.</li></ul></div>
+<li>Every claimed result is a sales asset. A result measured against a holdout survives a client's CFO.</li>
+<li>The team that built 45+ agents at Cars24 almost certainly does much of this already. My first job would be to learn how, then make it the same for every client.</li></ul></div>
 </div>
 <p><b>Problem statement.</b> After go-live, (1) catch an agent's drift in days, including drift its own confidence can't see, with a fixed review budget; and (2) report each deployment's value in rupees, measured against what would have happened anyway, with an honest error bar.</p>
 
